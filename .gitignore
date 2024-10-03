@@ -1,5 +1,6 @@
 # Compiler files
 cache/
+cache_hardhat/
 out/
 
 # Ignores development broadcast logs
@@ -12,3 +13,9 @@ docs/
 
 # Dotenv file
 .env
+
+# log
+anvil_output.log
+
+# node
+node_modules/
