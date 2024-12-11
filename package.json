@@ -8,7 +8,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:sol": "solhint './src/*.sol'",
+    "lint:sol:fix": "pnpm run lint:sol --fix --noPrompt"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +23,7 @@
     "@types/node": "^22.7.4",
     "chai": "^4.5.0",
     "hardhat": "^2.22.12",
+    "solhint": "^5.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   }
