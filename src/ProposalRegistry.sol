@@ -12,6 +12,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
     event ProposalStatusChanged(bytes32 indexed proposalID, ProposalStatus newStatus);
     event CensusUpdated(bytes32 indexed proposalID, bytes32 censusRoot, string censusURI, uint256 maxCensusSize);
     event ProposalDurationChanged(bytes32 indexed proposalID, uint256 duration);
+    event ProposalStateRootUpdated(bytes32 indexed proposalID, bytes32 newStateRoot);
 
     enum ProposalStatus {
         READY,
@@ -93,9 +94,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
     }
 
     struct ProposalID {
-        CensusOrigin censusOrigin;
-        uint8 envType;
-        uint32 nonce;
+        uint256 nonce;
         bytes32 organizationID;
         string chainID;
     }
@@ -103,6 +102,8 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
     struct Proposal {
         ProposalStatus status;
         bytes32 organizationId;
+        bytes32[2] encryptionKeys;
+        bytes32 latestStateRoot;
         uint256[][] result;
         uint256 startTime;
         uint256 duration;
@@ -123,67 +124,51 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
         organizationRegistry = _organizationRegistry;
     }
 
-    function NewProposal(ProposalOptions calldata options, Census calldata census, string calldata metadata, bytes32 organizationID) public {
-        require(options.voteOptions.maxCount > 0, "NewProposal: invalid maxCount");
-        require(options.voteOptions.maxValue > options.voteOptions.maxCount, "NewProposal: maxCount > maxValue");
-        require(options.status == ProposalStatus.READY || options.status == ProposalStatus.PAUSED, "NewProposal: invalid status");
-        if (census.censusOrigin == CensusOrigin.OFF_CHAIN_CA) {
-            require(options.envelopeType & ENVELOPE_TYPE_ANONYMOUS == 0, "NewProposal: census origin CA requires non-anonymous envelope type");
+    function NewProposal(
+        ProposalOptions calldata _options,
+        Census calldata _census,
+        string calldata _metadata,
+        bytes32 _organizationID,
+        bytes32 _proposalID,
+        bytes32 _encryptionPubKey,
+        bytes32 _initStateRoot
+    ) public {
+        require(_options.voteOptions.maxCount > 0, "NewProposal: invalid maxCount");
+        require(_options.voteOptions.maxValue > _options.voteOptions.maxCount, "NewProposal: maxCount > maxValue");
+        require(_options.status == ProposalStatus.READY || _options.status == ProposalStatus.PAUSED, "NewProposal: invalid status");
+        if (_census.censusOrigin == CensusOrigin.OFF_CHAIN_CA) {
+            require(_options.envelopeType & ENVELOPE_TYPE_ANONYMOUS == 0, "NewProposal: census origin CA requires non-anonymous envelope type");
         }
-        if (census.censusOrigin == CensusOrigin.FARCASTER_FRAME) {
-            require(options.voteOptions.maxCount == 1, "NewProposal: maxCount must be 1 for Farcaster");
-            require(options.envelopeType & ENVELOPE_TYPE_ANONYMOUS == 0, "NewProposal: census origin Farcaster requires non-anonymous envelope type");
-            require(options.envelopeType & ENVELOPE_TYPE_ENCRYPTED_VOTES == 0, "NewProposal: census origin Farcaster requires non-encrypted envelope type");
+        if (_census.censusOrigin == CensusOrigin.FARCASTER_FRAME) {
+            require(_options.voteOptions.maxCount == 1, "NewProposal: maxCount must be 1 for Farcaster");
+            require(_options.envelopeType & ENVELOPE_TYPE_ANONYMOUS == 0, "NewProposal: census origin Farcaster requires non-anonymous envelope type");
+            require(_options.envelopeType & ENVELOPE_TYPE_ENCRYPTED_VOTES == 0, "NewProposal: census origin Farcaster requires non-encrypted envelope type");
         }
-        require(options.startTime > block.timestamp, "NewProposal: invalid startTime");
-        require(options.startTime + options.duration > block.timestamp, "NewProposal: invalid duration");
-        require(options.envelopeType & ENVELOPE_TYPE_SERIAL == 0, "NewProposal: serial envelope type not implemented");
-        require(OrganizationRegistry(organizationRegistry).isAdministrator(organizationID, msg.sender), "NewProposal: not an administrator");
+        require(_options.startTime > block.timestamp, "NewProposal: invalid startTime");
+        require(_options.startTime + _options.duration > block.timestamp, "NewProposal: invalid duration");
+        require(_options.envelopeType & ENVELOPE_TYPE_SERIAL == 0, "NewProposal: serial envelope type not implemented");
+        require(OrganizationRegistry(organizationRegistry).isAdministrator(_organizationID, msg.sender), "NewProposal: not an administrator");
         
+        if (proposals[_proposalID].organizationId != 0) {
+            revert("NewProposal: proposal already exists");
+        }
+
         Proposal memory p = Proposal({
-            status: options.status,
-            organizationId: organizationID,
+            status: _options.status,
+            organizationId: _organizationID,
+            encryptionKeys: [_encryptionPubKey, bytes32(0)],
+            latestStateRoot: _initStateRoot,
             result: new uint256[][](0),
-            startTime: options.startTime,
-            duration: options.duration,
-            metadataURI: metadata,
-            options: options,
-            census: census
+            startTime: _options.startTime,
+            duration: _options.duration,
+            metadataURI: _metadata,
+            options: _options,
+            census: _census
         });
+        
+        proposals[_proposalID] = p;
 
-        ProposalID memory pID = ProposalID({
-            censusOrigin: census.censusOrigin,
-            envType: options.envelopeType,
-            nonce: proposalCount,
-            organizationID: organizationID,
-            chainID: chainID
-        });
-
-        bytes32 proposalID = buildProposalID(pID);
-
-        proposals[proposalID] = p;
-
-        emit ProposalCreated(proposalID, msg.sender);
-    }
-
-    function buildProposalID(ProposalID memory p) public pure returns (bytes32) {
-        bytes32 chainIDHash = keccak256(bytes(p.chainID));
-        bytes memory chainIDBytes = new bytes(6);
-        for (uint256 i = 0; i < 6; i++) {
-            chainIDBytes[i] = chainIDHash[i];
-        }
-        bytes memory idBytes = abi.encodePacked(
-            chainIDBytes,                                   // 6 bytes
-            bytes20(uint160(uint256(p.organizationID))),    // 20 bytes
-            bytes1(uint8(p.censusOrigin)),                  // 1 byte
-            bytes1(uint8(p.envType)),                       // 1 byte
-            bytes4(p.nonce)                                 // 4 bytes
-        );
-        bytes32 proposalID;
-        assembly {
-            proposalID := mload(add(idBytes, 32))
-        }
-        return proposalID;
+        emit ProposalCreated(_proposalID, msg.sender);
     }
 
     function getProposal(bytes32 proposalID) public view returns (Proposal memory) {
@@ -271,14 +256,32 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
         emit ProposalDurationChanged(proposalID, duration);
     }
 
-    function SetProposalResult(bytes32 proposalID, uint256[][] memory result) public {
+    function endProposal(bytes32 proposalID) public {
+        require(OrganizationRegistry(organizationRegistry).isAdministrator(proposals[proposalID].organizationId, msg.sender), "endProposal: not an administrator");
+        require(proposals[proposalID].status == ProposalStatus.READY || proposals[proposalID].status == ProposalStatus.PAUSED, "Process terminated");
+        proposals[proposalID].status = ProposalStatus.ENDED;
+
+        emit ProposalStatusChanged(proposalID, ProposalStatus.ENDED);
+    }
+
+    function submitStateTransition(bytes32 _proposalID, bytes32 _oldRoot, bytes32 _newRoot, bytes calldata _proof) public {
+        require(proposals[_proposalID].organizationId != 0, "Proposal not found");
+        require(proposals[_proposalID].status != ProposalStatus.RESULTS && proposals[_proposalID].status != ProposalStatus.CANCELED, "Invalid status for submitting state transition");
+        require(proposals[_proposalID].latestStateRoot == _oldRoot, "Invalid old root");
+        // TODO verify proof
+        // update state root
+        proposals[_proposalID].latestStateRoot = _newRoot;
+        emit ProposalStateRootUpdated(_proposalID, _newRoot);
+    }
+
+    function SetProposalResult(bytes32 proposalID, uint256[][] memory result, bytes calldata proof) public {
         // require sequencer from sequencer registry
         // TODO
 
         require(proposals[proposalID].organizationId != 0, "Proposal not found");
+        require(proposals[proposalID].status == ProposalStatus.ENDED, "Process not ended");
 
-        require(block.timestamp > proposals[proposalID].startTime + proposals[proposalID].duration, "Process ongoing");
-        require(proposals[proposalID].status != ProposalStatus.RESULTS && proposals[proposalID].status != ProposalStatus.CANCELED, "Invalid status for setting result");
+        // TODO verify proof   
 
         proposals[proposalID].result = result;
         proposals[proposalID].status = ProposalStatus.RESULTS;

@@ -1,3 +1,11 @@
+# Set up local env
+
+1. Installed foundry -> `curl -L https://foundry.paradigm.xyz | bash`
+2. `npm i`
+3. `cp example.env .env`
+4. `source .env`
+5. `./setup_local_env.sh`
+
 ## Foundry
 
 ### Install
