@@ -140,22 +140,22 @@ export declare namespace ProposalRegistry {
 export interface ProposalRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "NewProposal"
-      | "SetProposalCensus"
-      | "SetProposalDuration"
-      | "SetProposalResult"
-      | "SetProposalStatus"
       | "UPGRADE_INTERFACE_VERSION"
       | "chainID"
       | "endProposal"
       | "getProposal"
       | "initialize"
+      | "newProposal"
       | "organizationRegistry"
       | "owner"
       | "proposalCount"
       | "proposals"
       | "proxiableUUID"
       | "renounceOwnership"
+      | "setProposalCensus"
+      | "setProposalDuration"
+      | "setProposalResult"
+      | "setProposalStatus"
       | "submitStateTransition"
       | "transferOwnership"
       | "upgradeToAndCall"
@@ -174,34 +174,6 @@ export interface ProposalRegistryInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
-    functionFragment: "NewProposal",
-    values: [
-      ProposalRegistry.ProposalOptionsStruct,
-      ProposalRegistry.CensusStruct,
-      string,
-      BytesLike,
-      BytesLike,
-      BytesLike,
-      BytesLike
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "SetProposalCensus",
-    values: [BytesLike, ProposalRegistry.CensusStruct]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "SetProposalDuration",
-    values: [BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "SetProposalResult",
-    values: [BytesLike, BigNumberish[][], BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "SetProposalStatus",
-    values: [BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "UPGRADE_INTERFACE_VERSION",
     values?: undefined
   ): string;
@@ -217,6 +189,18 @@ export interface ProposalRegistryInterface extends Interface {
   encodeFunctionData(
     functionFragment: "initialize",
     values: [string, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "newProposal",
+    values: [
+      ProposalRegistry.ProposalOptionsStruct,
+      ProposalRegistry.CensusStruct,
+      string,
+      BytesLike,
+      BytesLike,
+      BytesLike,
+      BytesLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "organizationRegistry",
@@ -240,6 +224,22 @@ export interface ProposalRegistryInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "setProposalCensus",
+    values: [BytesLike, ProposalRegistry.CensusStruct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProposalDuration",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProposalResult",
+    values: [BytesLike, BigNumberish[][], BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProposalStatus",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "submitStateTransition",
     values: [BytesLike, BytesLike, BytesLike, BytesLike]
   ): string;
@@ -252,26 +252,6 @@ export interface ProposalRegistryInterface extends Interface {
     values: [AddressLike, BytesLike]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "NewProposal",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "SetProposalCensus",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "SetProposalDuration",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "SetProposalResult",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "SetProposalStatus",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "UPGRADE_INTERFACE_VERSION",
     data: BytesLike
@@ -286,6 +266,10 @@ export interface ProposalRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "newProposal",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "organizationRegistry",
     data: BytesLike
@@ -302,6 +286,22 @@ export interface ProposalRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProposalCensus",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProposalDuration",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProposalResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProposalStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -475,44 +475,6 @@ export interface ProposalRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  NewProposal: TypedContractMethod<
-    [
-      _options: ProposalRegistry.ProposalOptionsStruct,
-      _census: ProposalRegistry.CensusStruct,
-      _metadata: string,
-      _organizationID: BytesLike,
-      _proposalID: BytesLike,
-      _encryptionPubKey: BytesLike,
-      _initStateRoot: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-
-  SetProposalCensus: TypedContractMethod<
-    [_proposalID: BytesLike, _census: ProposalRegistry.CensusStruct],
-    [void],
-    "nonpayable"
-  >;
-
-  SetProposalDuration: TypedContractMethod<
-    [_proposalID: BytesLike, _duration: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  SetProposalResult: TypedContractMethod<
-    [_proposalID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
-    [void],
-    "nonpayable"
-  >;
-
-  SetProposalStatus: TypedContractMethod<
-    [_proposalID: BytesLike, _newStatus: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
   UPGRADE_INTERFACE_VERSION: TypedContractMethod<[], [string], "view">;
 
   chainID: TypedContractMethod<[], [string], "view">;
@@ -531,6 +493,20 @@ export interface ProposalRegistry extends BaseContract {
 
   initialize: TypedContractMethod<
     [_chainID: string, _organizationRegistry: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  newProposal: TypedContractMethod<
+    [
+      _options: ProposalRegistry.ProposalOptionsStruct,
+      _census: ProposalRegistry.CensusStruct,
+      _metadata: string,
+      _organizationID: BytesLike,
+      _proposalID: BytesLike,
+      _encryptionPubKey: BytesLike,
+      _initStateRoot: BytesLike
+    ],
     [void],
     "nonpayable"
   >;
@@ -571,6 +547,30 @@ export interface ProposalRegistry extends BaseContract {
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
+  setProposalCensus: TypedContractMethod<
+    [_proposalID: BytesLike, _census: ProposalRegistry.CensusStruct],
+    [void],
+    "nonpayable"
+  >;
+
+  setProposalDuration: TypedContractMethod<
+    [_proposalID: BytesLike, _duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setProposalResult: TypedContractMethod<
+    [_proposalID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setProposalStatus: TypedContractMethod<
+    [_proposalID: BytesLike, _newStatus: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   submitStateTransition: TypedContractMethod<
     [
       _proposalID: BytesLike,
@@ -599,49 +599,6 @@ export interface ProposalRegistry extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "NewProposal"
-  ): TypedContractMethod<
-    [
-      _options: ProposalRegistry.ProposalOptionsStruct,
-      _census: ProposalRegistry.CensusStruct,
-      _metadata: string,
-      _organizationID: BytesLike,
-      _proposalID: BytesLike,
-      _encryptionPubKey: BytesLike,
-      _initStateRoot: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "SetProposalCensus"
-  ): TypedContractMethod<
-    [_proposalID: BytesLike, _census: ProposalRegistry.CensusStruct],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "SetProposalDuration"
-  ): TypedContractMethod<
-    [_proposalID: BytesLike, _duration: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "SetProposalResult"
-  ): TypedContractMethod<
-    [_proposalID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "SetProposalStatus"
-  ): TypedContractMethod<
-    [_proposalID: BytesLike, _newStatus: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
     nameOrSignature: "UPGRADE_INTERFACE_VERSION"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -661,6 +618,21 @@ export interface ProposalRegistry extends BaseContract {
     nameOrSignature: "initialize"
   ): TypedContractMethod<
     [_chainID: string, _organizationRegistry: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "newProposal"
+  ): TypedContractMethod<
+    [
+      _options: ProposalRegistry.ProposalOptionsStruct,
+      _census: ProposalRegistry.CensusStruct,
+      _metadata: string,
+      _organizationID: BytesLike,
+      _proposalID: BytesLike,
+      _encryptionPubKey: BytesLike,
+      _initStateRoot: BytesLike
+    ],
     [void],
     "nonpayable"
   >;
@@ -706,6 +678,34 @@ export interface ProposalRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setProposalCensus"
+  ): TypedContractMethod<
+    [_proposalID: BytesLike, _census: ProposalRegistry.CensusStruct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setProposalDuration"
+  ): TypedContractMethod<
+    [_proposalID: BytesLike, _duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setProposalResult"
+  ): TypedContractMethod<
+    [_proposalID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setProposalStatus"
+  ): TypedContractMethod<
+    [_proposalID: BytesLike, _newStatus: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "submitStateTransition"
   ): TypedContractMethod<

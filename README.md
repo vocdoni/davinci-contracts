@@ -82,3 +82,17 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
+### Typechain
+
+```shell
+$ npx hardhat compile
+```
+
+### Golang bindings
+
+```shell
+$ ./go_bind.sh
+```
+
+

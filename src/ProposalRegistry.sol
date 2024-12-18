@@ -11,7 +11,6 @@ import "./OrganizationRegistry.sol";
  * @notice This contract is responsible for storing proposals data and managing their lifecycle.
  */
 contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-
     /*
      * @notice Emitted when a new proposal is created.
      * @param proposalID The ID of the proposal.
@@ -232,7 +231,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
      * @param _encryptionPubKey The public key of the encryption.
      * @param _initStateRoot The initial state root.
      */
-    function NewProposal(
+    function newProposal(
         ProposalOptions calldata _options,
         Census calldata _census,
         string calldata _metadata,
@@ -308,7 +307,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
      * @param _proposalID The ID of the proposal.
      * @param _newStatus The new status of the proposal.
      */
-    function SetProposalStatus(bytes32 _proposalID, ProposalStatus _newStatus) public {
+    function setProposalStatus(bytes32 _proposalID, ProposalStatus _newStatus) public {
         require(
             OrganizationRegistry(organizationRegistry).isAdministrator(
                 proposals[_proposalID].organizationId,
@@ -348,7 +347,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
      * @param _proposalID The ID of the proposal.
      * @param _census The census of the proposal.
      */
-    function SetProposalCensus(bytes32 _proposalID, Census calldata _census) public {
+    function setProposalCensus(bytes32 _proposalID, Census calldata _census) public {
         require(
             OrganizationRegistry(organizationRegistry).isAdministrator(
                 proposals[_proposalID].organizationId,
@@ -392,7 +391,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
      * @param _proposalID The ID of the proposal.
      * @param _duration The new duration of the proposal.
      */
-    function SetProposalDuration(bytes32 _proposalID, uint256 _duration) public {
+    function setProposalDuration(bytes32 _proposalID, uint256 _duration) public {
         require(
             OrganizationRegistry(organizationRegistry).isAdministrator(
                 proposals[_proposalID].organizationId,
@@ -471,7 +470,7 @@ contract ProposalRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable 
      * @param _result The result of the proposal.
      * @param _proof The proof of the result.
      */
-    function SetProposalResult(bytes32 _proposalID, uint256[][] memory _result, bytes calldata _proof) public {
+    function setProposalResult(bytes32 _proposalID, uint256[][] memory _result, bytes calldata _proof) public {
         // require sequencer from sequencer registry
         // TODO
 
