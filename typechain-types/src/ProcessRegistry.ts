@@ -104,7 +104,7 @@ export declare namespace ProcessRegistry {
     organizationId: BytesLike;
     encryptionKeys: [BytesLike, BytesLike];
     latestStateRoot: BytesLike;
-    result: BigNumberish[][];
+    result: BigNumberish[];
     startTime: BigNumberish;
     duration: BigNumberish;
     metadataURI: string;
@@ -117,7 +117,7 @@ export declare namespace ProcessRegistry {
     organizationId: string,
     encryptionKeys: [string, string],
     latestStateRoot: string,
-    result: bigint[][],
+    result: bigint[],
     startTime: bigint,
     duration: bigint,
     metadataURI: string,
@@ -128,7 +128,7 @@ export declare namespace ProcessRegistry {
     organizationId: string;
     encryptionKeys: [string, string];
     latestStateRoot: string;
-    result: bigint[][];
+    result: bigint[];
     startTime: bigint;
     duration: bigint;
     metadataURI: string;
@@ -233,7 +233,7 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessResult",
-    values: [BytesLike, BigNumberish[][], BytesLike]
+    values: [BytesLike, BigNumberish[], BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessStatus",
@@ -551,7 +551,7 @@ export interface ProcessRegistry extends BaseContract {
   >;
 
   setProcessResult: TypedContractMethod<
-    [_processID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
+    [_processID: BytesLike, _result: BigNumberish[], _proof: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -686,7 +686,7 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "setProcessResult"
   ): TypedContractMethod<
-    [_processID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
+    [_processID: BytesLike, _result: BigNumberish[], _proof: BytesLike],
     [void],
     "nonpayable"
   >;

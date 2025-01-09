@@ -184,7 +184,7 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         bytes32 organizationId;
         bytes32[2] encryptionKeys;
         bytes32 latestStateRoot;
-        uint256[][] result;
+        uint256[] result;
         uint256 startTime;
         uint256 duration;
         string metadataURI;
@@ -280,7 +280,7 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             organizationId: _organizationID,
             encryptionKeys: [_encryptionPubKey, bytes32(0)],
             latestStateRoot: _initStateRoot,
-            result: new uint256[][](0),
+            result: new uint256[](0),
             startTime: _options.startTime,
             duration: _options.duration,
             metadataURI: _metadata,
@@ -470,7 +470,7 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @param _result The result of the process.
      * @param _proof The proof of the result.
      */
-    function setProcessResult(bytes32 _processID, uint256[][] memory _result, bytes calldata _proof) public {
+    function setProcessResult(bytes32 _processID, uint256[] calldata _result, bytes calldata _proof) public {
         // require sequencer from sequencer registry
         // TODO
 
