@@ -50,13 +50,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OrganizationRegistry__factory>;
     getContractFactory(
-      name: "ProposalRegistry",
+      name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ProposalRegistry__factory>;
-    getContractFactory(
-      name: "ZKRegistry",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ZKRegistry__factory>;
+    ): Promise<Contracts.ProcessRegistry__factory>;
 
     getContractAt(
       name: "OwnableUpgradeable",
@@ -104,15 +100,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.OrganizationRegistry>;
     getContractAt(
-      name: "ProposalRegistry",
+      name: "ProcessRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ProposalRegistry>;
-    getContractAt(
-      name: "ZKRegistry",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ZKRegistry>;
+    ): Promise<Contracts.ProcessRegistry>;
 
     deployContract(
       name: "OwnableUpgradeable",
@@ -151,13 +142,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OrganizationRegistry>;
     deployContract(
-      name: "ProposalRegistry",
+      name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ProposalRegistry>;
-    deployContract(
-      name: "ZKRegistry",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ZKRegistry>;
+    ): Promise<Contracts.ProcessRegistry>;
 
     deployContract(
       name: "OwnableUpgradeable",
@@ -205,15 +192,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OrganizationRegistry>;
     deployContract(
-      name: "ProposalRegistry",
+      name: "ProcessRegistry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ProposalRegistry>;
-    deployContract(
-      name: "ZKRegistry",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ZKRegistry>;
+    ): Promise<Contracts.ProcessRegistry>;
 
     // default types
     getContractFactory(

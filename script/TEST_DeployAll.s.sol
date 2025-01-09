@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {OrganizationRegistry} from "../src/OrganizationRegistry.sol";
-import {ProposalRegistry} from "../src/ProposalRegistry.sol";
+import {ProcessRegistry} from "../src/ProcessRegistry.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract TestDeployAllScript is Script {
@@ -12,8 +12,8 @@ contract TestDeployAllScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         address proxy = Upgrades.deployUUPSProxy("OrganizationRegistry.sol", abi.encodeCall(OrganizationRegistry.initialize, ()));
         console.log("OrganizationRegistry deployed at:", proxy);
-        address proxy2 = Upgrades.deployUUPSProxy("ProposalRegistry.sol", abi.encodeCall(ProposalRegistry.initialize, ("31337", proxy)));
-        console.log("ProposalRegistry deployed at:", proxy2);
+        address proxy2 = Upgrades.deployUUPSProxy("ProcessRegistry.sol", abi.encodeCall(ProcessRegistry.initialize, ("31337", proxy)));
+        console.log("ProcessRegistry deployed at:", proxy2);
         vm.stopBroadcast();
     }
 }

@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { OrganizationRegistry } from "./OrganizationRegistry";
-export type { ProposalRegistry } from "./ProposalRegistry";
-export type { ZKRegistry } from "./ZKRegistry";
+export type { ProcessRegistry } from "./ProcessRegistry";

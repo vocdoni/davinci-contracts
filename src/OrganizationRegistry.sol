@@ -30,13 +30,13 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
     /**
      * @notice Organization structure containing the organization's data
      * @param id The organization's unique identifier
-     * @param proposalCount The number of proposals created by the organization
+     * @param processCount The number of processes created by the organization
      * @param name The organization's name
      * @param metadataURI The organization's metadata URI that can be used to store additional information
      * @param administrators The list of administrators of the organization
      */
     struct Organization {
-        uint32 proposalCount;
+        uint32 processCount;
         string name;
         string metadataURI;
         mapping(address => bool) administrators;
@@ -117,13 +117,13 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
     /**
      * @notice Retrieves an organization's data
      * @param id The organization's unique identifier
-     * @return proposalCount The number of proposals created by the organization
+     * @return processCount The number of processes created by the organization
      * @return name The organization's name
      * @return metadataURI The organization's metadata URI that can be used to store additional information
      */
     function getOrganization(bytes32 id) public view returns (uint32, string memory, string memory) {
         Organization storage organization = organizations[id];
-        return (organization.proposalCount, organization.name, organization.metadataURI);
+        return (organization.processCount, organization.name, organization.metadataURI);
     }
     
     /**

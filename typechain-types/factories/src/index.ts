@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { OrganizationRegistry__factory } from "./OrganizationRegistry__factory";
-export { ProposalRegistry__factory } from "./ProposalRegistry__factory";
-export { ZKRegistry__factory } from "./ZKRegistry__factory";
+export { ProcessRegistry__factory } from "./ProcessRegistry__factory";

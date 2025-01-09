@@ -2,6 +2,18 @@
 
 set -euo pipefail
 
+sed_in_place() {
+    local pattern="$1"
+    local file="$2"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # macOS
+        sed -i '' "$pattern" "$file"
+    else
+        # Linux
+        sed -i "$pattern" "$file"
+    fi
+}
+
 abi() {
     local json_file="$1"
     local pkg_name="$2"
@@ -12,33 +24,22 @@ abi() {
         exit 1
     fi
 
-    local temp_abi_file
-    temp_abi_file=$(mktemp)
+    # Generate the Go bindings directly from the JSON ABI
+    jq -r '.abi' "$json_file" | abigen --abi=/dev/stdin --pkg="$pkg_name" --out="$output_file"
+    echo "Successfully generated Go bindings for '$pkg_name' contract."
 
-    jq -r '.abi' "$json_file" > "$temp_abi_file"
-    if [[ ! -s "$temp_abi_file" ]]; then
-        echo "Error: ABI extraction failed." >&2
-        rm -f "$temp_abi_file"
-        exit 1
-    fi
-
-    abigen --abi="$temp_abi_file" --pkg="$pkg_name" --out="$output_file"
-
-    rm -f "$temp_abi_file"
+    # Replace the package name in the generated file with "contracts"
+    sed_in_place "s/^package $pkg_name/package contracts/" "$output_file"
 }
 
 abi "./artifacts/src/OrganizationRegistry.sol/OrganizationRegistry.json" \
     "OrganizationRegistry" \
     "./golang-types/OrganizationRegistry.go"
 
-abi "./artifacts/src/ProposalRegistry.sol/ProposalRegistry.json" \
-    "ProposalRegistry" \
-    "./golang-types/ProposalRegistry.go"
+abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
+    "ProcessRegistry" \
+    "./golang-types/ProcessRegistry.go"
 
 # abi "./artifacts/src/SequencerRegistry.sol/SequencerRegistry.json" \
 #     "SequencerRegistry" \
 #     "./golang-types/SequencerRegistry.go"
-
-abi "./artifacts/src/ZKRegistry.sol/ZKRegistry.json" \
-    "ZKRegistry" \
-    "./golang-types/ZKRegistry.go"

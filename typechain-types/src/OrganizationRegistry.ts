@@ -326,7 +326,7 @@ export interface OrganizationRegistry extends BaseContract {
     [arg0: BytesLike],
     [
       [bigint, string, string] & {
-        proposalCount: bigint;
+        processCount: bigint;
         name: string;
         metadataURI: string;
       }
@@ -415,7 +415,7 @@ export interface OrganizationRegistry extends BaseContract {
     [arg0: BytesLike],
     [
       [bigint, string, string] & {
-        proposalCount: bigint;
+        processCount: bigint;
         name: string;
         metadataURI: string;
       }

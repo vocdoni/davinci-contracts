@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export declare namespace ProposalRegistry {
+export declare namespace ProcessRegistry {
   export type VoteOptionsStruct = {
     uniqueValues: boolean;
     maxCount: BigNumberish;
@@ -55,29 +55,29 @@ export declare namespace ProposalRegistry {
     costExponent: bigint;
   };
 
-  export type ProposalOptionsStruct = {
+  export type ProcessOptionsStruct = {
     envelopeType: BigNumberish;
-    proposalMode: BigNumberish;
+    processMode: BigNumberish;
     startTime: BigNumberish;
     duration: BigNumberish;
     status: BigNumberish;
-    voteOptions: ProposalRegistry.VoteOptionsStruct;
+    voteOptions: ProcessRegistry.VoteOptionsStruct;
   };
 
-  export type ProposalOptionsStructOutput = [
+  export type ProcessOptionsStructOutput = [
     envelopeType: bigint,
-    proposalMode: bigint,
+    processMode: bigint,
     startTime: bigint,
     duration: bigint,
     status: bigint,
-    voteOptions: ProposalRegistry.VoteOptionsStructOutput
+    voteOptions: ProcessRegistry.VoteOptionsStructOutput
   ] & {
     envelopeType: bigint;
-    proposalMode: bigint;
+    processMode: bigint;
     startTime: bigint;
     duration: bigint;
     status: bigint;
-    voteOptions: ProposalRegistry.VoteOptionsStructOutput;
+    voteOptions: ProcessRegistry.VoteOptionsStructOutput;
   };
 
   export type CensusStruct = {
@@ -99,7 +99,7 @@ export declare namespace ProposalRegistry {
     censusURI: string;
   };
 
-  export type ProposalStruct = {
+  export type ProcessStruct = {
     status: BigNumberish;
     organizationId: BytesLike;
     encryptionKeys: [BytesLike, BytesLike];
@@ -108,11 +108,11 @@ export declare namespace ProposalRegistry {
     startTime: BigNumberish;
     duration: BigNumberish;
     metadataURI: string;
-    options: ProposalRegistry.ProposalOptionsStruct;
-    census: ProposalRegistry.CensusStruct;
+    options: ProcessRegistry.ProcessOptionsStruct;
+    census: ProcessRegistry.CensusStruct;
   };
 
-  export type ProposalStructOutput = [
+  export type ProcessStructOutput = [
     status: bigint,
     organizationId: string,
     encryptionKeys: [string, string],
@@ -121,8 +121,8 @@ export declare namespace ProposalRegistry {
     startTime: bigint,
     duration: bigint,
     metadataURI: string,
-    options: ProposalRegistry.ProposalOptionsStructOutput,
-    census: ProposalRegistry.CensusStructOutput
+    options: ProcessRegistry.ProcessOptionsStructOutput,
+    census: ProcessRegistry.CensusStructOutput
   ] & {
     status: bigint;
     organizationId: string;
@@ -132,30 +132,30 @@ export declare namespace ProposalRegistry {
     startTime: bigint;
     duration: bigint;
     metadataURI: string;
-    options: ProposalRegistry.ProposalOptionsStructOutput;
-    census: ProposalRegistry.CensusStructOutput;
+    options: ProcessRegistry.ProcessOptionsStructOutput;
+    census: ProcessRegistry.CensusStructOutput;
   };
 }
 
-export interface ProposalRegistryInterface extends Interface {
+export interface ProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "UPGRADE_INTERFACE_VERSION"
       | "chainID"
-      | "endProposal"
-      | "getProposal"
+      | "endProcess"
+      | "getProcess"
       | "initialize"
-      | "newProposal"
+      | "newProcess"
       | "organizationRegistry"
       | "owner"
-      | "proposalCount"
-      | "proposals"
+      | "processCount"
+      | "processes"
       | "proxiableUUID"
       | "renounceOwnership"
-      | "setProposalCensus"
-      | "setProposalDuration"
-      | "setProposalResult"
-      | "setProposalStatus"
+      | "setProcessCensus"
+      | "setProcessDuration"
+      | "setProcessResult"
+      | "setProcessStatus"
       | "submitStateTransition"
       | "transferOwnership"
       | "upgradeToAndCall"
@@ -166,10 +166,10 @@ export interface ProposalRegistryInterface extends Interface {
       | "CensusUpdated"
       | "Initialized"
       | "OwnershipTransferred"
-      | "ProposalCreated"
-      | "ProposalDurationChanged"
-      | "ProposalStateRootUpdated"
-      | "ProposalStatusChanged"
+      | "ProcessCreated"
+      | "ProcessDurationChanged"
+      | "ProcessStateRootUpdated"
+      | "ProcessStatusChanged"
       | "Upgraded"
   ): EventFragment;
 
@@ -179,11 +179,11 @@ export interface ProposalRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "endProposal",
+    functionFragment: "endProcess",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "getProposal",
+    functionFragment: "getProcess",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -191,10 +191,10 @@ export interface ProposalRegistryInterface extends Interface {
     values: [string, AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "newProposal",
+    functionFragment: "newProcess",
     values: [
-      ProposalRegistry.ProposalOptionsStruct,
-      ProposalRegistry.CensusStruct,
+      ProcessRegistry.ProcessOptionsStruct,
+      ProcessRegistry.CensusStruct,
       string,
       BytesLike,
       BytesLike,
@@ -208,11 +208,11 @@ export interface ProposalRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "proposalCount",
+    functionFragment: "processCount",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "proposals",
+    functionFragment: "processes",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -224,19 +224,19 @@ export interface ProposalRegistryInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "setProposalCensus",
-    values: [BytesLike, ProposalRegistry.CensusStruct]
+    functionFragment: "setProcessCensus",
+    values: [BytesLike, ProcessRegistry.CensusStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProposalDuration",
+    functionFragment: "setProcessDuration",
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProposalResult",
+    functionFragment: "setProcessResult",
     values: [BytesLike, BigNumberish[][], BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProposalStatus",
+    functionFragment: "setProcessStatus",
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -257,29 +257,20 @@ export interface ProposalRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "endProposal",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getProposal",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "endProcess", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getProcess", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "newProposal",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "organizationRegistry",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "proposalCount",
+    functionFragment: "processCount",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "proposals", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "processes", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
     data: BytesLike
@@ -289,19 +280,19 @@ export interface ProposalRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProposalCensus",
+    functionFragment: "setProcessCensus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProposalDuration",
+    functionFragment: "setProcessDuration",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProposalResult",
+    functionFragment: "setProcessResult",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProposalStatus",
+    functionFragment: "setProcessStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -320,19 +311,19 @@ export interface ProposalRegistryInterface extends Interface {
 
 export namespace CensusUpdatedEvent {
   export type InputTuple = [
-    proposalID: BytesLike,
+    processID: BytesLike,
     censusRoot: BytesLike,
     censusURI: string,
     maxCensusSize: BigNumberish
   ];
   export type OutputTuple = [
-    proposalID: string,
+    processID: string,
     censusRoot: string,
     censusURI: string,
     maxCensusSize: bigint
   ];
   export interface OutputObject {
-    proposalID: string;
+    processID: string;
     censusRoot: string;
     censusURI: string;
     maxCensusSize: bigint;
@@ -368,11 +359,11 @@ export namespace OwnershipTransferredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProposalCreatedEvent {
-  export type InputTuple = [proposalID: BytesLike, creator: AddressLike];
-  export type OutputTuple = [proposalID: string, creator: string];
+export namespace ProcessCreatedEvent {
+  export type InputTuple = [processID: BytesLike, creator: AddressLike];
+  export type OutputTuple = [processID: string, creator: string];
   export interface OutputObject {
-    proposalID: string;
+    processID: string;
     creator: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -381,11 +372,11 @@ export namespace ProposalCreatedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProposalDurationChangedEvent {
-  export type InputTuple = [proposalID: BytesLike, duration: BigNumberish];
-  export type OutputTuple = [proposalID: string, duration: bigint];
+export namespace ProcessDurationChangedEvent {
+  export type InputTuple = [processID: BytesLike, duration: BigNumberish];
+  export type OutputTuple = [processID: string, duration: bigint];
   export interface OutputObject {
-    proposalID: string;
+    processID: string;
     duration: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -394,11 +385,11 @@ export namespace ProposalDurationChangedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProposalStateRootUpdatedEvent {
-  export type InputTuple = [proposalID: BytesLike, newStateRoot: BytesLike];
-  export type OutputTuple = [proposalID: string, newStateRoot: string];
+export namespace ProcessStateRootUpdatedEvent {
+  export type InputTuple = [processID: BytesLike, newStateRoot: BytesLike];
+  export type OutputTuple = [processID: string, newStateRoot: string];
   export interface OutputObject {
-    proposalID: string;
+    processID: string;
     newStateRoot: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -407,11 +398,11 @@ export namespace ProposalStateRootUpdatedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProposalStatusChangedEvent {
-  export type InputTuple = [proposalID: BytesLike, newStatus: BigNumberish];
-  export type OutputTuple = [proposalID: string, newStatus: bigint];
+export namespace ProcessStatusChangedEvent {
+  export type InputTuple = [processID: BytesLike, newStatus: BigNumberish];
+  export type OutputTuple = [processID: string, newStatus: bigint];
   export interface OutputObject {
-    proposalID: string;
+    processID: string;
     newStatus: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -432,11 +423,11 @@ export namespace UpgradedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface ProposalRegistry extends BaseContract {
-  connect(runner?: ContractRunner | null): ProposalRegistry;
+export interface ProcessRegistry extends BaseContract {
+  connect(runner?: ContractRunner | null): ProcessRegistry;
   waitForDeployment(): Promise<this>;
 
-  interface: ProposalRegistryInterface;
+  interface: ProcessRegistryInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -479,15 +470,15 @@ export interface ProposalRegistry extends BaseContract {
 
   chainID: TypedContractMethod<[], [string], "view">;
 
-  endProposal: TypedContractMethod<
-    [_proposalID: BytesLike],
+  endProcess: TypedContractMethod<
+    [_processID: BytesLike],
     [void],
     "nonpayable"
   >;
 
-  getProposal: TypedContractMethod<
-    [_proposalID: BytesLike],
-    [ProposalRegistry.ProposalStructOutput],
+  getProcess: TypedContractMethod<
+    [_processID: BytesLike],
+    [ProcessRegistry.ProcessStructOutput],
     "view"
   >;
 
@@ -497,13 +488,13 @@ export interface ProposalRegistry extends BaseContract {
     "nonpayable"
   >;
 
-  newProposal: TypedContractMethod<
+  newProcess: TypedContractMethod<
     [
-      _options: ProposalRegistry.ProposalOptionsStruct,
-      _census: ProposalRegistry.CensusStruct,
+      _options: ProcessRegistry.ProcessOptionsStruct,
+      _census: ProcessRegistry.CensusStruct,
       _metadata: string,
       _organizationID: BytesLike,
-      _proposalID: BytesLike,
+      _processID: BytesLike,
       _encryptionPubKey: BytesLike,
       _initStateRoot: BytesLike
     ],
@@ -515,9 +506,9 @@ export interface ProposalRegistry extends BaseContract {
 
   owner: TypedContractMethod<[], [string], "view">;
 
-  proposalCount: TypedContractMethod<[], [bigint], "view">;
+  processCount: TypedContractMethod<[], [bigint], "view">;
 
-  proposals: TypedContractMethod<
+  processes: TypedContractMethod<
     [arg0: BytesLike],
     [
       [
@@ -527,8 +518,8 @@ export interface ProposalRegistry extends BaseContract {
         bigint,
         bigint,
         string,
-        ProposalRegistry.ProposalOptionsStructOutput,
-        ProposalRegistry.CensusStructOutput
+        ProcessRegistry.ProcessOptionsStructOutput,
+        ProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
@@ -536,8 +527,8 @@ export interface ProposalRegistry extends BaseContract {
         startTime: bigint;
         duration: bigint;
         metadataURI: string;
-        options: ProposalRegistry.ProposalOptionsStructOutput;
-        census: ProposalRegistry.CensusStructOutput;
+        options: ProcessRegistry.ProcessOptionsStructOutput;
+        census: ProcessRegistry.CensusStructOutput;
       }
     ],
     "view"
@@ -547,33 +538,33 @@ export interface ProposalRegistry extends BaseContract {
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-  setProposalCensus: TypedContractMethod<
-    [_proposalID: BytesLike, _census: ProposalRegistry.CensusStruct],
+  setProcessCensus: TypedContractMethod<
+    [_processID: BytesLike, _census: ProcessRegistry.CensusStruct],
     [void],
     "nonpayable"
   >;
 
-  setProposalDuration: TypedContractMethod<
-    [_proposalID: BytesLike, _duration: BigNumberish],
+  setProcessDuration: TypedContractMethod<
+    [_processID: BytesLike, _duration: BigNumberish],
     [void],
     "nonpayable"
   >;
 
-  setProposalResult: TypedContractMethod<
-    [_proposalID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
+  setProcessResult: TypedContractMethod<
+    [_processID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
     [void],
     "nonpayable"
   >;
 
-  setProposalStatus: TypedContractMethod<
-    [_proposalID: BytesLike, _newStatus: BigNumberish],
+  setProcessStatus: TypedContractMethod<
+    [_processID: BytesLike, _newStatus: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   submitStateTransition: TypedContractMethod<
     [
-      _proposalID: BytesLike,
+      _processID: BytesLike,
       _oldRoot: BytesLike,
       _newRoot: BytesLike,
       _proof: BytesLike
@@ -605,13 +596,13 @@ export interface ProposalRegistry extends BaseContract {
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "endProposal"
-  ): TypedContractMethod<[_proposalID: BytesLike], [void], "nonpayable">;
+    nameOrSignature: "endProcess"
+  ): TypedContractMethod<[_processID: BytesLike], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "getProposal"
+    nameOrSignature: "getProcess"
   ): TypedContractMethod<
-    [_proposalID: BytesLike],
-    [ProposalRegistry.ProposalStructOutput],
+    [_processID: BytesLike],
+    [ProcessRegistry.ProcessStructOutput],
     "view"
   >;
   getFunction(
@@ -622,14 +613,14 @@ export interface ProposalRegistry extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "newProposal"
+    nameOrSignature: "newProcess"
   ): TypedContractMethod<
     [
-      _options: ProposalRegistry.ProposalOptionsStruct,
-      _census: ProposalRegistry.CensusStruct,
+      _options: ProcessRegistry.ProcessOptionsStruct,
+      _census: ProcessRegistry.CensusStruct,
       _metadata: string,
       _organizationID: BytesLike,
-      _proposalID: BytesLike,
+      _processID: BytesLike,
       _encryptionPubKey: BytesLike,
       _initStateRoot: BytesLike
     ],
@@ -643,10 +634,10 @@ export interface ProposalRegistry extends BaseContract {
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "proposalCount"
+    nameOrSignature: "processCount"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "proposals"
+    nameOrSignature: "processes"
   ): TypedContractMethod<
     [arg0: BytesLike],
     [
@@ -657,8 +648,8 @@ export interface ProposalRegistry extends BaseContract {
         bigint,
         bigint,
         string,
-        ProposalRegistry.ProposalOptionsStructOutput,
-        ProposalRegistry.CensusStructOutput
+        ProcessRegistry.ProcessOptionsStructOutput,
+        ProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
@@ -666,8 +657,8 @@ export interface ProposalRegistry extends BaseContract {
         startTime: bigint;
         duration: bigint;
         metadataURI: string;
-        options: ProposalRegistry.ProposalOptionsStructOutput;
-        census: ProposalRegistry.CensusStructOutput;
+        options: ProcessRegistry.ProcessOptionsStructOutput;
+        census: ProcessRegistry.CensusStructOutput;
       }
     ],
     "view"
@@ -679,30 +670,30 @@ export interface ProposalRegistry extends BaseContract {
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "setProposalCensus"
+    nameOrSignature: "setProcessCensus"
   ): TypedContractMethod<
-    [_proposalID: BytesLike, _census: ProposalRegistry.CensusStruct],
+    [_processID: BytesLike, _census: ProcessRegistry.CensusStruct],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "setProposalDuration"
+    nameOrSignature: "setProcessDuration"
   ): TypedContractMethod<
-    [_proposalID: BytesLike, _duration: BigNumberish],
+    [_processID: BytesLike, _duration: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "setProposalResult"
+    nameOrSignature: "setProcessResult"
   ): TypedContractMethod<
-    [_proposalID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
+    [_processID: BytesLike, _result: BigNumberish[][], _proof: BytesLike],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "setProposalStatus"
+    nameOrSignature: "setProcessStatus"
   ): TypedContractMethod<
-    [_proposalID: BytesLike, _newStatus: BigNumberish],
+    [_processID: BytesLike, _newStatus: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -710,7 +701,7 @@ export interface ProposalRegistry extends BaseContract {
     nameOrSignature: "submitStateTransition"
   ): TypedContractMethod<
     [
-      _proposalID: BytesLike,
+      _processID: BytesLike,
       _oldRoot: BytesLike,
       _newRoot: BytesLike,
       _proof: BytesLike
@@ -751,32 +742,32 @@ export interface ProposalRegistry extends BaseContract {
     OwnershipTransferredEvent.OutputObject
   >;
   getEvent(
-    key: "ProposalCreated"
+    key: "ProcessCreated"
   ): TypedContractEvent<
-    ProposalCreatedEvent.InputTuple,
-    ProposalCreatedEvent.OutputTuple,
-    ProposalCreatedEvent.OutputObject
+    ProcessCreatedEvent.InputTuple,
+    ProcessCreatedEvent.OutputTuple,
+    ProcessCreatedEvent.OutputObject
   >;
   getEvent(
-    key: "ProposalDurationChanged"
+    key: "ProcessDurationChanged"
   ): TypedContractEvent<
-    ProposalDurationChangedEvent.InputTuple,
-    ProposalDurationChangedEvent.OutputTuple,
-    ProposalDurationChangedEvent.OutputObject
+    ProcessDurationChangedEvent.InputTuple,
+    ProcessDurationChangedEvent.OutputTuple,
+    ProcessDurationChangedEvent.OutputObject
   >;
   getEvent(
-    key: "ProposalStateRootUpdated"
+    key: "ProcessStateRootUpdated"
   ): TypedContractEvent<
-    ProposalStateRootUpdatedEvent.InputTuple,
-    ProposalStateRootUpdatedEvent.OutputTuple,
-    ProposalStateRootUpdatedEvent.OutputObject
+    ProcessStateRootUpdatedEvent.InputTuple,
+    ProcessStateRootUpdatedEvent.OutputTuple,
+    ProcessStateRootUpdatedEvent.OutputObject
   >;
   getEvent(
-    key: "ProposalStatusChanged"
+    key: "ProcessStatusChanged"
   ): TypedContractEvent<
-    ProposalStatusChangedEvent.InputTuple,
-    ProposalStatusChangedEvent.OutputTuple,
-    ProposalStatusChangedEvent.OutputObject
+    ProcessStatusChangedEvent.InputTuple,
+    ProcessStatusChangedEvent.OutputTuple,
+    ProcessStatusChangedEvent.OutputObject
   >;
   getEvent(
     key: "Upgraded"
@@ -820,48 +811,48 @@ export interface ProposalRegistry extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "ProposalCreated(bytes32,address)": TypedContractEvent<
-      ProposalCreatedEvent.InputTuple,
-      ProposalCreatedEvent.OutputTuple,
-      ProposalCreatedEvent.OutputObject
+    "ProcessCreated(bytes32,address)": TypedContractEvent<
+      ProcessCreatedEvent.InputTuple,
+      ProcessCreatedEvent.OutputTuple,
+      ProcessCreatedEvent.OutputObject
     >;
-    ProposalCreated: TypedContractEvent<
-      ProposalCreatedEvent.InputTuple,
-      ProposalCreatedEvent.OutputTuple,
-      ProposalCreatedEvent.OutputObject
-    >;
-
-    "ProposalDurationChanged(bytes32,uint256)": TypedContractEvent<
-      ProposalDurationChangedEvent.InputTuple,
-      ProposalDurationChangedEvent.OutputTuple,
-      ProposalDurationChangedEvent.OutputObject
-    >;
-    ProposalDurationChanged: TypedContractEvent<
-      ProposalDurationChangedEvent.InputTuple,
-      ProposalDurationChangedEvent.OutputTuple,
-      ProposalDurationChangedEvent.OutputObject
+    ProcessCreated: TypedContractEvent<
+      ProcessCreatedEvent.InputTuple,
+      ProcessCreatedEvent.OutputTuple,
+      ProcessCreatedEvent.OutputObject
     >;
 
-    "ProposalStateRootUpdated(bytes32,bytes32)": TypedContractEvent<
-      ProposalStateRootUpdatedEvent.InputTuple,
-      ProposalStateRootUpdatedEvent.OutputTuple,
-      ProposalStateRootUpdatedEvent.OutputObject
+    "ProcessDurationChanged(bytes32,uint256)": TypedContractEvent<
+      ProcessDurationChangedEvent.InputTuple,
+      ProcessDurationChangedEvent.OutputTuple,
+      ProcessDurationChangedEvent.OutputObject
     >;
-    ProposalStateRootUpdated: TypedContractEvent<
-      ProposalStateRootUpdatedEvent.InputTuple,
-      ProposalStateRootUpdatedEvent.OutputTuple,
-      ProposalStateRootUpdatedEvent.OutputObject
+    ProcessDurationChanged: TypedContractEvent<
+      ProcessDurationChangedEvent.InputTuple,
+      ProcessDurationChangedEvent.OutputTuple,
+      ProcessDurationChangedEvent.OutputObject
     >;
 
-    "ProposalStatusChanged(bytes32,uint8)": TypedContractEvent<
-      ProposalStatusChangedEvent.InputTuple,
-      ProposalStatusChangedEvent.OutputTuple,
-      ProposalStatusChangedEvent.OutputObject
+    "ProcessStateRootUpdated(bytes32,bytes32)": TypedContractEvent<
+      ProcessStateRootUpdatedEvent.InputTuple,
+      ProcessStateRootUpdatedEvent.OutputTuple,
+      ProcessStateRootUpdatedEvent.OutputObject
     >;
-    ProposalStatusChanged: TypedContractEvent<
-      ProposalStatusChangedEvent.InputTuple,
-      ProposalStatusChangedEvent.OutputTuple,
-      ProposalStatusChangedEvent.OutputObject
+    ProcessStateRootUpdated: TypedContractEvent<
+      ProcessStateRootUpdatedEvent.InputTuple,
+      ProcessStateRootUpdatedEvent.OutputTuple,
+      ProcessStateRootUpdatedEvent.OutputObject
+    >;
+
+    "ProcessStatusChanged(bytes32,uint8)": TypedContractEvent<
+      ProcessStatusChangedEvent.InputTuple,
+      ProcessStatusChangedEvent.OutputTuple,
+      ProcessStatusChangedEvent.OutputObject
+    >;
+    ProcessStatusChanged: TypedContractEvent<
+      ProcessStatusChangedEvent.InputTuple,
+      ProcessStatusChangedEvent.OutputTuple,
+      ProcessStatusChangedEvent.OutputObject
     >;
 
     "Upgraded(address)": TypedContractEvent<
