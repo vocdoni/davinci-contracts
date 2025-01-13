@@ -3,7 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-foundry"
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.24",
+  solidity: "0.8.28",
 };
 
 export default config;

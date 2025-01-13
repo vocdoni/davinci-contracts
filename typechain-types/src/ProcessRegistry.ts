@@ -24,115 +24,97 @@ import type {
 } from "../common";
 
 export declare namespace ProcessRegistry {
-  export type VoteOptionsStruct = {
-    uniqueValues: boolean;
+  export type EncryptionKeyStruct = { x: BigNumberish; y: BigNumberish };
+
+  export type EncryptionKeyStructOutput = [x: bigint, y: bigint] & {
+    x: bigint;
+    y: bigint;
+  };
+
+  export type BallotModeStruct = {
+    costFromWeight: boolean;
+    forceUniqueness: boolean;
     maxCount: BigNumberish;
+    costExponent: BigNumberish;
     maxValue: BigNumberish;
     minValue: BigNumberish;
-    maxOverwrites: BigNumberish;
     maxTotalCost: BigNumberish;
     minTotalCost: BigNumberish;
-    costExponent: BigNumberish;
   };
 
-  export type VoteOptionsStructOutput = [
-    uniqueValues: boolean,
+  export type BallotModeStructOutput = [
+    costFromWeight: boolean,
+    forceUniqueness: boolean,
     maxCount: bigint,
+    costExponent: bigint,
     maxValue: bigint,
     minValue: bigint,
-    maxOverwrites: bigint,
     maxTotalCost: bigint,
-    minTotalCost: bigint,
-    costExponent: bigint
+    minTotalCost: bigint
   ] & {
-    uniqueValues: boolean;
+    costFromWeight: boolean;
+    forceUniqueness: boolean;
     maxCount: bigint;
+    costExponent: bigint;
     maxValue: bigint;
     minValue: bigint;
-    maxOverwrites: bigint;
     maxTotalCost: bigint;
     minTotalCost: bigint;
-    costExponent: bigint;
-  };
-
-  export type ProcessOptionsStruct = {
-    envelopeType: BigNumberish;
-    processMode: BigNumberish;
-    startTime: BigNumberish;
-    duration: BigNumberish;
-    status: BigNumberish;
-    voteOptions: ProcessRegistry.VoteOptionsStruct;
-  };
-
-  export type ProcessOptionsStructOutput = [
-    envelopeType: bigint,
-    processMode: bigint,
-    startTime: bigint,
-    duration: bigint,
-    status: bigint,
-    voteOptions: ProcessRegistry.VoteOptionsStructOutput
-  ] & {
-    envelopeType: bigint;
-    processMode: bigint;
-    startTime: bigint;
-    duration: bigint;
-    status: bigint;
-    voteOptions: ProcessRegistry.VoteOptionsStructOutput;
   };
 
   export type CensusStruct = {
     censusOrigin: BigNumberish;
-    maxCensusSize: BigNumberish;
+    maxVotes: BigNumberish;
     censusRoot: BytesLike;
     censusURI: string;
   };
 
   export type CensusStructOutput = [
     censusOrigin: bigint,
-    maxCensusSize: bigint,
+    maxVotes: bigint,
     censusRoot: string,
     censusURI: string
   ] & {
     censusOrigin: bigint;
-    maxCensusSize: bigint;
+    maxVotes: bigint;
     censusRoot: string;
     censusURI: string;
   };
 
   export type ProcessStruct = {
     status: BigNumberish;
-    organizationId: BytesLike;
-    encryptionKeys: [BytesLike, BytesLike];
+    organizationId: AddressLike;
+    encryptionKey: ProcessRegistry.EncryptionKeyStruct;
     latestStateRoot: BytesLike;
     result: BigNumberish[];
     startTime: BigNumberish;
     duration: BigNumberish;
     metadataURI: string;
-    options: ProcessRegistry.ProcessOptionsStruct;
+    ballotMode: ProcessRegistry.BallotModeStruct;
     census: ProcessRegistry.CensusStruct;
   };
 
   export type ProcessStructOutput = [
     status: bigint,
     organizationId: string,
-    encryptionKeys: [string, string],
+    encryptionKey: ProcessRegistry.EncryptionKeyStructOutput,
     latestStateRoot: string,
     result: bigint[],
     startTime: bigint,
     duration: bigint,
     metadataURI: string,
-    options: ProcessRegistry.ProcessOptionsStructOutput,
+    ballotMode: ProcessRegistry.BallotModeStructOutput,
     census: ProcessRegistry.CensusStructOutput
   ] & {
     status: bigint;
     organizationId: string;
-    encryptionKeys: [string, string];
+    encryptionKey: ProcessRegistry.EncryptionKeyStructOutput;
     latestStateRoot: string;
     result: bigint[];
     startTime: bigint;
     duration: bigint;
     metadataURI: string;
-    options: ProcessRegistry.ProcessOptionsStructOutput;
+    ballotMode: ProcessRegistry.BallotModeStructOutput;
     census: ProcessRegistry.CensusStructOutput;
   };
 }
@@ -193,12 +175,15 @@ export interface ProcessRegistryInterface extends Interface {
   encodeFunctionData(
     functionFragment: "newProcess",
     values: [
-      ProcessRegistry.ProcessOptionsStruct,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      ProcessRegistry.BallotModeStruct,
       ProcessRegistry.CensusStruct,
       string,
+      AddressLike,
       BytesLike,
-      BytesLike,
-      BytesLike,
+      ProcessRegistry.EncryptionKeyStruct,
       BytesLike
     ]
   ): string;
@@ -314,19 +299,19 @@ export namespace CensusUpdatedEvent {
     processID: BytesLike,
     censusRoot: BytesLike,
     censusURI: string,
-    maxCensusSize: BigNumberish
+    maxVotes: BigNumberish
   ];
   export type OutputTuple = [
     processID: string,
     censusRoot: string,
     censusURI: string,
-    maxCensusSize: bigint
+    maxVotes: bigint
   ];
   export interface OutputObject {
     processID: string;
     censusRoot: string;
     censusURI: string;
-    maxCensusSize: bigint;
+    maxVotes: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -490,12 +475,15 @@ export interface ProcessRegistry extends BaseContract {
 
   newProcess: TypedContractMethod<
     [
-      _options: ProcessRegistry.ProcessOptionsStruct,
+      _status: BigNumberish,
+      _startTime: BigNumberish,
+      _duration: BigNumberish,
+      _ballotMode: ProcessRegistry.BallotModeStruct,
       _census: ProcessRegistry.CensusStruct,
       _metadata: string,
-      _organizationID: BytesLike,
+      _organizationID: AddressLike,
       _processID: BytesLike,
-      _encryptionPubKey: BytesLike,
+      _encryptionKey: ProcessRegistry.EncryptionKeyStruct,
       _initStateRoot: BytesLike
     ],
     [void],
@@ -514,20 +502,22 @@ export interface ProcessRegistry extends BaseContract {
       [
         bigint,
         string,
+        ProcessRegistry.EncryptionKeyStructOutput,
         string,
         bigint,
         bigint,
         string,
-        ProcessRegistry.ProcessOptionsStructOutput,
+        ProcessRegistry.BallotModeStructOutput,
         ProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
+        encryptionKey: ProcessRegistry.EncryptionKeyStructOutput;
         latestStateRoot: string;
         startTime: bigint;
         duration: bigint;
         metadataURI: string;
-        options: ProcessRegistry.ProcessOptionsStructOutput;
+        ballotMode: ProcessRegistry.BallotModeStructOutput;
         census: ProcessRegistry.CensusStructOutput;
       }
     ],
@@ -616,12 +606,15 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "newProcess"
   ): TypedContractMethod<
     [
-      _options: ProcessRegistry.ProcessOptionsStruct,
+      _status: BigNumberish,
+      _startTime: BigNumberish,
+      _duration: BigNumberish,
+      _ballotMode: ProcessRegistry.BallotModeStruct,
       _census: ProcessRegistry.CensusStruct,
       _metadata: string,
-      _organizationID: BytesLike,
+      _organizationID: AddressLike,
       _processID: BytesLike,
-      _encryptionPubKey: BytesLike,
+      _encryptionKey: ProcessRegistry.EncryptionKeyStruct,
       _initStateRoot: BytesLike
     ],
     [void],
@@ -644,20 +637,22 @@ export interface ProcessRegistry extends BaseContract {
       [
         bigint,
         string,
+        ProcessRegistry.EncryptionKeyStructOutput,
         string,
         bigint,
         bigint,
         string,
-        ProcessRegistry.ProcessOptionsStructOutput,
+        ProcessRegistry.BallotModeStructOutput,
         ProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
+        encryptionKey: ProcessRegistry.EncryptionKeyStructOutput;
         latestStateRoot: string;
         startTime: bigint;
         duration: bigint;
         metadataURI: string;
-        options: ProcessRegistry.ProcessOptionsStructOutput;
+        ballotMode: ProcessRegistry.BallotModeStructOutput;
         census: ProcessRegistry.CensusStructOutput;
       }
     ],

@@ -31,7 +31,7 @@ var (
 
 // OrganizationRegistryMetaData contains all meta data concerning the OrganizationRegistry contract.
 var OrganizationRegistryMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"}],\"name\":\"OrganizationCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"updater\",\"type\":\"address\"}],\"name\":\"OrganizationUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"administrator\",\"type\":\"address\"}],\"name\":\"addAdministrator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"},{\"internalType\":\"address[]\",\"name\":\"administrators\",\"type\":\"address[]\"}],\"name\":\"createOrganization\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"deleteOrganization\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getOrganization\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"},{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"isAdministrator\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"organizationCount\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"organizations\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"processCount\",\"type\":\"uint32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"administrator\",\"type\":\"address\"}],\"name\":\"removeAdministrator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"}],\"name\":\"updateOrganization\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"}],\"name\":\"OrganizationCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"updater\",\"type\":\"address\"}],\"name\":\"OrganizationUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"administrator\",\"type\":\"address\"}],\"name\":\"addAdministrator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"},{\"internalType\":\"address[]\",\"name\":\"administrators\",\"type\":\"address[]\"}],\"name\":\"createOrganization\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"}],\"name\":\"deleteOrganization\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"}],\"name\":\"getOrganization\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"},{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"isAdministrator\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"organizationCount\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"organizations\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"processCount\",\"type\":\"uint32\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"administrator\",\"type\":\"address\"}],\"name\":\"removeAdministrator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"id\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"}],\"name\":\"updateOrganization\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
 }
 
 // OrganizationRegistryABI is the input ABI used to generate the binding from.
@@ -211,10 +211,10 @@ func (_OrganizationRegistry *OrganizationRegistryCallerSession) UPGRADEINTERFACE
 	return _OrganizationRegistry.Contract.UPGRADEINTERFACEVERSION(&_OrganizationRegistry.CallOpts)
 }
 
-// GetOrganization is a free data retrieval call binding the contract method 0x22b3cd4e.
+// GetOrganization is a free data retrieval call binding the contract method 0xd2c30a6d.
 //
-// Solidity: function getOrganization(bytes32 id) view returns(uint32, string, string)
-func (_OrganizationRegistry *OrganizationRegistryCaller) GetOrganization(opts *bind.CallOpts, id [32]byte) (uint32, string, string, error) {
+// Solidity: function getOrganization(address id) view returns(uint32, string, string)
+func (_OrganizationRegistry *OrganizationRegistryCaller) GetOrganization(opts *bind.CallOpts, id common.Address) (uint32, string, string, error) {
 	var out []interface{}
 	err := _OrganizationRegistry.contract.Call(opts, &out, "getOrganization", id)
 
@@ -230,24 +230,24 @@ func (_OrganizationRegistry *OrganizationRegistryCaller) GetOrganization(opts *b
 
 }
 
-// GetOrganization is a free data retrieval call binding the contract method 0x22b3cd4e.
+// GetOrganization is a free data retrieval call binding the contract method 0xd2c30a6d.
 //
-// Solidity: function getOrganization(bytes32 id) view returns(uint32, string, string)
-func (_OrganizationRegistry *OrganizationRegistrySession) GetOrganization(id [32]byte) (uint32, string, string, error) {
+// Solidity: function getOrganization(address id) view returns(uint32, string, string)
+func (_OrganizationRegistry *OrganizationRegistrySession) GetOrganization(id common.Address) (uint32, string, string, error) {
 	return _OrganizationRegistry.Contract.GetOrganization(&_OrganizationRegistry.CallOpts, id)
 }
 
-// GetOrganization is a free data retrieval call binding the contract method 0x22b3cd4e.
+// GetOrganization is a free data retrieval call binding the contract method 0xd2c30a6d.
 //
-// Solidity: function getOrganization(bytes32 id) view returns(uint32, string, string)
-func (_OrganizationRegistry *OrganizationRegistryCallerSession) GetOrganization(id [32]byte) (uint32, string, string, error) {
+// Solidity: function getOrganization(address id) view returns(uint32, string, string)
+func (_OrganizationRegistry *OrganizationRegistryCallerSession) GetOrganization(id common.Address) (uint32, string, string, error) {
 	return _OrganizationRegistry.Contract.GetOrganization(&_OrganizationRegistry.CallOpts, id)
 }
 
-// IsAdministrator is a free data retrieval call binding the contract method 0x64dd489f.
+// IsAdministrator is a free data retrieval call binding the contract method 0xc1af6e03.
 //
-// Solidity: function isAdministrator(bytes32 id, address account) view returns(bool)
-func (_OrganizationRegistry *OrganizationRegistryCaller) IsAdministrator(opts *bind.CallOpts, id [32]byte, account common.Address) (bool, error) {
+// Solidity: function isAdministrator(address id, address account) view returns(bool)
+func (_OrganizationRegistry *OrganizationRegistryCaller) IsAdministrator(opts *bind.CallOpts, id common.Address, account common.Address) (bool, error) {
 	var out []interface{}
 	err := _OrganizationRegistry.contract.Call(opts, &out, "isAdministrator", id, account)
 
@@ -261,17 +261,17 @@ func (_OrganizationRegistry *OrganizationRegistryCaller) IsAdministrator(opts *b
 
 }
 
-// IsAdministrator is a free data retrieval call binding the contract method 0x64dd489f.
+// IsAdministrator is a free data retrieval call binding the contract method 0xc1af6e03.
 //
-// Solidity: function isAdministrator(bytes32 id, address account) view returns(bool)
-func (_OrganizationRegistry *OrganizationRegistrySession) IsAdministrator(id [32]byte, account common.Address) (bool, error) {
+// Solidity: function isAdministrator(address id, address account) view returns(bool)
+func (_OrganizationRegistry *OrganizationRegistrySession) IsAdministrator(id common.Address, account common.Address) (bool, error) {
 	return _OrganizationRegistry.Contract.IsAdministrator(&_OrganizationRegistry.CallOpts, id, account)
 }
 
-// IsAdministrator is a free data retrieval call binding the contract method 0x64dd489f.
+// IsAdministrator is a free data retrieval call binding the contract method 0xc1af6e03.
 //
-// Solidity: function isAdministrator(bytes32 id, address account) view returns(bool)
-func (_OrganizationRegistry *OrganizationRegistryCallerSession) IsAdministrator(id [32]byte, account common.Address) (bool, error) {
+// Solidity: function isAdministrator(address id, address account) view returns(bool)
+func (_OrganizationRegistry *OrganizationRegistryCallerSession) IsAdministrator(id common.Address, account common.Address) (bool, error) {
 	return _OrganizationRegistry.Contract.IsAdministrator(&_OrganizationRegistry.CallOpts, id, account)
 }
 
@@ -306,10 +306,10 @@ func (_OrganizationRegistry *OrganizationRegistryCallerSession) OrganizationCoun
 	return _OrganizationRegistry.Contract.OrganizationCount(&_OrganizationRegistry.CallOpts)
 }
 
-// Organizations is a free data retrieval call binding the contract method 0xba51b14e.
+// Organizations is a free data retrieval call binding the contract method 0x5a1f7406.
 //
-// Solidity: function organizations(bytes32 ) view returns(uint32 processCount, string name, string metadataURI)
-func (_OrganizationRegistry *OrganizationRegistryCaller) Organizations(opts *bind.CallOpts, arg0 [32]byte) (struct {
+// Solidity: function organizations(address ) view returns(uint32 processCount, string name, string metadataURI)
+func (_OrganizationRegistry *OrganizationRegistryCaller) Organizations(opts *bind.CallOpts, arg0 common.Address) (struct {
 	ProcessCount uint32
 	Name         string
 	MetadataURI  string
@@ -334,10 +334,10 @@ func (_OrganizationRegistry *OrganizationRegistryCaller) Organizations(opts *bin
 
 }
 
-// Organizations is a free data retrieval call binding the contract method 0xba51b14e.
+// Organizations is a free data retrieval call binding the contract method 0x5a1f7406.
 //
-// Solidity: function organizations(bytes32 ) view returns(uint32 processCount, string name, string metadataURI)
-func (_OrganizationRegistry *OrganizationRegistrySession) Organizations(arg0 [32]byte) (struct {
+// Solidity: function organizations(address ) view returns(uint32 processCount, string name, string metadataURI)
+func (_OrganizationRegistry *OrganizationRegistrySession) Organizations(arg0 common.Address) (struct {
 	ProcessCount uint32
 	Name         string
 	MetadataURI  string
@@ -345,10 +345,10 @@ func (_OrganizationRegistry *OrganizationRegistrySession) Organizations(arg0 [32
 	return _OrganizationRegistry.Contract.Organizations(&_OrganizationRegistry.CallOpts, arg0)
 }
 
-// Organizations is a free data retrieval call binding the contract method 0xba51b14e.
+// Organizations is a free data retrieval call binding the contract method 0x5a1f7406.
 //
-// Solidity: function organizations(bytes32 ) view returns(uint32 processCount, string name, string metadataURI)
-func (_OrganizationRegistry *OrganizationRegistryCallerSession) Organizations(arg0 [32]byte) (struct {
+// Solidity: function organizations(address ) view returns(uint32 processCount, string name, string metadataURI)
+func (_OrganizationRegistry *OrganizationRegistryCallerSession) Organizations(arg0 common.Address) (struct {
 	ProcessCount uint32
 	Name         string
 	MetadataURI  string
@@ -418,66 +418,66 @@ func (_OrganizationRegistry *OrganizationRegistryCallerSession) ProxiableUUID() 
 	return _OrganizationRegistry.Contract.ProxiableUUID(&_OrganizationRegistry.CallOpts)
 }
 
-// AddAdministrator is a paid mutator transaction binding the contract method 0xef8ed86c.
+// AddAdministrator is a paid mutator transaction binding the contract method 0x1c2e3d82.
 //
-// Solidity: function addAdministrator(bytes32 id, address administrator) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactor) AddAdministrator(opts *bind.TransactOpts, id [32]byte, administrator common.Address) (*types.Transaction, error) {
+// Solidity: function addAdministrator(address id, address administrator) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactor) AddAdministrator(opts *bind.TransactOpts, id common.Address, administrator common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.contract.Transact(opts, "addAdministrator", id, administrator)
 }
 
-// AddAdministrator is a paid mutator transaction binding the contract method 0xef8ed86c.
+// AddAdministrator is a paid mutator transaction binding the contract method 0x1c2e3d82.
 //
-// Solidity: function addAdministrator(bytes32 id, address administrator) returns()
-func (_OrganizationRegistry *OrganizationRegistrySession) AddAdministrator(id [32]byte, administrator common.Address) (*types.Transaction, error) {
+// Solidity: function addAdministrator(address id, address administrator) returns()
+func (_OrganizationRegistry *OrganizationRegistrySession) AddAdministrator(id common.Address, administrator common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.AddAdministrator(&_OrganizationRegistry.TransactOpts, id, administrator)
 }
 
-// AddAdministrator is a paid mutator transaction binding the contract method 0xef8ed86c.
+// AddAdministrator is a paid mutator transaction binding the contract method 0x1c2e3d82.
 //
-// Solidity: function addAdministrator(bytes32 id, address administrator) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactorSession) AddAdministrator(id [32]byte, administrator common.Address) (*types.Transaction, error) {
+// Solidity: function addAdministrator(address id, address administrator) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactorSession) AddAdministrator(id common.Address, administrator common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.AddAdministrator(&_OrganizationRegistry.TransactOpts, id, administrator)
 }
 
-// CreateOrganization is a paid mutator transaction binding the contract method 0x8d6e0e4f.
+// CreateOrganization is a paid mutator transaction binding the contract method 0xc2a950be.
 //
-// Solidity: function createOrganization(bytes32 id, string name, string metadataURI, address[] administrators) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactor) CreateOrganization(opts *bind.TransactOpts, id [32]byte, name string, metadataURI string, administrators []common.Address) (*types.Transaction, error) {
+// Solidity: function createOrganization(address id, string name, string metadataURI, address[] administrators) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactor) CreateOrganization(opts *bind.TransactOpts, id common.Address, name string, metadataURI string, administrators []common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.contract.Transact(opts, "createOrganization", id, name, metadataURI, administrators)
 }
 
-// CreateOrganization is a paid mutator transaction binding the contract method 0x8d6e0e4f.
+// CreateOrganization is a paid mutator transaction binding the contract method 0xc2a950be.
 //
-// Solidity: function createOrganization(bytes32 id, string name, string metadataURI, address[] administrators) returns()
-func (_OrganizationRegistry *OrganizationRegistrySession) CreateOrganization(id [32]byte, name string, metadataURI string, administrators []common.Address) (*types.Transaction, error) {
+// Solidity: function createOrganization(address id, string name, string metadataURI, address[] administrators) returns()
+func (_OrganizationRegistry *OrganizationRegistrySession) CreateOrganization(id common.Address, name string, metadataURI string, administrators []common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.CreateOrganization(&_OrganizationRegistry.TransactOpts, id, name, metadataURI, administrators)
 }
 
-// CreateOrganization is a paid mutator transaction binding the contract method 0x8d6e0e4f.
+// CreateOrganization is a paid mutator transaction binding the contract method 0xc2a950be.
 //
-// Solidity: function createOrganization(bytes32 id, string name, string metadataURI, address[] administrators) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactorSession) CreateOrganization(id [32]byte, name string, metadataURI string, administrators []common.Address) (*types.Transaction, error) {
+// Solidity: function createOrganization(address id, string name, string metadataURI, address[] administrators) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactorSession) CreateOrganization(id common.Address, name string, metadataURI string, administrators []common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.CreateOrganization(&_OrganizationRegistry.TransactOpts, id, name, metadataURI, administrators)
 }
 
-// DeleteOrganization is a paid mutator transaction binding the contract method 0x6928848d.
+// DeleteOrganization is a paid mutator transaction binding the contract method 0x7acbb8af.
 //
-// Solidity: function deleteOrganization(bytes32 id) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactor) DeleteOrganization(opts *bind.TransactOpts, id [32]byte) (*types.Transaction, error) {
+// Solidity: function deleteOrganization(address id) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactor) DeleteOrganization(opts *bind.TransactOpts, id common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.contract.Transact(opts, "deleteOrganization", id)
 }
 
-// DeleteOrganization is a paid mutator transaction binding the contract method 0x6928848d.
+// DeleteOrganization is a paid mutator transaction binding the contract method 0x7acbb8af.
 //
-// Solidity: function deleteOrganization(bytes32 id) returns()
-func (_OrganizationRegistry *OrganizationRegistrySession) DeleteOrganization(id [32]byte) (*types.Transaction, error) {
+// Solidity: function deleteOrganization(address id) returns()
+func (_OrganizationRegistry *OrganizationRegistrySession) DeleteOrganization(id common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.DeleteOrganization(&_OrganizationRegistry.TransactOpts, id)
 }
 
-// DeleteOrganization is a paid mutator transaction binding the contract method 0x6928848d.
+// DeleteOrganization is a paid mutator transaction binding the contract method 0x7acbb8af.
 //
-// Solidity: function deleteOrganization(bytes32 id) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactorSession) DeleteOrganization(id [32]byte) (*types.Transaction, error) {
+// Solidity: function deleteOrganization(address id) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactorSession) DeleteOrganization(id common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.DeleteOrganization(&_OrganizationRegistry.TransactOpts, id)
 }
 
@@ -502,24 +502,24 @@ func (_OrganizationRegistry *OrganizationRegistryTransactorSession) Initialize()
 	return _OrganizationRegistry.Contract.Initialize(&_OrganizationRegistry.TransactOpts)
 }
 
-// RemoveAdministrator is a paid mutator transaction binding the contract method 0xcb9bfa50.
+// RemoveAdministrator is a paid mutator transaction binding the contract method 0x3c10eee5.
 //
-// Solidity: function removeAdministrator(bytes32 id, address administrator) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactor) RemoveAdministrator(opts *bind.TransactOpts, id [32]byte, administrator common.Address) (*types.Transaction, error) {
+// Solidity: function removeAdministrator(address id, address administrator) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactor) RemoveAdministrator(opts *bind.TransactOpts, id common.Address, administrator common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.contract.Transact(opts, "removeAdministrator", id, administrator)
 }
 
-// RemoveAdministrator is a paid mutator transaction binding the contract method 0xcb9bfa50.
+// RemoveAdministrator is a paid mutator transaction binding the contract method 0x3c10eee5.
 //
-// Solidity: function removeAdministrator(bytes32 id, address administrator) returns()
-func (_OrganizationRegistry *OrganizationRegistrySession) RemoveAdministrator(id [32]byte, administrator common.Address) (*types.Transaction, error) {
+// Solidity: function removeAdministrator(address id, address administrator) returns()
+func (_OrganizationRegistry *OrganizationRegistrySession) RemoveAdministrator(id common.Address, administrator common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.RemoveAdministrator(&_OrganizationRegistry.TransactOpts, id, administrator)
 }
 
-// RemoveAdministrator is a paid mutator transaction binding the contract method 0xcb9bfa50.
+// RemoveAdministrator is a paid mutator transaction binding the contract method 0x3c10eee5.
 //
-// Solidity: function removeAdministrator(bytes32 id, address administrator) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactorSession) RemoveAdministrator(id [32]byte, administrator common.Address) (*types.Transaction, error) {
+// Solidity: function removeAdministrator(address id, address administrator) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactorSession) RemoveAdministrator(id common.Address, administrator common.Address) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.RemoveAdministrator(&_OrganizationRegistry.TransactOpts, id, administrator)
 }
 
@@ -565,24 +565,24 @@ func (_OrganizationRegistry *OrganizationRegistryTransactorSession) TransferOwne
 	return _OrganizationRegistry.Contract.TransferOwnership(&_OrganizationRegistry.TransactOpts, newOwner)
 }
 
-// UpdateOrganization is a paid mutator transaction binding the contract method 0xf3e5785a.
+// UpdateOrganization is a paid mutator transaction binding the contract method 0x6cca67bf.
 //
-// Solidity: function updateOrganization(bytes32 id, string name, string metadataURI) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactor) UpdateOrganization(opts *bind.TransactOpts, id [32]byte, name string, metadataURI string) (*types.Transaction, error) {
+// Solidity: function updateOrganization(address id, string name, string metadataURI) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactor) UpdateOrganization(opts *bind.TransactOpts, id common.Address, name string, metadataURI string) (*types.Transaction, error) {
 	return _OrganizationRegistry.contract.Transact(opts, "updateOrganization", id, name, metadataURI)
 }
 
-// UpdateOrganization is a paid mutator transaction binding the contract method 0xf3e5785a.
+// UpdateOrganization is a paid mutator transaction binding the contract method 0x6cca67bf.
 //
-// Solidity: function updateOrganization(bytes32 id, string name, string metadataURI) returns()
-func (_OrganizationRegistry *OrganizationRegistrySession) UpdateOrganization(id [32]byte, name string, metadataURI string) (*types.Transaction, error) {
+// Solidity: function updateOrganization(address id, string name, string metadataURI) returns()
+func (_OrganizationRegistry *OrganizationRegistrySession) UpdateOrganization(id common.Address, name string, metadataURI string) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.UpdateOrganization(&_OrganizationRegistry.TransactOpts, id, name, metadataURI)
 }
 
-// UpdateOrganization is a paid mutator transaction binding the contract method 0xf3e5785a.
+// UpdateOrganization is a paid mutator transaction binding the contract method 0x6cca67bf.
 //
-// Solidity: function updateOrganization(bytes32 id, string name, string metadataURI) returns()
-func (_OrganizationRegistry *OrganizationRegistryTransactorSession) UpdateOrganization(id [32]byte, name string, metadataURI string) (*types.Transaction, error) {
+// Solidity: function updateOrganization(address id, string name, string metadataURI) returns()
+func (_OrganizationRegistry *OrganizationRegistryTransactorSession) UpdateOrganization(id common.Address, name string, metadataURI string) (*types.Transaction, error) {
 	return _OrganizationRegistry.Contract.UpdateOrganization(&_OrganizationRegistry.TransactOpts, id, name, metadataURI)
 }
 
@@ -810,15 +810,15 @@ func (it *OrganizationRegistryOrganizationCreatedIterator) Close() error {
 
 // OrganizationRegistryOrganizationCreated represents a OrganizationCreated event raised by the OrganizationRegistry contract.
 type OrganizationRegistryOrganizationCreated struct {
-	Id      [32]byte
+	Id      common.Address
 	Creator common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// FilterOrganizationCreated is a free log retrieval operation binding the contract event 0x5bf391b908bf20dee9909c8fcb845e459772dcbd3abfb1acab2cfce848ae3d88.
+// FilterOrganizationCreated is a free log retrieval operation binding the contract event 0x2725ca0bb6f842da395a595005373aaa8e052b21133359b3c75f59a1247e6e7a.
 //
-// Solidity: event OrganizationCreated(bytes32 indexed id, address indexed creator)
-func (_OrganizationRegistry *OrganizationRegistryFilterer) FilterOrganizationCreated(opts *bind.FilterOpts, id [][32]byte, creator []common.Address) (*OrganizationRegistryOrganizationCreatedIterator, error) {
+// Solidity: event OrganizationCreated(address indexed id, address indexed creator)
+func (_OrganizationRegistry *OrganizationRegistryFilterer) FilterOrganizationCreated(opts *bind.FilterOpts, id []common.Address, creator []common.Address) (*OrganizationRegistryOrganizationCreatedIterator, error) {
 
 	var idRule []interface{}
 	for _, idItem := range id {
@@ -836,10 +836,10 @@ func (_OrganizationRegistry *OrganizationRegistryFilterer) FilterOrganizationCre
 	return &OrganizationRegistryOrganizationCreatedIterator{contract: _OrganizationRegistry.contract, event: "OrganizationCreated", logs: logs, sub: sub}, nil
 }
 
-// WatchOrganizationCreated is a free log subscription operation binding the contract event 0x5bf391b908bf20dee9909c8fcb845e459772dcbd3abfb1acab2cfce848ae3d88.
+// WatchOrganizationCreated is a free log subscription operation binding the contract event 0x2725ca0bb6f842da395a595005373aaa8e052b21133359b3c75f59a1247e6e7a.
 //
-// Solidity: event OrganizationCreated(bytes32 indexed id, address indexed creator)
-func (_OrganizationRegistry *OrganizationRegistryFilterer) WatchOrganizationCreated(opts *bind.WatchOpts, sink chan<- *OrganizationRegistryOrganizationCreated, id [][32]byte, creator []common.Address) (event.Subscription, error) {
+// Solidity: event OrganizationCreated(address indexed id, address indexed creator)
+func (_OrganizationRegistry *OrganizationRegistryFilterer) WatchOrganizationCreated(opts *bind.WatchOpts, sink chan<- *OrganizationRegistryOrganizationCreated, id []common.Address, creator []common.Address) (event.Subscription, error) {
 
 	var idRule []interface{}
 	for _, idItem := range id {
@@ -882,9 +882,9 @@ func (_OrganizationRegistry *OrganizationRegistryFilterer) WatchOrganizationCrea
 	}), nil
 }
 
-// ParseOrganizationCreated is a log parse operation binding the contract event 0x5bf391b908bf20dee9909c8fcb845e459772dcbd3abfb1acab2cfce848ae3d88.
+// ParseOrganizationCreated is a log parse operation binding the contract event 0x2725ca0bb6f842da395a595005373aaa8e052b21133359b3c75f59a1247e6e7a.
 //
-// Solidity: event OrganizationCreated(bytes32 indexed id, address indexed creator)
+// Solidity: event OrganizationCreated(address indexed id, address indexed creator)
 func (_OrganizationRegistry *OrganizationRegistryFilterer) ParseOrganizationCreated(log types.Log) (*OrganizationRegistryOrganizationCreated, error) {
 	event := new(OrganizationRegistryOrganizationCreated)
 	if err := _OrganizationRegistry.contract.UnpackLog(event, "OrganizationCreated", log); err != nil {
@@ -963,15 +963,15 @@ func (it *OrganizationRegistryOrganizationUpdatedIterator) Close() error {
 
 // OrganizationRegistryOrganizationUpdated represents a OrganizationUpdated event raised by the OrganizationRegistry contract.
 type OrganizationRegistryOrganizationUpdated struct {
-	Id      [32]byte
+	Id      common.Address
 	Updater common.Address
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// FilterOrganizationUpdated is a free log retrieval operation binding the contract event 0xff342de402b1bacc32d42d69295cf87bcc0836fe21c85cb440275445c4a895ca.
+// FilterOrganizationUpdated is a free log retrieval operation binding the contract event 0xdcd663553eb7f5f57b83637c17d95d22a764affd6dbcc98f8ce9dcbac3e239f6.
 //
-// Solidity: event OrganizationUpdated(bytes32 indexed id, address indexed updater)
-func (_OrganizationRegistry *OrganizationRegistryFilterer) FilterOrganizationUpdated(opts *bind.FilterOpts, id [][32]byte, updater []common.Address) (*OrganizationRegistryOrganizationUpdatedIterator, error) {
+// Solidity: event OrganizationUpdated(address indexed id, address indexed updater)
+func (_OrganizationRegistry *OrganizationRegistryFilterer) FilterOrganizationUpdated(opts *bind.FilterOpts, id []common.Address, updater []common.Address) (*OrganizationRegistryOrganizationUpdatedIterator, error) {
 
 	var idRule []interface{}
 	for _, idItem := range id {
@@ -989,10 +989,10 @@ func (_OrganizationRegistry *OrganizationRegistryFilterer) FilterOrganizationUpd
 	return &OrganizationRegistryOrganizationUpdatedIterator{contract: _OrganizationRegistry.contract, event: "OrganizationUpdated", logs: logs, sub: sub}, nil
 }
 
-// WatchOrganizationUpdated is a free log subscription operation binding the contract event 0xff342de402b1bacc32d42d69295cf87bcc0836fe21c85cb440275445c4a895ca.
+// WatchOrganizationUpdated is a free log subscription operation binding the contract event 0xdcd663553eb7f5f57b83637c17d95d22a764affd6dbcc98f8ce9dcbac3e239f6.
 //
-// Solidity: event OrganizationUpdated(bytes32 indexed id, address indexed updater)
-func (_OrganizationRegistry *OrganizationRegistryFilterer) WatchOrganizationUpdated(opts *bind.WatchOpts, sink chan<- *OrganizationRegistryOrganizationUpdated, id [][32]byte, updater []common.Address) (event.Subscription, error) {
+// Solidity: event OrganizationUpdated(address indexed id, address indexed updater)
+func (_OrganizationRegistry *OrganizationRegistryFilterer) WatchOrganizationUpdated(opts *bind.WatchOpts, sink chan<- *OrganizationRegistryOrganizationUpdated, id []common.Address, updater []common.Address) (event.Subscription, error) {
 
 	var idRule []interface{}
 	for _, idItem := range id {
@@ -1035,9 +1035,9 @@ func (_OrganizationRegistry *OrganizationRegistryFilterer) WatchOrganizationUpda
 	}), nil
 }
 
-// ParseOrganizationUpdated is a log parse operation binding the contract event 0xff342de402b1bacc32d42d69295cf87bcc0836fe21c85cb440275445c4a895ca.
+// ParseOrganizationUpdated is a log parse operation binding the contract event 0xdcd663553eb7f5f57b83637c17d95d22a764affd6dbcc98f8ce9dcbac3e239f6.
 //
-// Solidity: event OrganizationUpdated(bytes32 indexed id, address indexed updater)
+// Solidity: event OrganizationUpdated(address indexed id, address indexed updater)
 func (_OrganizationRegistry *OrganizationRegistryFilterer) ParseOrganizationUpdated(log types.Log) (*OrganizationRegistryOrganizationUpdated, error) {
 	event := new(OrganizationRegistryOrganizationUpdated)
 	if err := _OrganizationRegistry.contract.UnpackLog(event, "OrganizationUpdated", log); err != nil {

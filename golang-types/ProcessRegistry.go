@@ -29,53 +29,49 @@ var (
 	_ = abi.ConvertType
 )
 
+// ProcessRegistryBallotMode is an auto generated low-level Go binding around an user-defined struct.
+type ProcessRegistryBallotMode struct {
+	CostFromWeight  bool
+	ForceUniqueness bool
+	MaxCount        uint8
+	CostExponent    uint8
+	MaxValue        *big.Int
+	MinValue        *big.Int
+	MaxTotalCost    *big.Int
+	MinTotalCost    *big.Int
+}
+
 // ProcessRegistryCensus is an auto generated low-level Go binding around an user-defined struct.
 type ProcessRegistryCensus struct {
-	CensusOrigin  uint8
-	MaxCensusSize *big.Int
-	CensusRoot    [32]byte
-	CensusURI     string
+	CensusOrigin uint8
+	MaxVotes     *big.Int
+	CensusRoot   [32]byte
+	CensusURI    string
+}
+
+// ProcessRegistryEncryptionKey is an auto generated low-level Go binding around an user-defined struct.
+type ProcessRegistryEncryptionKey struct {
+	X *big.Int
+	Y *big.Int
 }
 
 // ProcessRegistryProcess is an auto generated low-level Go binding around an user-defined struct.
 type ProcessRegistryProcess struct {
 	Status          uint8
-	OrganizationId  [32]byte
-	EncryptionKeys  [2][32]byte
+	OrganizationId  common.Address
+	EncryptionKey   ProcessRegistryEncryptionKey
 	LatestStateRoot [32]byte
 	Result          []*big.Int
 	StartTime       *big.Int
 	Duration        *big.Int
 	MetadataURI     string
-	Options         ProcessRegistryProcessOptions
+	BallotMode      ProcessRegistryBallotMode
 	Census          ProcessRegistryCensus
-}
-
-// ProcessRegistryProcessOptions is an auto generated low-level Go binding around an user-defined struct.
-type ProcessRegistryProcessOptions struct {
-	EnvelopeType uint8
-	ProcessMode  uint8
-	StartTime    *big.Int
-	Duration     *big.Int
-	Status       uint8
-	VoteOptions  ProcessRegistryVoteOptions
-}
-
-// ProcessRegistryVoteOptions is an auto generated low-level Go binding around an user-defined struct.
-type ProcessRegistryVoteOptions struct {
-	UniqueValues  bool
-	MaxCount      *big.Int
-	MaxValue      *big.Int
-	MinValue      *big.Int
-	MaxOverwrites *big.Int
-	MaxTotalCost  *big.Int
-	MinTotalCost  *big.Int
-	CostExponent  *big.Int
 }
 
 // ProcessRegistryMetaData contains all meta data concerning the ProcessRegistry contract.
 var ProcessRegistryMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"maxCensusSize\",\"type\":\"uint256\"}],\"name\":\"CensusUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"}],\"name\":\"ProcessCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"}],\"name\":\"ProcessDurationChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"newStateRoot\",\"type\":\"bytes32\"}],\"name\":\"ProcessStateRootUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"newStatus\",\"type\":\"uint8\"}],\"name\":\"ProcessStatusChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainID\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"}],\"name\":\"endProcess\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"}],\"name\":\"getProcess\",\"outputs\":[{\"components\":[{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"organizationId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[2]\",\"name\":\"encryptionKeys\",\"type\":\"bytes32[2]\"},{\"internalType\":\"bytes32\",\"name\":\"latestStateRoot\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"result\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"},{\"components\":[{\"internalType\":\"uint8\",\"name\":\"envelopeType\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"processMode\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"bool\",\"name\":\"uniqueValues\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"maxCount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxOverwrites\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"costExponent\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.VoteOptions\",\"name\":\"voteOptions\",\"type\":\"tuple\"}],\"internalType\":\"structProcessRegistry.ProcessOptions\",\"name\":\"options\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxCensusSize\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"census\",\"type\":\"tuple\"}],\"internalType\":\"structProcessRegistry.Process\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_chainID\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_organizationRegistry\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint8\",\"name\":\"envelopeType\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"processMode\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"bool\",\"name\":\"uniqueValues\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"maxCount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxOverwrites\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"costExponent\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.VoteOptions\",\"name\":\"voteOptions\",\"type\":\"tuple\"}],\"internalType\":\"structProcessRegistry.ProcessOptions\",\"name\":\"_options\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxCensusSize\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"_census\",\"type\":\"tuple\"},{\"internalType\":\"string\",\"name\":\"_metadata\",\"type\":\"string\"},{\"internalType\":\"bytes32\",\"name\":\"_organizationID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_encryptionPubKey\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_initStateRoot\",\"type\":\"bytes32\"}],\"name\":\"newProcess\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"organizationRegistry\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"processCount\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"processes\",\"outputs\":[{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"organizationId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"latestStateRoot\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"},{\"components\":[{\"internalType\":\"uint8\",\"name\":\"envelopeType\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"processMode\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"bool\",\"name\":\"uniqueValues\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"maxCount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxOverwrites\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"costExponent\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.VoteOptions\",\"name\":\"voteOptions\",\"type\":\"tuple\"}],\"internalType\":\"structProcessRegistry.ProcessOptions\",\"name\":\"options\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxCensusSize\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"census\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxCensusSize\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"_census\",\"type\":\"tuple\"}],\"name\":\"setProcessCensus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_duration\",\"type\":\"uint256\"}],\"name\":\"setProcessDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"_result\",\"type\":\"uint256[]\"},{\"internalType\":\"bytes\",\"name\":\"_proof\",\"type\":\"bytes\"}],\"name\":\"setProcessResult\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"_newStatus\",\"type\":\"uint8\"}],\"name\":\"setProcessStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_oldRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_newRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_proof\",\"type\":\"bytes\"}],\"name\":\"submitStateTransition\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"maxVotes\",\"type\":\"uint256\"}],\"name\":\"CensusUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"}],\"name\":\"ProcessCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"}],\"name\":\"ProcessDurationChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"newStateRoot\",\"type\":\"bytes32\"}],\"name\":\"ProcessStateRootUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"processID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"newStatus\",\"type\":\"uint8\"}],\"name\":\"ProcessStatusChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainID\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"}],\"name\":\"endProcess\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"}],\"name\":\"getProcess\",\"outputs\":[{\"components\":[{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"organizationId\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"y\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.EncryptionKey\",\"name\":\"encryptionKey\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"latestStateRoot\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"result\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"},{\"components\":[{\"internalType\":\"bool\",\"name\":\"costFromWeight\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"forceUniqueness\",\"type\":\"bool\"},{\"internalType\":\"uint8\",\"name\":\"maxCount\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"costExponent\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minTotalCost\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.BallotMode\",\"name\":\"ballotMode\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxVotes\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"census\",\"type\":\"tuple\"}],\"internalType\":\"structProcessRegistry.Process\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_chainID\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_organizationRegistry\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"_status\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"_startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_duration\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"bool\",\"name\":\"costFromWeight\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"forceUniqueness\",\"type\":\"bool\"},{\"internalType\":\"uint8\",\"name\":\"maxCount\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"costExponent\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minTotalCost\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.BallotMode\",\"name\":\"_ballotMode\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxVotes\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"_census\",\"type\":\"tuple\"},{\"internalType\":\"string\",\"name\":\"_metadata\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_organizationID\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"y\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.EncryptionKey\",\"name\":\"_encryptionKey\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"_initStateRoot\",\"type\":\"bytes32\"}],\"name\":\"newProcess\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"organizationRegistry\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"processCount\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"processes\",\"outputs\":[{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"organizationId\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"y\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.EncryptionKey\",\"name\":\"encryptionKey\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"latestStateRoot\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"startTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"duration\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"metadataURI\",\"type\":\"string\"},{\"components\":[{\"internalType\":\"bool\",\"name\":\"costFromWeight\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"forceUniqueness\",\"type\":\"bool\"},{\"internalType\":\"uint8\",\"name\":\"maxCount\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"costExponent\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxTotalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minTotalCost\",\"type\":\"uint256\"}],\"internalType\":\"structProcessRegistry.BallotMode\",\"name\":\"ballotMode\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxVotes\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"census\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"components\":[{\"internalType\":\"enumProcessRegistry.CensusOrigin\",\"name\":\"censusOrigin\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"maxVotes\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"censusRoot\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"censusURI\",\"type\":\"string\"}],\"internalType\":\"structProcessRegistry.Census\",\"name\":\"_census\",\"type\":\"tuple\"}],\"name\":\"setProcessCensus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_duration\",\"type\":\"uint256\"}],\"name\":\"setProcessDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"_result\",\"type\":\"uint256[]\"},{\"internalType\":\"bytes\",\"name\":\"_proof\",\"type\":\"bytes\"}],\"name\":\"setProcessResult\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"enumProcessRegistry.ProcessStatus\",\"name\":\"_newStatus\",\"type\":\"uint8\"}],\"name\":\"setProcessStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_processID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_oldRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_newRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_proof\",\"type\":\"bytes\"}],\"name\":\"submitStateTransition\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
 }
 
 // ProcessRegistryABI is the input ABI used to generate the binding from.
@@ -288,7 +284,7 @@ func (_ProcessRegistry *ProcessRegistryCallerSession) ChainID() (string, error) 
 
 // GetProcess is a free data retrieval call binding the contract method 0x992bc45b.
 //
-// Solidity: function getProcess(bytes32 _processID) view returns((uint8,bytes32,bytes32[2],bytes32,uint256[],uint256,uint256,string,(uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)),(uint8,uint256,bytes32,string)))
+// Solidity: function getProcess(bytes32 _processID) view returns((uint8,address,(uint256,uint256),bytes32,uint256[],uint256,uint256,string,(bool,bool,uint8,uint8,uint256,uint256,uint256,uint256),(uint8,uint256,bytes32,string)))
 func (_ProcessRegistry *ProcessRegistryCaller) GetProcess(opts *bind.CallOpts, _processID [32]byte) (ProcessRegistryProcess, error) {
 	var out []interface{}
 	err := _ProcessRegistry.contract.Call(opts, &out, "getProcess", _processID)
@@ -305,14 +301,14 @@ func (_ProcessRegistry *ProcessRegistryCaller) GetProcess(opts *bind.CallOpts, _
 
 // GetProcess is a free data retrieval call binding the contract method 0x992bc45b.
 //
-// Solidity: function getProcess(bytes32 _processID) view returns((uint8,bytes32,bytes32[2],bytes32,uint256[],uint256,uint256,string,(uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)),(uint8,uint256,bytes32,string)))
+// Solidity: function getProcess(bytes32 _processID) view returns((uint8,address,(uint256,uint256),bytes32,uint256[],uint256,uint256,string,(bool,bool,uint8,uint8,uint256,uint256,uint256,uint256),(uint8,uint256,bytes32,string)))
 func (_ProcessRegistry *ProcessRegistrySession) GetProcess(_processID [32]byte) (ProcessRegistryProcess, error) {
 	return _ProcessRegistry.Contract.GetProcess(&_ProcessRegistry.CallOpts, _processID)
 }
 
 // GetProcess is a free data retrieval call binding the contract method 0x992bc45b.
 //
-// Solidity: function getProcess(bytes32 _processID) view returns((uint8,bytes32,bytes32[2],bytes32,uint256[],uint256,uint256,string,(uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)),(uint8,uint256,bytes32,string)))
+// Solidity: function getProcess(bytes32 _processID) view returns((uint8,address,(uint256,uint256),bytes32,uint256[],uint256,uint256,string,(bool,bool,uint8,uint8,uint256,uint256,uint256,uint256),(uint8,uint256,bytes32,string)))
 func (_ProcessRegistry *ProcessRegistryCallerSession) GetProcess(_processID [32]byte) (ProcessRegistryProcess, error) {
 	return _ProcessRegistry.Contract.GetProcess(&_ProcessRegistry.CallOpts, _processID)
 }
@@ -412,15 +408,16 @@ func (_ProcessRegistry *ProcessRegistryCallerSession) ProcessCount() (uint32, er
 
 // Processes is a free data retrieval call binding the contract method 0x0535fece.
 //
-// Solidity: function processes(bytes32 ) view returns(uint8 status, bytes32 organizationId, bytes32 latestStateRoot, uint256 startTime, uint256 duration, string metadataURI, (uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)) options, (uint8,uint256,bytes32,string) census)
+// Solidity: function processes(bytes32 ) view returns(uint8 status, address organizationId, (uint256,uint256) encryptionKey, bytes32 latestStateRoot, uint256 startTime, uint256 duration, string metadataURI, (bool,bool,uint8,uint8,uint256,uint256,uint256,uint256) ballotMode, (uint8,uint256,bytes32,string) census)
 func (_ProcessRegistry *ProcessRegistryCaller) Processes(opts *bind.CallOpts, arg0 [32]byte) (struct {
 	Status          uint8
-	OrganizationId  [32]byte
+	OrganizationId  common.Address
+	EncryptionKey   ProcessRegistryEncryptionKey
 	LatestStateRoot [32]byte
 	StartTime       *big.Int
 	Duration        *big.Int
 	MetadataURI     string
-	Options         ProcessRegistryProcessOptions
+	BallotMode      ProcessRegistryBallotMode
 	Census          ProcessRegistryCensus
 }, error) {
 	var out []interface{}
@@ -428,12 +425,13 @@ func (_ProcessRegistry *ProcessRegistryCaller) Processes(opts *bind.CallOpts, ar
 
 	outstruct := new(struct {
 		Status          uint8
-		OrganizationId  [32]byte
+		OrganizationId  common.Address
+		EncryptionKey   ProcessRegistryEncryptionKey
 		LatestStateRoot [32]byte
 		StartTime       *big.Int
 		Duration        *big.Int
 		MetadataURI     string
-		Options         ProcessRegistryProcessOptions
+		BallotMode      ProcessRegistryBallotMode
 		Census          ProcessRegistryCensus
 	})
 	if err != nil {
@@ -441,13 +439,14 @@ func (_ProcessRegistry *ProcessRegistryCaller) Processes(opts *bind.CallOpts, ar
 	}
 
 	outstruct.Status = *abi.ConvertType(out[0], new(uint8)).(*uint8)
-	outstruct.OrganizationId = *abi.ConvertType(out[1], new([32]byte)).(*[32]byte)
-	outstruct.LatestStateRoot = *abi.ConvertType(out[2], new([32]byte)).(*[32]byte)
-	outstruct.StartTime = *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
-	outstruct.Duration = *abi.ConvertType(out[4], new(*big.Int)).(**big.Int)
-	outstruct.MetadataURI = *abi.ConvertType(out[5], new(string)).(*string)
-	outstruct.Options = *abi.ConvertType(out[6], new(ProcessRegistryProcessOptions)).(*ProcessRegistryProcessOptions)
-	outstruct.Census = *abi.ConvertType(out[7], new(ProcessRegistryCensus)).(*ProcessRegistryCensus)
+	outstruct.OrganizationId = *abi.ConvertType(out[1], new(common.Address)).(*common.Address)
+	outstruct.EncryptionKey = *abi.ConvertType(out[2], new(ProcessRegistryEncryptionKey)).(*ProcessRegistryEncryptionKey)
+	outstruct.LatestStateRoot = *abi.ConvertType(out[3], new([32]byte)).(*[32]byte)
+	outstruct.StartTime = *abi.ConvertType(out[4], new(*big.Int)).(**big.Int)
+	outstruct.Duration = *abi.ConvertType(out[5], new(*big.Int)).(**big.Int)
+	outstruct.MetadataURI = *abi.ConvertType(out[6], new(string)).(*string)
+	outstruct.BallotMode = *abi.ConvertType(out[7], new(ProcessRegistryBallotMode)).(*ProcessRegistryBallotMode)
+	outstruct.Census = *abi.ConvertType(out[8], new(ProcessRegistryCensus)).(*ProcessRegistryCensus)
 
 	return *outstruct, err
 
@@ -455,15 +454,16 @@ func (_ProcessRegistry *ProcessRegistryCaller) Processes(opts *bind.CallOpts, ar
 
 // Processes is a free data retrieval call binding the contract method 0x0535fece.
 //
-// Solidity: function processes(bytes32 ) view returns(uint8 status, bytes32 organizationId, bytes32 latestStateRoot, uint256 startTime, uint256 duration, string metadataURI, (uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)) options, (uint8,uint256,bytes32,string) census)
+// Solidity: function processes(bytes32 ) view returns(uint8 status, address organizationId, (uint256,uint256) encryptionKey, bytes32 latestStateRoot, uint256 startTime, uint256 duration, string metadataURI, (bool,bool,uint8,uint8,uint256,uint256,uint256,uint256) ballotMode, (uint8,uint256,bytes32,string) census)
 func (_ProcessRegistry *ProcessRegistrySession) Processes(arg0 [32]byte) (struct {
 	Status          uint8
-	OrganizationId  [32]byte
+	OrganizationId  common.Address
+	EncryptionKey   ProcessRegistryEncryptionKey
 	LatestStateRoot [32]byte
 	StartTime       *big.Int
 	Duration        *big.Int
 	MetadataURI     string
-	Options         ProcessRegistryProcessOptions
+	BallotMode      ProcessRegistryBallotMode
 	Census          ProcessRegistryCensus
 }, error) {
 	return _ProcessRegistry.Contract.Processes(&_ProcessRegistry.CallOpts, arg0)
@@ -471,15 +471,16 @@ func (_ProcessRegistry *ProcessRegistrySession) Processes(arg0 [32]byte) (struct
 
 // Processes is a free data retrieval call binding the contract method 0x0535fece.
 //
-// Solidity: function processes(bytes32 ) view returns(uint8 status, bytes32 organizationId, bytes32 latestStateRoot, uint256 startTime, uint256 duration, string metadataURI, (uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)) options, (uint8,uint256,bytes32,string) census)
+// Solidity: function processes(bytes32 ) view returns(uint8 status, address organizationId, (uint256,uint256) encryptionKey, bytes32 latestStateRoot, uint256 startTime, uint256 duration, string metadataURI, (bool,bool,uint8,uint8,uint256,uint256,uint256,uint256) ballotMode, (uint8,uint256,bytes32,string) census)
 func (_ProcessRegistry *ProcessRegistryCallerSession) Processes(arg0 [32]byte) (struct {
 	Status          uint8
-	OrganizationId  [32]byte
+	OrganizationId  common.Address
+	EncryptionKey   ProcessRegistryEncryptionKey
 	LatestStateRoot [32]byte
 	StartTime       *big.Int
 	Duration        *big.Int
 	MetadataURI     string
-	Options         ProcessRegistryProcessOptions
+	BallotMode      ProcessRegistryBallotMode
 	Census          ProcessRegistryCensus
 }, error) {
 	return _ProcessRegistry.Contract.Processes(&_ProcessRegistry.CallOpts, arg0)
@@ -558,25 +559,25 @@ func (_ProcessRegistry *ProcessRegistryTransactorSession) Initialize(_chainID st
 	return _ProcessRegistry.Contract.Initialize(&_ProcessRegistry.TransactOpts, _chainID, _organizationRegistry)
 }
 
-// NewProcess is a paid mutator transaction binding the contract method 0xa96e8d2e.
+// NewProcess is a paid mutator transaction binding the contract method 0x152f3128.
 //
-// Solidity: function newProcess((uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)) _options, (uint8,uint256,bytes32,string) _census, string _metadata, bytes32 _organizationID, bytes32 _processID, bytes32 _encryptionPubKey, bytes32 _initStateRoot) returns()
-func (_ProcessRegistry *ProcessRegistryTransactor) NewProcess(opts *bind.TransactOpts, _options ProcessRegistryProcessOptions, _census ProcessRegistryCensus, _metadata string, _organizationID [32]byte, _processID [32]byte, _encryptionPubKey [32]byte, _initStateRoot [32]byte) (*types.Transaction, error) {
-	return _ProcessRegistry.contract.Transact(opts, "newProcess", _options, _census, _metadata, _organizationID, _processID, _encryptionPubKey, _initStateRoot)
+// Solidity: function newProcess(uint8 _status, uint256 _startTime, uint256 _duration, (bool,bool,uint8,uint8,uint256,uint256,uint256,uint256) _ballotMode, (uint8,uint256,bytes32,string) _census, string _metadata, address _organizationID, bytes32 _processID, (uint256,uint256) _encryptionKey, bytes32 _initStateRoot) returns()
+func (_ProcessRegistry *ProcessRegistryTransactor) NewProcess(opts *bind.TransactOpts, _status uint8, _startTime *big.Int, _duration *big.Int, _ballotMode ProcessRegistryBallotMode, _census ProcessRegistryCensus, _metadata string, _organizationID common.Address, _processID [32]byte, _encryptionKey ProcessRegistryEncryptionKey, _initStateRoot [32]byte) (*types.Transaction, error) {
+	return _ProcessRegistry.contract.Transact(opts, "newProcess", _status, _startTime, _duration, _ballotMode, _census, _metadata, _organizationID, _processID, _encryptionKey, _initStateRoot)
 }
 
-// NewProcess is a paid mutator transaction binding the contract method 0xa96e8d2e.
+// NewProcess is a paid mutator transaction binding the contract method 0x152f3128.
 //
-// Solidity: function newProcess((uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)) _options, (uint8,uint256,bytes32,string) _census, string _metadata, bytes32 _organizationID, bytes32 _processID, bytes32 _encryptionPubKey, bytes32 _initStateRoot) returns()
-func (_ProcessRegistry *ProcessRegistrySession) NewProcess(_options ProcessRegistryProcessOptions, _census ProcessRegistryCensus, _metadata string, _organizationID [32]byte, _processID [32]byte, _encryptionPubKey [32]byte, _initStateRoot [32]byte) (*types.Transaction, error) {
-	return _ProcessRegistry.Contract.NewProcess(&_ProcessRegistry.TransactOpts, _options, _census, _metadata, _organizationID, _processID, _encryptionPubKey, _initStateRoot)
+// Solidity: function newProcess(uint8 _status, uint256 _startTime, uint256 _duration, (bool,bool,uint8,uint8,uint256,uint256,uint256,uint256) _ballotMode, (uint8,uint256,bytes32,string) _census, string _metadata, address _organizationID, bytes32 _processID, (uint256,uint256) _encryptionKey, bytes32 _initStateRoot) returns()
+func (_ProcessRegistry *ProcessRegistrySession) NewProcess(_status uint8, _startTime *big.Int, _duration *big.Int, _ballotMode ProcessRegistryBallotMode, _census ProcessRegistryCensus, _metadata string, _organizationID common.Address, _processID [32]byte, _encryptionKey ProcessRegistryEncryptionKey, _initStateRoot [32]byte) (*types.Transaction, error) {
+	return _ProcessRegistry.Contract.NewProcess(&_ProcessRegistry.TransactOpts, _status, _startTime, _duration, _ballotMode, _census, _metadata, _organizationID, _processID, _encryptionKey, _initStateRoot)
 }
 
-// NewProcess is a paid mutator transaction binding the contract method 0xa96e8d2e.
+// NewProcess is a paid mutator transaction binding the contract method 0x152f3128.
 //
-// Solidity: function newProcess((uint8,uint8,uint256,uint256,uint8,(bool,uint256,uint256,uint256,uint256,uint256,uint256,uint256)) _options, (uint8,uint256,bytes32,string) _census, string _metadata, bytes32 _organizationID, bytes32 _processID, bytes32 _encryptionPubKey, bytes32 _initStateRoot) returns()
-func (_ProcessRegistry *ProcessRegistryTransactorSession) NewProcess(_options ProcessRegistryProcessOptions, _census ProcessRegistryCensus, _metadata string, _organizationID [32]byte, _processID [32]byte, _encryptionPubKey [32]byte, _initStateRoot [32]byte) (*types.Transaction, error) {
-	return _ProcessRegistry.Contract.NewProcess(&_ProcessRegistry.TransactOpts, _options, _census, _metadata, _organizationID, _processID, _encryptionPubKey, _initStateRoot)
+// Solidity: function newProcess(uint8 _status, uint256 _startTime, uint256 _duration, (bool,bool,uint8,uint8,uint256,uint256,uint256,uint256) _ballotMode, (uint8,uint256,bytes32,string) _census, string _metadata, address _organizationID, bytes32 _processID, (uint256,uint256) _encryptionKey, bytes32 _initStateRoot) returns()
+func (_ProcessRegistry *ProcessRegistryTransactorSession) NewProcess(_status uint8, _startTime *big.Int, _duration *big.Int, _ballotMode ProcessRegistryBallotMode, _census ProcessRegistryCensus, _metadata string, _organizationID common.Address, _processID [32]byte, _encryptionKey ProcessRegistryEncryptionKey, _initStateRoot [32]byte) (*types.Transaction, error) {
+	return _ProcessRegistry.Contract.NewProcess(&_ProcessRegistry.TransactOpts, _status, _startTime, _duration, _ballotMode, _census, _metadata, _organizationID, _processID, _encryptionKey, _initStateRoot)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -816,16 +817,16 @@ func (it *ProcessRegistryCensusUpdatedIterator) Close() error {
 
 // ProcessRegistryCensusUpdated represents a CensusUpdated event raised by the ProcessRegistry contract.
 type ProcessRegistryCensusUpdated struct {
-	ProcessID     [32]byte
-	CensusRoot    [32]byte
-	CensusURI     string
-	MaxCensusSize *big.Int
-	Raw           types.Log // Blockchain specific contextual infos
+	ProcessID  [32]byte
+	CensusRoot [32]byte
+	CensusURI  string
+	MaxVotes   *big.Int
+	Raw        types.Log // Blockchain specific contextual infos
 }
 
 // FilterCensusUpdated is a free log retrieval operation binding the contract event 0x35947a8913e2156f19b018078c9f0667e49cb3dc24af3434a4d0b16b82675b1b.
 //
-// Solidity: event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxCensusSize)
+// Solidity: event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxVotes)
 func (_ProcessRegistry *ProcessRegistryFilterer) FilterCensusUpdated(opts *bind.FilterOpts, processID [][32]byte) (*ProcessRegistryCensusUpdatedIterator, error) {
 
 	var processIDRule []interface{}
@@ -842,7 +843,7 @@ func (_ProcessRegistry *ProcessRegistryFilterer) FilterCensusUpdated(opts *bind.
 
 // WatchCensusUpdated is a free log subscription operation binding the contract event 0x35947a8913e2156f19b018078c9f0667e49cb3dc24af3434a4d0b16b82675b1b.
 //
-// Solidity: event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxCensusSize)
+// Solidity: event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxVotes)
 func (_ProcessRegistry *ProcessRegistryFilterer) WatchCensusUpdated(opts *bind.WatchOpts, sink chan<- *ProcessRegistryCensusUpdated, processID [][32]byte) (event.Subscription, error) {
 
 	var processIDRule []interface{}
@@ -884,7 +885,7 @@ func (_ProcessRegistry *ProcessRegistryFilterer) WatchCensusUpdated(opts *bind.W
 
 // ParseCensusUpdated is a log parse operation binding the contract event 0x35947a8913e2156f19b018078c9f0667e49cb3dc24af3434a4d0b16b82675b1b.
 //
-// Solidity: event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxCensusSize)
+// Solidity: event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxVotes)
 func (_ProcessRegistry *ProcessRegistryFilterer) ParseCensusUpdated(log types.Log) (*ProcessRegistryCensusUpdated, error) {
 	event := new(ProcessRegistryCensusUpdated)
 	if err := _ProcessRegistry.contract.UnpackLog(event, "CensusUpdated", log); err != nil {

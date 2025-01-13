@@ -59,19 +59,19 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "addAdministrator",
-    values: [BytesLike, AddressLike]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "createOrganization",
-    values: [BytesLike, string, string, AddressLike[]]
+    values: [AddressLike, string, string, AddressLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "deleteOrganization",
-    values: [BytesLike]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getOrganization",
-    values: [BytesLike]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
@@ -79,7 +79,7 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "isAdministrator",
-    values: [BytesLike, AddressLike]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "organizationCount",
@@ -87,7 +87,7 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "organizations",
-    values: [BytesLike]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -96,7 +96,7 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "removeAdministrator",
-    values: [BytesLike, AddressLike]
+    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -108,7 +108,7 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "updateOrganization",
-    values: [BytesLike, string, string]
+    values: [AddressLike, string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "upgradeToAndCall",
@@ -188,7 +188,7 @@ export namespace InitializedEvent {
 }
 
 export namespace OrganizationCreatedEvent {
-  export type InputTuple = [id: BytesLike, creator: AddressLike];
+  export type InputTuple = [id: AddressLike, creator: AddressLike];
   export type OutputTuple = [id: string, creator: string];
   export interface OutputObject {
     id: string;
@@ -201,7 +201,7 @@ export namespace OrganizationCreatedEvent {
 }
 
 export namespace OrganizationUpdatedEvent {
-  export type InputTuple = [id: BytesLike, updater: AddressLike];
+  export type InputTuple = [id: AddressLike, updater: AddressLike];
   export type OutputTuple = [id: string, updater: string];
   export interface OutputObject {
     id: string;
@@ -284,14 +284,14 @@ export interface OrganizationRegistry extends BaseContract {
   UPGRADE_INTERFACE_VERSION: TypedContractMethod<[], [string], "view">;
 
   addAdministrator: TypedContractMethod<
-    [id: BytesLike, administrator: AddressLike],
+    [id: AddressLike, administrator: AddressLike],
     [void],
     "nonpayable"
   >;
 
   createOrganization: TypedContractMethod<
     [
-      id: BytesLike,
+      id: AddressLike,
       name: string,
       metadataURI: string,
       administrators: AddressLike[]
@@ -301,13 +301,13 @@ export interface OrganizationRegistry extends BaseContract {
   >;
 
   deleteOrganization: TypedContractMethod<
-    [id: BytesLike],
+    [id: AddressLike],
     [void],
     "nonpayable"
   >;
 
   getOrganization: TypedContractMethod<
-    [id: BytesLike],
+    [id: AddressLike],
     [[bigint, string, string]],
     "view"
   >;
@@ -315,7 +315,7 @@ export interface OrganizationRegistry extends BaseContract {
   initialize: TypedContractMethod<[], [void], "nonpayable">;
 
   isAdministrator: TypedContractMethod<
-    [id: BytesLike, account: AddressLike],
+    [id: AddressLike, account: AddressLike],
     [boolean],
     "view"
   >;
@@ -323,7 +323,7 @@ export interface OrganizationRegistry extends BaseContract {
   organizationCount: TypedContractMethod<[], [bigint], "view">;
 
   organizations: TypedContractMethod<
-    [arg0: BytesLike],
+    [arg0: AddressLike],
     [
       [bigint, string, string] & {
         processCount: bigint;
@@ -339,7 +339,7 @@ export interface OrganizationRegistry extends BaseContract {
   proxiableUUID: TypedContractMethod<[], [string], "view">;
 
   removeAdministrator: TypedContractMethod<
-    [id: BytesLike, administrator: AddressLike],
+    [id: AddressLike, administrator: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -353,7 +353,7 @@ export interface OrganizationRegistry extends BaseContract {
   >;
 
   updateOrganization: TypedContractMethod<
-    [id: BytesLike, name: string, metadataURI: string],
+    [id: AddressLike, name: string, metadataURI: string],
     [void],
     "nonpayable"
   >;
@@ -374,7 +374,7 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "addAdministrator"
   ): TypedContractMethod<
-    [id: BytesLike, administrator: AddressLike],
+    [id: AddressLike, administrator: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -382,7 +382,7 @@ export interface OrganizationRegistry extends BaseContract {
     nameOrSignature: "createOrganization"
   ): TypedContractMethod<
     [
-      id: BytesLike,
+      id: AddressLike,
       name: string,
       metadataURI: string,
       administrators: AddressLike[]
@@ -392,17 +392,17 @@ export interface OrganizationRegistry extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "deleteOrganization"
-  ): TypedContractMethod<[id: BytesLike], [void], "nonpayable">;
+  ): TypedContractMethod<[id: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "getOrganization"
-  ): TypedContractMethod<[id: BytesLike], [[bigint, string, string]], "view">;
+  ): TypedContractMethod<[id: AddressLike], [[bigint, string, string]], "view">;
   getFunction(
     nameOrSignature: "initialize"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "isAdministrator"
   ): TypedContractMethod<
-    [id: BytesLike, account: AddressLike],
+    [id: AddressLike, account: AddressLike],
     [boolean],
     "view"
   >;
@@ -412,7 +412,7 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "organizations"
   ): TypedContractMethod<
-    [arg0: BytesLike],
+    [arg0: AddressLike],
     [
       [bigint, string, string] & {
         processCount: bigint;
@@ -431,7 +431,7 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "removeAdministrator"
   ): TypedContractMethod<
-    [id: BytesLike, administrator: AddressLike],
+    [id: AddressLike, administrator: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -444,7 +444,7 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "updateOrganization"
   ): TypedContractMethod<
-    [id: BytesLike, name: string, metadataURI: string],
+    [id: AddressLike, name: string, metadataURI: string],
     [void],
     "nonpayable"
   >;
@@ -504,7 +504,7 @@ export interface OrganizationRegistry extends BaseContract {
       InitializedEvent.OutputObject
     >;
 
-    "OrganizationCreated(bytes32,address)": TypedContractEvent<
+    "OrganizationCreated(address,address)": TypedContractEvent<
       OrganizationCreatedEvent.InputTuple,
       OrganizationCreatedEvent.OutputTuple,
       OrganizationCreatedEvent.OutputObject
@@ -515,7 +515,7 @@ export interface OrganizationRegistry extends BaseContract {
       OrganizationCreatedEvent.OutputObject
     >;
 
-    "OrganizationUpdated(bytes32,address)": TypedContractEvent<
+    "OrganizationUpdated(address,address)": TypedContractEvent<
       OrganizationUpdatedEvent.InputTuple,
       OrganizationUpdatedEvent.OutputTuple,
       OrganizationUpdatedEvent.OutputObject

@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:sol": "solhint './src/*.sol'",
-    "lint:sol:fix": "pnpm run lint:sol --fix --noPrompt"
+    "lint:sol:fix": "npm run lint:sol --fix --noPrompt"
   },
   "keywords": [],
   "author": "",

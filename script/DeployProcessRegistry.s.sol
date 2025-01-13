@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ProcessRegistry} from "../src/ProcessRegistry.sol";
@@ -11,7 +11,9 @@ contract DeployProcessRegistryScript is Script {
         address organizationRegistryAddress = vm.envAddress("ORGANIZATION_REGISTRY");
         string memory chainID = vm.envString("CHAIN_ID");
         vm.startBroadcast(deployerPrivateKey);
-        address proxy = Upgrades.deployUUPSProxy("ProcessRegistry.sol", abi.encodeCall(ProcessRegistry.initialize, (chainID, organizationRegistryAddress)));
+        address proxy = Upgrades.deployUUPSProxy(
+            "ProcessRegistry.sol", abi.encodeCall(ProcessRegistry.initialize, (chainID, organizationRegistryAddress))
+        );
         console.log("ProcessRegistry deployed at:", proxy);
         vm.stopBroadcast();
     }
