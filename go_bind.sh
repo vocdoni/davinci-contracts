@@ -18,15 +18,20 @@ abi() {
     local json_file="$1"
     local pkg_name="$2"
     local output_file="$3"
+    local bin_file="./golang-types/${pkg_name}.bin"
 
     if [[ ! -f "$json_file" ]]; then
         echo "Error: File '$json_file' does not exist." >&2
         exit 1
     fi
 
+    jq -r '.bytecode' "$json_file" > "$bin_file"
+
     # Generate the Go bindings directly from the JSON ABI
-    jq -r '.abi' "$json_file" | abigen --abi=/dev/stdin --pkg="$pkg_name" --out="$output_file"
+    jq -r '.abi' "$json_file" | abigen --abi=/dev/stdin --pkg="$pkg_name" --out="$output_file" --bin="$bin_file"
     echo "Successfully generated Go bindings for '$pkg_name' contract."
+
+    rm -f "$bin_file"
 
     # Replace the package name in the generated file with "contracts"
     sed_in_place "s/^package $pkg_name/package contracts/" "$output_file"
