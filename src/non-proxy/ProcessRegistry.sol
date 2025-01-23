@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./OrganizationRegistry.sol";
 
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
-contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract ProcessRegistry {
     /*
      * @notice Emitted when a new process is created.
      * @param processID The ID of the process.
@@ -173,13 +170,10 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     string public chainID;
 
     /**
-     * @notice Initializes the contract.
      * @param _chainID The ID of the chain.
      * @param _organizationRegistry The address of the organization registry.
      */
-    function initialize(string calldata _chainID, address _organizationRegistry) public initializer {
-        __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
+    constructor (string memory _chainID, address _organizationRegistry) {
         chainID = _chainID;
         organizationRegistry = _organizationRegistry;
     }
@@ -400,6 +394,4 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         processes[_processID].result = _result;
         processes[_processID].status = ProcessStatus.RESULTS;
     }
-
-    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

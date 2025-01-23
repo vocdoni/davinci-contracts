@@ -45,6 +45,14 @@ abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"
 
+abi "./artifacts/src/non-proxy/OrganizationRegistry.sol/OrganizationRegistry.json" \
+    "OrganizationRegistry" \
+    "./golang-types/non-proxy/OrganizationRegistry.go"
+
+abi "./artifacts/src/non-proxy/ProcessRegistry.sol/ProcessRegistry.json" \
+    "ProcessRegistry" \
+    "./golang-types/non-proxy/ProcessRegistry.go"
+
 # abi "./artifacts/src/SequencerRegistry.sol/SequencerRegistry.json" \
 #     "SequencerRegistry" \
 #     "./golang-types/SequencerRegistry.go"

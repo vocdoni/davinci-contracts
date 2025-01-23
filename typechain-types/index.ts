@@ -22,7 +22,7 @@ export type { ERC1967Utils } from "./@openzeppelin/contracts/proxy/ERC1967/ERC19
 export { ERC1967Utils__factory } from "./factories/@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils__factory";
 export type { Address } from "./@openzeppelin/contracts/utils/Address";
 export { Address__factory } from "./factories/@openzeppelin/contracts/utils/Address__factory";
-export type { OrganizationRegistry } from "./src/OrganizationRegistry";
-export { OrganizationRegistry__factory } from "./factories/src/OrganizationRegistry__factory";
-export type { ProcessRegistry } from "./src/ProcessRegistry";
-export { ProcessRegistry__factory } from "./factories/src/ProcessRegistry__factory";
+export type { OrganizationRegistry } from "./src/non-proxy/OrganizationRegistry";
+export { OrganizationRegistry__factory } from "./factories/src/non-proxy/OrganizationRegistry__factory";
+export type { ProcessRegistry } from "./src/non-proxy/ProcessRegistry";
+export { ProcessRegistry__factory } from "./factories/src/non-proxy/ProcessRegistry__factory";

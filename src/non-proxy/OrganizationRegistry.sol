@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 /**
  * @title OrganizationRegistry
  * @author Vocdoni Association
  * @notice The OrganizationRegistry contract is a registry of organizations.
- * @dev Uses OpenZeppelin's Initializable contract to manage the contract's initialization.
  */
-contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract OrganizationRegistry {
     /**
      * @notice Emitted when a new organization is created
      * @param id The organization's unique identifier
@@ -57,14 +52,6 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @notice Tracks the total number of organizations
      */
     uint32 public organizationCount;
-
-    /**
-     * @notice Initializes the contract
-     */
-    function initialize() public initializer {
-        __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
-    }
 
     /**
      * @notice Creates a new organization
@@ -160,7 +147,7 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @notice Deletes an organization
      * @param id The ID of the organization to delete
      */
-    function deleteOrganization(address id) public onlyOwner {
+    function deleteOrganization(address id) public {
         require(bytes(organizations[id].name).length > 0, "OrganizationRegistry: organization does not exist");
         delete organizations[id];
         organizationCount--;
@@ -175,6 +162,4 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
     function isAdministrator(address id, address account) public view returns (bool) {
         return organizations[id].administrators[account];
     }
-
-    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

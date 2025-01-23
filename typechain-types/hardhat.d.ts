@@ -53,6 +53,14 @@ declare module "hardhat/types/runtime" {
       name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ProcessRegistry__factory>;
+    getContractFactory(
+      name: "OrganizationRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.OrganizationRegistry__factory>;
+    getContractFactory(
+      name: "ProcessRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ProcessRegistry__factory>;
 
     getContractAt(
       name: "OwnableUpgradeable",
@@ -104,6 +112,16 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ProcessRegistry>;
+    getContractAt(
+      name: "OrganizationRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.OrganizationRegistry>;
+    getContractAt(
+      name: "ProcessRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ProcessRegistry>;
 
     deployContract(
       name: "OwnableUpgradeable",
@@ -137,6 +155,14 @@ declare module "hardhat/types/runtime" {
       name: "Address",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Address>;
+    deployContract(
+      name: "OrganizationRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.OrganizationRegistry>;
+    deployContract(
+      name: "ProcessRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ProcessRegistry>;
     deployContract(
       name: "OrganizationRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -186,6 +212,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Address>;
+    deployContract(
+      name: "OrganizationRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.OrganizationRegistry>;
+    deployContract(
+      name: "ProcessRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ProcessRegistry>;
     deployContract(
       name: "OrganizationRegistry",
       args: any[],
