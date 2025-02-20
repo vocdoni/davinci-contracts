@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+pragma solidity ^0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+import {stdError} from "forge-std/StdError.sol";
+import {ZKVerifier} from "../src/ZKVerifier.sol";
+
+contract ZKVerifierTest is Test {
+    
+    uint256 constant public ROOT_HASH_BEFORE = 2773072458553873709201164114201768243066148425063652934942402475964298215834;
+    uint256 constant public ROOT_HASH_AFTER = 3033651216511111400175039953981700650715262298138585644694383935611028748527;
+    uint256 constant public ROOT_HASH_AFTER_BAD = 4033651216511111400175039953981700650715262298138585644694383935611028748527;
+    uint256 constant public NUM_NEW_VOTES = 5;
+    uint256 constant public NUM_OVERWRITES = 0;
+
+    uint256[2] public AR = [
+        3749993813131825283497321548201560649004372478594993218285507628719884815386,
+        9863771861446043143702642301459156999722863664835956036229365559573131211929
+    ];
+    uint256[2][2] public BS = [
+        [
+            18612692335247145284760984116323499946004983165300566063028402344390712748131,
+            9788705052279126719835667499986023255652529179009616635608681538740201999029
+        ],
+        [
+            14388318237278056334549654349927351808592213828911389582631105316050642059078,
+            5635610165494482845792262271048204030434489764878521472163505281647226458546
+        ]
+    ];
+    uint256[2] public KRS = [
+        5716370189554044003116106660436071905567435783606008010682697384150401371363,
+        1201172250022598875781217140900983475726807253664434409259787133381201430572
+    ];
+
+    uint256[8] public proof = [
+        AR[0], AR[1],
+        BS[0][0], BS[0][1], BS[1][0], BS[1][1],
+        KRS[0], KRS[1]
+    ];
+
+    uint256[4] public input = [
+        ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES
+    ];
+    
+    ZKVerifier public zkVerifier;
+
+    function setUp() public {
+        zkVerifier = new ZKVerifier();
+    }
+
+    function test_Verify_OK() public {
+        zkVerifier.verifyProof(proof, input);
+    }
+
+    function test_Verify_Fail() public {
+        uint256[4] memory inputBad = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER_BAD, NUM_NEW_VOTES, NUM_OVERWRITES];
+        vm.expectRevert();
+        zkVerifier.verifyProof(proof, inputBad);
+    }
+}

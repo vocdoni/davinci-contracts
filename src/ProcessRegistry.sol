@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./OrganizationRegistry.sol";
+import "./ZKVerifier.sol";
 
 /**
  * @title ProcessRegistry
@@ -171,17 +172,22 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @notice The chain ID is the ID of the chain.
      */
     string public chainID;
+    /**
+     * @notice The verifier is the address of the ZK verifier contract.
+     */
+    address public verifier;
 
     /**
      * @notice Initializes the contract.
      * @param _chainID The ID of the chain.
      * @param _organizationRegistry The address of the organization registry.
      */
-    function initialize(string calldata _chainID, address _organizationRegistry) public initializer {
+    function initialize(string calldata _chainID, address _organizationRegistry, address _verifier) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         chainID = _chainID;
         organizationRegistry = _organizationRegistry;
+        verifier = _verifier;
     }
 
     /**

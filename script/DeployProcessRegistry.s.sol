@@ -12,7 +12,7 @@ contract DeployProcessRegistryScript is Script {
         string memory chainID = vm.envString("CHAIN_ID");
         vm.startBroadcast(deployerPrivateKey);
         address proxy = Upgrades.deployUUPSProxy(
-            "ProcessRegistry.sol", abi.encodeCall(ProcessRegistry.initialize, (chainID, organizationRegistryAddress))
+            "ProcessRegistry.sol", abi.encodeCall(ProcessRegistry.initialize, (chainID, organizationRegistryAddress, address(0)))
         );
         console.log("ProcessRegistry deployed at:", proxy);
         vm.stopBroadcast();
