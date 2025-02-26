@@ -6,7 +6,18 @@
     "max-line-length": ["warn", 120],
     "quotes": ["error", "double"],
     "func-visibility": ["error", { "ignoreConstructors": true }],
-    "state-visibility": "error",
-    "immutable-vars-naming": ["warn", { "immutablesAsConstants": false }]
+    "state-visibility": "warn",
+    "immutable-vars-naming": ["warn", { "immutablesAsConstants": false }],
+    "no-unused-vars": "error",
+    "duplicated-imports": "error",
+    "private-vars-leading-underscore": ["error",{"strict":true}],
+    "gas-calldata-parameters": "warn",
+    "gas-increment-by-one": "warn",
+    "gas-indexed-events": "warn",
+    "gas-struct-packing": "warn",
+    "gas-strict-inequalities": "warn",
+    "comprehensive-interface": "warn",
+    "var-name-mixedcase": "warn"
+
   }
 }
