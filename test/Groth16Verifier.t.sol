@@ -3,9 +3,9 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {stdError} from "forge-std/StdError.sol";
-import {ZKVerifier} from "../src/ZKVerifier.sol";
+import {Groth16Verifier} from "../src/Groth16Verifier.sol";
 
-contract ZKVerifierTest is Test {
+contract Groth16VerifierTest is Test {
     
     uint256 constant public ROOT_HASH_BEFORE = 2773072458553873709201164114201768243066148425063652934942402475964298215834;
     uint256 constant public ROOT_HASH_AFTER = 3033651216511111400175039953981700650715262298138585644694383935611028748527;
@@ -42,19 +42,19 @@ contract ZKVerifierTest is Test {
         ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES
     ];
     
-    ZKVerifier public zkVerifier;
+    Groth16Verifier public groth16Verifier;
 
     function setUp() public {
-        zkVerifier = new ZKVerifier();
+        groth16Verifier = new Groth16Verifier();
     }
 
     function test_Verify_OK() public {
-        zkVerifier.verifyProof(proof, input);
+        groth16Verifier.verifyProof(proof, input);
     }
 
     function test_Verify_Fail() public {
         uint256[4] memory inputBad = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER_BAD, NUM_NEW_VOTES, NUM_OVERWRITES];
         vm.expectRevert();
-        zkVerifier.verifyProof(proof, inputBad);
+    groth16Verifier.verifyProof(proof, inputBad);
     }
 }
