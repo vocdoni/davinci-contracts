@@ -141,6 +141,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "submitStateTransition"
       | "transferOwnership"
       | "upgradeToAndCall"
+      | "verifier"
   ): FunctionFragment;
 
   getEvent(
@@ -170,7 +171,7 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
-    values: [string, AddressLike]
+    values: [string, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "newProcess",
@@ -236,6 +237,7 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "upgradeToAndCall",
     values: [AddressLike, BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "verifier", values?: undefined): string;
 
   decodeFunctionResult(
     functionFragment: "UPGRADE_INTERFACE_VERSION",
@@ -292,6 +294,7 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "upgradeToAndCall",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "verifier", data: BytesLike): Result;
 }
 
 export namespace CensusUpdatedEvent {
@@ -468,7 +471,11 @@ export interface ProcessRegistry extends BaseContract {
   >;
 
   initialize: TypedContractMethod<
-    [_chainID: string, _organizationRegistry: AddressLike],
+    [
+      _chainID: string,
+      _organizationRegistry: AddressLike,
+      _verifier: AddressLike
+    ],
     [void],
     "nonpayable"
   >;
@@ -575,6 +582,8 @@ export interface ProcessRegistry extends BaseContract {
     "payable"
   >;
 
+  verifier: TypedContractMethod<[], [string], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -598,7 +607,11 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "initialize"
   ): TypedContractMethod<
-    [_chainID: string, _organizationRegistry: AddressLike],
+    [
+      _chainID: string,
+      _organizationRegistry: AddressLike,
+      _verifier: AddressLike
+    ],
     [void],
     "nonpayable"
   >;
@@ -714,6 +727,9 @@ export interface ProcessRegistry extends BaseContract {
     [void],
     "payable"
   >;
+  getFunction(
+    nameOrSignature: "verifier"
+  ): TypedContractMethod<[], [string], "view">;
 
   getEvent(
     key: "CensusUpdated"

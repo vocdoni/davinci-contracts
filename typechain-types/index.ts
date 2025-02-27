@@ -22,6 +22,10 @@ export type { ERC1967Utils } from "./@openzeppelin/contracts/proxy/ERC1967/ERC19
 export { ERC1967Utils__factory } from "./factories/@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils__factory";
 export type { Address } from "./@openzeppelin/contracts/utils/Address";
 export { Address__factory } from "./factories/@openzeppelin/contracts/utils/Address__factory";
+export type { Groth16Verifier } from "./src/Groth16Verifier";
+export { Groth16Verifier__factory } from "./factories/src/Groth16Verifier__factory";
+export type { Groth16Verifier2 } from "./src/Groth16Verifier2";
+export { Groth16Verifier2__factory } from "./factories/src/Groth16Verifier2__factory";
 export type { OrganizationRegistry } from "./src/non-proxy/OrganizationRegistry";
 export { OrganizationRegistry__factory } from "./factories/src/non-proxy/OrganizationRegistry__factory";
 export type { ProcessRegistry } from "./src/non-proxy/ProcessRegistry";

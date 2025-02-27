@@ -2,5 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as nonProxy from "./non-proxy";
+export { Groth16Verifier__factory } from "./Groth16Verifier__factory";
+export { Groth16Verifier2__factory } from "./Groth16Verifier2__factory";
 export { OrganizationRegistry__factory } from "./OrganizationRegistry__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";

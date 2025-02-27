@@ -3,14 +3,29 @@
   "rules": {
     "avoid-suicide": "error",
     "avoid-sha3": "warn",
-    "max-line-length": ["warn", 120],
-    "quotes": ["error", "double"],
-    "func-visibility": ["error", { "ignoreConstructors": true }],
+    "max-line-length": [
+      "warn",
+      120
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "func-visibility": [
+      "error",
+      {
+        "ignoreConstructors": true
+      }
+    ],
     "state-visibility": "warn",
-    "immutable-vars-naming": ["warn", { "immutablesAsConstants": false }],
+    "immutable-vars-naming": [
+      "warn",
+      {
+        "immutablesAsConstants": false
+      }
+    ],
     "no-unused-vars": "error",
     "duplicated-imports": "error",
-    "private-vars-leading-underscore": ["error",{"strict":true}],
     "gas-calldata-parameters": "warn",
     "gas-increment-by-one": "warn",
     "gas-indexed-events": "warn",
@@ -18,6 +33,5 @@
     "gas-strict-inequalities": "warn",
     "comprehensive-interface": "warn",
     "var-name-mixedcase": "warn"
-
   }
 }

@@ -217,10 +217,7 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     ) public {
         require(_ballotMode.maxCount > 0, "NewProcess: invalid maxCount");
         require(_ballotMode.maxValue > _ballotMode.maxCount, "NewProcess: maxCount > maxValue");
-        require(
-            _status == ProcessStatus.READY || _status == ProcessStatus.PAUSED,
-            "NewProcess: invalid status"
-        );
+        require(_status == ProcessStatus.READY || _status == ProcessStatus.PAUSED, "NewProcess: invalid status");
         require(_startTime > block.timestamp, "NewProcess: invalid startTime");
         require(_startTime + _duration > block.timestamp, "NewProcess: invalid duration");
         require(
@@ -267,7 +264,10 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      */
     function setProcessStatus(bytes32 _processID, ProcessStatus _newStatus) public {
         require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(processes[_processID].organizationId, msg.sender),
+            OrganizationRegistry(organizationRegistry).isAdministrator(
+                processes[_processID].organizationId,
+                msg.sender
+            ),
             "SetProcessStatus: not an administrator"
         );
 
@@ -293,7 +293,10 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      */
     function setProcessCensus(bytes32 _processID, Census calldata _census) public {
         require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(processes[_processID].organizationId, msg.sender),
+            OrganizationRegistry(organizationRegistry).isAdministrator(
+                processes[_processID].organizationId,
+                msg.sender
+            ),
             "SetProcessCensus: not an administrator"
         );
 
@@ -328,7 +331,10 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      */
     function setProcessDuration(bytes32 _processID, uint256 _duration) public {
         require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(processes[_processID].organizationId, msg.sender),
+            OrganizationRegistry(organizationRegistry).isAdministrator(
+                processes[_processID].organizationId,
+                msg.sender
+            ),
             "SetProcessDuration: not an administrator"
         );
 
@@ -353,7 +359,10 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      */
     function endProcess(bytes32 _processID) public {
         require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(processes[_processID].organizationId, msg.sender),
+            OrganizationRegistry(organizationRegistry).isAdministrator(
+                processes[_processID].organizationId,
+                msg.sender
+            ),
             "endProcess: not an administrator"
         );
         require(
@@ -372,13 +381,16 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @param _newRoot The new state root.
      * @param _proof The proof of the state transition.
      */
-    function submitStateTransition(bytes32 _processID, bytes32 _oldRoot, bytes32 _newRoot, bytes calldata _proof)
-        public
-    {
+    function submitStateTransition(
+        bytes32 _processID,
+        bytes32 _oldRoot,
+        bytes32 _newRoot,
+        bytes calldata _proof
+    ) public {
         require(processes[_processID].organizationId != address(0), "Process not found");
         require(
-            processes[_processID].status != ProcessStatus.RESULTS
-                && processes[_processID].status != ProcessStatus.CANCELED,
+            processes[_processID].status != ProcessStatus.RESULTS &&
+                processes[_processID].status != ProcessStatus.CANCELED,
             "Invalid status for submitting state transition"
         );
         require(processes[_processID].latestStateRoot == _oldRoot, "Invalid old root");

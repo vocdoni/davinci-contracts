@@ -3,5 +3,7 @@
 /* eslint-disable */
 import type * as nonProxy from "./non-proxy";
 export type { nonProxy };
+export type { Groth16Verifier } from "./Groth16Verifier";
+export type { Groth16Verifier2 } from "./Groth16Verifier2";
 export type { OrganizationRegistry } from "./OrganizationRegistry";
 export type { ProcessRegistry } from "./ProcessRegistry";
