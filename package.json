@@ -1,5 +1,5 @@
 {
-  "name": "vocdoni-davinci-contracts",
+  "name": "@vocdoni/davinci-contracts",
   "version": "0.0.1",
   "description": "Smart contracts powering DAVINCI's digital voting protocol",
   "directories": {
@@ -7,12 +7,21 @@
     "test": "test",
     "src": "src"
   },
+  "files": [
+    "typechain-types",
+    "deployed_contracts_addresses.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vocdoni/contracts-z.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:sol": "solhint './src/*.sol'",
     "lint:sol:fix": "npm run lint:sol --fix --noPrompt",
     "prettier": "prettier -c .",
     "prettier:fix": "prettier -w .",
+    "typechain": "npx hardhat compile",
     "mythril": "myth a ./src/*.sol --solc-json mythril.config.json",
     "slither": "slither ./src/*.sol"
   },

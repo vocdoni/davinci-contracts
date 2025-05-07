@@ -1,0 +1,14 @@
+{
+    "processRegistry": {
+        "sepolia": "0x0",
+        "mainnet": ""
+    },
+    "organizationRegistry": {
+        "sepolia": "0x0",
+        "mainnet": ""
+    },
+    "sequencerRegistry": {
+        "sepolia": "0x0",
+        "mainnet": ""
+    }
+}

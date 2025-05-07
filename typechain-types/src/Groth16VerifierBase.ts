@@ -20,7 +20,7 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export interface Groth16Verifier2Interface extends Interface {
+export interface Groth16VerifierBaseInterface extends Interface {
   getFunction(
     nameOrSignature: "compressProof" | "verifyCompressedProof" | "verifyProof"
   ): FunctionFragment;
@@ -39,7 +39,7 @@ export interface Groth16Verifier2Interface extends Interface {
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       [BigNumberish],
       BigNumberish,
-      [BigNumberish, BigNumberish, BigNumberish]
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ]
   ): string;
   encodeFunctionData(
@@ -48,7 +48,7 @@ export interface Groth16Verifier2Interface extends Interface {
       BigNumberish[],
       [BigNumberish, BigNumberish],
       [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish, BigNumberish]
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ]
   ): string;
 
@@ -66,11 +66,11 @@ export interface Groth16Verifier2Interface extends Interface {
   ): Result;
 }
 
-export interface Groth16Verifier2 extends BaseContract {
-  connect(runner?: ContractRunner | null): Groth16Verifier2;
+export interface Groth16VerifierBase extends BaseContract {
+  connect(runner?: ContractRunner | null): Groth16VerifierBase;
   waitForDeployment(): Promise<this>;
 
-  interface: Groth16Verifier2Interface;
+  interface: Groth16VerifierBaseInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -130,7 +130,7 @@ export interface Groth16Verifier2 extends BaseContract {
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       compressedCommitments: [BigNumberish],
       compressedCommitmentPok: BigNumberish,
-      input: [BigNumberish, BigNumberish, BigNumberish]
+      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
     "view"
@@ -141,7 +141,7 @@ export interface Groth16Verifier2 extends BaseContract {
       proof: BigNumberish[],
       commitments: [BigNumberish, BigNumberish],
       commitmentPok: [BigNumberish, BigNumberish],
-      input: [BigNumberish, BigNumberish, BigNumberish]
+      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
     "view"
@@ -175,7 +175,7 @@ export interface Groth16Verifier2 extends BaseContract {
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       compressedCommitments: [BigNumberish],
       compressedCommitmentPok: BigNumberish,
-      input: [BigNumberish, BigNumberish, BigNumberish]
+      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
     "view"
@@ -187,7 +187,7 @@ export interface Groth16Verifier2 extends BaseContract {
       proof: BigNumberish[],
       commitments: [BigNumberish, BigNumberish],
       commitmentPok: [BigNumberish, BigNumberish],
-      input: [BigNumberish, BigNumberish, BigNumberish]
+      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
     "view"

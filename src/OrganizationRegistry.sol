@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
+import "./IOrganizationRegistry.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -11,40 +12,15 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
  * @notice The OrganizationRegistry contract is a registry of organizations.
  * @dev Uses OpenZeppelin's Initializable contract to manage the contract's initialization.
  */
-contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-    /**
-     * @notice Emitted when a new organization is created
-     * @param id The organization's unique identifier
-     * @param creator The address of the organization's creator
-     */
-    event OrganizationCreated(address indexed id, address indexed creator);
-
-    /**
-     * @notice Emitted when an organization is updated
-     * @param id The organization's unique identifier
-     * @param updater The address of the organization's updater
-     */
-    event OrganizationUpdated(address indexed id, address indexed updater);
-
-    /**
-     * @notice Organization structure containing the organization's data
-     * @param id The organization's unique identifier
-     * @param name The organization's name
-     * @param metadataURI The organization's metadata URI that can be used to store additional information
-     * @param administrators The list of administrators of the organization
-     */
-    struct Organization {
-        string name;
-        string metadataURI;
-        mapping(address => bool) administrators;
-    }
-
+contract OrganizationRegistry is IOrganizationRegistry, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     /**
      * @notice Modifier that checks if the sender is an administrator of the organization
      * @param id The organization's unique identifier
      */
     modifier onlyAdministrator(address id) {
-        require(organizations[id].administrators[msg.sender], "OrganizationRegistry: not an administrator");
+        if (!organizations[id].administrators[msg.sender]) {
+            revert NotAdministrator();
+        }
         _;
     }
 
@@ -52,7 +28,6 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @notice Mapping of organizations IDs to their respective organization data
      */
     mapping(address => Organization) public organizations;
-
     /**
      * @notice Tracks the total number of organizations
      */
@@ -68,7 +43,7 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
 
     /**
      * @notice Creates a new organization
-     * @param id The organization's unique identifier
+     * @param id The organization's address
      * @param name The organization's name
      * @param metadataURI The organization's metadata URI that can be used to store additional information
      * @param administrators The list of administrators of the organization
@@ -81,23 +56,27 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
         string calldata metadataURI,
         address[] calldata administrators
     ) public {
-        require(id != address(0), "OrganizationRegistry: invalid id");
-        require(bytes(name).length > 0, "OrganizationRegistry: invalid name");
-
-        require(bytes(organizations[id].name).length == 0, "OrganizationRegistry: organization already exists");
-
+        if (id == address(0)) {
+            revert InvalidOrganizationID();
+        }
+        if (bytes(name).length <= 0) {
+            revert InvalidOrganizationName();
+        }
+        if (bytes(organizations[id].name).length != 0) {
+            revert OrganizationAlreadyExists();
+        }
         Organization storage organization = organizations[id];
         organization.name = name;
         organization.metadataURI = metadataURI;
-
         if (administrators.length > 0) {
             for (uint256 i = 0; i < administrators.length; i++) {
-                require(administrators[i] != address(0), "OrganizationRegistry: invalid administrator address");
+                if (administrators[i] == address(0)) {
+                    revert InvalidAddress();
+                }
                 organization.administrators[administrators[i]] = true;
             }
         }
         organization.administrators[msg.sender] = true;
-
         organizationCount++;
         emit OrganizationCreated(id, msg.sender);
     }
@@ -119,13 +98,20 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @param name The organization's name
      * @param metadataURI The organization's metadata URI that can be used to store additional information
      */
-    function updateOrganization(address id, string calldata name, string calldata metadataURI)
-        public
-        onlyAdministrator(id)
-    {
-        require(bytes(name).length > 0, "OrganizationRegistry: invalid name");
-        require(bytes(metadataURI).length > 0, "OrganizationRegistry: invalid metadataURI");
-        require(bytes(organizations[id].name).length > 0, "OrganizationRegistry: organization does not exist");
+    function updateOrganization(
+        address id,
+        string calldata name,
+        string calldata metadataURI
+    ) public onlyAdministrator(id) {
+        if (bytes(name).length <= 0) {
+            revert InvalidOrganizationName();
+        }
+        if (bytes(metadataURI).length <= 0) {
+            revert InvalidMetadataURI();
+        }
+        if (bytes(organizations[id].name).length <= 0) {
+            revert OrganizationNotFound();
+        }
 
         Organization storage organization = organizations[id];
         organization.name = name;
@@ -140,8 +126,12 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @param administrator The address of the administrator to add
      */
     function addAdministrator(address id, address administrator) public onlyAdministrator(id) {
-        require(bytes(organizations[id].name).length > 0, "OrganizationRegistry: organization does not exist");
-        require(administrator != address(0), "OrganizationRegistry: invalid administrator address");
+        if (bytes(organizations[id].name).length <= 0) {
+            revert OrganizationNotFound();
+        }
+        if (administrator == address(0)) {
+            revert InvalidAddress();
+        }
         organizations[id].administrators[administrator] = true;
     }
 
@@ -151,8 +141,12 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @param administrator The address of the administrator to remove
      */
     function removeAdministrator(address id, address administrator) public onlyAdministrator(id) {
-        require(bytes(organizations[id].name).length > 0, "OrganizationRegistry: organization does not exist");
-        require(administrator != address(0), "OrganizationRegistry: invalid administrator address");
+        if (bytes(organizations[id].name).length <= 0) {
+            revert OrganizationNotFound();
+        }
+        if (administrator == address(0)) {
+            revert InvalidAddress();
+        }
         organizations[id].administrators[administrator] = false;
     }
 
@@ -161,7 +155,9 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @param id The ID of the organization to delete
      */
     function deleteOrganization(address id) public onlyOwner {
-        require(bytes(organizations[id].name).length > 0, "OrganizationRegistry: organization does not exist");
+        if (bytes(organizations[id].name).length <= 0) {
+            revert OrganizationNotFound();
+        }
         delete organizations[id];
         organizationCount--;
     }
@@ -174,6 +170,15 @@ contract OrganizationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      */
     function isAdministrator(address id, address account) public view returns (bool) {
         return organizations[id].administrators[account];
+    }
+
+    /**
+     * @notice Checks if an organization exists
+     * @param id The organization's unique identifier
+     * @return true if the organization exists, false otherwise
+     */
+    function exists(address id) public view returns (bool) {
+        return bytes(organizations[id].name).length > 0;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}

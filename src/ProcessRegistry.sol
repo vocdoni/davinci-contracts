@@ -1,169 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
+import "./IProcessRegistry.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./OrganizationRegistry.sol";
-import "./Groth16Verifier.sol";
+import "./IZKVerifier.sol";
 
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
-contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-    /*
-     * @notice Emitted when a new process is created.
-     * @param processID The ID of the process.
-     * @param creator The address of the creator of the process.
-     */
-    event ProcessCreated(bytes32 indexed processID, address indexed creator);
-    /*
-     * @notice Emitted when the status of a process is modified.
-     * @param processID The ID of the process.
-     * @param newStatus The new status of the process.
-     */
-    event ProcessStatusChanged(bytes32 indexed processID, ProcessStatus newStatus);
-    /*
-     * @notice Emitted when the census of a process is updated.
-     * @param processID The ID of the process.
-     * @param censusRoot The new root of the census.
-     * @param censusURI The URI of the census.
-     * @param maxVotes The maximum number of votes.
-     */
-    event CensusUpdated(bytes32 indexed processID, bytes32 censusRoot, string censusURI, uint256 maxVotes);
-    /*
-     * @notice Emitted when the duration of a process is modified.
-     * @param processID The ID of the process.
-     * @param duration The new duration of the process.
-     */
-    event ProcessDurationChanged(bytes32 indexed processID, uint256 duration);
-    /*
-     * @notice Emitted when the state root of a process is updated.
-     * @param processID The ID of the process.
-     * @param newStateRoot The new state root of the process.
-     */
-    event ProcessStateRootUpdated(bytes32 indexed processID, bytes32 newStateRoot);
-
+contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     /**
-     * @notice The process status defines the current state of the process.
+     * @notice The maximum value of the census origin.
      */
-    enum ProcessStatus {
-        READY,
-        ENDED,
-        CANCELED,
-        PAUSED,
-        RESULTS
-    }
-
+    uint8 public constant MAX_CENSUS_ORIGIN = 9;
     /**
-     * @notice The census origin defines the origin of the census data. It affects the way the census is handled.
+     * @notice The maximum value of the process status.
      */
-    enum CensusOrigin {
-        CENSUS_UNKNOWN,
-        OFF_CHAIN_TREE,
-        OFF_CHAIN_TREE_WEIGHTED,
-        OFF_CHAIN_CA,
-        ERC20,
-        ERC721,
-        ERC1155,
-        ERC777,
-        MINI_ME,
-        FARCASTER_FRAME
-    }
-
-    /**
-     * @notice The ballot mode define the parameters of the vote.
-     * @param costFromWeight If weighted census, the ballot weight is used as maxTotalCost.
-     * @param forceUniqueness Choices cannot appear twice or more.
-     * @param maxCount The maximum number of field per ballot.
-     * @param costExponent The exponent that will be used to compute the "cost" of the field values.
-     * @param maxValue The maximum value for all fields.
-     * @param minValue The minimum value for all fields.
-     * @param maxTotalCost Maximum limit on the total sum of all ballot fields' values. 0 => Not applicable.
-     * @param minTotalCost Minimum limit on the total sum of all ballot fields' values. 0 => Not applicable.
-     */
-    struct BallotMode {
-        bool costFromWeight;
-        bool forceUniqueness;
-        uint8 maxCount;
-        uint8 costExponent;
-        uint256 maxValue;
-        uint256 minValue;
-        uint256 maxTotalCost;
-        uint256 minTotalCost;
-    }
-
-    /**
-     * @notice The census defines the parameters of the census.
-     * @param censusOrigin The origin of the census.
-     * @param maxVotes The maximum number of votes.
-     * @param censusRoot The root of the census.
-     * @param censusURI The URI of the census.
-     */
-    struct Census {
-        CensusOrigin censusOrigin;
-        uint256 maxVotes;
-        bytes32 censusRoot;
-        string censusURI;
-    }
-
-    /**
-     * @notice The process ID is a unique identifier for a process.
-     * @param nonce The nonce of the process.
-     * @param organizationID The ID of the organization.
-     * @param chainID The ID of the chain.
-     */
-    struct ProcessID {
-        uint256 nonce;
-        address organizationID;
-        string chainID;
-    }
-
-    /**
-     * @notice EcryptionKey of a process
-     * @param x value of the X coordinate on the curve
-     * @param y value of the Y coordinate on the curve
-     */
-    struct EncryptionKey {
-        uint256 x;
-        uint256 y;
-    }
-
-    /**
-     * @notice The process defines the parameters of the process.
-     * @param status The status of the process.
-     * @param organizationId The ID of the organization.
-     * @param encryptionKey The encryption key of the process.
-     * @param latestStateRoot The latest state root of the process.
-     * @param result The result of the process.
-     * @param startTime The start time of the process.
-     * @param duration The duration of the process.
-     * @param metadataURI The URI of the metadata.
-     * @param ballotMode The ballot mode.
-     * @param census The census of the process.
-     */
-    struct Process {
-        ProcessStatus status;
-        address organizationId;
-        EncryptionKey encryptionKey;
-        bytes32 latestStateRoot;
-        uint256[] result;
-        uint256 startTime;
-        uint256 duration;
-        string metadataURI;
-        BallotMode ballotMode;
-        Census census;
-    }
-
+    uint8 public constant MAX_STATUS = 4;
     /**
      * @notice The process mapping is a mapping of process IDs to processes.
      */
     mapping(bytes32 => Process) public processes;
     /**
-     * @notice The organization registry is the contract address of the organization registry.
+     * @notice The organization registry address is the contract address of the organization registry.
      */
-    address public organizationRegistry;
+    address public organizationRegistryAddress;
     /**
      * @notice The process count is the number of processes created.
      */
@@ -180,244 +45,201 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     /**
      * @notice Initializes the contract.
      * @param _chainID The ID of the chain.
-     * @param _organizationRegistry The address of the organization registry.
+     * @param _organizationRegistryAddress The address of the organization registry.
+     * @param _verifier The address of the ZK verifier contract.
      */
-    function initialize(string calldata _chainID, address _organizationRegistry, address _verifier) public initializer {
+    function initialize(
+        string calldata _chainID,
+        address _organizationRegistryAddress,
+        address _verifier
+    ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         chainID = _chainID;
-        organizationRegistry = _organizationRegistry;
+        organizationRegistryAddress = _organizationRegistryAddress;
         verifier = _verifier;
     }
 
-    /**
-     * @notice Creates a new process.
-     * @param _status The initial status of the process.
-     * @param _startTime The start time of the process.
-     * @param _duration The duration of the process.
-     * @param _ballotMode The ballot mode of the process.
-     * @param _census The census of the process.
-     * @param _metadata The URI of the metadata.
-     * @param _organizationID The ID of the organization.
-     * @param _processID The ID of the process.
-     * @param _encryptionKey The public key of the encryption.
-     * @param _initStateRoot The initial state root.
-     */
+    /// @inheritdoc IProcessRegistry
     function newProcess(
-        ProcessStatus _status,
-        uint256 _startTime,
-        uint256 _duration,
-        BallotMode calldata _ballotMode,
-        Census calldata _census,
-        string calldata _metadata,
-        address _organizationID,
-        bytes32 _processID,
-        EncryptionKey calldata _encryptionKey,
-        bytes32 _initStateRoot
-    ) public {
-        require(_ballotMode.maxCount > 0, "NewProcess: invalid maxCount");
-        require(_ballotMode.maxValue > _ballotMode.maxCount, "NewProcess: maxCount > maxValue");
-        require(_status == ProcessStatus.READY || _status == ProcessStatus.PAUSED, "NewProcess: invalid status");
-        require(_startTime > block.timestamp, "NewProcess: invalid startTime");
-        require(_startTime + _duration > block.timestamp, "NewProcess: invalid duration");
-        require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(_organizationID, msg.sender),
-            "NewProcess: not an administrator"
-        );
+        ProcessStatus status,
+        uint256 startTime,
+        uint256 duration,
+        BallotMode calldata ballotMode,
+        Census calldata census,
+        string calldata metadata,
+        address organizationID,
+        bytes32 processID,
+        EncryptionKey calldata encryptionKey,
+        uint256 initStateRoot
+    ) external override {
+        // check if the caller is an administrator
+        if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(organizationID, msg.sender))
+            revert NotOrganizationAdministrator();
 
-        if (processes[_processID].organizationId != address(0)) {
-            revert("NewProcess: process already exists");
-        }
+        Process storage p = processes[processID];
+        // check process does not exist
+        if (p.organizationID != address(0)) revert ProcessAlreadyExists();
+        // validate ballot mode parameters
+        if (ballotMode.maxCount == 0) revert InvalidMaxCount();
+        if (ballotMode.maxValue <= ballotMode.maxCount) revert InvalidMaxValue();
+        // validate status
+        if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
+            revert InvalidStatus();
+        // validate start time and duration
+        uint256 currentTimestamp = block.timestamp;
+        if (startTime <= currentTimestamp) revert InvalidStartTime();
+        if (startTime + duration <= currentTimestamp) revert InvalidDuration();
+        // validate census
+        if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensus();
 
-        Process memory p = Process({
-            status: _status,
-            startTime: _startTime,
-            duration: _duration,
-            organizationId: _organizationID,
-            encryptionKey: _encryptionKey,
-            latestStateRoot: _initStateRoot,
-            result: new uint256[](0),
-            metadataURI: _metadata,
-            ballotMode: _ballotMode,
-            census: _census
-        });
+        p.status = status;
+        p.startTime = startTime;
+        p.duration = duration;
+        p.organizationID = organizationID;
+        p.encryptionKey = encryptionKey;
+        p.latestStateRoot = initStateRoot;
+        p.metadataURI = metadata;
+        p.ballotMode = ballotMode;
+        p.census = census;
 
-        processes[_processID] = p;
         processCount++;
 
-        emit ProcessCreated(_processID, msg.sender);
+        emit ProcessCreated(processID, msg.sender);
     }
 
-    /**
-     * @notice Returns the process data.
-     * @param _processID The ID of the process.
-     * @return The process data.
-     */
-    function getProcess(bytes32 _processID) public view returns (Process memory) {
-        return processes[_processID];
-    }
-
-    /**
-     * @notice Sets the status of a process.
-     * @param _processID The ID of the process.
-     * @param _newStatus The new status of the process.
-     */
-    function setProcessStatus(bytes32 _processID, ProcessStatus _newStatus) public {
-        require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(
-                processes[_processID].organizationId,
-                msg.sender
-            ),
-            "SetProcessStatus: not an administrator"
+    /// @inheritdoc IProcessRegistry
+    function getProcess(
+        bytes32 processID
+    )
+        external
+        view
+        override
+        returns (
+            ProcessStatus status,
+            address organizationID,
+            EncryptionKey memory encryptionKey,
+            uint256 latestStateRoot,
+            uint256[] memory result,
+            uint256 startTime,
+            uint256 duration,
+            uint256 voteCount,
+            uint256 voteOverwriteCount,
+            string memory metadataURI,
+            BallotMode memory ballotMode,
+            Census memory census
+        )
+    {
+        Process memory p = processes[processID];
+        return (
+            p.status,
+            p.organizationID,
+            p.encryptionKey,
+            p.latestStateRoot,
+            p.result,
+            p.startTime,
+            p.duration,
+            p.voteCount,
+            p.voteOverwriteCount,
+            p.metadataURI,
+            p.ballotMode,
+            p.census
         );
+    }
 
-        ProcessStatus currentStatus = processes[_processID].status;
-        if (currentStatus != ProcessStatus.READY && currentStatus != ProcessStatus.PAUSED) {
-            // When currentStatus is [ENDED, CANCELED, RESULTS], no update is allowed
-            revert("Process terminated");
+    /// @inheritdoc IProcessRegistry
+    function setProcessStatus(bytes32 processID, ProcessStatus newStatus) external override {
+        Process storage p = processes[processID];
+        address orgID = p.organizationID;
+        // check process exist
+        if (orgID == address(0)) revert ProcessNotFound();
+        // check status
+        ProcessStatus currentStatus = p.status;
+        // if current status is READY => Can go to [ENDED, CANCELED, PAUSED].
+        // if current status is PAUSED => Can go to [READY, ENDED, CANCELED].
+        if (
+            newStatus == currentStatus ||
+            uint8(newStatus) > MAX_STATUS ||
+            (currentStatus != ProcessStatus.READY && currentStatus != ProcessStatus.PAUSED)
+        ) revert InvalidStatus();
+        // check if the caller is an administrator
+        if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(orgID, msg.sender))
+            revert NotOrganizationAdministrator();
+
+        p.status = newStatus;
+
+        emit ProcessStatusChanged(processID, newStatus);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function setProcessCensus(bytes32 processID, Census calldata census) external override {
+        // check census
+        if (bytes(census.censusURI).length == 0) revert InvalidCensus();
+        if (census.censusRoot == 0) revert InvalidCensus();
+
+        Process storage p = processes[processID];
+        address orgID = p.organizationID;
+        // check process exists
+        if (orgID == address(0)) revert ProcessNotFound();
+        // check if sender is administrator
+        if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(orgID, msg.sender)) {
+            revert NotOrganizationAdministrator();
         }
 
-        // If currentStatus is READY => Can go to [ENDED, CANCELED, PAUSED].
-        // If currentStatus is PAUSED => Can go to [READY, ENDED, CANCELED].
-        require(_newStatus != currentStatus, "Must differ");
+        if (p.census.maxVotes > census.maxVotes) revert InvalidCensus();
+        // check ongoing process
+        if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
 
-        processes[_processID].status = _newStatus;
+        p.census.maxVotes = census.maxVotes;
+        p.census.censusRoot = census.censusRoot;
+        p.census.censusURI = census.censusURI;
 
-        emit ProcessStatusChanged(_processID, _newStatus);
+        emit CensusUpdated(processID, census.censusRoot, census.censusURI, census.maxVotes);
     }
 
-    /**
-     * @notice Sets the census of a process.
-     * @param _processID The ID of the process.
-     * @param _census The census of the process.
-     */
-    function setProcessCensus(bytes32 _processID, Census calldata _census) public {
-        require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(
-                processes[_processID].organizationId,
-                msg.sender
-            ),
-            "SetProcessCensus: not an administrator"
-        );
+    /// @inheritdoc IProcessRegistry
+    function setProcessDuration(bytes32 processID, uint256 _duration) external override {
+        // check valid duration
+        if (_duration <= block.timestamp) revert InvalidDuration();
 
-        // check census URI is not empty
-        require(bytes(_census.censusURI).length > 0, "Empty URI");
-        // check census root is not empty
-        require(_census.censusRoot != 0, "Empty root");
+        Process storage p = processes[processID];
+        address orgID = p.organizationID;
+        // check process exists
+        if (orgID == address(0)) revert ProcessNotFound();
+        // check admin
+        if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(orgID, msg.sender))
+            revert NotOrganizationAdministrator();
+        // check ongoing process
+        if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
 
-        // check if the process exists
-        require(processes[_processID].organizationId != address(0), "Process not found");
+        p.duration = _duration;
 
-        // Only if the process is ongoing
-        require(
-            processes[_processID].status == ProcessStatus.READY || processes[_processID].status == ProcessStatus.PAUSED,
-            "Process terminated"
-        );
+        emit ProcessDurationChanged(processID, _duration);
+    }
 
-        if (processes[_processID].census.maxVotes < _census.maxVotes) {
-            processes[_processID].census.maxVotes = _census.maxVotes;
+    /// @inheritdoc IProcessRegistry
+    function submitStateTransition(bytes32 processID, bytes calldata proof, bytes calldata input) external override {
+        // check process exists
+        Process storage p = processes[processID];
+        if (p.organizationID == address(0)) revert ProcessNotFound();
+        // check process is ongoing
+        if (p.status != ProcessStatus.READY) revert InvalidStatus();
+        // verify proof
+        IZKVerifier(verifier).verifyProof(proof, input);
+        // decompress data
+        uint256[4] memory decompressedInput = abi.decode(input, (uint256[4]));
+        // update process
+        if (decompressedInput[0] != p.latestStateRoot) {
+            revert InvalidStateRoot();
         }
-
-        processes[_processID].census.censusRoot = _census.censusRoot;
-        processes[_processID].census.censusURI = _census.censusURI;
-
-        emit CensusUpdated(_processID, _census.censusRoot, _census.censusURI, _census.maxVotes);
+        p.latestStateRoot = decompressedInput[1];
+        p.voteCount = decompressedInput[2];
+        p.voteOverwriteCount = decompressedInput[3];
+        emit ProcessStateRootUpdated(processID, decompressedInput[1]);
     }
 
-    /**
-     * @notice Sets the duration of a process.
-     * @param _processID The ID of the process.
-     * @param _duration The new duration of the process.
-     */
-    function setProcessDuration(bytes32 _processID, uint256 _duration) public {
-        require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(
-                processes[_processID].organizationId,
-                msg.sender
-            ),
-            "SetProcessDuration: not an administrator"
-        );
-
-        // check if the process exists
-        require(processes[_processID].organizationId != address(0), "Process not found");
-
-        // Only if the process is ongoing
-        require(
-            processes[_processID].status == ProcessStatus.READY || processes[_processID].status == ProcessStatus.PAUSED,
-            "Process terminated"
-        );
-
-        require(_duration > block.timestamp, "Invalid duration");
-        processes[_processID].duration = _duration;
-
-        emit ProcessDurationChanged(_processID, _duration);
-    }
-
-    /**
-     * @notice Ends a process.
-     * @param _processID The ID of the process.
-     */
-    function endProcess(bytes32 _processID) public {
-        require(
-            OrganizationRegistry(organizationRegistry).isAdministrator(
-                processes[_processID].organizationId,
-                msg.sender
-            ),
-            "endProcess: not an administrator"
-        );
-        require(
-            processes[_processID].status == ProcessStatus.READY || processes[_processID].status == ProcessStatus.PAUSED,
-            "Process terminated"
-        );
-        processes[_processID].status = ProcessStatus.ENDED;
-
-        emit ProcessStatusChanged(_processID, ProcessStatus.ENDED);
-    }
-
-    /**
-     * @notice Used to submit a state transition.
-     * @param _processID The ID of the process.
-     * @param _oldRoot The old state root.
-     * @param _newRoot The new state root.
-     * @param _proof The proof of the state transition.
-     */
-    function submitStateTransition(
-        bytes32 _processID,
-        bytes32 _oldRoot,
-        bytes32 _newRoot,
-        bytes calldata _proof
-    ) public {
-        require(processes[_processID].organizationId != address(0), "Process not found");
-        require(
-            processes[_processID].status != ProcessStatus.RESULTS &&
-                processes[_processID].status != ProcessStatus.CANCELED,
-            "Invalid status for submitting state transition"
-        );
-        require(processes[_processID].latestStateRoot == _oldRoot, "Invalid old root");
-        // TODO verify proof
-        // update state root
-        processes[_processID].latestStateRoot = _newRoot;
-        emit ProcessStateRootUpdated(_processID, _newRoot);
-    }
-
-    /**
-     * @notice Sets the result of a process.
-     * @param _processID The ID of the process.
-     * @param _result The result of the process.
-     * @param _proof The proof of the result.
-     */
-    function setProcessResult(bytes32 _processID, uint256[] calldata _result, bytes calldata _proof) public {
-        // require sequencer from sequencer registry
-        // TODO
-
-        require(processes[_processID].organizationId != address(0), "Process not found");
-        require(processes[_processID].status == ProcessStatus.ENDED, "Process not ended");
-
-        // TODO verify proof
-
-        processes[_processID].result = _result;
-        processes[_processID].status = ProcessStatus.RESULTS;
-    }
+    /// @inheritdoc IProcessRegistry
+    function setProcessResults(bytes32 processID, uint256[] calldata results) external override {}
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }

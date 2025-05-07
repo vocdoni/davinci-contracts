@@ -28,6 +28,7 @@ export interface OrganizationRegistryInterface extends Interface {
       | "addAdministrator"
       | "createOrganization"
       | "deleteOrganization"
+      | "exists"
       | "getOrganization"
       | "isAdministrator"
       | "organizationCount"
@@ -52,6 +53,7 @@ export interface OrganizationRegistryInterface extends Interface {
     functionFragment: "deleteOrganization",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(functionFragment: "exists", values: [AddressLike]): string;
   encodeFunctionData(
     functionFragment: "getOrganization",
     values: [AddressLike]
@@ -89,6 +91,7 @@ export interface OrganizationRegistryInterface extends Interface {
     functionFragment: "deleteOrganization",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "exists", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getOrganization",
     data: BytesLike
@@ -207,6 +210,8 @@ export interface OrganizationRegistry extends BaseContract {
     "nonpayable"
   >;
 
+  exists: TypedContractMethod<[id: AddressLike], [boolean], "view">;
+
   getOrganization: TypedContractMethod<
     [id: AddressLike],
     [[string, string]],
@@ -265,6 +270,9 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "deleteOrganization"
   ): TypedContractMethod<[id: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "exists"
+  ): TypedContractMethod<[id: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "getOrganization"
   ): TypedContractMethod<[id: AddressLike], [[string, string]], "view">;

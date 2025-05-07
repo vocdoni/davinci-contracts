@@ -22,24 +22,40 @@ import type {
 
 export interface Groth16VerifierInterface extends Interface {
   getFunction(
-    nameOrSignature: "compressProof" | "verifyCompressedProof" | "verifyProof"
+    nameOrSignature:
+      | "compressProof"
+      | "verifyCompressedProof"
+      | "verifyProof(bytes,bytes)"
+      | "verifyProof(uint256[8],uint256[2],uint256[2],uint256[4])"
   ): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "compressProof",
-    values: [BigNumberish[]]
+    values: [
+      BigNumberish[],
+      [BigNumberish, BigNumberish],
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyCompressedProof",
     values: [
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      [BigNumberish],
+      BigNumberish,
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "verifyProof",
+    functionFragment: "verifyProof(bytes,bytes)",
+    values: [BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[4])",
     values: [
       BigNumberish[],
+      [BigNumberish, BigNumberish],
+      [BigNumberish, BigNumberish],
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ]
   ): string;
@@ -53,7 +69,11 @@ export interface Groth16VerifierInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "verifyProof",
+    functionFragment: "verifyProof(bytes,bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[4])",
     data: BytesLike
   ): Result;
 }
@@ -102,23 +122,43 @@ export interface Groth16Verifier extends BaseContract {
   ): Promise<this>;
 
   compressProof: TypedContractMethod<
-    [proof: BigNumberish[]],
-    [[bigint, bigint, bigint, bigint]],
+    [
+      proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish]
+    ],
+    [
+      [[bigint, bigint, bigint, bigint], [bigint], bigint] & {
+        compressed: [bigint, bigint, bigint, bigint];
+        compressedCommitments: [bigint];
+        compressedCommitmentPok: bigint;
+      }
+    ],
     "view"
   >;
 
   verifyCompressedProof: TypedContractMethod<
     [
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      compressedCommitments: [BigNumberish],
+      compressedCommitmentPok: BigNumberish,
       input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
     "view"
   >;
 
-  verifyProof: TypedContractMethod<
+  "verifyProof(bytes,bytes)": TypedContractMethod<
+    [_proof: BytesLike, _input: BytesLike],
+    [void],
+    "view"
+  >;
+
+  "verifyProof(uint256[8],uint256[2],uint256[2],uint256[4])": TypedContractMethod<
     [
       proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish],
       input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
@@ -132,8 +172,18 @@ export interface Groth16Verifier extends BaseContract {
   getFunction(
     nameOrSignature: "compressProof"
   ): TypedContractMethod<
-    [proof: BigNumberish[]],
-    [[bigint, bigint, bigint, bigint]],
+    [
+      proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish]
+    ],
+    [
+      [[bigint, bigint, bigint, bigint], [bigint], bigint] & {
+        compressed: [bigint, bigint, bigint, bigint];
+        compressedCommitments: [bigint];
+        compressedCommitmentPok: bigint;
+      }
+    ],
     "view"
   >;
   getFunction(
@@ -141,16 +191,27 @@ export interface Groth16Verifier extends BaseContract {
   ): TypedContractMethod<
     [
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      compressedCommitments: [BigNumberish],
+      compressedCommitmentPok: BigNumberish,
       input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
     "view"
   >;
   getFunction(
-    nameOrSignature: "verifyProof"
+    nameOrSignature: "verifyProof(bytes,bytes)"
+  ): TypedContractMethod<
+    [_proof: BytesLike, _input: BytesLike],
+    [void],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[4])"
   ): TypedContractMethod<
     [
       proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish],
       input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     ],
     [void],
