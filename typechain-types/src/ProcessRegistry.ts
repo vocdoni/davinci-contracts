@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export declare namespace ProcessRegistry {
+export declare namespace IProcessRegistry {
   export type EncryptionKeyStruct = { x: BigNumberish; y: BigNumberish };
 
   export type EncryptionKeyStructOutput = [x: bigint, y: bigint] & {
@@ -80,55 +80,19 @@ export declare namespace ProcessRegistry {
     censusRoot: string;
     censusURI: string;
   };
-
-  export type ProcessStruct = {
-    status: BigNumberish;
-    organizationId: AddressLike;
-    encryptionKey: ProcessRegistry.EncryptionKeyStruct;
-    latestStateRoot: BytesLike;
-    result: BigNumberish[];
-    startTime: BigNumberish;
-    duration: BigNumberish;
-    metadataURI: string;
-    ballotMode: ProcessRegistry.BallotModeStruct;
-    census: ProcessRegistry.CensusStruct;
-  };
-
-  export type ProcessStructOutput = [
-    status: bigint,
-    organizationId: string,
-    encryptionKey: ProcessRegistry.EncryptionKeyStructOutput,
-    latestStateRoot: string,
-    result: bigint[],
-    startTime: bigint,
-    duration: bigint,
-    metadataURI: string,
-    ballotMode: ProcessRegistry.BallotModeStructOutput,
-    census: ProcessRegistry.CensusStructOutput
-  ] & {
-    status: bigint;
-    organizationId: string;
-    encryptionKey: ProcessRegistry.EncryptionKeyStructOutput;
-    latestStateRoot: string;
-    result: bigint[];
-    startTime: bigint;
-    duration: bigint;
-    metadataURI: string;
-    ballotMode: ProcessRegistry.BallotModeStructOutput;
-    census: ProcessRegistry.CensusStructOutput;
-  };
 }
 
 export interface ProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "MAX_CENSUS_ORIGIN"
+      | "MAX_STATUS"
       | "UPGRADE_INTERFACE_VERSION"
       | "chainID"
-      | "endProcess"
       | "getProcess"
       | "initialize"
       | "newProcess"
-      | "organizationRegistry"
+      | "organizationRegistryAddress"
       | "owner"
       | "processCount"
       | "processes"
@@ -136,11 +100,12 @@ export interface ProcessRegistryInterface extends Interface {
       | "renounceOwnership"
       | "setProcessCensus"
       | "setProcessDuration"
-      | "setProcessResult"
+      | "setProcessResults"
       | "setProcessStatus"
       | "submitStateTransition"
       | "transferOwnership"
       | "upgradeToAndCall"
+      | "verifier"
   ): FunctionFragment;
 
   getEvent(
@@ -156,21 +121,25 @@ export interface ProcessRegistryInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
+    functionFragment: "MAX_CENSUS_ORIGIN",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MAX_STATUS",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "UPGRADE_INTERFACE_VERSION",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "endProcess",
-    values: [BytesLike]
-  ): string;
   encodeFunctionData(
     functionFragment: "getProcess",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
-    values: [string, AddressLike]
+    values: [string, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "newProcess",
@@ -178,17 +147,17 @@ export interface ProcessRegistryInterface extends Interface {
       BigNumberish,
       BigNumberish,
       BigNumberish,
-      ProcessRegistry.BallotModeStruct,
-      ProcessRegistry.CensusStruct,
+      IProcessRegistry.BallotModeStruct,
+      IProcessRegistry.CensusStruct,
       string,
       AddressLike,
       BytesLike,
-      ProcessRegistry.EncryptionKeyStruct,
-      BytesLike
+      IProcessRegistry.EncryptionKeyStruct,
+      BigNumberish
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "organizationRegistry",
+    functionFragment: "organizationRegistryAddress",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -210,15 +179,15 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessCensus",
-    values: [BytesLike, ProcessRegistry.CensusStruct]
+    values: [BytesLike, IProcessRegistry.CensusStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessDuration",
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProcessResult",
-    values: [BytesLike, BigNumberish[], BytesLike]
+    functionFragment: "setProcessResults",
+    values: [BytesLike, BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessStatus",
@@ -226,7 +195,7 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "submitStateTransition",
-    values: [BytesLike, BytesLike, BytesLike, BytesLike]
+    values: [BytesLike, BytesLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
@@ -236,18 +205,23 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "upgradeToAndCall",
     values: [AddressLike, BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "verifier", values?: undefined): string;
 
+  decodeFunctionResult(
+    functionFragment: "MAX_CENSUS_ORIGIN",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "MAX_STATUS", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "UPGRADE_INTERFACE_VERSION",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "endProcess", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getProcess", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "organizationRegistry",
+    functionFragment: "organizationRegistryAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -273,7 +247,7 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProcessResult",
+    functionFragment: "setProcessResults",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -292,23 +266,24 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "upgradeToAndCall",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "verifier", data: BytesLike): Result;
 }
 
 export namespace CensusUpdatedEvent {
   export type InputTuple = [
-    processID: BytesLike,
+    processId: BytesLike,
     censusRoot: BytesLike,
     censusURI: string,
     maxVotes: BigNumberish
   ];
   export type OutputTuple = [
-    processID: string,
+    processId: string,
     censusRoot: string,
     censusURI: string,
     maxVotes: bigint
   ];
   export interface OutputObject {
-    processID: string;
+    processId: string;
     censusRoot: string;
     censusURI: string;
     maxVotes: bigint;
@@ -345,10 +320,10 @@ export namespace OwnershipTransferredEvent {
 }
 
 export namespace ProcessCreatedEvent {
-  export type InputTuple = [processID: BytesLike, creator: AddressLike];
-  export type OutputTuple = [processID: string, creator: string];
+  export type InputTuple = [processId: BytesLike, creator: AddressLike];
+  export type OutputTuple = [processId: string, creator: string];
   export interface OutputObject {
-    processID: string;
+    processId: string;
     creator: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -358,10 +333,10 @@ export namespace ProcessCreatedEvent {
 }
 
 export namespace ProcessDurationChangedEvent {
-  export type InputTuple = [processID: BytesLike, duration: BigNumberish];
-  export type OutputTuple = [processID: string, duration: bigint];
+  export type InputTuple = [processId: BytesLike, duration: BigNumberish];
+  export type OutputTuple = [processId: string, duration: bigint];
   export interface OutputObject {
-    processID: string;
+    processId: string;
     duration: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -371,11 +346,11 @@ export namespace ProcessDurationChangedEvent {
 }
 
 export namespace ProcessStateRootUpdatedEvent {
-  export type InputTuple = [processID: BytesLike, newStateRoot: BytesLike];
-  export type OutputTuple = [processID: string, newStateRoot: string];
+  export type InputTuple = [processId: BytesLike, newStateRoot: BigNumberish];
+  export type OutputTuple = [processId: string, newStateRoot: bigint];
   export interface OutputObject {
-    processID: string;
-    newStateRoot: string;
+    processId: string;
+    newStateRoot: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -384,10 +359,10 @@ export namespace ProcessStateRootUpdatedEvent {
 }
 
 export namespace ProcessStatusChangedEvent {
-  export type InputTuple = [processID: BytesLike, newStatus: BigNumberish];
-  export type OutputTuple = [processID: string, newStatus: bigint];
+  export type InputTuple = [processId: BytesLike, newStatus: BigNumberish];
+  export type OutputTuple = [processId: string, newStatus: bigint];
   export interface OutputObject {
-    processID: string;
+    processId: string;
     newStatus: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -451,46 +426,76 @@ export interface ProcessRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  MAX_CENSUS_ORIGIN: TypedContractMethod<[], [bigint], "view">;
+
+  MAX_STATUS: TypedContractMethod<[], [bigint], "view">;
+
   UPGRADE_INTERFACE_VERSION: TypedContractMethod<[], [string], "view">;
 
   chainID: TypedContractMethod<[], [string], "view">;
 
-  endProcess: TypedContractMethod<
-    [_processID: BytesLike],
-    [void],
-    "nonpayable"
-  >;
-
   getProcess: TypedContractMethod<
-    [_processID: BytesLike],
-    [ProcessRegistry.ProcessStructOutput],
+    [processId: BytesLike],
+    [
+      [
+        bigint,
+        string,
+        IProcessRegistry.EncryptionKeyStructOutput,
+        bigint,
+        bigint[],
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        string,
+        IProcessRegistry.BallotModeStructOutput,
+        IProcessRegistry.CensusStructOutput
+      ] & {
+        status: bigint;
+        organizationId: string;
+        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
+        latestStateRoot: bigint;
+        result: bigint[];
+        startTime: bigint;
+        duration: bigint;
+        voteCount: bigint;
+        voteOverwriteCount: bigint;
+        metadataURI: string;
+        ballotMode: IProcessRegistry.BallotModeStructOutput;
+        census: IProcessRegistry.CensusStructOutput;
+      }
+    ],
     "view"
   >;
 
   initialize: TypedContractMethod<
-    [_chainID: string, _organizationRegistry: AddressLike],
+    [
+      _chainID: string,
+      _organizationRegistryAddress: AddressLike,
+      _verifier: AddressLike
+    ],
     [void],
     "nonpayable"
   >;
 
   newProcess: TypedContractMethod<
     [
-      _status: BigNumberish,
-      _startTime: BigNumberish,
-      _duration: BigNumberish,
-      _ballotMode: ProcessRegistry.BallotModeStruct,
-      _census: ProcessRegistry.CensusStruct,
-      _metadata: string,
-      _organizationID: AddressLike,
-      _processID: BytesLike,
-      _encryptionKey: ProcessRegistry.EncryptionKeyStruct,
-      _initStateRoot: BytesLike
+      status: BigNumberish,
+      startTime: BigNumberish,
+      duration: BigNumberish,
+      ballotMode: IProcessRegistry.BallotModeStruct,
+      census: IProcessRegistry.CensusStruct,
+      metadata: string,
+      organizationId: AddressLike,
+      processId: BytesLike,
+      encryptionKey: IProcessRegistry.EncryptionKeyStruct,
+      initStateRoot: BigNumberish
     ],
     [void],
     "nonpayable"
   >;
 
-  organizationRegistry: TypedContractMethod<[], [string], "view">;
+  organizationRegistryAddress: TypedContractMethod<[], [string], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
 
@@ -502,23 +507,27 @@ export interface ProcessRegistry extends BaseContract {
       [
         bigint,
         string,
-        ProcessRegistry.EncryptionKeyStructOutput,
-        string,
+        IProcessRegistry.EncryptionKeyStructOutput,
         bigint,
         bigint,
+        bigint,
+        bigint,
+        bigint,
         string,
-        ProcessRegistry.BallotModeStructOutput,
-        ProcessRegistry.CensusStructOutput
+        IProcessRegistry.BallotModeStructOutput,
+        IProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
-        encryptionKey: ProcessRegistry.EncryptionKeyStructOutput;
-        latestStateRoot: string;
+        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
+        latestStateRoot: bigint;
         startTime: bigint;
         duration: bigint;
+        voteCount: bigint;
+        voteOverwriteCount: bigint;
         metadataURI: string;
-        ballotMode: ProcessRegistry.BallotModeStructOutput;
-        census: ProcessRegistry.CensusStructOutput;
+        ballotMode: IProcessRegistry.BallotModeStructOutput;
+        census: IProcessRegistry.CensusStructOutput;
       }
     ],
     "view"
@@ -529,36 +538,31 @@ export interface ProcessRegistry extends BaseContract {
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   setProcessCensus: TypedContractMethod<
-    [_processID: BytesLike, _census: ProcessRegistry.CensusStruct],
+    [processId: BytesLike, census: IProcessRegistry.CensusStruct],
     [void],
     "nonpayable"
   >;
 
   setProcessDuration: TypedContractMethod<
-    [_processID: BytesLike, _duration: BigNumberish],
+    [processId: BytesLike, _duration: BigNumberish],
     [void],
     "nonpayable"
   >;
 
-  setProcessResult: TypedContractMethod<
-    [_processID: BytesLike, _result: BigNumberish[], _proof: BytesLike],
+  setProcessResults: TypedContractMethod<
+    [processId: BytesLike, results: BigNumberish[]],
     [void],
     "nonpayable"
   >;
 
   setProcessStatus: TypedContractMethod<
-    [_processID: BytesLike, _newStatus: BigNumberish],
+    [processId: BytesLike, newStatus: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   submitStateTransition: TypedContractMethod<
-    [
-      _processID: BytesLike,
-      _oldRoot: BytesLike,
-      _newRoot: BytesLike,
-      _proof: BytesLike
-    ],
+    [processId: BytesLike, proof: BytesLike, input: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -575,10 +579,18 @@ export interface ProcessRegistry extends BaseContract {
     "payable"
   >;
 
+  verifier: TypedContractMethod<[], [string], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "MAX_CENSUS_ORIGIN"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_STATUS"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "UPGRADE_INTERFACE_VERSION"
   ): TypedContractMethod<[], [string], "view">;
@@ -586,19 +598,48 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "endProcess"
-  ): TypedContractMethod<[_processID: BytesLike], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "getProcess"
   ): TypedContractMethod<
-    [_processID: BytesLike],
-    [ProcessRegistry.ProcessStructOutput],
+    [processId: BytesLike],
+    [
+      [
+        bigint,
+        string,
+        IProcessRegistry.EncryptionKeyStructOutput,
+        bigint,
+        bigint[],
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        string,
+        IProcessRegistry.BallotModeStructOutput,
+        IProcessRegistry.CensusStructOutput
+      ] & {
+        status: bigint;
+        organizationId: string;
+        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
+        latestStateRoot: bigint;
+        result: bigint[];
+        startTime: bigint;
+        duration: bigint;
+        voteCount: bigint;
+        voteOverwriteCount: bigint;
+        metadataURI: string;
+        ballotMode: IProcessRegistry.BallotModeStructOutput;
+        census: IProcessRegistry.CensusStructOutput;
+      }
+    ],
     "view"
   >;
   getFunction(
     nameOrSignature: "initialize"
   ): TypedContractMethod<
-    [_chainID: string, _organizationRegistry: AddressLike],
+    [
+      _chainID: string,
+      _organizationRegistryAddress: AddressLike,
+      _verifier: AddressLike
+    ],
     [void],
     "nonpayable"
   >;
@@ -606,22 +647,22 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "newProcess"
   ): TypedContractMethod<
     [
-      _status: BigNumberish,
-      _startTime: BigNumberish,
-      _duration: BigNumberish,
-      _ballotMode: ProcessRegistry.BallotModeStruct,
-      _census: ProcessRegistry.CensusStruct,
-      _metadata: string,
-      _organizationID: AddressLike,
-      _processID: BytesLike,
-      _encryptionKey: ProcessRegistry.EncryptionKeyStruct,
-      _initStateRoot: BytesLike
+      status: BigNumberish,
+      startTime: BigNumberish,
+      duration: BigNumberish,
+      ballotMode: IProcessRegistry.BallotModeStruct,
+      census: IProcessRegistry.CensusStruct,
+      metadata: string,
+      organizationId: AddressLike,
+      processId: BytesLike,
+      encryptionKey: IProcessRegistry.EncryptionKeyStruct,
+      initStateRoot: BigNumberish
     ],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "organizationRegistry"
+    nameOrSignature: "organizationRegistryAddress"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "owner"
@@ -637,23 +678,27 @@ export interface ProcessRegistry extends BaseContract {
       [
         bigint,
         string,
-        ProcessRegistry.EncryptionKeyStructOutput,
-        string,
+        IProcessRegistry.EncryptionKeyStructOutput,
         bigint,
         bigint,
+        bigint,
+        bigint,
+        bigint,
         string,
-        ProcessRegistry.BallotModeStructOutput,
-        ProcessRegistry.CensusStructOutput
+        IProcessRegistry.BallotModeStructOutput,
+        IProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
-        encryptionKey: ProcessRegistry.EncryptionKeyStructOutput;
-        latestStateRoot: string;
+        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
+        latestStateRoot: bigint;
         startTime: bigint;
         duration: bigint;
+        voteCount: bigint;
+        voteOverwriteCount: bigint;
         metadataURI: string;
-        ballotMode: ProcessRegistry.BallotModeStructOutput;
-        census: ProcessRegistry.CensusStructOutput;
+        ballotMode: IProcessRegistry.BallotModeStructOutput;
+        census: IProcessRegistry.CensusStructOutput;
       }
     ],
     "view"
@@ -667,40 +712,35 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "setProcessCensus"
   ): TypedContractMethod<
-    [_processID: BytesLike, _census: ProcessRegistry.CensusStruct],
+    [processId: BytesLike, census: IProcessRegistry.CensusStruct],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "setProcessDuration"
   ): TypedContractMethod<
-    [_processID: BytesLike, _duration: BigNumberish],
+    [processId: BytesLike, _duration: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "setProcessResult"
+    nameOrSignature: "setProcessResults"
   ): TypedContractMethod<
-    [_processID: BytesLike, _result: BigNumberish[], _proof: BytesLike],
+    [processId: BytesLike, results: BigNumberish[]],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "setProcessStatus"
   ): TypedContractMethod<
-    [_processID: BytesLike, _newStatus: BigNumberish],
+    [processId: BytesLike, newStatus: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "submitStateTransition"
   ): TypedContractMethod<
-    [
-      _processID: BytesLike,
-      _oldRoot: BytesLike,
-      _newRoot: BytesLike,
-      _proof: BytesLike
-    ],
+    [processId: BytesLike, proof: BytesLike, input: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -714,6 +754,9 @@ export interface ProcessRegistry extends BaseContract {
     [void],
     "payable"
   >;
+  getFunction(
+    nameOrSignature: "verifier"
+  ): TypedContractMethod<[], [string], "view">;
 
   getEvent(
     key: "CensusUpdated"
@@ -828,7 +871,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.OutputObject
     >;
 
-    "ProcessStateRootUpdated(bytes32,bytes32)": TypedContractEvent<
+    "ProcessStateRootUpdated(bytes32,uint256)": TypedContractEvent<
       ProcessStateRootUpdatedEvent.InputTuple,
       ProcessStateRootUpdatedEvent.OutputTuple,
       ProcessStateRootUpdatedEvent.OutputObject

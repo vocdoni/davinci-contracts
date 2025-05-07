@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
-import {Test, console} from "forge-std/Test.sol";
-import {OrganizationRegistry} from "../src/OrganizationRegistry.sol";
+import { Test, console } from "forge-std/Test.sol";
+import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
 
 contract OrganizationRegistryTest is Test {
     OrganizationRegistry public organizationRegistry;

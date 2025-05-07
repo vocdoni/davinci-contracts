@@ -1,5 +1,5 @@
 # Compiler files
-cache/
+cache_forge/
 cache_hardhat/
 out/
 

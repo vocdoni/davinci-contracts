@@ -45,6 +45,10 @@ abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"
 
+abi "./artifacts/src/Groth16Verifier.sol/Groth16Verifier.json" \
+    "Groth16Verifier" \
+    "./golang-types/Groth16Verifier.go"
+
 abi "./artifacts/src/non-proxy/OrganizationRegistry.sol/OrganizationRegistry.json" \
     "OrganizationRegistry" \
     "./golang-types/non-proxy/OrganizationRegistry.go"

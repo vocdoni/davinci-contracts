@@ -1,0 +1,18 @@
+{
+    "processRegistry": {
+        "sepolia": "0xED7A5A2b67a674617209291e2EE3346C535BebD0",
+        "mainnet": ""
+    },
+    "organizationRegistry": {
+        "sepolia": "0x05ad75024D388cfE9ab9b821752EB495ebC262d5",
+        "mainnet": ""
+    },
+    "groth16Verifier": {
+        "sepolia": "0x4FEc6320A1e73820e04364E92f313E8b0d7C3238",
+        "mainnet": ""
+    },
+    "sequencerRegistry": {
+        "sepolia": "0x0",
+        "mainnet": ""
+    }
+}
