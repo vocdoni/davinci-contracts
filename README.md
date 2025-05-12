@@ -95,4 +95,8 @@ $ npx hardhat compile
 $ ./go_bind.sh
 ```
 
+### Deployments roadmap
 
+- [x] Sepolia
+- [ ] Mainnet
+- [ ] [Celo](https://celo.org) L2
