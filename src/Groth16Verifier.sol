@@ -6,11 +6,17 @@ import { IZKVerifier } from "./IZKVerifier.sol";
 import { Groth16VerifierBase } from "./Groth16VerifierBase.sol";
 
 contract Groth16Verifier is IZKVerifier, Groth16VerifierBase {
+    /// @inheritdoc IZKVerifier
     function verifyProof(bytes calldata _proof, bytes calldata _input) external view override {
         (uint256[8] memory proof, uint256[2] memory commitments, uint256[2] memory commitmentPok) = _decodeProof(
             _proof
         );
         this.verifyProof(proof, commitments, commitmentPok, _decodeInput(_input));
+    }
+
+    /// @inheritdoc IZKVerifier
+    function provingKeyHash() external pure override returns (bytes32) {
+        return PROVING_KEY_HASH;
     }
 
     function _decodeProof(

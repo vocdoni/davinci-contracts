@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "typechain-types",
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+  },
+  "include": ["typechain-types**/*.ts"],
+}
