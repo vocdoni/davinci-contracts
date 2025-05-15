@@ -8,7 +8,7 @@ import { Groth16Verifier } from "../../src/Groth16Verifier.sol";
 
 contract TestDeployAllScript is Script {
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("SEPOLIA_PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
         OrganizationRegistry organizationRegistry = new OrganizationRegistry();

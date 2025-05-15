@@ -1,6 +1,7 @@
 # Compiler files
 cache_forge/
 cache_hardhat/
+cache/
 out/
 
 # Ignores development broadcast logs
@@ -19,3 +20,10 @@ anvil_output.log
 
 # node
 node_modules/
+
+dist/
+*.zip
+*.tar.gz
+*.tgz
+
+*.tsbuildinfo

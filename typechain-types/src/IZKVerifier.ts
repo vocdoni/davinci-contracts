@@ -20,13 +20,23 @@ import type {
 } from "../common";
 
 export interface IZKVerifierInterface extends Interface {
-  getFunction(nameOrSignature: "verifyProof"): FunctionFragment;
+  getFunction(
+    nameOrSignature: "provingKeyHash" | "verifyProof"
+  ): FunctionFragment;
 
+  encodeFunctionData(
+    functionFragment: "provingKeyHash",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "verifyProof",
     values: [BytesLike, BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "provingKeyHash",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "verifyProof",
     data: BytesLike
@@ -76,6 +86,8 @@ export interface IZKVerifier extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  provingKeyHash: TypedContractMethod<[], [string], "view">;
+
   verifyProof: TypedContractMethod<
     [proof: BytesLike, input: BytesLike],
     [void],
@@ -86,6 +98,9 @@ export interface IZKVerifier extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "provingKeyHash"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "verifyProof"
   ): TypedContractMethod<[proof: BytesLike, input: BytesLike], [void], "view">;

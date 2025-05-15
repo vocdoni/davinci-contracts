@@ -1,54 +1,57 @@
 {
-  "name": "@vocdoni/davinci-contracts",
-  "version": "0.0.1",
-  "description": "Smart contracts powering DAVINCI's digital voting protocol",
-  "directories": {
-    "lib": "lib",
-    "test": "test",
-    "src": "src"
-  },
-  "files": [
-    "typechain-types",
-    "deployed_contracts_addresses.json"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vocdoni/contracts-z.git"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint:sol": "solhint './src/*.sol'",
-    "lint:sol:fix": "npm run lint:sol --fix --noPrompt",
-    "prettier": "prettier -c .",
-    "prettier:fix": "prettier -w .",
-    "typechain": "npx hardhat compile",
-    "mythril": "myth a ./src/*.sol --solc-json mythril.config.json",
-    "slither": "slither ./src/*.sol"
-  },
-  "keywords": [
-    "digital",
-    "voting",
-    "protocol",
-    "blockchain",
-    "ethereum",
-    "vocdoni",
-    "evm",
-    "solidity"
-  ],
-  "author": "Vocdoni Association",
-  "license": "AGPL-3.0-only",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-foundry": "^1.1.2",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@types/chai": "^4.3.20",
-    "@types/mocha": "^10.0.8",
-    "@types/node": "^22.7.4",
-    "chai": "^4.5.0",
-    "hardhat": "^2.22.12",
-    "prettier": "^3.5.2",
-    "prettier-plugin-solidity": "^1.4.2",
-    "solhint": "^5.0.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.2"
-  }
+    "name": "@vocdoni/davinci-contracts",
+    "version": "0.0.1",
+    "description": "Smart contracts powering DAVINCI's digital voting protocol",
+    "directories": {
+        "lib": "lib",
+        "test": "test",
+        "src": "src"
+    },
+    "files": [
+        "dist",
+        "deployed_contracts_addresses.json"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/vocdoni/contracts-z.git"
+    },
+    "main": "dist/index.ts",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "lint:sol": "solhint './src/*.sol'",
+        "lint:sol:fix": "npm run lint:sol --fix --noPrompt",
+        "prettier": "prettier -c .",
+        "prettier:fix": "prettier -w .",
+        "typechain": "npx hardhat compile",
+        "prepare": "tsc -b tsconfig.build.json",
+        "mythril": "myth a ./src/*.sol --solc-json mythril.config.json",
+        "slither": "slither ./src/*.sol"
+    },
+    "keywords": [
+        "digital",
+        "voting",
+        "protocol",
+        "blockchain",
+        "ethereum",
+        "vocdoni",
+        "evm",
+        "solidity"
+    ],
+    "author": "Vocdoni Association",
+    "license": "AGPL-3.0-only",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-foundry": "^1.1.2",
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "@types/chai": "^4.3.20",
+        "@types/mocha": "^10.0.8",
+        "@types/node": "^22.7.4",
+        "chai": "^4.5.0",
+        "hardhat": "^2.22.12",
+        "prettier": "^3.5.2",
+        "prettier-plugin-solidity": "^1.4.2",
+        "solhint": "^5.0.3",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.6.2"
+    }
 }

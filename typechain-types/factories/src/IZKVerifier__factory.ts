@@ -8,8 +8,16 @@ import type { IZKVerifier, IZKVerifierInterface } from "../../src/IZKVerifier";
 const _abi = [
   {
     inputs: [],
-    name: "InvalidProof",
-    type: "error",
+    name: "provingKeyHash",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
   },
   {
     inputs: [

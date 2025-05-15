@@ -5,8 +5,16 @@
   "abi": [
     {
       "inputs": [],
-      "name": "InvalidProof",
-      "type": "error"
+      "name": "provingKeyHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
     },
     {
       "inputs": [

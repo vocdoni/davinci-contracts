@@ -24,6 +24,7 @@ export interface Groth16VerifierInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "compressProof"
+      | "provingKeyHash"
       | "verifyCompressedProof"
       | "verifyProof(bytes,bytes)"
       | "verifyProof(uint256[8],uint256[2],uint256[2],uint256[4])"
@@ -36,6 +37,10 @@ export interface Groth16VerifierInterface extends Interface {
       [BigNumberish, BigNumberish],
       [BigNumberish, BigNumberish]
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "provingKeyHash",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "verifyCompressedProof",
@@ -62,6 +67,10 @@ export interface Groth16VerifierInterface extends Interface {
 
   decodeFunctionResult(
     functionFragment: "compressProof",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "provingKeyHash",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -137,6 +146,8 @@ export interface Groth16Verifier extends BaseContract {
     "view"
   >;
 
+  provingKeyHash: TypedContractMethod<[], [string], "view">;
+
   verifyCompressedProof: TypedContractMethod<
     [
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
@@ -186,6 +197,9 @@ export interface Groth16Verifier extends BaseContract {
     ],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "provingKeyHash"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "verifyCompressedProof"
   ): TypedContractMethod<
