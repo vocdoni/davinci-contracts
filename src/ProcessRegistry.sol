@@ -88,7 +88,10 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
             revert InvalidStatus();
         // validate start time and duration
         uint256 currentTimestamp = block.timestamp;
-        if (startTime <= currentTimestamp) revert InvalidStartTime();
+        if (startTime == 0) {
+            startTime = currentTimestamp;
+        }
+        if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensus();
@@ -109,42 +112,13 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
     }
 
     /// @inheritdoc IProcessRegistry
-    function getProcess(
-        bytes32 processId
-    )
-        external
-        view
-        override
-        returns (
-            ProcessStatus status,
-            address organizationId,
-            EncryptionKey memory encryptionKey,
-            uint256 latestStateRoot,
-            uint256[] memory result,
-            uint256 startTime,
-            uint256 duration,
-            uint256 voteCount,
-            uint256 voteOverwriteCount,
-            string memory metadataURI,
-            BallotMode memory ballotMode,
-            Census memory census
-        )
-    {
-        Process memory p = processes[processId];
-        return (
-            p.status,
-            p.organizationId,
-            p.encryptionKey,
-            p.latestStateRoot,
-            p.result,
-            p.startTime,
-            p.duration,
-            p.voteCount,
-            p.voteOverwriteCount,
-            p.metadataURI,
-            p.ballotMode,
-            p.census
-        );
+    function getProcess(bytes32 processId) external view override returns (Process memory) {
+        return processes[processId];
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getVerifierVKeyHash() external view override returns (bytes32) {
+        return IZKVerifier(verifier).provingKeyHash();
     }
 
     /// @inheritdoc IProcessRegistry

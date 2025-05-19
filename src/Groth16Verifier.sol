@@ -25,7 +25,7 @@ contract Groth16Verifier is IZKVerifier, Groth16VerifierBase {
         return abi.decode(encodedProof, (uint256[8], uint256[2], uint256[2]));
     }
 
-    function _decodeInput(bytes calldata _encodedInputs) internal pure returns (uint256[4] memory) {
-        return abi.decode(_encodedInputs, (uint256[4]));
+    function _decodeInput(bytes calldata encodedInputs) internal pure returns (uint256[4] memory) {
+        return abi.decode(encodedInputs, (uint256[4]));
     }
 }

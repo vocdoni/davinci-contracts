@@ -80,6 +80,49 @@ export declare namespace IProcessRegistry {
     censusRoot: string;
     censusURI: string;
   };
+
+  export type ProcessStruct = {
+    status: BigNumberish;
+    organizationId: AddressLike;
+    encryptionKey: IProcessRegistry.EncryptionKeyStruct;
+    latestStateRoot: BigNumberish;
+    result: BigNumberish[];
+    startTime: BigNumberish;
+    duration: BigNumberish;
+    voteCount: BigNumberish;
+    voteOverwriteCount: BigNumberish;
+    metadataURI: string;
+    ballotMode: IProcessRegistry.BallotModeStruct;
+    census: IProcessRegistry.CensusStruct;
+  };
+
+  export type ProcessStructOutput = [
+    status: bigint,
+    organizationId: string,
+    encryptionKey: IProcessRegistry.EncryptionKeyStructOutput,
+    latestStateRoot: bigint,
+    result: bigint[],
+    startTime: bigint,
+    duration: bigint,
+    voteCount: bigint,
+    voteOverwriteCount: bigint,
+    metadataURI: string,
+    ballotMode: IProcessRegistry.BallotModeStructOutput,
+    census: IProcessRegistry.CensusStructOutput
+  ] & {
+    status: bigint;
+    organizationId: string;
+    encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
+    latestStateRoot: bigint;
+    result: bigint[];
+    startTime: bigint;
+    duration: bigint;
+    voteCount: bigint;
+    voteOverwriteCount: bigint;
+    metadataURI: string;
+    ballotMode: IProcessRegistry.BallotModeStructOutput;
+    census: IProcessRegistry.CensusStructOutput;
+  };
 }
 
 export interface ProcessRegistryInterface extends Interface {
@@ -89,6 +132,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "MAX_STATUS"
       | "chainID"
       | "getProcess"
+      | "getVerifierVKeyHash"
       | "newProcess"
       | "organizationRegistryAddress"
       | "processCount"
@@ -122,6 +166,10 @@ export interface ProcessRegistryInterface extends Interface {
   encodeFunctionData(
     functionFragment: "getProcess",
     values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getVerifierVKeyHash",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "newProcess",
@@ -179,6 +227,10 @@ export interface ProcessRegistryInterface extends Interface {
   decodeFunctionResult(functionFragment: "MAX_STATUS", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getProcess", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getVerifierVKeyHash",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "organizationRegistryAddress",
@@ -340,37 +392,11 @@ export interface ProcessRegistry extends BaseContract {
 
   getProcess: TypedContractMethod<
     [processId: BytesLike],
-    [
-      [
-        bigint,
-        string,
-        IProcessRegistry.EncryptionKeyStructOutput,
-        bigint,
-        bigint[],
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        string,
-        IProcessRegistry.BallotModeStructOutput,
-        IProcessRegistry.CensusStructOutput
-      ] & {
-        status: bigint;
-        organizationId: string;
-        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
-        latestStateRoot: bigint;
-        result: bigint[];
-        startTime: bigint;
-        duration: bigint;
-        voteCount: bigint;
-        voteOverwriteCount: bigint;
-        metadataURI: string;
-        ballotMode: IProcessRegistry.BallotModeStructOutput;
-        census: IProcessRegistry.CensusStructOutput;
-      }
-    ],
+    [IProcessRegistry.ProcessStructOutput],
     "view"
   >;
+
+  getVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
 
   newProcess: TypedContractMethod<
     [
@@ -474,37 +500,12 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "getProcess"
   ): TypedContractMethod<
     [processId: BytesLike],
-    [
-      [
-        bigint,
-        string,
-        IProcessRegistry.EncryptionKeyStructOutput,
-        bigint,
-        bigint[],
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        string,
-        IProcessRegistry.BallotModeStructOutput,
-        IProcessRegistry.CensusStructOutput
-      ] & {
-        status: bigint;
-        organizationId: string;
-        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
-        latestStateRoot: bigint;
-        result: bigint[];
-        startTime: bigint;
-        duration: bigint;
-        voteCount: bigint;
-        voteOverwriteCount: bigint;
-        metadataURI: string;
-        ballotMode: IProcessRegistry.BallotModeStructOutput;
-        census: IProcessRegistry.CensusStructOutput;
-      }
-    ],
+    [IProcessRegistry.ProcessStructOutput],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "getVerifierVKeyHash"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "newProcess"
   ): TypedContractMethod<

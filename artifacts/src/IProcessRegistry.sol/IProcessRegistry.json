@@ -176,140 +176,160 @@
       "name": "getProcess",
       "outputs": [
         {
-          "internalType": "enum IProcessRegistry.ProcessStatus",
-          "name": "status",
-          "type": "uint8"
-        },
-        {
-          "internalType": "address",
-          "name": "organizationId",
-          "type": "address"
-        },
-        {
           "components": [
             {
-              "internalType": "uint256",
-              "name": "x",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "y",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct IProcessRegistry.EncryptionKey",
-          "name": "encryptionKey",
-          "type": "tuple"
-        },
-        {
-          "internalType": "uint256",
-          "name": "latestStateRoot",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "result",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256",
-          "name": "startTime",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "duration",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "voteCount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "voteOverwriteCount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "metadataURI",
-          "type": "string"
-        },
-        {
-          "components": [
-            {
-              "internalType": "bool",
-              "name": "costFromWeight",
-              "type": "bool"
-            },
-            {
-              "internalType": "bool",
-              "name": "forceUniqueness",
-              "type": "bool"
-            },
-            {
-              "internalType": "uint8",
-              "name": "maxCount",
+              "internalType": "enum IProcessRegistry.ProcessStatus",
+              "name": "status",
               "type": "uint8"
             },
             {
-              "internalType": "uint8",
-              "name": "costExponent",
-              "type": "uint8"
+              "internalType": "address",
+              "name": "organizationId",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "x",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "y",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IProcessRegistry.EncryptionKey",
+              "name": "encryptionKey",
+              "type": "tuple"
             },
             {
               "internalType": "uint256",
-              "name": "maxValue",
+              "name": "latestStateRoot",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "result",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startTime",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "minValue",
+              "name": "duration",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "maxTotalCost",
+              "name": "voteCount",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "minTotalCost",
+              "name": "voteOverwriteCount",
               "type": "uint256"
-            }
-          ],
-          "internalType": "struct IProcessRegistry.BallotMode",
-          "name": "ballotMode",
-          "type": "tuple"
-        },
-        {
-          "components": [
-            {
-              "internalType": "enum IProcessRegistry.CensusOrigin",
-              "name": "censusOrigin",
-              "type": "uint8"
-            },
-            {
-              "internalType": "uint256",
-              "name": "maxVotes",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "censusRoot",
-              "type": "bytes32"
             },
             {
               "internalType": "string",
-              "name": "censusURI",
+              "name": "metadataURI",
               "type": "string"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bool",
+                  "name": "costFromWeight",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "forceUniqueness",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "maxCount",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "costExponent",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxValue",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minValue",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxTotalCost",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minTotalCost",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IProcessRegistry.BallotMode",
+              "name": "ballotMode",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "enum IProcessRegistry.CensusOrigin",
+                  "name": "censusOrigin",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxVotes",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "censusRoot",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "string",
+                  "name": "censusURI",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct IProcessRegistry.Census",
+              "name": "census",
+              "type": "tuple"
             }
           ],
-          "internalType": "struct IProcessRegistry.Census",
-          "name": "census",
+          "internalType": "struct IProcessRegistry.Process",
+          "name": "process",
           "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVerifierVKeyHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
         }
       ],
       "stateMutability": "view",

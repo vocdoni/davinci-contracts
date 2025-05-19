@@ -213,26 +213,15 @@ interface IProcessRegistry {
     /**
      * @notice Returns the process data.
      * @param processId The ID of the process.
+     * @return process The process struct.
      */
-    function getProcess(
-        bytes32 processId
-    )
-        external
-        view
-        returns (
-            ProcessStatus status,
-            address organizationId,
-            EncryptionKey memory encryptionKey,
-            uint256 latestStateRoot,
-            uint256[] memory result,
-            uint256 startTime,
-            uint256 duration,
-            uint256 voteCount,
-            uint256 voteOverwriteCount,
-            string memory metadataURI,
-            BallotMode memory ballotMode,
-            Census memory census
-        );
+    function getProcess(bytes32 processId) external view returns (Process memory process);
+
+    /**
+     * @notice Returns the hash of the ZK verifier proving key.
+     * @return The hash of the ZK verifier proving key.
+     */
+    function getVerifierVKeyHash() external view returns (bytes32);
 
     /// SETTERS ///
 
