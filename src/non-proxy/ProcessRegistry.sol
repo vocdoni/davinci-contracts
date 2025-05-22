@@ -198,8 +198,8 @@ contract ProcessRegistry is IProcessRegistry {
             revert InvalidStateRoot();
         }
         p.latestStateRoot = decompressedInput[1];
-        p.voteCount = decompressedInput[2];
-        p.voteOverwriteCount = decompressedInput[3];
+        p.voteCount += decompressedInput[2];
+        p.voteOverwriteCount += decompressedInput[3];
         emit ProcessStateRootUpdated(processId, decompressedInput[1]);
     }
 
