@@ -15,7 +15,7 @@
         "type": "git",
         "url": "git+https://github.com/vocdoni/contracts-z.git"
     },
-    "main": "dist/index.ts",
+    "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
