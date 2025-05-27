@@ -213,7 +213,7 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes32 processId, uint256[] calldata results) external override {}
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {}
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }

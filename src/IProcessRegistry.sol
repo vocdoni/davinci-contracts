@@ -275,9 +275,10 @@ interface IProcessRegistry {
     /**
      * @notice Sets the results of a process.
      * @param processId The ID of the process.
-     * @param results The results of the process.
+     * @param proof The proof for validating the process results.
+     * @param input The public inputs data for the results.
      */
-    function setProcessResults(bytes32 processId, uint256[] calldata results) external;
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external;
 
     /**
      * @notice Submits a process state transition.

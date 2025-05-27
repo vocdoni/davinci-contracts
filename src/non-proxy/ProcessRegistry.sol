@@ -204,5 +204,5 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes32 processId, uint256[] calldata results) external override {}
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {}
 }
