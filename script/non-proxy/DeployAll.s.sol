@@ -5,6 +5,7 @@ import { Script, console } from "forge-std/Script.sol";
 import { OrganizationRegistry } from "../../src/non-proxy/OrganizationRegistry.sol";
 import { ProcessRegistry } from "../../src/non-proxy/ProcessRegistry.sol";
 import { StateTransitionVerifierGroth16 } from "../../src/StateTransitionVerifierGroth16.sol";
+import { ResultsVerifierGroth16 } from "../../src/ResultsVerifierGroth16.sol";
 
 contract TestDeployAllScript is Script {
     function run() public {
@@ -17,7 +18,15 @@ contract TestDeployAllScript is Script {
         StateTransitionVerifierGroth16 stv = new StateTransitionVerifierGroth16();
         console.log("StateTransitionVerifierGroth16 deployed at:", address(stv));
 
-        ProcessRegistry processRegistry = new ProcessRegistry("11155111", address(organizationRegistry), address(stv));
+        ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
+        console.log("ResultsVerifierGroth16 deployed at:", address(rv));
+
+        ProcessRegistry processRegistry = new ProcessRegistry(
+            "11155111",
+            address(organizationRegistry),
+            address(stv),
+            address(rv)
+        );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
 
         vm.stopBroadcast();

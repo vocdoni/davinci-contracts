@@ -38,26 +38,33 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
      */
     string public chainID;
     /**
-     * @notice The verifier is the address of the ZK verifier contract.
+     * @notice The stVerifier is the address of the state transition ZK verifier contract.
      */
-    address public verifier;
+    address public stVerifier;
+    /**
+     * @notice The rVerifier is the address of the results ZK verifier contract.
+     */
+    address public rVerifier;
 
     /**
      * @notice Initializes the contract.
      * @param _chainID The ID of the chain.
      * @param _organizationRegistryAddress The address of the organization registry.
-     * @param _verifier The address of the ZK verifier contract.
+     * @param _stVerifier The address of the ZK verifier contract.
+     * @param _rVerifier The address of the results ZK verifier contract.
      */
     function initialize(
         string calldata _chainID,
         address _organizationRegistryAddress,
-        address _verifier
+        address _stVerifier,
+        address _rVerifier
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         chainID = _chainID;
         organizationRegistryAddress = _organizationRegistryAddress;
-        verifier = _verifier;
+        stVerifier = _stVerifier;
+        rVerifier = _rVerifier;
     }
 
     /// @inheritdoc IProcessRegistry
@@ -117,8 +124,13 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
     }
 
     /// @inheritdoc IProcessRegistry
-    function getVerifierVKeyHash() external view override returns (bytes32) {
-        return IZKVerifier(verifier).provingKeyHash();
+    function getSTVerifierVKeyHash() external view override returns (bytes32) {
+        return IZKVerifier(stVerifier).provingKeyHash();
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getRVerifierVKeyHash() external view override returns (bytes32) {
+        return IZKVerifier(rVerifier).provingKeyHash();
     }
 
     /// @inheritdoc IProcessRegistry
@@ -199,7 +211,7 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
         // check process is ongoing
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         // verify proof
-        IZKVerifier(verifier).verifyProof(proof, input);
+        IZKVerifier(stVerifier).verifyProof(proof, input);
         // decompress data
         uint256[4] memory decompressedInput = abi.decode(input, (uint256[4]));
         // update process
@@ -213,7 +225,27 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {}
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
+        // check process exists
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        // TODO: check process status
+        // verify proof
+        IZKVerifier(rVerifier).verifyProof(proof, input);
+        // decompress data
+        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
+        // update process
+        if (decompressedInput[0] != p.latestStateRoot) {
+            revert InvalidStateRoot();
+        }
+        // loop through the result and update the process
+        uint256[] memory result = new uint256[](decompressedInput.length - 1);
+        for (uint256 i = 1; i < decompressedInput.length; i++) {
+            result[i - 1] = decompressedInput[i];
+        }
+        p.result = result;
+        emit ProcessResultsSet(processId, result);
+    }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }

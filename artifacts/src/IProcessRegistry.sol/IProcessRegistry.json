@@ -1,0 +1,631 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IProcessRegistry",
+  "sourceName": "src/IProcessRegistry.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "InvalidCensus",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidDuration",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMaxCount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMaxValue",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidStartTime",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidStateRoot",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidStatus",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotOrganizationAdministrator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OrganizationNotFound",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ProcessAlreadyExists",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ProcessNotFound",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "censusRoot",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "censusURI",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "maxVotes",
+          "type": "uint256"
+        }
+      ],
+      "name": "CensusUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        }
+      ],
+      "name": "ProcessCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "duration",
+          "type": "uint256"
+        }
+      ],
+      "name": "ProcessDurationChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256[]",
+          "name": "result",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "ProcessResultsSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newStateRoot",
+          "type": "uint256"
+        }
+      ],
+      "name": "ProcessStateRootUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum IProcessRegistry.ProcessStatus",
+          "name": "newStatus",
+          "type": "uint8"
+        }
+      ],
+      "name": "ProcessStatusChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getProcess",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "enum IProcessRegistry.ProcessStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "organizationId",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "x",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "y",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IProcessRegistry.EncryptionKey",
+              "name": "encryptionKey",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint256",
+              "name": "latestStateRoot",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "result",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "duration",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "voteCount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "voteOverwriteCount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "metadataURI",
+              "type": "string"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bool",
+                  "name": "costFromWeight",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "forceUniqueness",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "maxCount",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "costExponent",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxValue",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minValue",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxTotalCost",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minTotalCost",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IProcessRegistry.BallotMode",
+              "name": "ballotMode",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "enum IProcessRegistry.CensusOrigin",
+                  "name": "censusOrigin",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "maxVotes",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "censusRoot",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "string",
+                  "name": "censusURI",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct IProcessRegistry.Census",
+              "name": "census",
+              "type": "tuple"
+            }
+          ],
+          "internalType": "struct IProcessRegistry.Process",
+          "name": "process",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getRVerifierVKeyHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSTVerifierVKeyHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IProcessRegistry.ProcessStatus",
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "startTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "duration",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "costFromWeight",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "forceUniqueness",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint8",
+              "name": "maxCount",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "costExponent",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxValue",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minValue",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxTotalCost",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minTotalCost",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IProcessRegistry.BallotMode",
+          "name": "ballotMode",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum IProcessRegistry.CensusOrigin",
+              "name": "censusOrigin",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxVotes",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "censusRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "string",
+              "name": "censusURI",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct IProcessRegistry.Census",
+          "name": "census",
+          "type": "tuple"
+        },
+        {
+          "internalType": "string",
+          "name": "metadata",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "organizationId",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IProcessRegistry.EncryptionKey",
+          "name": "encryptionKey",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint256",
+          "name": "initStateRoot",
+          "type": "uint256"
+        }
+      ],
+      "name": "newProcess",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum IProcessRegistry.CensusOrigin",
+              "name": "censusOrigin",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxVotes",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "censusRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "string",
+              "name": "censusURI",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct IProcessRegistry.Census",
+          "name": "census",
+          "type": "tuple"
+        }
+      ],
+      "name": "setProcessCensus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "duration",
+          "type": "uint256"
+        }
+      ],
+      "name": "setProcessDuration",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "input",
+          "type": "bytes"
+        }
+      ],
+      "name": "setProcessResults",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "enum IProcessRegistry.ProcessStatus",
+          "name": "newStatus",
+          "type": "uint8"
+        }
+      ],
+      "name": "setProcessStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "processId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "input",
+          "type": "bytes"
+        }
+      ],
+      "name": "submitStateTransition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

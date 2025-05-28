@@ -17,7 +17,7 @@ contract TestDeployAllScript is Script {
         console.log("OrganizationRegistry deployed at:", proxy);
         address proxy2 = Upgrades.deployUUPSProxy(
             "ProcessRegistry.sol",
-            abi.encodeCall(ProcessRegistry.initialize, ("11155111", proxy, address(0)))
+            abi.encodeCall(ProcessRegistry.initialize, ("11155111", proxy, address(0), address(0)))
         );
         console.log("ProcessRegistry deployed at:", proxy2);
         vm.stopBroadcast();

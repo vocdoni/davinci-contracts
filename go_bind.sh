@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+rm -rf ./golang-types
+mkdir -p ./golang-types
+
+
 sed_in_place() {
     local pattern="$1"
     local file="$2"
@@ -25,6 +29,8 @@ abi() {
         exit 1
     fi
 
+    mkdir -p "$(dirname "$output_file")"
+
     jq -r '.bytecode' "$json_file" > "$bin_file"
 
     # Generate the Go bindings directly from the JSON ABI
@@ -45,9 +51,13 @@ abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"
 
-abi "./artifacts/src/Groth16Verifier.sol/Groth16Verifier.json" \
-    "Groth16Verifier" \
-    "./golang-types/Groth16Verifier.go"
+abi "./artifacts/src/StateTransitionVerifierGroth16.sol/StateTransitionVerifierGroth16.json" \
+    "StateTransitionVerifierGroth16" \
+    "./golang-types/StateTransitionVerifierGroth16.go"
+
+abi "./artifacts/src/ResultsVerifierGroth16.sol/ResultsVerifierGroth16.json" \
+    "ResultsVerifierGroth16" \
+    "./golang-types/ResultsVerifierGroth16.go"
 
 abi "./artifacts/src/non-proxy/OrganizationRegistry.sol/OrganizationRegistry.json" \
     "OrganizationRegistry" \
