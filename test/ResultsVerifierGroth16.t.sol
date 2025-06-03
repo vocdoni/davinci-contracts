@@ -7,12 +7,6 @@ import { ResultsVerifierGroth16 } from "../src/ResultsVerifierGroth16.sol";
 
 contract ResultsVerifierGroth16Test is Test {
     uint256 public constant STATE_ROOT = 848094410278823325666743560735506188625075380389348078732430222085993157699;
-    // uint256 public constant ROOT_HASH_AFTER =
-    //     17221650114163349820651399714058649394077581872287092757887500660867278649420;
-    // uint256 public constant ROOT_HASH_AFTER_BAD =
-    //     4033651216511111400175039953981700650715262298138585644694383935611028748527;
-    // uint256 public constant NUM_NEW_VOTES = 5;
-    // uint256 public constant NUM_OVERWRITES = 0;
     uint256[8] public results = [34, 43, 53, 54, 39, 0, 0, 0];
 
     bytes public zkp =
@@ -27,12 +21,12 @@ contract ResultsVerifierGroth16Test is Test {
     ];
     uint256[2][2] public BS = [
         [
-            8509796908533565590414684930771419624731157470256424436925734786475904097872,
-            3362890908561291071592037173181884097239615433507365346910843129676951968940
+            3362890908561291071592037173181884097239615433507365346910843129676951968940,
+            8509796908533565590414684930771419624731157470256424436925734786475904097872
         ],
         [
-            6612991766068464561495849680004841547408853560332343214761387044477784446260,
-            4456592892662497794948153547332934625044266539597669174464746999740377072930
+            4456592892662497794948153547332934625044266539597669174464746999740377072930,
+            6612991766068464561495849680004841547408853560332343214761387044477784446260
         ]
     ];
     uint256[2] public KRS = [
@@ -51,6 +45,17 @@ contract ResultsVerifierGroth16Test is Test {
     ];
 
     uint256[8] public proof = [AR[0], AR[1], BS[0][0], BS[0][1], BS[1][0], BS[1][1], KRS[0], KRS[1]];
+    uint256[9] public inputs = [
+        STATE_ROOT,
+        results[0],
+        results[1],
+        results[2],
+        results[3],
+        results[4],
+        results[5],
+        results[6],
+        results[7]
+    ];
 
     ResultsVerifierGroth16 public rv;
 
@@ -58,69 +63,83 @@ contract ResultsVerifierGroth16Test is Test {
         rv = new ResultsVerifierGroth16();
     }
 
-    // function test_Verify_OK() public view {
-    //     uint256[4] memory input = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES];
-    //     rv.verifyProof(proof, commitments, commitmentPok, input);
-    // }
+    function test_Verify_OK() public view {
+        rv.verifyProof(proof, commitments, commitmentPok, inputs);
+    }
 
     function test_Verify_OK_ABIEncoded() public view {
-        // (uint256[8] memory _proof, , ) = decodeProof(zkp);
-        // uint256[4] memory input = decodeInputs(encodedInputs);
         rv.verifyProof(zkp, encodedInputs);
     }
 
-    // function test_Verify_Fail() public {
-    //     (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(zkp);
-    //     uint256[4] memory inputBad = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER_BAD, NUM_NEW_VOTES, NUM_OVERWRITES];
-    //     vm.expectRevert();
-    //     rv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
-    // }
+    function test_Verify_Fail() public {
+        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(zkp);
+        uint256[9] memory inputBad = [
+            STATE_ROOT,
+            results[0],
+            results[1],
+            results[2],
+            results[3],
+            results[4],
+            results[5],
+            results[6],
+            999 // Bad input
+        ];
+        vm.expectRevert();
+        rv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
+    }
 
-    // function test_Encode_Proof() public view {
-    //     bytes memory encodedProof = encodeProof(proof, commitments, commitmentPok);
-    //     if (keccak256(encodedProof) != keccak256(zkp)) {
-    //         revert();
-    //     }
-    // }
+    function test_Encode_Proof() public view {
+        bytes memory encodedProof = encodeProof(proof, commitments, commitmentPok);
+        if (keccak256(encodedProof) != keccak256(zkp)) {
+            revert();
+        }
+    }
 
-    // function test_Decode_Proof() public view {
-    //     (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(zkp);
-    //     if (
-    //         _proof[0] != proof[0] ||
-    //         _proof[1] != proof[1] ||
-    //         _proof[2] != proof[2] ||
-    //         _proof[3] != proof[3] ||
-    //         _proof[4] != proof[4] ||
-    //         _proof[5] != proof[5] ||
-    //         _proof[6] != proof[6] ||
-    //         _proof[7] != proof[7] ||
-    //         _commitments[0] != commitments[0] ||
-    //         _commitments[1] != commitments[1] ||
-    //         _commitmentPok[0] != commitmentPok[0] ||
-    //         _commitmentPok[1] != commitmentPok[1]
-    //     ) {
-    //         revert();
-    //     }
-    // }
+    function test_Decode_Proof() public view {
+        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(zkp);
+        if (
+            _proof[0] != proof[0] ||
+            _proof[1] != proof[1] ||
+            _proof[2] != proof[2] ||
+            _proof[3] != proof[3] ||
+            _proof[4] != proof[4] ||
+            _proof[5] != proof[5] ||
+            _proof[6] != proof[6] ||
+            _proof[7] != proof[7] ||
+            _commitments[0] != commitments[0] ||
+            _commitments[1] != commitments[1] ||
+            _commitmentPok[0] != commitmentPok[0] ||
+            _commitmentPok[1] != commitmentPok[1]
+        ) {
+            revert();
+        }
+    }
 
-    // function test_Encode_Inputs() public view {
-    //     bytes memory _encodedInputs = encodeInputs([ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES]);
-    //     if (keccak256(_encodedInputs) != keccak256(encodedInputs)) {
-    //         revert();
-    //     }
-    // }
+    function test_Encode_Inputs() public view {
+        bytes memory _encodedInputs = encodeInputs(
+            [STATE_ROOT, results[0], results[1], results[2], results[3], results[4], results[5], results[6], results[7]]
+        );
+        if (keccak256(_encodedInputs) != keccak256(encodedInputs)) {
+            revert();
+        }
+    }
 
-    // function test_Decode_Inputs() public view {
-    //     uint256[9] memory inputs = decodeInputs(encodedInputs);
-    //     if (
-    //         inputs[0] != ROOT_HASH_BEFORE ||
-    //         inputs[1] != ROOT_HASH_AFTER ||
-    //         inputs[2] != NUM_NEW_VOTES ||
-    //         inputs[3] != NUM_OVERWRITES
-    //     ) {
-    //         revert();
-    //     }
-    // }
+    function test_Decode_Inputs() public view {
+        uint256[9] memory _inputs = decodeInputs(encodedInputs);
+        if (
+            _inputs[0] != STATE_ROOT ||
+            _inputs[1] != results[0] ||
+            _inputs[2] != results[1] ||
+            _inputs[3] != results[2] ||
+            _inputs[4] != results[3] ||
+            _inputs[5] != results[4] ||
+            _inputs[6] != results[5] ||
+            _inputs[7] != results[6] ||
+            _inputs[8] != results[7]
+        ) {
+            revert();
+        }
+    }
 
     function decodeProof(
         bytes memory encodedProof
@@ -137,11 +156,11 @@ contract ResultsVerifierGroth16Test is Test {
     }
 
     function decodeInputs(bytes memory _encodedInputs) public pure returns (uint256[9] memory) {
-        uint256[9] memory inputs = abi.decode(_encodedInputs, (uint256[9]));
-        return inputs;
+        uint256[9] memory _inputs = abi.decode(_encodedInputs, (uint256[9]));
+        return _inputs;
     }
 
-    function encodeInputs(uint256[9] memory inputs) public pure returns (bytes memory) {
-        return abi.encode(inputs);
+    function encodeInputs(uint256[9] memory _inputs) public pure returns (bytes memory) {
+        return abi.encode(_inputs);
     }
 }
