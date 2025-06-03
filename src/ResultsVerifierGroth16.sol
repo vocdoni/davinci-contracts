@@ -8,8 +8,10 @@ import { ResultsVerifierBaseGroth16 } from "./verifiers/ResultsVerifierBaseGroth
 contract ResultsVerifierGroth16 is IZKVerifier, ResultsVerifierBaseGroth16 {
     /// @inheritdoc IZKVerifier
     function verifyProof(bytes calldata _proof, bytes calldata _input) external view override {
-        (uint256[8] memory proof, , ) = _decodeProof(_proof);
-        this.verifyProof(proof, _decodeInput(_input));
+        (uint256[8] memory proof, uint256[2] memory commitments, uint256[2] memory commitmentPok) = _decodeProof(
+            _proof
+        );
+        this.verifyProof(proof, commitments, commitmentPok, _decodeInput(_input));
     }
 
     /// @inheritdoc IZKVerifier

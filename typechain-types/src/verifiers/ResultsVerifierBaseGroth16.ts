@@ -27,18 +27,29 @@ export interface ResultsVerifierBaseGroth16Interface extends Interface {
 
   encodeFunctionData(
     functionFragment: "compressProof",
-    values: [BigNumberish[]]
+    values: [
+      BigNumberish[],
+      [BigNumberish, BigNumberish],
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyCompressedProof",
     values: [
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      [BigNumberish],
+      BigNumberish,
       BigNumberish[]
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyProof",
-    values: [BigNumberish[], BigNumberish[]]
+    values: [
+      BigNumberish[],
+      [BigNumberish, BigNumberish],
+      [BigNumberish, BigNumberish],
+      BigNumberish[]
+    ]
   ): string;
 
   decodeFunctionResult(
@@ -99,14 +110,26 @@ export interface ResultsVerifierBaseGroth16 extends BaseContract {
   ): Promise<this>;
 
   compressProof: TypedContractMethod<
-    [proof: BigNumberish[]],
-    [[bigint, bigint, bigint, bigint]],
+    [
+      proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish]
+    ],
+    [
+      [[bigint, bigint, bigint, bigint], [bigint], bigint] & {
+        compressed: [bigint, bigint, bigint, bigint];
+        compressedCommitments: [bigint];
+        compressedCommitmentPok: bigint;
+      }
+    ],
     "view"
   >;
 
   verifyCompressedProof: TypedContractMethod<
     [
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      compressedCommitments: [BigNumberish],
+      compressedCommitmentPok: BigNumberish,
       input: BigNumberish[]
     ],
     [void],
@@ -114,7 +137,12 @@ export interface ResultsVerifierBaseGroth16 extends BaseContract {
   >;
 
   verifyProof: TypedContractMethod<
-    [proof: BigNumberish[], input: BigNumberish[]],
+    [
+      proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish],
+      input: BigNumberish[]
+    ],
     [void],
     "view"
   >;
@@ -126,8 +154,18 @@ export interface ResultsVerifierBaseGroth16 extends BaseContract {
   getFunction(
     nameOrSignature: "compressProof"
   ): TypedContractMethod<
-    [proof: BigNumberish[]],
-    [[bigint, bigint, bigint, bigint]],
+    [
+      proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish]
+    ],
+    [
+      [[bigint, bigint, bigint, bigint], [bigint], bigint] & {
+        compressed: [bigint, bigint, bigint, bigint];
+        compressedCommitments: [bigint];
+        compressedCommitmentPok: bigint;
+      }
+    ],
     "view"
   >;
   getFunction(
@@ -135,6 +173,8 @@ export interface ResultsVerifierBaseGroth16 extends BaseContract {
   ): TypedContractMethod<
     [
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      compressedCommitments: [BigNumberish],
+      compressedCommitmentPok: BigNumberish,
       input: BigNumberish[]
     ],
     [void],
@@ -143,7 +183,12 @@ export interface ResultsVerifierBaseGroth16 extends BaseContract {
   getFunction(
     nameOrSignature: "verifyProof"
   ): TypedContractMethod<
-    [proof: BigNumberish[], input: BigNumberish[]],
+    [
+      proof: BigNumberish[],
+      commitments: [BigNumberish, BigNumberish],
+      commitmentPok: [BigNumberish, BigNumberish],
+      input: BigNumberish[]
+    ],
     [void],
     "view"
   >;
