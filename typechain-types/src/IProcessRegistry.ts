@@ -129,7 +129,8 @@ export interface IProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "getProcess"
-      | "getVerifierVKeyHash"
+      | "getRVerifierVKeyHash"
+      | "getSTVerifierVKeyHash"
       | "newProcess"
       | "setProcessCensus"
       | "setProcessDuration"
@@ -143,6 +144,7 @@ export interface IProcessRegistryInterface extends Interface {
       | "CensusUpdated"
       | "ProcessCreated"
       | "ProcessDurationChanged"
+      | "ProcessResultsSet"
       | "ProcessStateRootUpdated"
       | "ProcessStatusChanged"
   ): EventFragment;
@@ -152,7 +154,11 @@ export interface IProcessRegistryInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "getVerifierVKeyHash",
+    functionFragment: "getRVerifierVKeyHash",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSTVerifierVKeyHash",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -180,7 +186,7 @@ export interface IProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessResults",
-    values: [BytesLike, BigNumberish[]]
+    values: [BytesLike, BytesLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessStatus",
@@ -193,7 +199,11 @@ export interface IProcessRegistryInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "getProcess", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getVerifierVKeyHash",
+    functionFragment: "getRVerifierVKeyHash",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSTVerifierVKeyHash",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
@@ -263,6 +273,19 @@ export namespace ProcessDurationChangedEvent {
   export interface OutputObject {
     processId: string;
     duration: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProcessResultsSetEvent {
+  export type InputTuple = [processId: BytesLike, result: BigNumberish[]];
+  export type OutputTuple = [processId: string, result: bigint[]];
+  export interface OutputObject {
+    processId: string;
+    result: bigint[];
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -345,7 +368,9 @@ export interface IProcessRegistry extends BaseContract {
     "view"
   >;
 
-  getVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
+  getRVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
+
+  getSTVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
 
   newProcess: TypedContractMethod<
     [
@@ -377,7 +402,7 @@ export interface IProcessRegistry extends BaseContract {
   >;
 
   setProcessResults: TypedContractMethod<
-    [processId: BytesLike, results: BigNumberish[]],
+    [processId: BytesLike, proof: BytesLike, input: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -406,7 +431,10 @@ export interface IProcessRegistry extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "getVerifierVKeyHash"
+    nameOrSignature: "getRVerifierVKeyHash"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "getSTVerifierVKeyHash"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "newProcess"
@@ -443,7 +471,7 @@ export interface IProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "setProcessResults"
   ): TypedContractMethod<
-    [processId: BytesLike, results: BigNumberish[]],
+    [processId: BytesLike, proof: BytesLike, input: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -482,6 +510,13 @@ export interface IProcessRegistry extends BaseContract {
     ProcessDurationChangedEvent.InputTuple,
     ProcessDurationChangedEvent.OutputTuple,
     ProcessDurationChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProcessResultsSet"
+  ): TypedContractEvent<
+    ProcessResultsSetEvent.InputTuple,
+    ProcessResultsSetEvent.OutputTuple,
+    ProcessResultsSetEvent.OutputObject
   >;
   getEvent(
     key: "ProcessStateRootUpdated"
@@ -530,6 +565,17 @@ export interface IProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.InputTuple,
       ProcessDurationChangedEvent.OutputTuple,
       ProcessDurationChangedEvent.OutputObject
+    >;
+
+    "ProcessResultsSet(bytes32,uint256[])": TypedContractEvent<
+      ProcessResultsSetEvent.InputTuple,
+      ProcessResultsSetEvent.OutputTuple,
+      ProcessResultsSetEvent.OutputObject
+    >;
+    ProcessResultsSet: TypedContractEvent<
+      ProcessResultsSetEvent.InputTuple,
+      ProcessResultsSetEvent.OutputTuple,
+      ProcessResultsSetEvent.OutputObject
     >;
 
     "ProcessStateRootUpdated(bytes32,uint256)": TypedContractEvent<

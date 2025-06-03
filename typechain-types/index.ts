@@ -22,10 +22,6 @@ export type { ERC1967Utils } from "./@openzeppelin/contracts/proxy/ERC1967/ERC19
 export { ERC1967Utils__factory } from "./factories/@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils__factory";
 export type { Address } from "./@openzeppelin/contracts/utils/Address";
 export { Address__factory } from "./factories/@openzeppelin/contracts/utils/Address__factory";
-export type { Groth16Verifier } from "./src/Groth16Verifier";
-export { Groth16Verifier__factory } from "./factories/src/Groth16Verifier__factory";
-export type { Groth16VerifierBase } from "./src/Groth16VerifierBase";
-export { Groth16VerifierBase__factory } from "./factories/src/Groth16VerifierBase__factory";
 export type { IOrganizationRegistry } from "./src/IOrganizationRegistry";
 export { IOrganizationRegistry__factory } from "./factories/src/IOrganizationRegistry__factory";
 export type { IProcessRegistry } from "./src/IProcessRegistry";
@@ -36,3 +32,11 @@ export type { OrganizationRegistry } from "./src/non-proxy/OrganizationRegistry"
 export { OrganizationRegistry__factory } from "./factories/src/non-proxy/OrganizationRegistry__factory";
 export type { ProcessRegistry } from "./src/non-proxy/ProcessRegistry";
 export { ProcessRegistry__factory } from "./factories/src/non-proxy/ProcessRegistry__factory";
+export type { ResultsVerifierGroth16 } from "./src/ResultsVerifierGroth16";
+export { ResultsVerifierGroth16__factory } from "./factories/src/ResultsVerifierGroth16__factory";
+export type { StateTransitionVerifierGroth16 } from "./src/StateTransitionVerifierGroth16";
+export { StateTransitionVerifierGroth16__factory } from "./factories/src/StateTransitionVerifierGroth16__factory";
+export type { ResultsVerifierBaseGroth16 } from "./src/verifiers/ResultsVerifierBaseGroth16";
+export { ResultsVerifierBaseGroth16__factory } from "./factories/src/verifiers/ResultsVerifierBaseGroth16__factory";
+export type { StateTransitionVerifierBaseGroth16 } from "./src/verifiers/StateTransitionVerifierBaseGroth16";
+export { StateTransitionVerifierBaseGroth16__factory } from "./factories/src/verifiers/StateTransitionVerifierBaseGroth16__factory";

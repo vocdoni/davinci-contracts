@@ -2,10 +2,11 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as nonProxy from "./non-proxy";
-export { Groth16Verifier__factory } from "./Groth16Verifier__factory";
-export { Groth16VerifierBase__factory } from "./Groth16VerifierBase__factory";
+export * as verifiers from "./verifiers";
 export { IOrganizationRegistry__factory } from "./IOrganizationRegistry__factory";
 export { IProcessRegistry__factory } from "./IProcessRegistry__factory";
 export { IZKVerifier__factory } from "./IZKVerifier__factory";
 export { OrganizationRegistry__factory } from "./OrganizationRegistry__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";
+export { ResultsVerifierGroth16__factory } from "./ResultsVerifierGroth16__factory";
+export { StateTransitionVerifierGroth16__factory } from "./StateTransitionVerifierGroth16__factory";

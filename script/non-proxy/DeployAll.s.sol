@@ -4,7 +4,8 @@ pragma solidity ^0.8.28;
 import { Script, console } from "forge-std/Script.sol";
 import { OrganizationRegistry } from "../../src/non-proxy/OrganizationRegistry.sol";
 import { ProcessRegistry } from "../../src/non-proxy/ProcessRegistry.sol";
-import { Groth16Verifier } from "../../src/Groth16Verifier.sol";
+import { StateTransitionVerifierGroth16 } from "../../src/StateTransitionVerifierGroth16.sol";
+import { ResultsVerifierGroth16 } from "../../src/ResultsVerifierGroth16.sol";
 
 contract TestDeployAllScript is Script {
     function run() public {
@@ -14,13 +15,17 @@ contract TestDeployAllScript is Script {
         OrganizationRegistry organizationRegistry = new OrganizationRegistry();
         console.log("OrganizationRegistry deployed at:", address(organizationRegistry));
 
-        Groth16Verifier groth16Verifier = new Groth16Verifier();
-        console.log("Groth16Verifier deployed at:", address(groth16Verifier));
+        StateTransitionVerifierGroth16 stv = new StateTransitionVerifierGroth16();
+        console.log("StateTransitionVerifierGroth16 deployed at:", address(stv));
+
+        ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
+        console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
         ProcessRegistry processRegistry = new ProcessRegistry(
             "11155111",
             address(organizationRegistry),
-            address(groth16Verifier)
+            address(stv),
+            address(rv)
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
 

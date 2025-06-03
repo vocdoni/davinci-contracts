@@ -4,26 +4,29 @@ pragma solidity ^0.8.28;
 import { Test } from "forge-std/Test.sol";
 import { ProcessRegistry } from "../src/non-proxy/ProcessRegistry.sol";
 import { OrganizationRegistry } from "../src/non-proxy/OrganizationRegistry.sol";
-import { Groth16Verifier } from "../src/Groth16Verifier.sol";
+import { StateTransitionVerifierGroth16 } from "../src/StateTransitionVerifierGroth16.sol";
+import { ResultsVerifierGroth16 } from "../src/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/IProcessRegistry.sol";
 
 contract ProcessRegistryTest is Test {
     ProcessRegistry public processRegistry;
     OrganizationRegistry public organizationRegistry;
-    Groth16Verifier public groth16Verifier;
+    StateTransitionVerifierGroth16 public stv;
+    ResultsVerifierGroth16 public rv;
 
     bytes public zkp =
-        hex"0ecab3cb35e0fe048245884fd3714a38d5f252a635eee1daaefcecedbe28557d04ca7508c53b20f185cf07cee7769eb259d6b95862cd6b3bb283828e1f2aad3115d502cc34fb6f67960d0ba635f26ca472e92507b34269ab274d5b32942b53e20983e9e55869b7a6894d5741a8eb92616910cb07faffc943309c1a75b60e41652ed5cb3a891b992a9e65b617f92d90fe27df72b22026f64973537d84b759aa2c2f96d7d7cf3a22184b05c7a697ef2539cff420956944da825a50f2017fa9362d05cb4d8a84499313b004bfc497bd180bf614c1e35e96fcae757df780c7e081db1c0ac6c54f917aee5df7532b681d39d2d584f6fd4c306f04870cb070db3eddb523cfbb5ec47f2ba67e73558f057f5fa22da5e1bdea9858a0553c159d3edee8f50779f592936e47a69b718f08fdaed9a34b2660fe110e1c38607cf3fc3bd0bc4612a36b159967b420a0c0860efd43eae410620b58e2bf639c795100e899baf22926a7512d00d5f9668fb943cb61ee6ee12a036d5d565e6c57ed252a2c1edf0d9b";
+        hex"2e688a61c5924ca3464fce45d4b1b1639b31e3c7fc6e4e74244fd6af74ea57522e9aea56c395612a89f15176942a5f5a264d4125e00c024f725e00fe9d52765a226cd50609972adb62b8c71a5b1aa60b6dc298075b44203d1cecdf3fe43c7a171e586cc471d3934312167ded54fab40cdf81e61abd3608c830ae730759e2c87f0728ad0f1277c067e26ea451d337abc81abfb83cf1c972f2d01f14a87ffbe27a1f5253ae069b804783f59ef87db09ef7df1a45b93adc28f0dcc3d8cddcd90ab20ef68f7c1c26efedcfc7f897abc69a34a0dde812ac895baf2c69b1af02493ecb2e5e1f8d4ce0f18bc3e863970eaef46154e94c8f4f2b112a7a636c5283a2fe790741f6373905e5c54bfa57f0b70104f485f24b694baa249491f0a308734548bb02c9b350371a51c8db2b1abe0e01da678da7e826474481ffef66b1dcebad58a82d56fcfbcdaeca5a963a3b510a09bd6cd17afce730f213b729bba8d1da84d982209d534b8a7b2e19f402935ffc64a3897273f82379a8a670a42bc0b00ae157cc";
 
     bytes public encodedInputs =
-        hex"224ee39d8852a0a5b414cb2a312f9cc812b767a6d676c583b0fe17b82517ca0926131bc948cf601e6038c00507492262a56a511c85c0cb0a19ad411639b1384c00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000000";
+        hex"23ffb93b6e4fb1b2098ceff1e0f20ec383761619d80f1d80ea21c652c738d99a1ef33e4eac84b3192df54859cf12c0a632f66912dbd1eee0ebc9d1dcb8bde79a00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000000";
 
-    uint256 initStateRoot = 15518021866372582043604022785954659526716738998075185570627351931444151175689;
+    uint256 initStateRoot = 16282774127260957557439015348635445656767673488688041267615841575933035731354;
 
     function setUp() public {
         organizationRegistry = new OrganizationRegistry();
-        groth16Verifier = new Groth16Verifier();
-        processRegistry = new ProcessRegistry("11155111", address(organizationRegistry), address(groth16Verifier));
+        stv = new StateTransitionVerifierGroth16();
+        rv = new ResultsVerifierGroth16();
+        processRegistry = new ProcessRegistry("11155111", address(organizationRegistry), address(stv), address(rv));
 
         createData();
     }
@@ -46,7 +49,7 @@ contract ProcessRegistryTest is Test {
         process = processRegistry.getProcess(hex"000005390056d6ed515b2e0af39bb068f587d0de83facd1b0000000000000004");
         assertEq(
             process.latestStateRoot,
-            17221650114163349820651399714058649394077581872287092757887500660867278649420
+            13999159323556783713340982889683090407637562075598756749526547570965285300122
         );
     }
 

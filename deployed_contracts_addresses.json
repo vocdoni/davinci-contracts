@@ -1,14 +1,18 @@
 {
     "processRegistry": {
-        "sepolia": "0x7c2Fdd6b411e40d9f02B496D1cA1EA767bC3d337",
+        "sepolia": "0xd721ACDc64758F8eCb0ae016C7aE563509D9Ac6F",
         "mainnet": ""
     },
     "organizationRegistry": {
-        "sepolia": "0x82A6492db3c26E666634FF8EFDac3Fe8dbe5652C",
+        "sepolia": "0x9F354dce18279F6bC3b17A5df78CbD3536e3f18c",
         "mainnet": ""
     },
-    "groth16Verifier": {
-        "sepolia": "0x0C1f5067Dc08A4A81061cf86D33002c903279653",
+    "stateTransitionVerifierGroth16": {
+        "sepolia": "0xdD1e78b5Ec6ADB7D3C9243FE42fD9180e9Cc8F43",
+        "mainnet": ""
+    },
+    "resultsVerifierGroth16": {
+        "sepolia": "0xEE95EbD00BFA339BcCE28011Ee7e4D0377C22dDB",
         "mainnet": ""
     },
     "sequencerRegistry": {

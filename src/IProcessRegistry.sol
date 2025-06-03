@@ -42,6 +42,13 @@ interface IProcessRegistry {
      */
     event ProcessStateRootUpdated(bytes32 indexed processId, uint256 newStateRoot);
 
+    /*
+     * @notice Emitted when the results of a process are set.
+     * @param processId The ID of the process.
+     * @param result The result of the process.
+     */
+    event ProcessResultsSet(bytes32 indexed processId, uint256[] result);
+
     /// ERRORS ///
 
     /**
@@ -218,10 +225,16 @@ interface IProcessRegistry {
     function getProcess(bytes32 processId) external view returns (Process memory process);
 
     /**
-     * @notice Returns the hash of the ZK verifier proving key.
-     * @return The hash of the ZK verifier proving key.
+     * @notice Returns the hash of the state transition ZK verifier proving key.
+     * @return The hash of the state transition ZK verifier proving key.
      */
-    function getVerifierVKeyHash() external view returns (bytes32);
+    function getSTVerifierVKeyHash() external view returns (bytes32);
+
+    /**
+     * @notice Returns the hash of the results ZK verifier proving key.
+     * @return The hash of the results ZK verifier proving key.
+     */
+    function getRVerifierVKeyHash() external view returns (bytes32);
 
     /// SETTERS ///
 
@@ -275,9 +288,10 @@ interface IProcessRegistry {
     /**
      * @notice Sets the results of a process.
      * @param processId The ID of the process.
-     * @param results The results of the process.
+     * @param proof The proof for validating the process results.
+     * @param input The public inputs data for the results.
      */
-    function setProcessResults(bytes32 processId, uint256[] calldata results) external;
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external;
 
     /**
      * @notice Submits a process state transition.

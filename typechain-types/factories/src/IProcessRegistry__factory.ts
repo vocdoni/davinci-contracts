@@ -144,6 +144,25 @@ const _abi = [
       },
       {
         indexed: false,
+        internalType: "uint256[]",
+        name: "result",
+        type: "uint256[]",
+      },
+    ],
+    name: "ProcessResultsSet",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "processId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
         internalType: "uint256",
         name: "newStateRoot",
         type: "uint256",
@@ -330,7 +349,20 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "getVerifierVKeyHash",
+    name: "getRVerifierVKeyHash",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getSTVerifierVKeyHash",
     outputs: [
       {
         internalType: "bytes32",
@@ -541,9 +573,14 @@ const _abi = [
         type: "bytes32",
       },
       {
-        internalType: "uint256[]",
-        name: "results",
-        type: "uint256[]",
+        internalType: "bytes",
+        name: "proof",
+        type: "bytes",
+      },
+      {
+        internalType: "bytes",
+        name: "input",
+        type: "bytes",
       },
     ],
     name: "setProcessResults",
