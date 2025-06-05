@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./OrganizationRegistry.sol";
 import "./IZKVerifier.sol";
+import "./ISequencerRegistry.sol";
 
 /**
  * @title ProcessRegistry
@@ -29,6 +30,10 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
      * @notice The organization registry address is the contract address of the organization registry.
      */
     address public organizationRegistryAddress;
+    /**
+     * @notice The sequencer registry address is the sequencer registry contract that manages sequencers.
+     */
+    address public sequencerRegistryAddress;
     /**
      * @notice The process count is the number of processes created.
      */
@@ -229,7 +234,8 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
         // check process exists
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        // TODO: check process status
+        if (p.status == ProcessStatus.RESULTS || p.status == ProcessStatus.CANCELED) revert InvalidStatus();
+        if (!_checkProcessEnded(p)) revert CannotAcceptResult();
         // verify proof
         IZKVerifier(rVerifier).verifyProof(proof, input);
         // decompress data
@@ -243,8 +249,18 @@ contract ProcessRegistry is IProcessRegistry, Initializable, UUPSUpgradeable, Ow
         for (uint256 i = 1; i < decompressedInput.length; i++) {
             result[i - 1] = decompressedInput[i];
         }
+        p.status = ProcessStatus.RESULTS;
         p.result = result;
+
+        emit ProcessStatusChanged(processId, ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, result);
+    }
+
+    function _checkProcessEnded(Process memory p) internal view returns (bool) {
+        if (p.status == ProcessStatus.ENDED || (p.startTime + p.duration) < block.timestamp) {
+            return true;
+        }
+        return false;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}

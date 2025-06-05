@@ -95,6 +95,10 @@ interface IProcessRegistry {
      * @notice NotOrganizationAdministrator error is emitted when the caller is not an administrator of the organization.
      */
     error NotOrganizationAdministrator();
+    /**
+     * @notice CannotAcceptResult error is emitted when a process cannot allow the results to be set.
+     */
+    error CannotAcceptResult();
 
     /// ENUMS ///
 
