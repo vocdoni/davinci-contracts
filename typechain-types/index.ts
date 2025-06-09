@@ -26,6 +26,8 @@ export type { IOrganizationRegistry } from "./src/IOrganizationRegistry";
 export { IOrganizationRegistry__factory } from "./factories/src/IOrganizationRegistry__factory";
 export type { IProcessRegistry } from "./src/IProcessRegistry";
 export { IProcessRegistry__factory } from "./factories/src/IProcessRegistry__factory";
+export type { ISequencerRegistry } from "./src/ISequencerRegistry";
+export { ISequencerRegistry__factory } from "./factories/src/ISequencerRegistry__factory";
 export type { IZKVerifier } from "./src/IZKVerifier";
 export { IZKVerifier__factory } from "./factories/src/IZKVerifier__factory";
 export type { OrganizationRegistry } from "./src/non-proxy/OrganizationRegistry";

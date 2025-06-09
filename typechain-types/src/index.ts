@@ -7,6 +7,7 @@ import type * as verifiers from "./verifiers";
 export type { verifiers };
 export type { IOrganizationRegistry } from "./IOrganizationRegistry";
 export type { IProcessRegistry } from "./IProcessRegistry";
+export type { ISequencerRegistry } from "./ISequencerRegistry";
 export type { IZKVerifier } from "./IZKVerifier";
 export type { OrganizationRegistry } from "./OrganizationRegistry";
 export type { ProcessRegistry } from "./ProcessRegistry";

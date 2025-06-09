@@ -27,3 +27,5 @@ dist/
 *.tgz
 
 *.tsbuildinfo
+
+bash_utils.sh

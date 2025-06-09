@@ -5,6 +5,11 @@
   "abi": [
     {
       "inputs": [],
+      "name": "CannotAcceptResult",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "InvalidCensus",
       "type": "error"
     },

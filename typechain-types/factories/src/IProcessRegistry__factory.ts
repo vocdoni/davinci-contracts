@@ -11,6 +11,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "CannotAcceptResult",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidCensus",
     type: "error",
   },

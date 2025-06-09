@@ -5,6 +5,7 @@ export * as nonProxy from "./non-proxy";
 export * as verifiers from "./verifiers";
 export { IOrganizationRegistry__factory } from "./IOrganizationRegistry__factory";
 export { IProcessRegistry__factory } from "./IProcessRegistry__factory";
+export { ISequencerRegistry__factory } from "./ISequencerRegistry__factory";
 export { IZKVerifier__factory } from "./IZKVerifier__factory";
 export { OrganizationRegistry__factory } from "./OrganizationRegistry__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";

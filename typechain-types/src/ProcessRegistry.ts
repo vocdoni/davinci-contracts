@@ -144,6 +144,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "proxiableUUID"
       | "rVerifier"
       | "renounceOwnership"
+      | "sequencerRegistryAddress"
       | "setProcessCensus"
       | "setProcessDuration"
       | "setProcessResults"
@@ -234,6 +235,10 @@ export interface ProcessRegistryInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "sequencerRegistryAddress",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "setProcessCensus",
     values: [BytesLike, IProcessRegistry.CensusStruct]
   ): string;
@@ -304,6 +309,10 @@ export interface ProcessRegistryInterface extends Interface {
   decodeFunctionResult(functionFragment: "rVerifier", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "sequencerRegistryAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -597,6 +606,8 @@ export interface ProcessRegistry extends BaseContract {
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
+  sequencerRegistryAddress: TypedContractMethod<[], [string], "view">;
+
   setProcessCensus: TypedContractMethod<
     [processId: BytesLike, census: IProcessRegistry.CensusStruct],
     [void],
@@ -751,6 +762,9 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "sequencerRegistryAddress"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "setProcessCensus"
   ): TypedContractMethod<

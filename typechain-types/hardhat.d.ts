@@ -54,6 +54,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IProcessRegistry__factory>;
     getContractFactory(
+      name: "ISequencerRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ISequencerRegistry__factory>;
+    getContractFactory(
       name: "IZKVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IZKVerifier__factory>;
@@ -141,6 +145,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IProcessRegistry>;
     getContractAt(
+      name: "ISequencerRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ISequencerRegistry>;
+    getContractAt(
       name: "IZKVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -227,6 +236,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
     deployContract(
+      name: "ISequencerRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ISequencerRegistry>;
+    deployContract(
       name: "IZKVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IZKVerifier>;
@@ -313,6 +326,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
+    deployContract(
+      name: "ISequencerRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ISequencerRegistry>;
     deployContract(
       name: "IZKVerifier",
       args: any[],
