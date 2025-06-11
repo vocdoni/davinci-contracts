@@ -27,6 +27,10 @@ contract ProcessRegistry is IProcessRegistry {
      */
     address public organizationRegistryAddress;
     /**
+     * @notice The sequencer registry address is the sequencer registry contract that manages sequencers.
+     */
+    address public sequencerRegistryAddress;
+    /**
      * @notice The process count is the number of processes created.
      */
     uint32 public processCount;
@@ -77,9 +81,18 @@ contract ProcessRegistry is IProcessRegistry {
         Process storage p = processes[processId];
         // check process does not exist
         if (p.organizationId != address(0)) revert ProcessAlreadyExists();
+
         // validate ballot mode parameters
         if (ballotMode.maxCount == 0) revert InvalidMaxCount();
-        if (ballotMode.maxValue <= ballotMode.maxCount) revert InvalidMaxValue();
+        if (ballotMode.maxValue < ballotMode.minValue) revert InvalidMinValue();
+        if (!ballotMode.costFromWeight && ballotMode.maxTotalCost == 0) revert InvalidMaxTotalCost();
+        if (ballotMode.maxTotalCost > 0 && (ballotMode.maxTotalCost < ballotMode.minTotalCost))
+            revert InvalidTotalCostBounds();
+        // validate census
+        if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
+        if (census.maxVotes == 0) revert InvalidMaxVotes();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
             revert InvalidStatus();
@@ -90,8 +103,6 @@ contract ProcessRegistry is IProcessRegistry {
         }
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
-        // validate census
-        if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensus();
 
         p.status = status;
         p.startTime = startTime;
@@ -129,18 +140,13 @@ contract ProcessRegistry is IProcessRegistry {
         address orgID = p.organizationId;
         // check process exist
         if (orgID == address(0)) revert ProcessNotFound();
-        // check status
-        ProcessStatus currentStatus = p.status;
-        // if current status is READY => Can go to [ENDED, CANCELED, PAUSED].
-        // if current status is PAUSED => Can go to [READY, ENDED, CANCELED].
-        if (
-            newStatus == currentStatus ||
-            uint8(newStatus) > MAX_STATUS ||
-            (currentStatus != ProcessStatus.READY && currentStatus != ProcessStatus.PAUSED)
-        ) revert InvalidStatus();
+
         // check if the caller is an administrator
         if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(orgID, msg.sender))
             revert NotOrganizationAdministrator();
+
+        // Validate status transition
+        if (!__validateStatusTransition(p.status, newStatus)) revert InvalidStatus();
 
         p.status = newStatus;
 
@@ -149,10 +155,6 @@ contract ProcessRegistry is IProcessRegistry {
 
     /// @inheritdoc IProcessRegistry
     function setProcessCensus(bytes32 processId, Census calldata census) external override {
-        // check census
-        if (bytes(census.censusURI).length == 0) revert InvalidCensus();
-        if (census.censusRoot == 0) revert InvalidCensus();
-
         Process storage p = processes[processId];
         address orgID = p.organizationId;
         // check process exists
@@ -162,7 +164,11 @@ contract ProcessRegistry is IProcessRegistry {
             revert NotOrganizationAdministrator();
         }
 
-        if (p.census.maxVotes > census.maxVotes) revert InvalidCensus();
+        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin(); // enforce census origin cannot be changed
+        if (census.maxVotes == 0 || p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+
         // check ongoing process
         if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
 
@@ -239,6 +245,43 @@ contract ProcessRegistry is IProcessRegistry {
 
         emit ProcessStatusChanged(processId, ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, result);
+    }
+
+    // internal functions
+
+    /**
+     * @notice Validates if a status transition is allowed
+     * @param currentStatus The current status of the process
+     * @param newStatus The new status to transition to
+     * @return bool True if the transition is valid, false otherwise
+     */
+    function __validateStatusTransition(
+        ProcessStatus currentStatus,
+        ProcessStatus newStatus
+    ) internal pure returns (bool) {
+        // Cannot transition to the same status
+        if (newStatus == currentStatus) return false;
+
+        // CANCELED and RESULTS states cannot be changed
+        if (currentStatus == ProcessStatus.CANCELED || currentStatus == ProcessStatus.RESULTS) return false;
+
+        // Validate transitions based on current status
+        if (currentStatus == ProcessStatus.READY) {
+            // READY can only go to PAUSED, CANCELED, or ENDED
+            return (newStatus == ProcessStatus.PAUSED ||
+                newStatus == ProcessStatus.CANCELED ||
+                newStatus == ProcessStatus.ENDED);
+        } else if (currentStatus == ProcessStatus.PAUSED) {
+            // PAUSED can only go to READY, CANCELED, or ENDED
+            return (newStatus == ProcessStatus.READY ||
+                newStatus == ProcessStatus.CANCELED ||
+                newStatus == ProcessStatus.ENDED);
+        } else if (currentStatus == ProcessStatus.ENDED) {
+            // ENDED can only go to RESULTS or CANCELED
+            return (newStatus == ProcessStatus.RESULTS || newStatus == ProcessStatus.CANCELED);
+        }
+
+        return false;
     }
 
     function _checkProcessEnded(Process memory p) internal view returns (bool) {

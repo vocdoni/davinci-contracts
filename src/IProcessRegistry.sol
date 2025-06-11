@@ -72,9 +72,41 @@ interface IProcessRegistry {
      */
     error InvalidMaxValue();
     /**
-     * @notice InvalidCensus error is emitted when the census is invalid.
+     * @notice InvalidMinValue error is emitted when the minimum value of the ballot mode is invalid.
      */
-    error InvalidCensus();
+    error InvalidMinValue();
+    /**
+     * @notice InvalidMaxTotalCost error is emitted when the maximum total cost of the ballot mode is invalid.
+     */
+    error InvalidMaxTotalCost();
+    /**
+     * @notice InvalidMinTotalCost error is emitted when the minimum total cost of the ballot mode is invalid.
+     */
+    error InvalidMinTotalCost();
+    /**
+     * @notice InvalidTotalCostBounds error is emitted when the total cost bounds of the ballot mode are invalid.
+     */
+    error InvalidTotalCostBounds();
+    /**
+     * @notice InvalidMaxVotes error is emitted when the maximum number of votes is invalid.
+     */
+    error InvalidMaxVotes();
+    /**
+     * @notice InvalidUniqueValues error is emitted when the unique values are invalid.
+     */
+    error InvalidUniqueValues();
+    /**
+     * @notice InvalidCensusRoot error is emitted when the census root is invalid.
+     */
+    error InvalidCensusRoot();
+    /**
+     * @notice InvalidCensusURI error is emitted when the census URI is invalid.
+     */
+    error InvalidCensusURI();
+    /**
+     * @notice InvalidCensusOrigin error is emitted when the census origin is invalid.
+     */
+    error InvalidCensusOrigin();
     /**
      * @notice InvalidStateRoot error is emitted when a state root is invalid.
      */
@@ -135,7 +167,7 @@ interface IProcessRegistry {
      * @notice The ballot mode define the parameters of the vote.
      * @param costFromWeight If weighted census, the ballot weight is used as maxTotalCost.
      * @param forceUniqueness Choices cannot appear twice or more.
-     * @param maxCount The maximum number of field per ballot.
+     * @param maxCount The maximum number of fields per ballot.
      * @param costExponent The exponent that will be used to compute the "cost" of the field values.
      * @param maxValue The maximum value for all fields.
      * @param minValue The minimum value for all fields.

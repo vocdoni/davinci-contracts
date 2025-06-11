@@ -10,6 +10,8 @@ import { ResultsVerifierGroth16 } from "../../src/ResultsVerifierGroth16.sol";
 contract TestDeployAllScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("SEPOLIA_PRIVATE_KEY");
+        address deployerAddress = vm.addr(deployerPrivateKey);
+        console.log("Deployer address:", deployerAddress);
         vm.startBroadcast(deployerPrivateKey);
 
         OrganizationRegistry organizationRegistry = new OrganizationRegistry();
@@ -21,8 +23,9 @@ contract TestDeployAllScript is Script {
         ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
         console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
+        string memory chainId = vm.envString("SEPOLIA_CHAIN_ID");
         ProcessRegistry processRegistry = new ProcessRegistry(
-            "11155111",
+            chainId, // change this to the desired chain ID
             address(organizationRegistry),
             address(stv),
             address(rv)
