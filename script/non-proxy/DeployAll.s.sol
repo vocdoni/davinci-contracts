@@ -23,10 +23,9 @@ contract TestDeployAllScript is Script {
         ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
         console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
-        string memory chainId = vm.envString("SEPOLIA_CHAIN_ID");
+        uint256 chainId = vm.envUint("SEPOLIA_CHAIN_ID");
         ProcessRegistry processRegistry = new ProcessRegistry(
-            chainId, // change this to the desired chain ID
-            address(organizationRegistry),
+            uint32(chainId), // change this to the desired chain ID
             address(stv),
             address(rv)
         );

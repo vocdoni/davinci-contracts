@@ -32,16 +32,18 @@ interface IProcessRegistry {
     /*
      * @notice Emitted when the state root of a process is updated.
      * @param processId The ID of the process.
+     * @param sender The address of the sender.
      * @param newStateRoot The new state root of the process.
      */
-    event ProcessStateRootUpdated(bytes32 indexed processId, uint256 newStateRoot);
+    event ProcessStateRootUpdated(bytes32 indexed processId, address indexed sender, uint256 newStateRoot);
 
     /*
      * @notice Emitted when the results of a process are set.
      * @param processId The ID of the process.
+     * @param sender The address of the sender.
      * @param result The result of the process.
      */
-    event ProcessResultsSet(bytes32 indexed processId, uint256[] result);
+    event ProcessResultsSet(bytes32 indexed processId, address indexed sender, uint256[] result);
     /**
      * @notice Emitted when a process status is modified
      * @param processId The ID of the process
@@ -121,14 +123,6 @@ interface IProcessRegistry {
      */
     error ProcessNotFound();
     /**
-     * @notice OrganizationNotFound error is emitted when the organization is not found.
-     */
-    error OrganizationNotFound();
-    /**
-     * @notice NotOrganizationAdministrator error is emitted when the caller is not an administrator of the organization.
-     */
-    error NotOrganizationAdministrator();
-    /**
      * @notice CannotAcceptResult error is emitted when a process cannot allow the results to be set.
      */
     error CannotAcceptResult();
@@ -136,10 +130,6 @@ interface IProcessRegistry {
      * @notice Thrown when the process ID is invalid (zero)
      */
     error InvalidProcessId();
-    /**
-     * @notice Thrown when the organization registry address is invalid (zero)
-     */
-    error InvalidOrganizationRegistry();
     /**
      * @notice Thrown when attempting to transition to RESULTS state before process has ended
      */
@@ -152,6 +142,10 @@ interface IProcessRegistry {
      * @notice Thrown when the proof is invalid.
      */
     error ProofInvalid();
+    /**
+     * @notice Thrown when the sender is not authorized to perform the action.
+     */
+    error Unauthorized();
 
     /// ENUMS ///
 
@@ -222,14 +216,14 @@ interface IProcessRegistry {
 
     /**
      * @notice The process ID is a unique identifier for a process.
-     * @param nonce The nonce of the process.
-     * @param organizationId The ID of the organization.
+     * @param owner The owner of the process.
      * @param chainID The ID of the chain.
+     * @param nonce The nonce of the process.
      */
     struct ProcessId {
-        uint256 nonce;
-        address organizationId;
-        string chainID;
+        address owner;
+        uint32 chainID;
+        uint64 nonce;
     }
 
     /**
@@ -245,7 +239,7 @@ interface IProcessRegistry {
     /**
      * @notice The process defines the parameters of the process.
      * @param status The status of the process.
-     * @param organizationId The ID of the organization.
+     * @param owner The owner of the process.
      * @param encryptionKey The encryption key of the process.
      * @param latestStateRoot The latest state root of the process.
      * @param result The result of the process.
@@ -259,7 +253,7 @@ interface IProcessRegistry {
      */
     struct Process {
         ProcessStatus status;
-        address organizationId;
+        address owner;
         EncryptionKey encryptionKey;
         uint256 latestStateRoot;
         uint256[] result;
@@ -310,8 +304,6 @@ interface IProcessRegistry {
      * @param ballotMode The ballot mode of the process.
      * @param census The census of the process.
      * @param metadata The URI of the metadata.
-     * @param organizationId The ID of the organization.
-     * @param processId The ID of the process.
      * @param encryptionKey The public key used for vote encryption.
      * @param initStateRoot The initial state root.
      */
@@ -322,11 +314,9 @@ interface IProcessRegistry {
         BallotMode calldata ballotMode,
         Census calldata census,
         string calldata metadata,
-        address organizationId,
-        bytes32 processId,
         EncryptionKey calldata encryptionKey,
         uint256 initStateRoot
-    ) external;
+    ) external returns (bytes32);
 
     /**
      * @notice Sets the status of a process.
