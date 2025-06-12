@@ -85,21 +85,31 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         EncryptionKey calldata encryptionKey,
         uint256 initStateRoot
     ) external override {
-        // check if the caller is an administrator
+        // check caller permissions
         if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(organizationId, msg.sender))
             revert NotOrganizationAdministrator();
 
-        Process storage p = processes[processId];
         // check process does not exist
+        Process storage p = processes[processId];
         if (p.organizationId != address(0)) revert ProcessAlreadyExists();
 
         // validate ballot mode parameters
-        _validateBallotMode(ballotMode);
-        // validate census
-        _validateCensus(census);
+        if (ballotMode.maxCount == 0) revert InvalidMaxCount();
+        if (ballotMode.maxValue < ballotMode.minValue) revert InvalidMinValue();
+        if (!ballotMode.costFromWeight && ballotMode.maxTotalCost == 0) revert InvalidMaxTotalCost();
+        if (ballotMode.maxTotalCost > 0 && (ballotMode.maxTotalCost < ballotMode.minTotalCost))
+            revert InvalidTotalCostBounds();
+
+        // validate census parameters
+        if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
+        if (census.maxVotes == 0) revert InvalidMaxVotes();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
             revert InvalidStatus();
+
         // validate start time and duration
         uint256 currentTimestamp = block.timestamp;
         if (startTime == 0) {
@@ -108,6 +118,7 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
 
+        // store process data
         p.status = status;
         p.startTime = startTime;
         p.duration = duration;
@@ -118,6 +129,7 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         p.ballotMode = ballotMode;
         p.census = census;
 
+        // update process count
         processCount++;
 
         emit ProcessCreated(processId, msg.sender);
@@ -140,28 +152,42 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
 
     /// @inheritdoc IProcessRegistry
     function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external override {
+        // validate inputs
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
+
         Process storage p = processes[processId];
         address orgID = p.organizationId;
-        // check process exist
+
+        // check process exists
         if (orgID == address(0)) revert ProcessNotFound();
 
-        // check if the caller is an administrator
+        // check caller permissions
         if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(orgID, msg.sender))
             revert NotOrganizationAdministrator();
 
-        // Validate status transition
-        if (!__validateStatusTransition(p.status, newStatus)) revert InvalidStatus();
+        // validate status transition
+        ProcessStatus oldStatus = p.status;
+        if (!_validateStatusTransition(oldStatus, newStatus)) revert InvalidStatus();
 
+        // validate process time, allow ENDED status to be manually set
+        if (p.startTime + p.duration <= block.timestamp && newStatus != ProcessStatus.ENDED) revert InvalidTimeBounds();
+
+        // update status
         p.status = newStatus;
+        // if transition is to ENDED, update duration to the time difference between current time and start time
+        if (newStatus == ProcessStatus.ENDED) {
+            uint256 newDuration = block.timestamp - p.startTime;
+            p.duration = newDuration;
+            emit ProcessDurationChanged(processId, newDuration);
+        }
 
-        emit ProcessStatusChanged(processId, newStatus);
+        // emit event with both old and new status for better traceability
+        emit ProcessStatusChanged(processId, oldStatus, newStatus);
     }
 
     /// @inheritdoc IProcessRegistry
     function setProcessCensus(bytes32 processId, Census calldata census) external override {
-        // check census
-        _validateCensus(census);
-
         Process storage p = processes[processId];
         address orgID = p.organizationId;
         // check process exists
@@ -171,9 +197,16 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
             revert NotOrganizationAdministrator();
         }
 
+        // check census parameters
+        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin(); // enforce census origin cannot be changed
         if (p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+
         // check ongoing process
         if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
+        // validate process time
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         p.census.maxVotes = census.maxVotes;
         p.census.censusRoot = census.censusRoot;
@@ -183,10 +216,8 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     }
 
     /// @inheritdoc IProcessRegistry
+    /// @dev Note that the end time of the process is startTime + duration.
     function setProcessDuration(bytes32 processId, uint256 _duration) external override {
-        // check valid duration
-        if (_duration <= block.timestamp) revert InvalidDuration();
-
         Process storage p = processes[processId];
         address orgID = p.organizationId;
         // check process exists
@@ -195,11 +226,26 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         if (!OrganizationRegistry(organizationRegistryAddress).isAdministrator(orgID, msg.sender))
             revert NotOrganizationAdministrator();
         // check ongoing process
-        if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
+        ProcessStatus status = p.status;
+        if (status != ProcessStatus.READY && status != ProcessStatus.PAUSED) revert InvalidStatus();
+        // check valid duration
+        uint256 startTime = p.startTime;
+        uint256 oldDuration = p.duration;
+        if (
+            _duration == 0 ||
+            startTime + _duration <= block.timestamp ||
+            startTime + _duration <= startTime + oldDuration
+        ) revert InvalidDuration();
 
         p.duration = _duration;
 
         emit ProcessDurationChanged(processId, _duration);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getProcessEndTime(bytes32 processId) external view returns (uint256) {
+        Process storage p = processes[processId];
+        return p.startTime + p.duration;
     }
 
     /// @inheritdoc IProcessRegistry
@@ -209,6 +255,8 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         if (p.organizationId == address(0)) revert ProcessNotFound();
         // check process is ongoing
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
+        // validate process time
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
         // verify proof
         IZKVerifier(stVerifier).verifyProof(proof, input);
         // decompress data
@@ -228,13 +276,15 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         // check process exists
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        if (p.status == ProcessStatus.RESULTS || p.status == ProcessStatus.CANCELED) revert InvalidStatus();
-        if (!_checkProcessEnded(p)) revert CannotAcceptResult();
+        // check process is ended
+        if (p.status != ProcessStatus.ENDED) revert InvalidStatus();
+        // validate process ended by time
+        if (p.startTime + p.duration > block.timestamp) revert InvalidTimeBounds();
         // verify proof
         IZKVerifier(rVerifier).verifyProof(proof, input);
-        // decompress data
+        // decompress input data
         uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
-        // update process
+        // validate state root against the latest stored in the process
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
@@ -246,67 +296,55 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         p.status = ProcessStatus.RESULTS;
         p.result = result;
 
-        emit ProcessStatusChanged(processId, ProcessStatus.RESULTS);
+        // process always goes from ENDED to RESULTS
+        emit ProcessStatusChanged(processId, ProcessStatus.ENDED, ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, result);
     }
 
     // internal functions
-
-    function _validateBallotMode(BallotMode memory ballotMode) internal pure {
-        if (ballotMode.maxCount < 1) revert InvalidMaxCount();
-        if (ballotMode.maxValue < ballotMode.minValue) revert InvalidMinValue();
-        if (!ballotMode.costFromWeight && ballotMode.maxTotalCost == 0) revert InvalidMaxTotalCost();
-        if (ballotMode.maxTotalCost > 0 && (ballotMode.maxTotalCost < ballotMode.minTotalCost))
-            revert InvalidTotalCostBounds();
-    }
 
     /**
      * @notice Validates if a status transition is allowed
      * @param currentStatus The current status of the process
      * @param newStatus The new status to transition to
      * @return bool True if the transition is valid, false otherwise
+     * @dev Status transition rules:
+     * - READY -> PAUSED, CANCELED, ENDED
+     * - PAUSED -> READY, CANCELED, ENDED
+     * - ENDED -> RESULTS (automatically set when calling setProcessResults)
+     * - CANCELED -> No transitions allowed
+     * - RESULTS -> No transitions allowed
      */
-    function __validateStatusTransition(
+    function _validateStatusTransition(
         ProcessStatus currentStatus,
         ProcessStatus newStatus
     ) internal pure returns (bool) {
         // Cannot transition to the same status
         if (newStatus == currentStatus) return false;
 
-        // CANCELED and RESULTS states cannot be changed
+        // CANCELED and RESULTS states are final states
         if (currentStatus == ProcessStatus.CANCELED || currentStatus == ProcessStatus.RESULTS) return false;
 
-        // Validate transitions based on current status
+        // Use bit flags for more gas-efficient status transition validation
+        uint256 allowedTransitions;
+
         if (currentStatus == ProcessStatus.READY) {
             // READY can only go to PAUSED, CANCELED, or ENDED
-            return (newStatus == ProcessStatus.PAUSED ||
-                newStatus == ProcessStatus.CANCELED ||
-                newStatus == ProcessStatus.ENDED);
+            allowedTransitions =
+                (1 << uint8(ProcessStatus.PAUSED)) |
+                (1 << uint8(ProcessStatus.CANCELED)) |
+                (1 << uint8(ProcessStatus.ENDED));
         } else if (currentStatus == ProcessStatus.PAUSED) {
             // PAUSED can only go to READY, CANCELED, or ENDED
-            return (newStatus == ProcessStatus.READY ||
-                newStatus == ProcessStatus.CANCELED ||
-                newStatus == ProcessStatus.ENDED);
+            allowedTransitions =
+                (1 << uint8(ProcessStatus.READY)) |
+                (1 << uint8(ProcessStatus.CANCELED)) |
+                (1 << uint8(ProcessStatus.ENDED));
         } else if (currentStatus == ProcessStatus.ENDED) {
-            // ENDED can only go to RESULTS or CANCELED
-            return (newStatus == ProcessStatus.RESULTS || newStatus == ProcessStatus.CANCELED);
+            return false;
         }
 
-        return false;
-    }
-
-    function _validateCensus(Census memory census) internal pure {
-        if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
-        if (census.maxVotes == 0) revert InvalidMaxVotes();
-        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
-    }
-
-    function _checkProcessEnded(Process memory p) internal view returns (bool) {
-        if (p.status == ProcessStatus.ENDED || (p.startTime + p.duration) < block.timestamp) {
-            return true;
-        }
-        return false;
+        return (allowedTransitions & (1 << uint8(newStatus))) != 0;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}

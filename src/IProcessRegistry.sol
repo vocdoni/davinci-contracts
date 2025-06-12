@@ -16,12 +16,6 @@ interface IProcessRegistry {
      */
     event ProcessCreated(bytes32 indexed processId, address indexed creator);
     /*
-     * @notice Emitted when the status of a process is modified.
-     * @param processId The ID of the process.
-     * @param newStatus The new status of the process.
-     */
-    event ProcessStatusChanged(bytes32 indexed processId, ProcessStatus newStatus);
-    /*
      * @notice Emitted when the census of a process is updated.
      * @param processId The ID of the process.
      * @param censusRoot The new root of the census.
@@ -48,6 +42,13 @@ interface IProcessRegistry {
      * @param result The result of the process.
      */
     event ProcessResultsSet(bytes32 indexed processId, uint256[] result);
+    /**
+     * @notice Emitted when a process status is modified
+     * @param processId The ID of the process
+     * @param oldStatus The previous status of the process
+     * @param newStatus The new status of the process
+     */
+    event ProcessStatusChanged(bytes32 indexed processId, ProcessStatus oldStatus, ProcessStatus newStatus);
 
     /// ERRORS ///
 
@@ -131,6 +132,26 @@ interface IProcessRegistry {
      * @notice CannotAcceptResult error is emitted when a process cannot allow the results to be set.
      */
     error CannotAcceptResult();
+    /**
+     * @notice Thrown when the process ID is invalid (zero)
+     */
+    error InvalidProcessId();
+    /**
+     * @notice Thrown when the organization registry address is invalid (zero)
+     */
+    error InvalidOrganizationRegistry();
+    /**
+     * @notice Thrown when attempting to transition to RESULTS state before process has ended
+     */
+    error ProcessNotEnded();
+    /**
+     * @notice Thrown when the process time bounds are invalid
+     */
+    error InvalidTimeBounds();
+    /**
+     * @notice Thrown when the proof is invalid.
+     */
+    error ProofInvalid();
 
     /// ENUMS ///
 
@@ -271,6 +292,13 @@ interface IProcessRegistry {
      * @return The hash of the results ZK verifier proving key.
      */
     function getRVerifierVKeyHash() external view returns (bytes32);
+
+    /**
+     * @notice Returns the end time of a process.
+     * @param processId The ID of the process.
+     * @return The end time of the process.
+     */
+    function getProcessEndTime(bytes32 processId) external view returns (uint256);
 
     /// SETTERS ///
 
