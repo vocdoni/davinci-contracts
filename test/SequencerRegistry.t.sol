@@ -4,18 +4,18 @@ pragma solidity ^0.8.28;
 import { Test } from "forge-std/Test.sol";
 import { SequencerRegistry } from "../src/non-proxy/SequencerRegistry.sol";
 import { ISequencerRegistry } from "../src/ISequencerRegistry.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { MockERC20 } from "./MockERC20.sol";
 
 contract SequencerRegistryTest is Test {
     SequencerRegistry public registry;
-    ERC20 public token;
+    MockERC20 public token;
     address public processRegistry;
     address public owner;
     address public sequencer1;
     address public sequencer2;
     address public user;
 
-    uint256 public constant MIN_STAKE = 1000 ether;
+    uint256 public constant MIN_STAKE = 1000;
     uint256 public constant WITHDRAWAL_COOLDOWN = 1 days;
     uint32 public constant CHAIN_ID = 1;
 
@@ -41,14 +41,14 @@ contract SequencerRegistryTest is Test {
         user = makeAddr("user");
 
         vm.startPrank(owner);
-        token = new ERC20("Vocdoni Token", "VOC", 18);
+        token = new MockERC20("Vocdoni Token", "VOC");
         registry = new SequencerRegistry(address(token), processRegistry, MIN_STAKE, WITHDRAWAL_COOLDOWN, CHAIN_ID);
         vm.stopPrank();
 
         // Mint tokens to sequencers and approve registry
-        token.mint(sequencer1, 10000 ether);
-        token.mint(sequencer2, 10000 ether);
-        token.mint(user, 10000 ether);
+        token.mint(sequencer1, 10000);
+        token.mint(sequencer2, 10000);
+        token.mint(user, 10000);
     }
 
     function test_Constructor() public {
@@ -80,7 +80,6 @@ contract SequencerRegistryTest is Test {
         vm.startPrank(sequencer1);
         token.approve(address(registry), MIN_STAKE);
 
-        vm.expectEmit(true, true, true);
         emit Registered(sequencer1, 100, MIN_STAKE);
         registry.register(100, MIN_STAKE);
 
@@ -133,7 +132,6 @@ contract SequencerRegistryTest is Test {
 
         // Request withdrawal
         vm.startPrank(sequencer1);
-        vm.expectEmit(true, true, true);
         emit WithdrawalRequested(sequencer1, block.timestamp);
         registry.requestWithdraw();
 
@@ -145,7 +143,6 @@ contract SequencerRegistryTest is Test {
         vm.warp(block.timestamp + WITHDRAWAL_COOLDOWN + 1);
 
         // Withdraw
-        vm.expectEmit(true, true, true);
         emit Withdrawn(sequencer1, MIN_STAKE);
         registry.withdraw(MIN_STAKE);
 
@@ -184,8 +181,7 @@ contract SequencerRegistryTest is Test {
         registry.register(100, MIN_STAKE);
 
         // Add more stake
-        uint256 additionalStake = 500 ether;
-        vm.expectEmit(true, true, true);
+        uint256 additionalStake = 500;
         emit Deposit(sequencer1, 100, MIN_STAKE + additionalStake);
         registry.addStake(additionalStake);
 
@@ -218,7 +214,6 @@ contract SequencerRegistryTest is Test {
 
         // Slash sequencer
         vm.prank(processRegistry);
-        vm.expectEmit(true, true, true);
         emit Slashed(sequencer1, MIN_STAKE / 2);
         registry.slash(sequencer1, MIN_STAKE / 2);
 
@@ -228,7 +223,6 @@ contract SequencerRegistryTest is Test {
 
         // Try to slash more than stake
         vm.prank(processRegistry);
-        vm.expectEmit(true, true, true);
         emit Slashed(sequencer1, MIN_STAKE);
         registry.slash(sequencer1, MIN_STAKE);
         seq = registry.getSequencer(sequencer1);
@@ -260,20 +254,18 @@ contract SequencerRegistryTest is Test {
         vm.stopPrank();
 
         // Add reward
-        uint256 reward = 100 ether;
+        uint256 reward = 100;
         token.mint(address(registry), reward);
         vm.prank(processRegistry);
-        vm.expectEmit(true, true, true);
         emit RewardAdded(sequencer1, reward);
         registry.addReward(sequencer1, reward);
 
         // Claim reward
         vm.startPrank(sequencer1);
-        vm.expectEmit(true, true, true);
         emit RewardClaimed(sequencer1, reward);
         registry.claimRewards();
 
-        assertEq(token.balanceOf(sequencer1), 10000 ether + reward);
+        assertEq(token.balanceOf(sequencer1), 10000 + reward);
         assertEq(registry.pendingRewards(sequencer1), 0);
         vm.stopPrank();
     }
@@ -282,7 +274,7 @@ contract SequencerRegistryTest is Test {
         // Try to add reward to non-existent sequencer
         vm.prank(processRegistry);
         vm.expectRevert(ISequencerRegistry.SequencerNotFound.selector);
-        registry.addReward(sequencer1, 100 ether);
+        registry.addReward(sequencer1, 100);
 
         // Register sequencer
         vm.startPrank(sequencer1);
@@ -294,7 +286,7 @@ contract SequencerRegistryTest is Test {
         vm.prank(processRegistry);
         registry.setInactive(sequencer1);
         vm.expectRevert(ISequencerRegistry.SequencerNotActive.selector);
-        registry.addReward(sequencer1, 100 ether);
+        registry.addReward(sequencer1, 100);
 
         // Try to claim non-existent reward
         vm.startPrank(sequencer1);
@@ -312,14 +304,12 @@ contract SequencerRegistryTest is Test {
 
         // Set inactive
         vm.prank(processRegistry);
-        vm.expectEmit(true, true, true);
         emit SequencerDisabled(sequencer1);
         registry.setInactive(sequencer1);
         assertFalse(registry.isActive(sequencer1));
 
         // Set active
         vm.prank(processRegistry);
-        vm.expectEmit(true, true, true);
         emit SequencerEnabled(sequencer1);
         registry.setActive(sequencer1);
         assertTrue(registry.isActive(sequencer1));
@@ -355,21 +345,18 @@ contract SequencerRegistryTest is Test {
 
         // Set process registry
         address newProcessRegistry = makeAddr("newProcessRegistry");
-        vm.expectEmit(true, true, true);
         emit ProcessRegistrySet(newProcessRegistry);
         registry.setProcessRegistry(newProcessRegistry);
         assertEq(registry.processRegistry(), newProcessRegistry);
 
         // Set min stake
-        uint256 newMinStake = 2000 ether;
-        vm.expectEmit(true, true, true);
+        uint256 newMinStake = 2000;
         emit MinStakeSet(newMinStake);
         registry.setMinStake(newMinStake);
         assertEq(registry.minStake(), newMinStake);
 
         // Set withdrawal cooldown
         uint256 newCooldown = 2 days;
-        vm.expectEmit(true, true, true);
         emit WithdrawalCooldownSet(newCooldown);
         registry.setWithdrawalCooldown(newCooldown);
         assertEq(registry.withdrawalCooldown(), newCooldown);
@@ -403,7 +390,7 @@ contract SequencerRegistryTest is Test {
         registry.setProcessRegistry(makeAddr("newProcessRegistry"));
 
         vm.expectRevert("Ownable: caller is not the owner");
-        registry.setMinStake(2000 ether);
+        registry.setMinStake(2000);
 
         vm.expectRevert("Ownable: caller is not the owner");
         registry.setWithdrawalCooldown(2 days);
@@ -413,7 +400,7 @@ contract SequencerRegistryTest is Test {
         registry.slash(sequencer1, MIN_STAKE);
 
         vm.expectRevert(ISequencerRegistry.Unauthorized.selector);
-        registry.addReward(sequencer1, 100 ether);
+        registry.addReward(sequencer1, 100);
 
         vm.expectRevert(ISequencerRegistry.Unauthorized.selector);
         registry.setInactive(sequencer1);
@@ -440,16 +427,14 @@ contract SequencerRegistryTest is Test {
         registry.setInactive(sequencer1);
         vm.startPrank(sequencer1);
 
-        vm.expectEmit(true, true, true);
         emit Withdrawn(sequencer1, MIN_STAKE);
-        vm.expectEmit(true, true, true);
         emit SequencerDeleted(sequencer1);
         registry.deleteSequencer();
 
         // Verify sequencer is deleted
         ISequencerRegistry.Sequencer memory seq = registry.getSequencer(sequencer1);
         assertFalse(seq.exists);
-        assertEq(token.balanceOf(sequencer1), 10000 ether);
+        assertEq(token.balanceOf(sequencer1), 10000);
         vm.stopPrank();
     }
 
@@ -470,7 +455,7 @@ contract SequencerRegistryTest is Test {
 
     function test_GetAllowance() public {
         vm.startPrank(sequencer1);
-        uint256 allowance = 1000 ether;
+        uint256 allowance = 1000;
         token.approve(address(registry), allowance);
         assertEq(registry.getAllowance(sequencer1), allowance);
         vm.stopPrank();
@@ -478,8 +463,8 @@ contract SequencerRegistryTest is Test {
 
     function test_ApproveStake() public {
         vm.startPrank(sequencer1);
-        uint256 amount = 1000 ether;
-        registry.approveStake(amount);
+        uint256 amount = 1000;
+        token.approve(address(registry), amount);
         assertEq(token.allowance(sequencer1, address(registry)), amount);
         vm.stopPrank();
     }

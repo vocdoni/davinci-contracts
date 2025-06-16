@@ -6,8 +6,10 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IProcessRegistry } from "./IProcessRegistry.sol";
 import { IZKVerifier } from "./IZKVerifier.sol";
-// import {ISequencerRegistry} from "./ISequencerRegistry.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
+import { IERC20 } from "./interfaces/IERC20.sol";
+import { ISequencerRegistry } from "./ISequencerRegistry.sol";
+import { ProcessCalc } from "./ProcessCalc.sol";
 
 /**
  * @title ProcessRegistry
@@ -37,6 +39,14 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
      */
     address public sequencerRegistryAddress;
     /**
+     * @notice The process calc address is the process calc contract that manages the cost of a process.
+     */
+    address public processCalcAddress;
+    /**
+     * @notice The token address is the address of the token contract.
+     */
+    address public tokenAddress;
+    /**
      * @notice The process count is the number of processes created.
      */
     uint32 public processCount;
@@ -58,13 +68,26 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
      * @param _chainID The ID of the chain.
      * @param _stVerifier The address of the ZK verifier contract.
      * @param _rVerifier The address of the results ZK verifier contract.
+     * @param _processCalc The address of the process calc contract.
+     * @param _sequencerRegistry The address of the sequencer registry contract.
+     * @param _tokenAddress The address of the token contract.
      */
-    function initialize(uint32 _chainID, address _stVerifier, address _rVerifier) public initializer {
+    function initialize(
+        uint32 _chainID,
+        address _stVerifier,
+        address _rVerifier,
+        address _processCalc,
+        address _sequencerRegistry,
+        address _tokenAddress
+    ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         chainID = _chainID;
         stVerifier = _stVerifier;
         rVerifier = _rVerifier;
+        processCalcAddress = _processCalc;
+        sequencerRegistryAddress = _sequencerRegistry;
+        tokenAddress = _tokenAddress;
     }
 
     /// @inheritdoc IProcessRegistry
@@ -76,7 +99,8 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         Census calldata census,
         string calldata metadata,
         EncryptionKey calldata encryptionKey,
-        uint256 initStateRoot
+        uint256 initStateRoot,
+        address[] calldata sequencers
     ) external override returns (bytes32) {
         address sender = msg.sender;
         bytes32 processId = ProcessIdLib.computeProcessId(chainID, sender, processNonce[sender]);
@@ -109,6 +133,14 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
 
+        // calculate and send cost to sequencer pool
+        uint256 cost = ProcessCalc(processCalcAddress).calculateProcessCost(
+            census.maxVotes,
+            duration,
+            sequencers.length
+        );
+        IERC20(tokenAddress).transferFrom(sender, sequencerRegistryAddress, cost);
+
         p.status = status;
         p.startTime = startTime;
         p.duration = duration;
@@ -118,6 +150,8 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
+        p.sequencers = sequencers;
+        p.cost = cost;
 
         processCount++;
         processNonce[sender]++;
@@ -146,6 +180,11 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     /// @inheritdoc IProcessRegistry
     function getRVerifierVKeyHash() external view override returns (bytes32) {
         return IZKVerifier(rVerifier).provingKeyHash();
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getNextProcessId() external view override returns (bytes32) {
+        return ProcessIdLib.computeProcessId(chainID, msg.sender, processNonce[msg.sender]);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -244,6 +283,20 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         p.voteCount += decompressedInput[2];
         p.voteOverwriteCount += decompressedInput[3];
 
+        // add reward if process registered sequencer
+        address sequencer = msg.sender;
+        for (uint256 i = 0; i < p.sequencers.length; i++) {
+            if (sequencer == p.sequencers[i] && ISequencerRegistry(sequencerRegistryAddress).isActive(sequencer)) {
+                ISequencerRegistry(sequencerRegistryAddress).addReward(
+                    processId,
+                    msg.sender,
+                    decompressedInput[2],
+                    decompressedInput[3]
+                );
+                break;
+            }
+        }
+
         emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
     }
 
@@ -270,6 +323,8 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
 
         p.status = ProcessStatus.RESULTS;
         p.result = result;
+
+        ISequencerRegistry(sequencerRegistryAddress).finalizeProcessRewards(processId);
 
         emit ProcessStatusChanged(processId, ProcessStatus.ENDED, ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, msg.sender, result);

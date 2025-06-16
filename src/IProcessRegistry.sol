@@ -250,6 +250,8 @@ interface IProcessRegistry {
      * @param metadataURI The URI of the metadata.
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
+     * @param sequencers The sequencers of the process.
+     * @param cost The cost of the process.
      */
     struct Process {
         ProcessStatus status;
@@ -264,6 +266,8 @@ interface IProcessRegistry {
         string metadataURI;
         BallotMode ballotMode;
         Census census;
+        address[] sequencers;
+        uint256 cost;
     }
 
     /// GETTERS ///
@@ -274,6 +278,12 @@ interface IProcessRegistry {
      * @return process The process struct.
      */
     function getProcess(bytes32 processId) external view returns (Process memory process);
+
+    /**
+     * @notice Returns the next process ID.
+     * @return The next process ID.
+     */
+    function getNextProcessId() external view returns (bytes32);
 
     /**
      * @notice Returns the hash of the state transition ZK verifier proving key.
@@ -306,6 +316,7 @@ interface IProcessRegistry {
      * @param metadata The URI of the metadata.
      * @param encryptionKey The public key used for vote encryption.
      * @param initStateRoot The initial state root.
+     * @param sequencers The sequencers of the process.
      */
     function newProcess(
         ProcessStatus status,
@@ -315,7 +326,8 @@ interface IProcessRegistry {
         Census calldata census,
         string calldata metadata,
         EncryptionKey calldata encryptionKey,
-        uint256 initStateRoot
+        uint256 initStateRoot,
+        address[] calldata sequencers
     ) external returns (bytes32);
 
     /**

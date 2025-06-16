@@ -36,22 +36,4 @@ library ProcessIdLib {
         processId |= bytes32(uint256(uint8(nonce >> 8)) << 8);
         processId |= bytes32(uint256(uint8(nonce)));
     }
-
-    /**
-     * @notice Extracts the nonce from a processId
-     */
-    function extractNonce(bytes32 processId) internal pure returns (uint64 nonce) {
-        assembly {
-            nonce := and(processId, 0xFFFFFFFFFFFFFFFF)
-        }
-    }
-
-    /**
-     * @notice Extracts the address from a processId
-     */
-    function extractAddress(bytes32 processId) internal pure returns (address _address) {
-        assembly {
-            _address := shr(96, shl(32, processId))
-        }
-    }
 }

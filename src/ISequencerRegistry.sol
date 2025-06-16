@@ -29,6 +29,16 @@ interface ISequencerRegistry {
         uint256 lastWithdrawalRequest;
     }
 
+    /**
+     * @notice Represents the rewards for a sequencer in a process.
+     * @param votes The number of votes the sequencer has received.
+     * @param rewrites The number of rewrites the sequencer has received.
+     */
+    struct ProcessReward {
+        uint256 votes;
+        uint256 rewrites;
+    }
+
     /// EVENTS ///
 
     /**
@@ -92,10 +102,12 @@ interface ISequencerRegistry {
     event Deposit(address indexed sequencer, uint256 capacity, uint256 stake);
     /**
      * @notice Emitted when a sequencer adds a reward.
+     * @param processId The ID of the process.
      * @param sequencer The address of the sequencer that received the reward.
-     * @param amount The amount of the reward added.
+     * @param votes The number of votes the sequencer has received.
+     * @param rewrites The number of rewrites the sequencer has received.
      */
-    event RewardAdded(address indexed sequencer, uint256 amount);
+    event RewardAdded(bytes32 indexed processId, address indexed sequencer, uint256 votes, uint256 rewrites);
     /**
      * @notice Emitted when the process registry is set.
      * @param processRegistry The address of the process registry.
@@ -178,6 +190,10 @@ interface ISequencerRegistry {
      * @notice Emitted when the Vocdoni token address is invalid.
      */
     error InvalidRewardAmount();
+    /**
+     * @notice Thrown when the rewards are already claimed.
+     */
+    error RewardsAlreadyClaimed();
 
     /// WRITE ///
 
@@ -234,10 +250,12 @@ interface ISequencerRegistry {
     /**
      * @notice Adds a reward to a sequencer's account.
      * @dev This function is called to reward a sequencer for its performance.
+     * @param _processId The ID of the process.
      * @param _sequencer The address of the sequencer to receive the reward.
-     * @param _amount The amount of Vocdoni tokens to add as a reward.
+     * @param _votes The number of votes the sequencer has received.
+     * @param _rewrites The number of rewrites the sequencer has received.
      */
-    function addReward(address _sequencer, uint256 _amount) external;
+    function addReward(bytes32 _processId, address _sequencer, uint256 _votes, uint256 _rewrites) external;
     /**
      * @notice Claims the pending rewards for the caller.
      * @dev This function allows a sequencer to claim its accumulated rewards.
@@ -253,6 +271,11 @@ interface ISequencerRegistry {
      * @param _sequencer The address of the sequencer to set as active.
      */
     function setActive(address _sequencer) external;
+    /**
+     * @notice Finalizes the rewards for a process.
+     * @param processId The ID of the process.
+     */
+    function finalizeProcessRewards(bytes32 processId) external;
 
     /// READ ///
 
@@ -300,11 +323,4 @@ interface ISequencerRegistry {
      * @return The chain ID.
      */
     function chainID() external view returns (uint32);
-
-    /**
-     * @notice Returns the pending rewards for a sequencer.
-     * @param _sequencer The address of the sequencer.
-     * @return The pending rewards for the sequencer.
-     */
-    function pendingRewards(address _sequencer) external view returns (uint256);
 }

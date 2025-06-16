@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { ISequencerRegistry } from "../ISequencerRegistry.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import "../IProcessRegistry.sol";
 
 /**
  * @title SequencerRegistry
@@ -50,10 +51,25 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
      */
     mapping(address => Sequencer) public sequencers;
     /**
+     * @notice The rewards for each sequencer in a process.
+     * @dev This mapping stores the rewards for each sequencer in a process.
+     */
+    mapping(bytes32 => mapping(address => ProcessReward)) public rewards;
+    /**
      * @notice The pending rewards for each sequencer.
      * @dev This mapping stores the pending rewards for each sequencer.
      */
     mapping(address => uint256) public pendingRewards;
+    /**
+     * @notice The cost factor for the votes processed.
+     * @dev This is the cost factor for the votes processed.
+     */
+    uint256 public R;
+    /**
+     * @notice The cost factor for the rewrites processed.
+     * @dev This is the cost factor for the rewrites processed.
+     */
+    uint256 public W;
 
     modifier onlyProcessRegistry() {
         if (msg.sender != processRegistry) revert Unauthorized();
@@ -78,28 +94,28 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         chainID = _chainID;
     }
 
-    function setProcessRegistry(address _processRegistry) external onlyOwner {
+    function setProcessRegistry(address _processRegistry) external override onlyOwner {
         if (_processRegistry == address(0)) revert InvalidSequencerAddress();
         processRegistry = _processRegistry;
 
         emit ProcessRegistrySet(_processRegistry);
     }
 
-    function setMinStake(uint256 _minStake) external onlyOwner {
+    function setMinStake(uint256 _minStake) external override onlyOwner {
         if (_minStake == 0) revert InvalidStakeAmount();
         minStake = _minStake;
 
         emit MinStakeSet(_minStake);
     }
 
-    function setWithdrawalCooldown(uint256 _cooldown) external onlyOwner {
+    function setWithdrawalCooldown(uint256 _cooldown) external override onlyOwner {
         if (_cooldown == 0) revert InvalidCooldownPeriod();
         withdrawalCooldown = _cooldown;
 
         emit WithdrawalCooldownSet(_cooldown);
     }
 
-    function register(uint256 _capacity, uint256 _stake) external {
+    function register(uint256 _capacity, uint256 _stake) external override {
         if (sequencers[msg.sender].exists) revert SequencerAlreadyExists();
         if (_capacity == 0) revert InvalidCapacity();
         if (_stake == 0) _stake = minStake;
@@ -120,11 +136,11 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit Registered(msg.sender, _capacity, _stake);
     }
 
-    function getSequencer(address _sequencer) external view returns (Sequencer memory) {
+    function getSequencer(address _sequencer) external view override returns (Sequencer memory) {
         return sequencers[_sequencer];
     }
 
-    function requestWithdraw() external {
+    function requestWithdraw() external override {
         Sequencer storage s = sequencers[msg.sender];
         if (!s.exists) revert SequencerNotFound();
         if (s.active) revert SequencerNotActive();
@@ -134,7 +150,7 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit WithdrawalRequested(msg.sender, s.lastWithdrawalRequest);
     }
 
-    function withdraw(uint256 _amount) external {
+    function withdraw(uint256 _amount) external override {
         Sequencer storage s = sequencers[msg.sender];
         if (s.lastWithdrawalRequest == 0) revert WithdrawalRequestNotMade();
         if (block.timestamp < s.lastWithdrawalRequest + withdrawalCooldown) revert InvalidCooldownPeriod();
@@ -146,7 +162,7 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit Withdrawn(msg.sender, _amount);
     }
 
-    function deleteSequencer() external {
+    function deleteSequencer() external override {
         Sequencer storage s = sequencers[msg.sender];
         if (!s.exists) revert SequencerNotFound();
         if (s.active) revert SequencerNotActive();
@@ -158,7 +174,7 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit SequencerDeleted(msg.sender);
     }
 
-    function addStake(uint256 _amount) external {
+    function addStake(uint256 _amount) external override {
         Sequencer storage s = sequencers[msg.sender];
         if (!s.exists) revert SequencerNotFound();
         if (IERC20(token).allowance(msg.sender, address(this)) < _amount) revert InsufficientStake();
@@ -172,7 +188,7 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit Deposit(msg.sender, s.capacity, s.stake);
     }
 
-    function slash(address _sequencer, uint256 _amount) external onlyProcessRegistry {
+    function slash(address _sequencer, uint256 _amount) external override onlyProcessRegistry {
         Sequencer storage s = sequencers[_sequencer];
         if (!s.exists || !s.active) revert SequencerNotActive();
         if (_amount < s.stake) {
@@ -189,23 +205,53 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit Slashed(_sequencer, _amount);
     }
 
-    function addReward(address _sequencer, uint256 _amount) external onlyProcessRegistry {
+    function addReward(
+        bytes32 _processId,
+        address _sequencer,
+        uint256 _votes,
+        uint256 _rewrites
+    ) external override onlyProcessRegistry {
         if (!sequencers[_sequencer].exists) revert SequencerNotFound();
         if (!sequencers[_sequencer].active) revert SequencerNotActive();
-        pendingRewards[_sequencer] += _amount;
-        emit RewardAdded(_sequencer, _amount);
+        uint256 newVotes = rewards[_processId][_sequencer].votes + _votes;
+        uint256 newRewrites = rewards[_processId][_sequencer].rewrites + _rewrites;
+
+        rewards[_processId][_sequencer].votes = newVotes;
+        rewards[_processId][_sequencer].rewrites = newRewrites;
+
+        emit RewardAdded(_processId, _sequencer, newVotes, newRewrites);
     }
 
-    function claimRewards() external {
-        uint256 amount = pendingRewards[msg.sender];
-        if (amount == 0) revert InvalidRewardAmount();
+    function claimRewards() external override {
+        uint256 reward = pendingRewards[msg.sender];
+        if (reward == 0) revert InvalidRewardAmount();
+
         pendingRewards[msg.sender] = 0;
-        if (!IERC20(token).transfer(msg.sender, amount)) revert InsufficientStake();
+        if (!IERC20(token).transfer(msg.sender, reward)) revert InsufficientStake();
 
-        emit RewardClaimed(msg.sender, amount);
+        emit RewardClaimed(msg.sender, reward);
     }
 
-    function setInactive(address _sequencer) external onlyProcessRegistry {
+    function finalizeProcessRewards(bytes32 processId) external onlyProcessRegistry {
+        IProcessRegistry.Process memory p = IProcessRegistry(processRegistry).getProcess(processId);
+        if (p.status != IProcessRegistry.ProcessStatus.RESULTS) revert("Process not finalized");
+
+        uint256 rewardFromVotes = (p.cost * R) / (R + W);
+        uint256 rewardFromRewrites = p.cost - rewardFromVotes;
+
+        for (uint256 i = 0; i < p.sequencers.length; i++) {
+            address seq = p.sequencers[i];
+            uint256 votePart = (p.voteCount > 0) ? (rewardFromVotes * rewards[processId][seq].votes) / p.voteCount : 0;
+            uint256 rewritePart = (p.voteOverwriteCount > 0)
+                ? (rewardFromRewrites * rewards[processId][seq].rewrites) / p.voteOverwriteCount
+                : 0;
+            uint256 reward = votePart + rewritePart;
+
+            pendingRewards[seq] += reward;
+        }
+    }
+
+    function setInactive(address _sequencer) external override onlyProcessRegistry {
         Sequencer storage s = sequencers[_sequencer];
         if (!s.exists || !s.active) revert SequencerNotActive();
 
@@ -213,7 +259,7 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit SequencerDisabled(_sequencer);
     }
 
-    function setActive(address _sequencer) external onlyProcessRegistry {
+    function setActive(address _sequencer) external override onlyProcessRegistry {
         Sequencer storage s = sequencers[_sequencer];
         if (!s.exists || s.active) revert SequencerNotActive();
         if (s.stake < minStake) revert StakeAmountTooLow();
@@ -221,28 +267,11 @@ contract SequencerRegistry is ISequencerRegistry, Ownable {
         emit SequencerEnabled(_sequencer);
     }
 
-    function isActive(address _seq) external view returns (bool) {
+    function isActive(address _seq) external view override returns (bool) {
         return sequencers[_seq].active;
     }
 
     function getCapacity(address _seq) external view returns (uint256) {
         return sequencers[_seq].capacity;
-    }
-
-    /**
-     * @notice Returns the current allowance of tokens for this contract
-     * @param _holder The address of the token holder
-     * @return The current allowance
-     */
-    function getAllowance(address _holder) external view returns (uint256) {
-        return IERC20(token).allowance(_holder, address(this));
-    }
-
-    /**
-     * @notice Sets the allowance for this contract to spend tokens
-     * @param _amount The amount of tokens to approve
-     */
-    function approveStake(uint256 _amount) external {
-        if (!IERC20(token).approve(address(this), _amount)) revert InsufficientStake();
     }
 }
