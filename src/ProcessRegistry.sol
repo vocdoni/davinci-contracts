@@ -105,8 +105,45 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         address sender = msg.sender;
         bytes32 processId = ProcessIdLib.computeProcessId(chainID, sender, processNonce[sender]);
 
-        Process storage p = processes[processId];
-        if (p.owner == sender) revert ProcessAlreadyExists();
+        // Validate process doesn't exist and validate inputs
+        _validateNewProcess(processId, sender, status, startTime, duration, ballotMode, census);
+
+        // Calculate cost and transfer tokens
+        uint256 cost = _calculateAndTransferCost(sender, census.maxVotes, duration, sequencers.length);
+
+        // Store process data
+        _storeProcessData(
+            processId,
+            sender,
+            status,
+            startTime,
+            duration,
+            ballotMode,
+            census,
+            metadata,
+            encryptionKey,
+            initStateRoot,
+            sequencers,
+            cost
+        );
+
+        emit ProcessCreated(processId, sender);
+        return processId;
+    }
+
+    /**
+     * @dev Validates inputs for a new process
+     */
+    function _validateNewProcess(
+        bytes32 processId,
+        address sender,
+        ProcessStatus status,
+        uint256 startTime,
+        uint256 duration,
+        BallotMode calldata ballotMode,
+        Census calldata census
+    ) private view {
+        if (processes[processId].owner == sender) revert ProcessAlreadyExists();
 
         // validate ballot mode
         if (ballotMode.maxCount == 0) revert InvalidMaxCount();
@@ -132,14 +169,40 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         }
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
+    }
 
-        // calculate and send cost to sequencer pool
-        uint256 cost = ProcessCalc(processCalcAddress).calculateProcessCost(
-            census.maxVotes,
-            duration,
-            sequencers.length
-        );
+    /**
+     * @dev Calculates process cost and transfers tokens
+     */
+    function _calculateAndTransferCost(
+        address sender,
+        uint256 maxVotes,
+        uint256 duration,
+        uint256 sequencersLength
+    ) private returns (uint256) {
+        uint256 cost = ProcessCalc(processCalcAddress).calculateProcessCost(maxVotes, duration, sequencersLength);
         IERC20(tokenAddress).transferFrom(sender, sequencerRegistryAddress, cost);
+        return cost;
+    }
+
+    /**
+     * @dev Stores process data in storage
+     */
+    function _storeProcessData(
+        bytes32 processId,
+        address sender,
+        ProcessStatus status,
+        uint256 startTime,
+        uint256 duration,
+        BallotMode calldata ballotMode,
+        Census calldata census,
+        string calldata metadata,
+        EncryptionKey calldata encryptionKey,
+        uint256 initStateRoot,
+        address[] calldata sequencers,
+        uint256 cost
+    ) private {
+        Process storage p = processes[processId];
 
         p.status = status;
         p.startTime = startTime;
@@ -155,10 +218,6 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
 
         processCount++;
         processNonce[sender]++;
-
-        emit ProcessCreated(processId, sender);
-
-        return processId;
     }
 
     /// @inheritdoc IProcessRegistry
