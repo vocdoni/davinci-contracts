@@ -2,9 +2,9 @@
 pragma solidity ^0.8.28;
 
 import { IERC20 } from "../interfaces/IERC20.sol";
-import { ISequencerRegistry } from "../ISequencerRegistry.sol";
+import { ISequencerRegistry } from "../interfaces/ISequencerRegistry.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import "../IProcessRegistry.sol";
+import "../interfaces/IProcessRegistry.sol";
 
 /**
  * @title SequencerRegistry

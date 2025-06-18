@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.28;
 
-import { IZKVerifier } from "./IZKVerifier.sol";
-import { StateTransitionVerifierBaseGroth16 } from "./verifiers/StateTransitionVerifierBaseGroth16.sol";
+import { IZKVerifier } from "../interfaces/IZKVerifier.sol";
+import { StateTransitionVerifierBaseGroth16 } from "./StateTransitionVerifierBaseGroth16.sol";
 
 contract StateTransitionVerifierGroth16 is IZKVerifier, StateTransitionVerifierBaseGroth16 {
     /// @inheritdoc IZKVerifier

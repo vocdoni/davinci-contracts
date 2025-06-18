@@ -12,9 +12,8 @@ interface IOrganizationRegistry {
     /**
      * @notice Emitted when a new organization is created
      * @param id The organization's unique identifier
-     * @param creator The address of the organization's creator
      */
-    event OrganizationCreated(address indexed id, address indexed creator);
+    event OrganizationCreated(address indexed id);
 
     /**
      * @notice Emitted when an organization is updated
@@ -23,12 +22,52 @@ interface IOrganizationRegistry {
      */
     event OrganizationUpdated(address indexed id, address indexed updater);
 
+    /**
+     * @notice Emitted when an administrator is added to an organization
+     * @param id The organization's unique identifier
+     * @param administrator The address of the administrator added
+     * @param adder The address of the adder
+     */
+    event AdministratorAdded(address indexed id, address indexed administrator, address indexed adder);
+    /**
+     * @notice Emitted when an administrator is removed from an organization
+     * @param id The organization's unique identifier
+     * @param administrator The address of the administrator removed
+     */
+    event AdministratorRemoved(address indexed id, address indexed administrator);
+
+    /**
+     * @notice Emitted when a deposit is approved for an organization
+     * @param id The organization's unique identifier
+     * @param amount The amount to deposit
+     * @param approver The address of the approver
+     */
+    event DepositApproved(address indexed id, uint256 amount, address indexed approver);
+    /**
+     * @notice Emitted when a deposit is made to an organization
+     * @param id The organization's unique identifier
+     * @param amount The amount deposited
+     * @param depositor The address of the depositor
+     */
+    event DepositDeposited(address indexed id, uint256 amount, address indexed depositor);
+    /**
+     * @notice Emitted when a deposit is withdrawn from an organization
+     * @param id The organization's unique identifier
+     * @param amount The amount withdrawn
+     * @param withdrawer The address of the withdrawer
+     */
+    event DepositWithdrawn(address indexed id, uint256 amount, address indexed withdrawer);
+
     /// ERRORS ///
 
     /**
      * @notice NotAdministrator error is emitted when the caller is not an administrator of the organization.
      */
     error NotAdministrator();
+    /**
+     * @notice AlreadyAdministrator error is emitted when the account is already an administrator of the organization.
+     */
+    error AlreadyAdministrator();
     /**
      * @notice InvalidOrganizationID error is emitted when an organization ID is not valid.
      */
@@ -53,6 +92,14 @@ interface IOrganizationRegistry {
      * InvalidMetadataURI error is emitted when the metadata URI is invalid
      */
     error InvalidMetadataURI();
+    /**
+     * @notice NotImplemented error is emitted when a function is not implemented
+     */
+    error NotImplemented();
+    /**
+     * @notice Unauthorized error is emitted when the caller is not authorized to perform an action
+     */
+    error Unauthorized();
 
     /// STRUCTS ///
 
@@ -66,7 +113,7 @@ interface IOrganizationRegistry {
     struct Organization {
         string name;
         string metadataURI;
-        mapping(address => bool) administrators;
+        address[] administrators;
     }
 
     /// GETTERS ///
@@ -74,10 +121,9 @@ interface IOrganizationRegistry {
     /**
      * @notice Retrieves an organization's data
      * @param id The organization's unique identifier
-     * @return name The organization's name
-     * @return metadataURI The organization's metadata URI that can be used to store additional information
+     * @return Organization The organization data including name, metadataURI, and administrators
      */
-    function getOrganization(address id) external view returns (string memory, string memory);
+    function getOrganization(address id) external view returns (Organization memory);
 
     /**
      * @notice Checks if an account is an administrator of an organization
@@ -98,7 +144,6 @@ interface IOrganizationRegistry {
 
     /**
      * @notice Creates a new organization
-     * @param id The organization's unique identifier
      * @param name The organization's name
      * @param metadataURI The organization's metadata URI that can be used to store additional information
      * @param administrators The list of administrators of the organization
@@ -106,7 +151,6 @@ interface IOrganizationRegistry {
      * @dev msg.sender is added as an administrator by default
      */
     function createOrganization(
-        address id,
         string calldata name,
         string calldata metadataURI,
         address[] calldata administrators
@@ -139,4 +183,30 @@ interface IOrganizationRegistry {
      * @param id The ID of the organization to delete
      */
     function deleteOrganization(address id) external;
+
+    // Utility functions for managing deposits for process creation costs
+
+    /**
+     * @notice Approves a deposit for an organization
+     * @param id The organization's unique identifier
+     * @param amount The amount to deposit
+     * @dev This function is used to approve deposits for an organization, typically for process creation costs.
+     */
+    function approveDeposit(address id, uint256 amount) external;
+
+    /**
+     * @notice Deposits an amount to an organization
+     * @param id The organization's unique identifier
+     * @param amount The amount to deposit
+     * @dev This function is used to deposit funds into an organization, typically for process creation costs.
+     */
+    function deposit(address id, uint256 amount) external;
+
+    /**
+     * @notice Withdraws a deposit for an organization
+     * @param id The organization's unique identifier
+     * @param amount The amount to withdraw
+     * @dev This function is used to withdraw deposits from an organization, typically after process completion.
+     */
+    function withdrawDeposit(address id, uint256 amount) external;
 }

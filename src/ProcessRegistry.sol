@@ -4,11 +4,11 @@ pragma solidity ^0.8.28;
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { IProcessRegistry } from "./IProcessRegistry.sol";
-import { IZKVerifier } from "./IZKVerifier.sol";
+import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
+import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
-import { ISequencerRegistry } from "./ISequencerRegistry.sol";
+import { ISequencerRegistry } from "./interfaces/ISequencerRegistry.sol";
 import { ProcessCalc } from "./ProcessCalc.sol";
 
 /**
@@ -218,6 +218,12 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
 
         processCount++;
         processNonce[sender]++;
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function setProcessKey(bytes32 processId, EncryptionKey calldata encryptionKey) external override {
+        // This function is not implemented in the current version of the contract.
+        revert NotImplemented();
     }
 
     /// @inheritdoc IProcessRegistry

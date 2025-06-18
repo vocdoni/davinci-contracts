@@ -146,6 +146,10 @@ interface IProcessRegistry {
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
+    /**
+     * @notice Thrown when a function is not implemented.
+     */
+    error NotImplemented();
 
     /// ENUMS ///
 
@@ -330,6 +334,12 @@ interface IProcessRegistry {
         address[] calldata sequencers
     ) external returns (bytes32);
 
+    /**
+     * @notice Sets the process key.
+     * @param processId The ID of the process.
+     * @param encryptionKey The public key used for vote encryption.
+     */
+    function setProcessKey(bytes32 processId, EncryptionKey calldata encryptionKey) external;
     /**
      * @notice Sets the status of a process.
      * @param processId The ID of the process.

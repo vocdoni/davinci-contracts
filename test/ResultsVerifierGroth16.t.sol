@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
 import { stdError } from "forge-std/StdError.sol";
-import { ResultsVerifierGroth16 } from "../src/ResultsVerifierGroth16.sol";
+import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 
 contract ResultsVerifierGroth16Test is Test {
     uint256 public constant STATE_ROOT = 848094410278823325666743560735506188625075380389348078732430222085993157699;
