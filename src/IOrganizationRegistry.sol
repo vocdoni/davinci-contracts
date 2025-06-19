@@ -23,6 +23,20 @@ interface IOrganizationRegistry {
      */
     event OrganizationUpdated(address indexed id, address indexed updater);
 
+    /**
+     * @notice Emitted when an administrator is added to an organization
+     * @param id The organization's unique identifier
+     * @param administrator The address of the administrator added
+     */
+    event AdministratorAdded(address indexed id, address indexed administrator);
+    /**
+     * @notice Emitted when an administrator is removed from an organization
+     * @param id The organization's unique identifier
+     * @param administrator The address of the administrator removed
+     * @param remover The address of the remover
+     */
+    event AdministratorRemoved(address indexed id, address indexed administrator, address indexed remover);
+
     /// ERRORS ///
 
     /**
@@ -53,6 +67,10 @@ interface IOrganizationRegistry {
      * InvalidMetadataURI error is emitted when the metadata URI is invalid
      */
     error InvalidMetadataURI();
+    /**
+     * @notice Unauthorized error is emitted when the caller is not authorized to perform an action
+     */
+    error Unauthorized();
 
     /// STRUCTS ///
 

@@ -2,4 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export { ResultsVerifierBaseGroth16__factory } from "./ResultsVerifierBaseGroth16__factory";
+export { ResultsVerifierGroth16__factory } from "./ResultsVerifierGroth16__factory";
 export { StateTransitionVerifierBaseGroth16__factory } from "./StateTransitionVerifierBaseGroth16__factory";
+export { StateTransitionVerifierGroth16__factory } from "./StateTransitionVerifierGroth16__factory";

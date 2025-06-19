@@ -4,12 +4,14 @@ pragma solidity ^0.8.28;
 import { Script, console } from "forge-std/Script.sol";
 import { OrganizationRegistry } from "../../src/non-proxy/OrganizationRegistry.sol";
 import { ProcessRegistry } from "../../src/non-proxy/ProcessRegistry.sol";
-import { StateTransitionVerifierGroth16 } from "../../src/StateTransitionVerifierGroth16.sol";
-import { ResultsVerifierGroth16 } from "../../src/ResultsVerifierGroth16.sol";
+import { StateTransitionVerifierGroth16 } from "../../src/verifiers/StateTransitionVerifierGroth16.sol";
+import { ResultsVerifierGroth16 } from "../../src/verifiers/ResultsVerifierGroth16.sol";
 
-contract TestDeployAllScript is Script {
+contract DeployAllScript is Script {
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("SEPOLIA_PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("UZH_PRIVATE_KEY");
+        address deployerAddress = vm.addr(deployerPrivateKey);
+        console.log("Deployer address:", deployerAddress);
         vm.startBroadcast(deployerPrivateKey);
 
         OrganizationRegistry organizationRegistry = new OrganizationRegistry();
@@ -21,9 +23,9 @@ contract TestDeployAllScript is Script {
         ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
         console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
+        uint256 chainId = vm.envUint("UZH_CHAIN_ID");
         ProcessRegistry processRegistry = new ProcessRegistry(
-            "11155111",
-            address(organizationRegistry),
+            uint32(chainId), // change this to the desired chain ID
             address(stv),
             address(rv)
         );

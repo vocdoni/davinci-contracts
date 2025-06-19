@@ -23,6 +23,20 @@ import type {
   TypedContractMethod,
 } from "../common";
 
+export declare namespace IOrganizationRegistry {
+  export type OrganizationStruct = {
+    name: string;
+    metadataURI: string;
+    administrators: AddressLike[];
+  };
+
+  export type OrganizationStructOutput = [
+    name: string,
+    metadataURI: string,
+    administrators: string[]
+  ] & { name: string; metadataURI: string; administrators: string[] };
+}
+
 export interface OrganizationRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -47,6 +61,8 @@ export interface OrganizationRegistryInterface extends Interface {
 
   getEvent(
     nameOrSignatureOrTopic:
+      | "AdministratorAdded"
+      | "AdministratorRemoved"
       | "Initialized"
       | "OrganizationCreated"
       | "OrganizationUpdated"
@@ -64,7 +80,7 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createOrganization",
-    values: [AddressLike, string, string, AddressLike[]]
+    values: [string, string, AddressLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "deleteOrganization",
@@ -178,6 +194,41 @@ export interface OrganizationRegistryInterface extends Interface {
   ): Result;
 }
 
+export namespace AdministratorAddedEvent {
+  export type InputTuple = [id: AddressLike, administrator: AddressLike];
+  export type OutputTuple = [id: string, administrator: string];
+  export interface OutputObject {
+    id: string;
+    administrator: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AdministratorRemovedEvent {
+  export type InputTuple = [
+    id: AddressLike,
+    administrator: AddressLike,
+    remover: AddressLike
+  ];
+  export type OutputTuple = [
+    id: string,
+    administrator: string,
+    remover: string
+  ];
+  export interface OutputObject {
+    id: string;
+    administrator: string;
+    remover: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace InitializedEvent {
   export type InputTuple = [version: BigNumberish];
   export type OutputTuple = [version: bigint];
@@ -191,11 +242,10 @@ export namespace InitializedEvent {
 }
 
 export namespace OrganizationCreatedEvent {
-  export type InputTuple = [id: AddressLike, creator: AddressLike];
-  export type OutputTuple = [id: string, creator: string];
+  export type InputTuple = [id: AddressLike];
+  export type OutputTuple = [id: string];
   export interface OutputObject {
     id: string;
-    creator: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -293,12 +343,7 @@ export interface OrganizationRegistry extends BaseContract {
   >;
 
   createOrganization: TypedContractMethod<
-    [
-      id: AddressLike,
-      name: string,
-      metadataURI: string,
-      administrators: AddressLike[]
-    ],
+    [name: string, metadataURI: string, administrators: AddressLike[]],
     [void],
     "nonpayable"
   >;
@@ -313,7 +358,7 @@ export interface OrganizationRegistry extends BaseContract {
 
   getOrganization: TypedContractMethod<
     [id: AddressLike],
-    [[string, string]],
+    [IOrganizationRegistry.OrganizationStructOutput],
     "view"
   >;
 
@@ -380,12 +425,7 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "createOrganization"
   ): TypedContractMethod<
-    [
-      id: AddressLike,
-      name: string,
-      metadataURI: string,
-      administrators: AddressLike[]
-    ],
+    [name: string, metadataURI: string, administrators: AddressLike[]],
     [void],
     "nonpayable"
   >;
@@ -397,7 +437,11 @@ export interface OrganizationRegistry extends BaseContract {
   ): TypedContractMethod<[id: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "getOrganization"
-  ): TypedContractMethod<[id: AddressLike], [[string, string]], "view">;
+  ): TypedContractMethod<
+    [id: AddressLike],
+    [IOrganizationRegistry.OrganizationStructOutput],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "initialize"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -453,6 +497,20 @@ export interface OrganizationRegistry extends BaseContract {
   >;
 
   getEvent(
+    key: "AdministratorAdded"
+  ): TypedContractEvent<
+    AdministratorAddedEvent.InputTuple,
+    AdministratorAddedEvent.OutputTuple,
+    AdministratorAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "AdministratorRemoved"
+  ): TypedContractEvent<
+    AdministratorRemovedEvent.InputTuple,
+    AdministratorRemovedEvent.OutputTuple,
+    AdministratorRemovedEvent.OutputObject
+  >;
+  getEvent(
     key: "Initialized"
   ): TypedContractEvent<
     InitializedEvent.InputTuple,
@@ -489,6 +547,28 @@ export interface OrganizationRegistry extends BaseContract {
   >;
 
   filters: {
+    "AdministratorAdded(address,address)": TypedContractEvent<
+      AdministratorAddedEvent.InputTuple,
+      AdministratorAddedEvent.OutputTuple,
+      AdministratorAddedEvent.OutputObject
+    >;
+    AdministratorAdded: TypedContractEvent<
+      AdministratorAddedEvent.InputTuple,
+      AdministratorAddedEvent.OutputTuple,
+      AdministratorAddedEvent.OutputObject
+    >;
+
+    "AdministratorRemoved(address,address,address)": TypedContractEvent<
+      AdministratorRemovedEvent.InputTuple,
+      AdministratorRemovedEvent.OutputTuple,
+      AdministratorRemovedEvent.OutputObject
+    >;
+    AdministratorRemoved: TypedContractEvent<
+      AdministratorRemovedEvent.InputTuple,
+      AdministratorRemovedEvent.OutputTuple,
+      AdministratorRemovedEvent.OutputObject
+    >;
+
     "Initialized(uint64)": TypedContractEvent<
       InitializedEvent.InputTuple,
       InitializedEvent.OutputTuple,
@@ -500,7 +580,7 @@ export interface OrganizationRegistry extends BaseContract {
       InitializedEvent.OutputObject
     >;
 
-    "OrganizationCreated(address,address)": TypedContractEvent<
+    "OrganizationCreated(address)": TypedContractEvent<
       OrganizationCreatedEvent.InputTuple,
       OrganizationCreatedEvent.OutputTuple,
       OrganizationCreatedEvent.OutputObject

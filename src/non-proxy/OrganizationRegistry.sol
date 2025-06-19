@@ -31,6 +31,11 @@ contract OrganizationRegistry is IOrganizationRegistry {
     uint32 public organizationCount;
 
     /**
+     * @notice Initializes the contract
+     */
+    constructor() Ownable(msg.sender) {}
+
+    /**
      * @notice Creates a new organization
      * @param id The organization's address
      * @param name The organization's name
@@ -121,7 +126,14 @@ contract OrganizationRegistry is IOrganizationRegistry {
         if (administrator == address(0)) {
             revert InvalidAddress();
         }
-        organizations[id].administrators[administrator] = true;
+        address[] storage admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == administrator) {
+                revert AlreadyAdministrator();
+            }
+        }
+        admins.push(administrator);
+        emit AdministratorAdded(id, administrator);
     }
 
     /**
@@ -136,7 +148,20 @@ contract OrganizationRegistry is IOrganizationRegistry {
         if (administrator == address(0)) {
             revert InvalidAddress();
         }
-        organizations[id].administrators[administrator] = false;
+        bool found = false;
+        address[] storage admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == administrator) {
+                found = true;
+                admins[i] = admins[admins.length - 1];
+                admins.pop();
+                break;
+            }
+        }
+        if (!found) {
+            revert NotAdministrator();
+        }
+        emit AdministratorRemoved(id, administrator, msg.sender);
     }
 
     /**
@@ -168,5 +193,15 @@ contract OrganizationRegistry is IOrganizationRegistry {
      */
     function exists(address id) public view returns (bool) {
         return bytes(organizations[id].name).length > 0;
+    }
+
+    // @notice Internal function to check if a user is an administrator of an organization
+    // @param id The organization's unique identifier
+    function _isAdmin(address id) internal view returns (bool) {
+        address[] storage admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == msg.sender) return true;
+        }
+        return false;
     }
 }

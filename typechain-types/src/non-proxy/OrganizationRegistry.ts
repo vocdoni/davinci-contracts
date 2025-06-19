@@ -22,6 +22,20 @@ import type {
   TypedContractMethod,
 } from "../../common";
 
+export declare namespace IOrganizationRegistry {
+  export type OrganizationStruct = {
+    name: string;
+    metadataURI: string;
+    administrators: AddressLike[];
+  };
+
+  export type OrganizationStructOutput = [
+    name: string,
+    metadataURI: string,
+    administrators: string[]
+  ] & { name: string; metadataURI: string; administrators: string[] };
+}
+
 export interface OrganizationRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -33,12 +47,20 @@ export interface OrganizationRegistryInterface extends Interface {
       | "isAdministrator"
       | "organizationCount"
       | "organizations"
+      | "owner"
       | "removeAdministrator"
+      | "renounceOwnership"
+      | "transferOwnership"
       | "updateOrganization"
   ): FunctionFragment;
 
   getEvent(
-    nameOrSignatureOrTopic: "OrganizationCreated" | "OrganizationUpdated"
+    nameOrSignatureOrTopic:
+      | "AdministratorAdded"
+      | "AdministratorRemoved"
+      | "OrganizationCreated"
+      | "OrganizationUpdated"
+      | "OwnershipTransferred"
   ): EventFragment;
 
   encodeFunctionData(
@@ -47,7 +69,7 @@ export interface OrganizationRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createOrganization",
-    values: [AddressLike, string, string, AddressLike[]]
+    values: [string, string, AddressLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "deleteOrganization",
@@ -70,9 +92,18 @@ export interface OrganizationRegistryInterface extends Interface {
     functionFragment: "organizations",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "removeAdministrator",
     values: [AddressLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "renounceOwnership",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferOwnership",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "updateOrganization",
@@ -108,8 +139,17 @@ export interface OrganizationRegistryInterface extends Interface {
     functionFragment: "organizations",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "removeAdministrator",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -118,12 +158,46 @@ export interface OrganizationRegistryInterface extends Interface {
   ): Result;
 }
 
-export namespace OrganizationCreatedEvent {
-  export type InputTuple = [id: AddressLike, creator: AddressLike];
-  export type OutputTuple = [id: string, creator: string];
+export namespace AdministratorAddedEvent {
+  export type InputTuple = [id: AddressLike, administrator: AddressLike];
+  export type OutputTuple = [id: string, administrator: string];
   export interface OutputObject {
     id: string;
-    creator: string;
+    administrator: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AdministratorRemovedEvent {
+  export type InputTuple = [
+    id: AddressLike,
+    administrator: AddressLike,
+    remover: AddressLike
+  ];
+  export type OutputTuple = [
+    id: string,
+    administrator: string,
+    remover: string
+  ];
+  export interface OutputObject {
+    id: string;
+    administrator: string;
+    remover: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace OrganizationCreatedEvent {
+  export type InputTuple = [id: AddressLike];
+  export type OutputTuple = [id: string];
+  export interface OutputObject {
+    id: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -137,6 +211,19 @@ export namespace OrganizationUpdatedEvent {
   export interface OutputObject {
     id: string;
     updater: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -194,12 +281,7 @@ export interface OrganizationRegistry extends BaseContract {
   >;
 
   createOrganization: TypedContractMethod<
-    [
-      id: AddressLike,
-      name: string,
-      metadataURI: string,
-      administrators: AddressLike[]
-    ],
+    [name: string, metadataURI: string, administrators: AddressLike[]],
     [void],
     "nonpayable"
   >;
@@ -214,7 +296,7 @@ export interface OrganizationRegistry extends BaseContract {
 
   getOrganization: TypedContractMethod<
     [id: AddressLike],
-    [[string, string]],
+    [IOrganizationRegistry.OrganizationStructOutput],
     "view"
   >;
 
@@ -232,8 +314,18 @@ export interface OrganizationRegistry extends BaseContract {
     "view"
   >;
 
+  owner: TypedContractMethod<[], [string], "view">;
+
   removeAdministrator: TypedContractMethod<
     [id: AddressLike, administrator: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -258,12 +350,7 @@ export interface OrganizationRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "createOrganization"
   ): TypedContractMethod<
-    [
-      id: AddressLike,
-      name: string,
-      metadataURI: string,
-      administrators: AddressLike[]
-    ],
+    [name: string, metadataURI: string, administrators: AddressLike[]],
     [void],
     "nonpayable"
   >;
@@ -275,7 +362,11 @@ export interface OrganizationRegistry extends BaseContract {
   ): TypedContractMethod<[id: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "getOrganization"
-  ): TypedContractMethod<[id: AddressLike], [[string, string]], "view">;
+  ): TypedContractMethod<
+    [id: AddressLike],
+    [IOrganizationRegistry.OrganizationStructOutput],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "isAdministrator"
   ): TypedContractMethod<
@@ -294,12 +385,21 @@ export interface OrganizationRegistry extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "removeAdministrator"
   ): TypedContractMethod<
     [id: AddressLike, administrator: AddressLike],
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "updateOrganization"
   ): TypedContractMethod<
@@ -308,6 +408,20 @@ export interface OrganizationRegistry extends BaseContract {
     "nonpayable"
   >;
 
+  getEvent(
+    key: "AdministratorAdded"
+  ): TypedContractEvent<
+    AdministratorAddedEvent.InputTuple,
+    AdministratorAddedEvent.OutputTuple,
+    AdministratorAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "AdministratorRemoved"
+  ): TypedContractEvent<
+    AdministratorRemovedEvent.InputTuple,
+    AdministratorRemovedEvent.OutputTuple,
+    AdministratorRemovedEvent.OutputObject
+  >;
   getEvent(
     key: "OrganizationCreated"
   ): TypedContractEvent<
@@ -322,9 +436,38 @@ export interface OrganizationRegistry extends BaseContract {
     OrganizationUpdatedEvent.OutputTuple,
     OrganizationUpdatedEvent.OutputObject
   >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
 
   filters: {
-    "OrganizationCreated(address,address)": TypedContractEvent<
+    "AdministratorAdded(address,address)": TypedContractEvent<
+      AdministratorAddedEvent.InputTuple,
+      AdministratorAddedEvent.OutputTuple,
+      AdministratorAddedEvent.OutputObject
+    >;
+    AdministratorAdded: TypedContractEvent<
+      AdministratorAddedEvent.InputTuple,
+      AdministratorAddedEvent.OutputTuple,
+      AdministratorAddedEvent.OutputObject
+    >;
+
+    "AdministratorRemoved(address,address,address)": TypedContractEvent<
+      AdministratorRemovedEvent.InputTuple,
+      AdministratorRemovedEvent.OutputTuple,
+      AdministratorRemovedEvent.OutputObject
+    >;
+    AdministratorRemoved: TypedContractEvent<
+      AdministratorRemovedEvent.InputTuple,
+      AdministratorRemovedEvent.OutputTuple,
+      AdministratorRemovedEvent.OutputObject
+    >;
+
+    "OrganizationCreated(address)": TypedContractEvent<
       OrganizationCreatedEvent.InputTuple,
       OrganizationCreatedEvent.OutputTuple,
       OrganizationCreatedEvent.OutputObject
@@ -344,6 +487,17 @@ export interface OrganizationRegistry extends BaseContract {
       OrganizationUpdatedEvent.InputTuple,
       OrganizationUpdatedEvent.OutputTuple,
       OrganizationUpdatedEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
     >;
   };
 }

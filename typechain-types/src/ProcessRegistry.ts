@@ -132,19 +132,20 @@ export interface ProcessRegistryInterface extends Interface {
       | "MAX_STATUS"
       | "UPGRADE_INTERFACE_VERSION"
       | "chainID"
+      | "getNextProcessId"
       | "getProcess"
+      | "getProcessEndTime"
       | "getRVerifierVKeyHash"
       | "getSTVerifierVKeyHash"
       | "initialize"
       | "newProcess"
-      | "organizationRegistryAddress"
       | "owner"
       | "processCount"
+      | "processNonce"
       | "processes"
       | "proxiableUUID"
       | "rVerifier"
       | "renounceOwnership"
-      | "sequencerRegistryAddress"
       | "setProcessCensus"
       | "setProcessDuration"
       | "setProcessResults"
@@ -182,7 +183,15 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "getNextProcessId",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getProcess",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getProcessEndTime",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -195,7 +204,7 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
-    values: [string, AddressLike, AddressLike, AddressLike]
+    values: [BigNumberish, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "newProcess",
@@ -206,20 +215,18 @@ export interface ProcessRegistryInterface extends Interface {
       IProcessRegistry.BallotModeStruct,
       IProcessRegistry.CensusStruct,
       string,
-      AddressLike,
-      BytesLike,
       IProcessRegistry.EncryptionKeyStruct,
       BigNumberish
     ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "organizationRegistryAddress",
-    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "processCount",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "processNonce",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "processes",
@@ -232,10 +239,6 @@ export interface ProcessRegistryInterface extends Interface {
   encodeFunctionData(functionFragment: "rVerifier", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "sequencerRegistryAddress",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -281,7 +284,15 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getNextProcessId",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "getProcess", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getProcessEndTime",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getRVerifierVKeyHash",
     data: BytesLike
@@ -292,13 +303,13 @@ export interface ProcessRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "organizationRegistryAddress",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "processCount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "processNonce",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "processes", data: BytesLike): Result;
@@ -309,10 +320,6 @@ export interface ProcessRegistryInterface extends Interface {
   decodeFunctionResult(functionFragment: "rVerifier", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "sequencerRegistryAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -423,10 +430,19 @@ export namespace ProcessDurationChangedEvent {
 }
 
 export namespace ProcessResultsSetEvent {
-  export type InputTuple = [processId: BytesLike, result: BigNumberish[]];
-  export type OutputTuple = [processId: string, result: bigint[]];
+  export type InputTuple = [
+    processId: BytesLike,
+    sender: AddressLike,
+    result: BigNumberish[]
+  ];
+  export type OutputTuple = [
+    processId: string,
+    sender: string,
+    result: bigint[]
+  ];
   export interface OutputObject {
     processId: string;
+    sender: string;
     result: bigint[];
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -436,10 +452,19 @@ export namespace ProcessResultsSetEvent {
 }
 
 export namespace ProcessStateRootUpdatedEvent {
-  export type InputTuple = [processId: BytesLike, newStateRoot: BigNumberish];
-  export type OutputTuple = [processId: string, newStateRoot: bigint];
+  export type InputTuple = [
+    processId: BytesLike,
+    sender: AddressLike,
+    newStateRoot: BigNumberish
+  ];
+  export type OutputTuple = [
+    processId: string,
+    sender: string,
+    newStateRoot: bigint
+  ];
   export interface OutputObject {
     processId: string;
+    sender: string;
     newStateRoot: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -449,10 +474,19 @@ export namespace ProcessStateRootUpdatedEvent {
 }
 
 export namespace ProcessStatusChangedEvent {
-  export type InputTuple = [processId: BytesLike, newStatus: BigNumberish];
-  export type OutputTuple = [processId: string, newStatus: bigint];
+  export type InputTuple = [
+    processId: BytesLike,
+    oldStatus: BigNumberish,
+    newStatus: BigNumberish
+  ];
+  export type OutputTuple = [
+    processId: string,
+    oldStatus: bigint,
+    newStatus: bigint
+  ];
   export interface OutputObject {
     processId: string;
+    oldStatus: bigint;
     newStatus: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -522,11 +556,19 @@ export interface ProcessRegistry extends BaseContract {
 
   UPGRADE_INTERFACE_VERSION: TypedContractMethod<[], [string], "view">;
 
-  chainID: TypedContractMethod<[], [string], "view">;
+  chainID: TypedContractMethod<[], [bigint], "view">;
+
+  getNextProcessId: TypedContractMethod<[], [string], "view">;
 
   getProcess: TypedContractMethod<
     [processId: BytesLike],
     [IProcessRegistry.ProcessStructOutput],
+    "view"
+  >;
+
+  getProcessEndTime: TypedContractMethod<
+    [processId: BytesLike],
+    [bigint],
     "view"
   >;
 
@@ -535,12 +577,7 @@ export interface ProcessRegistry extends BaseContract {
   getSTVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
 
   initialize: TypedContractMethod<
-    [
-      _chainID: string,
-      _organizationRegistryAddress: AddressLike,
-      _stVerifier: AddressLike,
-      _rVerifier: AddressLike
-    ],
+    [_chainID: BigNumberish, _stVerifier: AddressLike, _rVerifier: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -553,20 +590,18 @@ export interface ProcessRegistry extends BaseContract {
       ballotMode: IProcessRegistry.BallotModeStruct,
       census: IProcessRegistry.CensusStruct,
       metadata: string,
-      organizationId: AddressLike,
-      processId: BytesLike,
       encryptionKey: IProcessRegistry.EncryptionKeyStruct,
       initStateRoot: BigNumberish
     ],
-    [void],
+    [string],
     "nonpayable"
   >;
-
-  organizationRegistryAddress: TypedContractMethod<[], [string], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
 
   processCount: TypedContractMethod<[], [bigint], "view">;
+
+  processNonce: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   processes: TypedContractMethod<
     [arg0: BytesLike],
@@ -605,8 +640,6 @@ export interface ProcessRegistry extends BaseContract {
   rVerifier: TypedContractMethod<[], [string], "view">;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
-
-  sequencerRegistryAddress: TypedContractMethod<[], [string], "view">;
 
   setProcessCensus: TypedContractMethod<
     [processId: BytesLike, census: IProcessRegistry.CensusStruct],
@@ -667,6 +700,9 @@ export interface ProcessRegistry extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "chainID"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getNextProcessId"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getProcess"
@@ -676,6 +712,9 @@ export interface ProcessRegistry extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "getProcessEndTime"
+  ): TypedContractMethod<[processId: BytesLike], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getRVerifierVKeyHash"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -684,12 +723,7 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "initialize"
   ): TypedContractMethod<
-    [
-      _chainID: string,
-      _organizationRegistryAddress: AddressLike,
-      _stVerifier: AddressLike,
-      _rVerifier: AddressLike
-    ],
+    [_chainID: BigNumberish, _stVerifier: AddressLike, _rVerifier: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -703,23 +737,21 @@ export interface ProcessRegistry extends BaseContract {
       ballotMode: IProcessRegistry.BallotModeStruct,
       census: IProcessRegistry.CensusStruct,
       metadata: string,
-      organizationId: AddressLike,
-      processId: BytesLike,
       encryptionKey: IProcessRegistry.EncryptionKeyStruct,
       initStateRoot: BigNumberish
     ],
-    [void],
+    [string],
     "nonpayable"
   >;
-  getFunction(
-    nameOrSignature: "organizationRegistryAddress"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "processCount"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "processNonce"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "processes"
   ): TypedContractMethod<
@@ -762,9 +794,6 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "sequencerRegistryAddress"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "setProcessCensus"
   ): TypedContractMethod<
@@ -934,7 +963,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.OutputObject
     >;
 
-    "ProcessResultsSet(bytes32,uint256[])": TypedContractEvent<
+    "ProcessResultsSet(bytes32,address,uint256[])": TypedContractEvent<
       ProcessResultsSetEvent.InputTuple,
       ProcessResultsSetEvent.OutputTuple,
       ProcessResultsSetEvent.OutputObject
@@ -945,7 +974,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessResultsSetEvent.OutputObject
     >;
 
-    "ProcessStateRootUpdated(bytes32,uint256)": TypedContractEvent<
+    "ProcessStateRootUpdated(bytes32,address,uint256)": TypedContractEvent<
       ProcessStateRootUpdatedEvent.InputTuple,
       ProcessStateRootUpdatedEvent.OutputTuple,
       ProcessStateRootUpdatedEvent.OutputObject
@@ -956,7 +985,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessStateRootUpdatedEvent.OutputObject
     >;
 
-    "ProcessStatusChanged(bytes32,uint8)": TypedContractEvent<
+    "ProcessStatusChanged(bytes32,uint8,uint8)": TypedContractEvent<
       ProcessStatusChangedEvent.InputTuple,
       ProcessStatusChangedEvent.OutputTuple,
       ProcessStatusChangedEvent.OutputObject

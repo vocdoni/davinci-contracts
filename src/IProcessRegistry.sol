@@ -99,6 +99,26 @@ interface IProcessRegistry {
      * @notice CannotAcceptResult error is emitted when a process cannot allow the results to be set.
      */
     error CannotAcceptResult();
+    /**
+     * @notice Thrown when the process ID is invalid (zero)
+     */
+    error InvalidProcessId();
+    /**
+     * @notice Thrown when attempting to transition to RESULTS state before process has ended
+     */
+    error ProcessNotEnded();
+    /**
+     * @notice Thrown when the process time bounds are invalid
+     */
+    error InvalidTimeBounds();
+    /**
+     * @notice Thrown when the proof is invalid.
+     */
+    error ProofInvalid();
+    /**
+     * @notice Thrown when the sender is not authorized to perform the action.
+     */
+    error Unauthorized();
 
     /// ENUMS ///
 
@@ -169,14 +189,16 @@ interface IProcessRegistry {
 
     /**
      * @notice The process ID is a unique identifier for a process.
+     * @param organizationId The organizationId of the process.
+     * @param chainID The ID of the chain.
      * @param nonce The nonce of the process.
      * @param organizationId The ID of the organization.
      * @param chainID The ID of the chain.
      */
     struct ProcessId {
-        uint256 nonce;
         address organizationId;
-        string chainID;
+        uint32 chainID;
+        uint64 nonce;
     }
 
     /**
@@ -192,7 +214,7 @@ interface IProcessRegistry {
     /**
      * @notice The process defines the parameters of the process.
      * @param status The status of the process.
-     * @param organizationId The ID of the organization.
+     * @param organizationId The organizationId of the process.
      * @param encryptionKey The encryption key of the process.
      * @param latestStateRoot The latest state root of the process.
      * @param result The result of the process.
@@ -266,7 +288,7 @@ interface IProcessRegistry {
         bytes32 processId,
         EncryptionKey calldata encryptionKey,
         uint256 initStateRoot
-    ) external;
+    ) external returns (bytes32);
 
     /**
      * @notice Sets the status of a process.
