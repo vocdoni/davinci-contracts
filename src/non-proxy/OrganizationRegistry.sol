@@ -27,19 +27,11 @@ contract OrganizationRegistry is IOrganizationRegistry, Ownable {
      * @notice Tracks the total number of organizations
      */
     uint32 public organizationCount;
-    /*
-     * @notice The address of the token used for deposits
-     * This is set during contract initialization and is used for process creation costs.
-     */
-    address public token;
+
     /**
      * @notice Initializes the contract
-     * @param _token The address of the token used for deposits
      */
-    constructor(address _token) Ownable(msg.sender) {
-        if (_token == address(0)) revert InvalidAddress();
-        token = _token;
-    }
+    constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IOrganizationRegistry
     function createOrganization(
@@ -128,7 +120,7 @@ contract OrganizationRegistry is IOrganizationRegistry, Ownable {
             }
         }
         admins.push(administrator);
-        emit AdministratorAdded(id, administrator, msg.sender);
+        emit AdministratorAdded(id, administrator);
     }
 
     /// @inheritdoc IOrganizationRegistry
@@ -157,7 +149,7 @@ contract OrganizationRegistry is IOrganizationRegistry, Ownable {
         if (!found) {
             revert NotAdministrator();
         }
-        emit AdministratorRemoved(id, administrator);
+        emit AdministratorRemoved(id, administrator, msg.sender);
     }
 
     /// @inheritdoc IOrganizationRegistry
@@ -173,32 +165,6 @@ contract OrganizationRegistry is IOrganizationRegistry, Ownable {
     /// @inheritdoc IOrganizationRegistry
     function exists(address id) public view returns (bool) {
         return bytes(organizations[id].name).length > 0;
-    }
-
-    /// @inheritdoc IOrganizationRegistry
-    function approveDeposit(address id, uint256 amount) external override {
-        // Implementation for approving a deposit for an organization
-        // This function is typically used to approve deposits for process creation costs.
-        revert NotImplemented();
-    }
-
-    /// @inheritdoc IOrganizationRegistry
-    function deposit(address id, uint256 amount) external override {
-        // Implementation for depositing an amount to an organization
-        // This function is typically used to deposit funds into an organization for process creation costs.
-        revert NotImplemented();
-    }
-
-    /// @inheritdoc IOrganizationRegistry
-    function withdrawDeposit(address id, uint256 amount) external override {
-        // Implementation for withdrawing a deposit for an organization
-        // This function is typically used to withdraw deposits from an organization after process completion.
-        revert NotImplemented();
-    }
-
-    function setToken(address _token) external onlyOwner {
-        if (_token == address(0)) revert InvalidAddress();
-        token = _token;
     }
 
     // @notice Internal function to check if a user is an administrator of an organization

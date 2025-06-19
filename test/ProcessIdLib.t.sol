@@ -12,11 +12,14 @@ contract ProcessIdLibTest is Test {
         address addr = address(0x1234567890123456789012345678901234567890);
         uint64 nonce = 42;
 
+        bytes32 expectedProcessId = 0x000000011234567890123456789012345678901234567890000000000000002a;
+
         bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
 
         assertEq(uint32(uint256(processId >> 224)), chainId);
         assertEq(address(uint160(uint256(processId >> 64))), addr);
         assertEq(uint64(uint256(processId)), nonce);
+        assertEq(processId, expectedProcessId);
     }
 
     function test_ComputeProcessId_MaxValues() public {

@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import { IProcessRegistry } from "../IProcessRegistry.sol";
-import { IZKVerifier } from "../IZKVerifier.sol";
+import { IProcessRegistry } from "../interfaces/IProcessRegistry.sol";
+import { IZKVerifier } from "../interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "../libraries/ProcessIdLib.sol";
-import { ISequencerRegistry } from "../ISequencerRegistry.sol";
-import { ProcessCalc } from "../ProcessCalc.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
-
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
@@ -32,18 +28,6 @@ contract ProcessRegistry is IProcessRegistry {
      */
     mapping(address => uint64) public processNonce;
     /**
-     * @notice The sequencer registry address is the sequencer registry contract that manages sequencers.
-     */
-    address public sequencerRegistryAddress;
-    /**
-     * @notice The process calc address is the process calc contract that manages the cost of a process.
-     */
-    address public processCalcAddress;
-    /**
-     * @notice The token address is the address of the token contract.
-     */
-    address public tokenAddress;
-    /**
      * @notice The process count is the number of processes created.
      */
     uint32 public processCount;
@@ -65,24 +49,37 @@ contract ProcessRegistry is IProcessRegistry {
      * @param _chainID The ID of the chain.
      * @param _stVerifier The address of the state transition ZK verifier contract.
      * @param _rVerifier The address of the results ZK verifier contract.
-     * @param _processCalc The address of the process calc contract.
-     * @param _sequencerRegistry The address of the sequencer registry contract.
-     * @param _tokenAddress The address of the token contract.
      */
-    constructor(
-        uint32 _chainID,
-        address _stVerifier,
-        address _rVerifier,
-        address _processCalc,
-        address _sequencerRegistry,
-        address _tokenAddress
-    ) {
+    constructor(uint32 _chainID, address _stVerifier, address _rVerifier) {
         stVerifier = _stVerifier;
         rVerifier = _rVerifier;
         chainID = _chainID;
-        processCalcAddress = _processCalc;
-        sequencerRegistryAddress = _sequencerRegistry;
-        tokenAddress = _tokenAddress;
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getProcess(bytes32 processId) external view override returns (Process memory) {
+        return processes[processId];
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getProcessEndTime(bytes32 processId) external view returns (uint256) {
+        Process memory p = processes[processId];
+        return p.startTime + p.duration;
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getSTVerifierVKeyHash() external view override returns (bytes32) {
+        return IZKVerifier(stVerifier).provingKeyHash();
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getRVerifierVKeyHash() external view override returns (bytes32) {
+        return IZKVerifier(rVerifier).provingKeyHash();
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getNextProcessId() external view override returns (bytes32) {
+        return ProcessIdLib.computeProcessId(chainID, msg.sender, processNonce[msg.sender]);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -94,8 +91,7 @@ contract ProcessRegistry is IProcessRegistry {
         Census calldata census,
         string calldata metadata,
         EncryptionKey calldata encryptionKey,
-        uint256 initStateRoot,
-        address[] calldata sequencers
+        uint256 initStateRoot
     ) external override returns (bytes32) {
         address sender = msg.sender;
         bytes32 processId = ProcessIdLib.computeProcessId(chainID, sender, processNonce[sender]);
@@ -103,27 +99,147 @@ contract ProcessRegistry is IProcessRegistry {
         // Validate process doesn't exist and validate inputs
         _validateNewProcess(processId, sender, status, startTime, duration, ballotMode, census);
 
-        // Calculate cost and transfer tokens
-        uint256 cost = _calculateAndTransferCost(sender, census.maxVotes, duration, sequencers.length);
+        Process storage p = processes[processId];
 
-        // Store process data
-        _storeProcessData(
-            processId,
-            sender,
-            status,
-            startTime,
-            duration,
-            ballotMode,
-            census,
-            metadata,
-            encryptionKey,
-            initStateRoot,
-            sequencers,
-            cost
-        );
+        p.status = status;
+        p.startTime = startTime;
+        p.duration = duration;
+        p.organizationId = sender;
+        p.encryptionKey = encryptionKey;
+        p.latestStateRoot = initStateRoot;
+        p.metadataURI = metadata;
+        p.ballotMode = ballotMode;
+        p.census = census;
+
+        processCount++;
+        processNonce[sender]++;
 
         emit ProcessCreated(processId, sender);
         return processId;
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external override {
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
+
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        if (p.organizationId != msg.sender) revert Unauthorized();
+
+        // validate status transition
+        ProcessStatus oldStatus = p.status;
+        if (!_validateStatusTransition(oldStatus, newStatus)) revert InvalidStatus();
+
+        p.status = newStatus;
+        // if newStatus is ENDED, update duration to the time difference between current time and start time
+        if (newStatus == ProcessStatus.ENDED) {
+            uint256 newDuration = block.timestamp - p.startTime;
+            p.duration = newDuration;
+            emit ProcessDurationChanged(processId, newDuration);
+        }
+
+        emit ProcessStatusChanged(processId, oldStatus, newStatus);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function setProcessCensus(bytes32 processId, Census calldata census) external override {
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        if (p.organizationId != msg.sender) revert Unauthorized();
+
+        // check census
+        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
+        if (p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+
+        // check ongoing process
+        if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        p.census.maxVotes = census.maxVotes;
+        p.census.censusRoot = census.censusRoot;
+        p.census.censusURI = census.censusURI;
+
+        emit CensusUpdated(processId, census.censusRoot, census.censusURI, census.maxVotes);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    /// @dev Note that the end time of the process is startTime + duration.
+    function setProcessDuration(bytes32 processId, uint256 _duration) external override {
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        if (p.organizationId != msg.sender) revert Unauthorized();
+
+        // check ongoing process
+        ProcessStatus status = p.status;
+        if (status != ProcessStatus.READY && status != ProcessStatus.PAUSED) revert InvalidStatus();
+
+        // check valid duration
+        uint256 startTime = p.startTime;
+        uint256 oldDuration = p.duration;
+        if (
+            _duration == 0 ||
+            startTime + _duration <= block.timestamp ||
+            startTime + _duration <= startTime + oldDuration
+        ) revert InvalidDuration();
+
+        p.duration = _duration;
+
+        emit ProcessDurationChanged(processId, _duration);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        if (p.status != ProcessStatus.READY) revert InvalidStatus();
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        IZKVerifier(stVerifier).verifyProof(proof, input);
+
+        uint256[4] memory decompressedInput = abi.decode(input, (uint256[4]));
+        if (decompressedInput[0] != p.latestStateRoot) {
+            revert InvalidStateRoot();
+        }
+
+        p.latestStateRoot = decompressedInput[1];
+        p.voteCount += decompressedInput[2];
+        p.voteOverwriteCount += decompressedInput[3];
+
+        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        if (p.status != ProcessStatus.ENDED) revert InvalidStatus();
+        if (p.startTime + p.duration > block.timestamp) revert InvalidTimeBounds();
+
+        IZKVerifier(rVerifier).verifyProof(proof, input);
+
+        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
+
+        if (decompressedInput[0] != p.latestStateRoot) {
+            revert InvalidStateRoot();
+        }
+
+        uint256[] memory result = new uint256[](decompressedInput.length - 1);
+        for (uint256 i = 1; i < decompressedInput.length; i++) {
+            result[i - 1] = decompressedInput[i];
+        }
+
+        p.status = ProcessStatus.RESULTS;
+        p.result = result;
+
+        emit ProcessStatusChanged(processId, ProcessStatus.ENDED, ProcessStatus.RESULTS);
+        emit ProcessResultsSet(processId, msg.sender, result);
     }
 
     /**
@@ -138,7 +254,7 @@ contract ProcessRegistry is IProcessRegistry {
         BallotMode calldata ballotMode,
         Census calldata census
     ) private view {
-        if (processes[processId].owner == sender) revert ProcessAlreadyExists();
+        if (processes[processId].organizationId == sender) revert ProcessAlreadyExists();
 
         // validate ballot mode
         if (ballotMode.maxCount == 0) revert InvalidMaxCount();
@@ -164,224 +280,6 @@ contract ProcessRegistry is IProcessRegistry {
         }
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
-    }
-
-    /**
-     * @dev Calculates process cost and transfers tokens
-     */
-    function _calculateAndTransferCost(
-        address sender,
-        uint256 maxVotes,
-        uint256 duration,
-        uint256 sequencersLength
-    ) private returns (uint256) {
-        uint256 cost = ProcessCalc(processCalcAddress).calculateProcessCost(maxVotes, duration, sequencersLength);
-        IERC20(tokenAddress).transferFrom(sender, sequencerRegistryAddress, cost);
-        return cost;
-    }
-
-    /**
-     * @dev Stores process data in storage
-     */
-    function _storeProcessData(
-        bytes32 processId,
-        address sender,
-        ProcessStatus status,
-        uint256 startTime,
-        uint256 duration,
-        BallotMode calldata ballotMode,
-        Census calldata census,
-        string calldata metadata,
-        EncryptionKey calldata encryptionKey,
-        uint256 initStateRoot,
-        address[] calldata sequencers,
-        uint256 cost
-    ) private {
-        Process storage p = processes[processId];
-
-        p.status = status;
-        p.startTime = startTime;
-        p.duration = duration;
-        p.owner = sender;
-        p.encryptionKey = encryptionKey;
-        p.latestStateRoot = initStateRoot;
-        p.metadataURI = metadata;
-        p.ballotMode = ballotMode;
-        p.census = census;
-        p.sequencers = sequencers;
-        p.cost = cost;
-
-        processCount++;
-        processNonce[sender]++;
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function getProcess(bytes32 processId) external view override returns (Process memory) {
-        return processes[processId];
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function getProcessEndTime(bytes32 processId) external view returns (uint256) {
-        Process storage p = processes[processId];
-        return p.startTime + p.duration;
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function getSTVerifierVKeyHash() external view override returns (bytes32) {
-        return IZKVerifier(stVerifier).provingKeyHash();
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function getRVerifierVKeyHash() external view override returns (bytes32) {
-        return IZKVerifier(rVerifier).provingKeyHash();
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function getNextProcessId() external view override returns (bytes32) {
-        return ProcessIdLib.computeProcessId(chainID, msg.sender, processNonce[msg.sender]);
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
-        if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
-
-        Process storage p = processes[processId];
-        if (p.owner == address(0)) revert ProcessNotFound();
-        if (p.owner != msg.sender) revert Unauthorized();
-
-        // validate status transition
-        ProcessStatus oldStatus = p.status;
-        if (!_validateStatusTransition(oldStatus, newStatus)) revert InvalidStatus();
-
-        // allow ENDED status to be manually set if process is ended by time
-        if (p.startTime + p.duration <= block.timestamp && newStatus != ProcessStatus.ENDED) revert InvalidTimeBounds();
-
-        p.status = newStatus;
-        // if newStatus is ENDED, update duration to the time difference between current time and start time
-        if (newStatus == ProcessStatus.ENDED) {
-            uint256 newDuration = block.timestamp - p.startTime;
-            p.duration = newDuration;
-            emit ProcessDurationChanged(processId, newDuration);
-        }
-
-        emit ProcessStatusChanged(processId, oldStatus, newStatus);
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function setProcessCensus(bytes32 processId, Census calldata census) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
-        Process storage p = processes[processId];
-        if (p.owner == address(0)) revert ProcessNotFound();
-        if (p.owner != msg.sender) revert Unauthorized();
-
-        // check census
-        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
-        if (p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
-        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
-
-        // check ongoing process
-        if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
-        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
-
-        p.census.maxVotes = census.maxVotes;
-        p.census.censusRoot = census.censusRoot;
-        p.census.censusURI = census.censusURI;
-
-        emit CensusUpdated(processId, census.censusRoot, census.censusURI, census.maxVotes);
-    }
-
-    /// @inheritdoc IProcessRegistry
-    /// @dev Note that the end time of the process is startTime + duration.
-    function setProcessDuration(bytes32 processId, uint256 _duration) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
-        Process storage p = processes[processId];
-        if (p.owner == address(0)) revert ProcessNotFound();
-        if (p.owner != msg.sender) revert Unauthorized();
-
-        // check ongoing process
-        ProcessStatus status = p.status;
-        if (status != ProcessStatus.READY && status != ProcessStatus.PAUSED) revert InvalidStatus();
-
-        // check valid duration
-        uint256 startTime = p.startTime;
-        uint256 oldDuration = p.duration;
-        if (
-            _duration == 0 ||
-            startTime + _duration <= block.timestamp ||
-            startTime + _duration <= startTime + oldDuration
-        ) revert InvalidDuration();
-
-        p.duration = _duration;
-
-        emit ProcessDurationChanged(processId, _duration);
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
-        Process storage p = processes[processId];
-        if (p.owner == address(0)) revert ProcessNotFound();
-        if (p.status != ProcessStatus.READY) revert InvalidStatus();
-        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
-
-        IZKVerifier(stVerifier).verifyProof(proof, input);
-
-        uint256[4] memory decompressedInput = abi.decode(input, (uint256[4]));
-        if (decompressedInput[0] != p.latestStateRoot) {
-            revert InvalidStateRoot();
-        }
-
-        p.latestStateRoot = decompressedInput[1];
-        p.voteCount += decompressedInput[2];
-        p.voteOverwriteCount += decompressedInput[3];
-
-        // add reward if process registered sequencer
-        address sequencer = msg.sender;
-        for (uint256 i = 0; i < p.sequencers.length; i++) {
-            if (sequencer == p.sequencers[i] && ISequencerRegistry(sequencerRegistryAddress).isActive(sequencer)) {
-                ISequencerRegistry(sequencerRegistryAddress).addReward(
-                    processId,
-                    msg.sender,
-                    decompressedInput[2],
-                    decompressedInput[3]
-                );
-                break;
-            }
-        }
-
-        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
-        Process storage p = processes[processId];
-        if (p.owner == address(0)) revert ProcessNotFound();
-        if (p.status != ProcessStatus.ENDED) revert InvalidStatus();
-        if (p.startTime + p.duration > block.timestamp) revert InvalidTimeBounds();
-
-        IZKVerifier(rVerifier).verifyProof(proof, input);
-
-        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
-
-        if (decompressedInput[0] != p.latestStateRoot) {
-            revert InvalidStateRoot();
-        }
-
-        uint256[] memory result = new uint256[](decompressedInput.length - 1);
-        for (uint256 i = 1; i < decompressedInput.length; i++) {
-            result[i - 1] = decompressedInput[i];
-        }
-
-        p.status = ProcessStatus.RESULTS;
-        p.result = result;
-
-        ISequencerRegistry(sequencerRegistryAddress).finalizeProcessRewards(processId);
-
-        emit ProcessStatusChanged(processId, ProcessStatus.ENDED, ProcessStatus.RESULTS);
-        emit ProcessResultsSet(processId, msg.sender, result);
     }
 
     /**

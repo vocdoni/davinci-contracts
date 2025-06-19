@@ -146,10 +146,6 @@ interface IProcessRegistry {
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
-    /**
-     * @notice Thrown when a function is not implemented.
-     */
-    error NotImplemented();
 
     /// ENUMS ///
 
@@ -220,12 +216,12 @@ interface IProcessRegistry {
 
     /**
      * @notice The process ID is a unique identifier for a process.
-     * @param owner The owner of the process.
+     * @param organizationId The organizationId of the process.
      * @param chainID The ID of the chain.
      * @param nonce The nonce of the process.
      */
     struct ProcessId {
-        address owner;
+        address organizationId;
         uint32 chainID;
         uint64 nonce;
     }
@@ -243,7 +239,7 @@ interface IProcessRegistry {
     /**
      * @notice The process defines the parameters of the process.
      * @param status The status of the process.
-     * @param owner The owner of the process.
+     * @param organizationId The organizationId of the process.
      * @param encryptionKey The encryption key of the process.
      * @param latestStateRoot The latest state root of the process.
      * @param result The result of the process.
@@ -254,12 +250,10 @@ interface IProcessRegistry {
      * @param metadataURI The URI of the metadata.
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
-     * @param sequencers The sequencers of the process.
-     * @param cost The cost of the process.
      */
     struct Process {
         ProcessStatus status;
-        address owner;
+        address organizationId;
         EncryptionKey encryptionKey;
         uint256 latestStateRoot;
         uint256[] result;
@@ -270,8 +264,6 @@ interface IProcessRegistry {
         string metadataURI;
         BallotMode ballotMode;
         Census census;
-        address[] sequencers;
-        uint256 cost;
     }
 
     /// GETTERS ///
@@ -320,7 +312,6 @@ interface IProcessRegistry {
      * @param metadata The URI of the metadata.
      * @param encryptionKey The public key used for vote encryption.
      * @param initStateRoot The initial state root.
-     * @param sequencers The sequencers of the process.
      */
     function newProcess(
         ProcessStatus status,
@@ -330,16 +321,9 @@ interface IProcessRegistry {
         Census calldata census,
         string calldata metadata,
         EncryptionKey calldata encryptionKey,
-        uint256 initStateRoot,
-        address[] calldata sequencers
+        uint256 initStateRoot
     ) external returns (bytes32);
 
-    /**
-     * @notice Sets the process key.
-     * @param processId The ID of the process.
-     * @param encryptionKey The public key used for vote encryption.
-     */
-    function setProcessKey(bytes32 processId, EncryptionKey calldata encryptionKey) external;
     /**
      * @notice Sets the status of a process.
      * @param processId The ID of the process.

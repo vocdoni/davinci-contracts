@@ -26,37 +26,15 @@ interface IOrganizationRegistry {
      * @notice Emitted when an administrator is added to an organization
      * @param id The organization's unique identifier
      * @param administrator The address of the administrator added
-     * @param adder The address of the adder
      */
-    event AdministratorAdded(address indexed id, address indexed administrator, address indexed adder);
+    event AdministratorAdded(address indexed id, address indexed administrator);
     /**
      * @notice Emitted when an administrator is removed from an organization
      * @param id The organization's unique identifier
      * @param administrator The address of the administrator removed
+     * @param remover The address of the remover
      */
-    event AdministratorRemoved(address indexed id, address indexed administrator);
-
-    /**
-     * @notice Emitted when a deposit is approved for an organization
-     * @param id The organization's unique identifier
-     * @param amount The amount to deposit
-     * @param approver The address of the approver
-     */
-    event DepositApproved(address indexed id, uint256 amount, address indexed approver);
-    /**
-     * @notice Emitted when a deposit is made to an organization
-     * @param id The organization's unique identifier
-     * @param amount The amount deposited
-     * @param depositor The address of the depositor
-     */
-    event DepositDeposited(address indexed id, uint256 amount, address indexed depositor);
-    /**
-     * @notice Emitted when a deposit is withdrawn from an organization
-     * @param id The organization's unique identifier
-     * @param amount The amount withdrawn
-     * @param withdrawer The address of the withdrawer
-     */
-    event DepositWithdrawn(address indexed id, uint256 amount, address indexed withdrawer);
+    event AdministratorRemoved(address indexed id, address indexed administrator, address indexed remover);
 
     /// ERRORS ///
 
@@ -92,10 +70,6 @@ interface IOrganizationRegistry {
      * InvalidMetadataURI error is emitted when the metadata URI is invalid
      */
     error InvalidMetadataURI();
-    /**
-     * @notice NotImplemented error is emitted when a function is not implemented
-     */
-    error NotImplemented();
     /**
      * @notice Unauthorized error is emitted when the caller is not authorized to perform an action
      */
@@ -183,30 +157,4 @@ interface IOrganizationRegistry {
      * @param id The ID of the organization to delete
      */
     function deleteOrganization(address id) external;
-
-    // Utility functions for managing deposits for process creation costs
-
-    /**
-     * @notice Approves a deposit for an organization
-     * @param id The organization's unique identifier
-     * @param amount The amount to deposit
-     * @dev This function is used to approve deposits for an organization, typically for process creation costs.
-     */
-    function approveDeposit(address id, uint256 amount) external;
-
-    /**
-     * @notice Deposits an amount to an organization
-     * @param id The organization's unique identifier
-     * @param amount The amount to deposit
-     * @dev This function is used to deposit funds into an organization, typically for process creation costs.
-     */
-    function deposit(address id, uint256 amount) external;
-
-    /**
-     * @notice Withdraws a deposit for an organization
-     * @param id The organization's unique identifier
-     * @param amount The amount to withdraw
-     * @dev This function is used to withdraw deposits from an organization, typically after process completion.
-     */
-    function withdrawDeposit(address id, uint256 amount) external;
 }
