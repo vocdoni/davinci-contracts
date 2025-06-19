@@ -2,4 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { ResultsVerifierBaseGroth16 } from "./ResultsVerifierBaseGroth16";
+export type { ResultsVerifierGroth16 } from "./ResultsVerifierGroth16";
 export type { StateTransitionVerifierBaseGroth16 } from "./StateTransitionVerifierBaseGroth16";
+export type { StateTransitionVerifierGroth16 } from "./StateTransitionVerifierGroth16";
