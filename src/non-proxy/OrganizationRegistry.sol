@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import "../IOrganizationRegistry.sol";
+import "../interfaces/IOrganizationRegistry.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title OrganizationRegistry
@@ -9,18 +10,15 @@ import "../IOrganizationRegistry.sol";
  * @notice The OrganizationRegistry contract is a registry of organizations.
  * @dev Uses OpenZeppelin's Initializable contract to manage the contract's initialization.
  */
-contract OrganizationRegistry is IOrganizationRegistry {
+contract OrganizationRegistry is IOrganizationRegistry, Ownable {
     /**
-     * @notice Modifier that checks if the sender is an administrator of the organization
-     * @param id The organization's unique identifier
+     * @notice Modifier to check if the caller is an administrator of the organization
+     * @param orgId The organization's unique identifier
      */
-    modifier onlyAdministrator(address id) {
-        if (!organizations[id].administrators[msg.sender]) {
-            revert NotAdministrator();
-        }
+    modifier onlyAdministrator(address orgId) {
+        if (!_isAdmin(orgId)) revert NotAdministrator();
         _;
     }
-
     /**
      * @notice Mapping of organizations IDs to their respective organization data
      */
@@ -31,23 +29,17 @@ contract OrganizationRegistry is IOrganizationRegistry {
     uint32 public organizationCount;
 
     /**
-     * @notice Creates a new organization
-     * @param id The organization's address
-     * @param name The organization's name
-     * @param metadataURI The organization's metadata URI that can be used to store additional information
-     * @param administrators The list of administrators of the organization
-     * @dev Checks for organization existence by verifying that the organization's name is not empty
-     * @dev msg.sender is added as an administrator by default
+     * @notice Initializes the contract
      */
+    constructor() Ownable(msg.sender) {}
+
+    /// @inheritdoc IOrganizationRegistry
     function createOrganization(
-        address id,
         string calldata name,
         string calldata metadataURI,
         address[] calldata administrators
     ) public {
-        if (id == address(0)) {
-            revert InvalidOrganizationID();
-        }
+        address id = msg.sender;
         if (bytes(name).length <= 0) {
             revert InvalidOrganizationName();
         }
@@ -59,34 +51,22 @@ contract OrganizationRegistry is IOrganizationRegistry {
         organization.metadataURI = metadataURI;
         if (administrators.length > 0) {
             for (uint256 i = 0; i < administrators.length; i++) {
-                if (administrators[i] == address(0)) {
-                    revert InvalidAddress();
-                }
-                organization.administrators[administrators[i]] = true;
+                if (administrators[i] == address(0)) revert InvalidAddress();
+                if (administrators[i] == id) continue;
+                organization.administrators.push(administrators[i]);
             }
         }
-        organization.administrators[msg.sender] = true;
+        organization.administrators.push(id);
         organizationCount++;
-        emit OrganizationCreated(id, msg.sender);
+        emit OrganizationCreated(id);
     }
 
-    /**
-     * @notice Retrieves an organization's data
-     * @param id The organization's unique identifier
-     * @return name The organization's name
-     * @return metadataURI The organization's metadata URI that can be used to store additional information
-     */
-    function getOrganization(address id) public view returns (string memory, string memory) {
-        Organization storage organization = organizations[id];
-        return (organization.name, organization.metadataURI);
+    /// @inheritdoc IOrganizationRegistry
+    function getOrganization(address id) public view returns (Organization memory) {
+        return organizations[id];
     }
 
-    /**
-     * @notice Updates an organization's data
-     * @param id The organization's unique identifier
-     * @param name The organization's name
-     * @param metadataURI The organization's metadata URI that can be used to store additional information
-     */
+    /// @inheritdoc IOrganizationRegistry
     function updateOrganization(
         address id,
         string calldata name,
@@ -109,64 +89,91 @@ contract OrganizationRegistry is IOrganizationRegistry {
         emit OrganizationUpdated(id, msg.sender);
     }
 
-    /**
-     * @notice Adds an administrator to an organization
-     * @param id The organization's unique identifier
-     * @param administrator The address of the administrator to add
-     */
-    function addAdministrator(address id, address administrator) public onlyAdministrator(id) {
+    /// @inheritdoc IOrganizationRegistry
+    function isAdministrator(address id, address account) public view returns (bool) {
+        if (bytes(organizations[id].name).length <= 0) {
+            revert OrganizationNotFound();
+        }
+        address[] memory admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == account) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// @inheritdoc IOrganizationRegistry
+    function addAdministrator(address id, address administrator) public {
+        // only the organization itself can add an administrator
+        if (msg.sender != id) revert Unauthorized();
         if (bytes(organizations[id].name).length <= 0) {
             revert OrganizationNotFound();
         }
         if (administrator == address(0)) {
             revert InvalidAddress();
         }
-        organizations[id].administrators[administrator] = true;
+        address[] storage admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == administrator) {
+                revert AlreadyAdministrator();
+            }
+        }
+        admins.push(administrator);
+        emit AdministratorAdded(id, administrator);
     }
 
-    /**
-     * @notice Removes an administrator from an organization
-     * @param id The organization's unique identifier
-     * @param administrator The address of the administrator to remove
-     */
+    /// @inheritdoc IOrganizationRegistry
     function removeAdministrator(address id, address administrator) public onlyAdministrator(id) {
+        // if the caller is the organization itself can remove any admin
+        // otherwise, the caller, if admin, can remove himself
+        if (msg.sender != id) {
+            administrator = msg.sender;
+        }
         if (bytes(organizations[id].name).length <= 0) {
             revert OrganizationNotFound();
         }
         if (administrator == address(0)) {
             revert InvalidAddress();
         }
-        organizations[id].administrators[administrator] = false;
+        bool found = false;
+        address[] storage admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == administrator) {
+                found = true;
+                admins[i] = admins[admins.length - 1];
+                admins.pop();
+                break;
+            }
+        }
+        if (!found) {
+            revert NotAdministrator();
+        }
+        emit AdministratorRemoved(id, administrator, msg.sender);
     }
 
-    /**
-     * @notice Deletes an organization
-     * @param id The ID of the organization to delete
-     */
-    function deleteOrganization(address id) public onlyAdministrator(id) {
+    /// @inheritdoc IOrganizationRegistry
+    function deleteOrganization(address id) public {
         if (bytes(organizations[id].name).length <= 0) {
             revert OrganizationNotFound();
         }
+        if (msg.sender != id) revert Unauthorized();
         delete organizations[id];
         organizationCount--;
     }
 
-    /**
-     * @notice Checks if an account is an administrator of an organization
-     * @param id The organization's unique identifier
-     * @param account The address of the account to check
-     * @return true if the account is an administrator, false otherwise
-     */
-    function isAdministrator(address id, address account) public view returns (bool) {
-        return organizations[id].administrators[account];
-    }
-
-    /**
-     * @notice Checks if an organization exists
-     * @param id The organization's unique identifier
-     * @return true if the organization exists, false otherwise
-     */
+    /// @inheritdoc IOrganizationRegistry
     function exists(address id) public view returns (bool) {
         return bytes(organizations[id].name).length > 0;
+    }
+
+    // @notice Internal function to check if a user is an administrator of an organization
+    // @param id The organization's unique identifier
+    function _isAdmin(address id) internal view returns (bool) {
+        address[] storage admins = organizations[id].administrators;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == msg.sender) return true;
+        }
+        return false;
     }
 }

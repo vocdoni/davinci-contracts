@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
 import { stdError } from "forge-std/StdError.sol";
-import { StateTransitionVerifierGroth16 } from "../src/StateTransitionVerifierGroth16.sol";
+import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 
 contract StateTransitionVerifierGroth16Test is Test {
     uint256 public constant ROOT_HASH_BEFORE =

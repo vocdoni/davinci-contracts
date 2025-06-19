@@ -30,9 +30,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ContextUpgradeable__factory>;
     getContractFactory(
+      name: "Ownable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Ownable__factory>;
+    getContractFactory(
       name: "IERC1822Proxiable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC1822Proxiable__factory>;
+    getContractFactory(
+      name: "IERC1967",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC1967__factory>;
     getContractFactory(
       name: "IBeacon",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -46,6 +54,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Address__factory>;
     getContractFactory(
+      name: "Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Errors__factory>;
+    getContractFactory(
       name: "IOrganizationRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IOrganizationRegistry__factory>;
@@ -53,10 +65,6 @@ declare module "hardhat/types/runtime" {
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IProcessRegistry__factory>;
-    getContractFactory(
-      name: "ISequencerRegistry",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ISequencerRegistry__factory>;
     getContractFactory(
       name: "IZKVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -78,21 +86,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ProcessRegistry__factory>;
     getContractFactory(
-      name: "ResultsVerifierGroth16",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ResultsVerifierGroth16__factory>;
-    getContractFactory(
-      name: "StateTransitionVerifierGroth16",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.StateTransitionVerifierGroth16__factory>;
-    getContractFactory(
       name: "ResultsVerifierBaseGroth16",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ResultsVerifierBaseGroth16__factory>;
     getContractFactory(
+      name: "ResultsVerifierGroth16",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ResultsVerifierGroth16__factory>;
+    getContractFactory(
       name: "StateTransitionVerifierBaseGroth16",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.StateTransitionVerifierBaseGroth16__factory>;
+    getContractFactory(
+      name: "StateTransitionVerifierGroth16",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.StateTransitionVerifierGroth16__factory>;
 
     getContractAt(
       name: "OwnableUpgradeable",
@@ -115,10 +123,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ContextUpgradeable>;
     getContractAt(
+      name: "Ownable",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Ownable>;
+    getContractAt(
       name: "IERC1822Proxiable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC1822Proxiable>;
+    getContractAt(
+      name: "IERC1967",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC1967>;
     getContractAt(
       name: "IBeacon",
       address: string | ethers.Addressable,
@@ -135,6 +153,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Address>;
     getContractAt(
+      name: "Errors",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Errors>;
+    getContractAt(
       name: "IOrganizationRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -144,11 +167,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IProcessRegistry>;
-    getContractAt(
-      name: "ISequencerRegistry",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ISequencerRegistry>;
     getContractAt(
       name: "IZKVerifier",
       address: string | ethers.Addressable,
@@ -175,25 +193,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ProcessRegistry>;
     getContractAt(
-      name: "ResultsVerifierGroth16",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ResultsVerifierGroth16>;
-    getContractAt(
-      name: "StateTransitionVerifierGroth16",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.StateTransitionVerifierGroth16>;
-    getContractAt(
       name: "ResultsVerifierBaseGroth16",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ResultsVerifierBaseGroth16>;
     getContractAt(
+      name: "ResultsVerifierGroth16",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ResultsVerifierGroth16>;
+    getContractAt(
       name: "StateTransitionVerifierBaseGroth16",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.StateTransitionVerifierBaseGroth16>;
+    getContractAt(
+      name: "StateTransitionVerifierGroth16",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
     deployContract(
       name: "OwnableUpgradeable",
@@ -212,9 +230,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ContextUpgradeable>;
     deployContract(
+      name: "Ownable",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Ownable>;
+    deployContract(
       name: "IERC1822Proxiable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC1822Proxiable>;
+    deployContract(
+      name: "IERC1967",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC1967>;
     deployContract(
       name: "IBeacon",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -228,6 +254,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Address>;
     deployContract(
+      name: "Errors",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Errors>;
+    deployContract(
       name: "IOrganizationRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IOrganizationRegistry>;
@@ -235,10 +265,6 @@ declare module "hardhat/types/runtime" {
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
-    deployContract(
-      name: "ISequencerRegistry",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISequencerRegistry>;
     deployContract(
       name: "IZKVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -260,21 +286,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ProcessRegistry>;
     deployContract(
-      name: "ResultsVerifierGroth16",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ResultsVerifierGroth16>;
-    deployContract(
-      name: "StateTransitionVerifierGroth16",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateTransitionVerifierGroth16>;
-    deployContract(
       name: "ResultsVerifierBaseGroth16",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ResultsVerifierBaseGroth16>;
     deployContract(
+      name: "ResultsVerifierGroth16",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ResultsVerifierGroth16>;
+    deployContract(
       name: "StateTransitionVerifierBaseGroth16",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.StateTransitionVerifierBaseGroth16>;
+    deployContract(
+      name: "StateTransitionVerifierGroth16",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
     deployContract(
       name: "OwnableUpgradeable",
@@ -297,10 +323,20 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ContextUpgradeable>;
     deployContract(
+      name: "Ownable",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Ownable>;
+    deployContract(
       name: "IERC1822Proxiable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC1822Proxiable>;
+    deployContract(
+      name: "IERC1967",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC1967>;
     deployContract(
       name: "IBeacon",
       args: any[],
@@ -317,6 +353,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Address>;
     deployContract(
+      name: "Errors",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Errors>;
+    deployContract(
       name: "IOrganizationRegistry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -326,11 +367,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
-    deployContract(
-      name: "ISequencerRegistry",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISequencerRegistry>;
     deployContract(
       name: "IZKVerifier",
       args: any[],
@@ -357,25 +393,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ProcessRegistry>;
     deployContract(
-      name: "ResultsVerifierGroth16",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ResultsVerifierGroth16>;
-    deployContract(
-      name: "StateTransitionVerifierGroth16",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateTransitionVerifierGroth16>;
-    deployContract(
       name: "ResultsVerifierBaseGroth16",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ResultsVerifierBaseGroth16>;
     deployContract(
+      name: "ResultsVerifierGroth16",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ResultsVerifierGroth16>;
+    deployContract(
       name: "StateTransitionVerifierBaseGroth16",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.StateTransitionVerifierBaseGroth16>;
+    deployContract(
+      name: "StateTransitionVerifierGroth16",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
     // default types
     getContractFactory(

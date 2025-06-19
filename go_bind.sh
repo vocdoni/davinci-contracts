@@ -51,13 +51,13 @@ abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"
 
-abi "./artifacts/src/StateTransitionVerifierGroth16.sol/StateTransitionVerifierGroth16.json" \
+abi "./artifacts/src/verifiers/StateTransitionVerifierGroth16.sol/StateTransitionVerifierGroth16.json" \
     "StateTransitionVerifierGroth16" \
-    "./golang-types/StateTransitionVerifierGroth16.go"
+    "./golang-types/verifiers/StateTransitionVerifierGroth16.go"
 
-abi "./artifacts/src/ResultsVerifierGroth16.sol/ResultsVerifierGroth16.json" \
+abi "./artifacts/src/verifiers/ResultsVerifierGroth16.sol/ResultsVerifierGroth16.json" \
     "ResultsVerifierGroth16" \
-    "./golang-types/ResultsVerifierGroth16.go"
+    "./golang-types/verifiers/ResultsVerifierGroth16.go"
 
 abi "./artifacts/src/non-proxy/OrganizationRegistry.sol/OrganizationRegistry.json" \
     "OrganizationRegistry" \
@@ -66,7 +66,3 @@ abi "./artifacts/src/non-proxy/OrganizationRegistry.sol/OrganizationRegistry.jso
 abi "./artifacts/src/non-proxy/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/non-proxy/ProcessRegistry.go"
-
-# abi "./artifacts/src/SequencerRegistry.sol/SequencerRegistry.json" \
-#     "SequencerRegistry" \
-#     "./golang-types/SequencerRegistry.go"
