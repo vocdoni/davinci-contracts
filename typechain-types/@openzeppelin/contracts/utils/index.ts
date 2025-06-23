@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { Address } from "./Address";
+export type { Errors } from "./Errors";

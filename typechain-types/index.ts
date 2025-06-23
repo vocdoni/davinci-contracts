@@ -16,12 +16,16 @@ export type { ContextUpgradeable } from "./@openzeppelin/contracts-upgradeable/u
 export { ContextUpgradeable__factory } from "./factories/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable__factory";
 export type { IERC1822Proxiable } from "./@openzeppelin/contracts/interfaces/draft-IERC1822.sol/IERC1822Proxiable";
 export { IERC1822Proxiable__factory } from "./factories/@openzeppelin/contracts/interfaces/draft-IERC1822.sol/IERC1822Proxiable__factory";
+export type { IERC1967 } from "./@openzeppelin/contracts/interfaces/IERC1967";
+export { IERC1967__factory } from "./factories/@openzeppelin/contracts/interfaces/IERC1967__factory";
 export type { IBeacon } from "./@openzeppelin/contracts/proxy/beacon/IBeacon";
 export { IBeacon__factory } from "./factories/@openzeppelin/contracts/proxy/beacon/IBeacon__factory";
 export type { ERC1967Utils } from "./@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils";
 export { ERC1967Utils__factory } from "./factories/@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils__factory";
 export type { Address } from "./@openzeppelin/contracts/utils/Address";
 export { Address__factory } from "./factories/@openzeppelin/contracts/utils/Address__factory";
+export type { Errors } from "./@openzeppelin/contracts/utils/Errors";
+export { Errors__factory } from "./factories/@openzeppelin/contracts/utils/Errors__factory";
 export type { IOrganizationRegistry } from "./src/IOrganizationRegistry";
 export { IOrganizationRegistry__factory } from "./factories/src/IOrganizationRegistry__factory";
 export type { IProcessRegistry } from "./src/IProcessRegistry";
