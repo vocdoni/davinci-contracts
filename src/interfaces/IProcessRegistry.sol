@@ -278,8 +278,9 @@ interface IProcessRegistry {
     /**
      * @notice Returns the next process ID.
      * @return The next process ID.
+     * @param organizationId The ID of the organization.
      */
-    function getNextProcessId() external view returns (bytes32);
+    function getNextProcessId(address organizationId) external view returns (bytes32);
 
     /**
      * @notice Returns the hash of the state transition ZK verifier proving key.

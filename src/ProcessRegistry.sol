@@ -84,8 +84,8 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     }
 
     /// @inheritdoc IProcessRegistry
-    function getNextProcessId() external view override returns (bytes32) {
-        return ProcessIdLib.computeProcessId(chainID, msg.sender, processNonce[msg.sender]);
+    function getNextProcessId(address organizationId) external view override returns (bytes32) {
+        return ProcessIdLib.computeProcessId(chainID, organizationId, processNonce[organizationId]);
     }
 
     /// @inheritdoc IProcessRegistry

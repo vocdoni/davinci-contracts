@@ -151,6 +151,8 @@ forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
 
 ### Testnet/Mainnet Deployment
 
+**Modify to non-proxy if required**
+
 1. Configure network in `.env`:
 
 ```bash
