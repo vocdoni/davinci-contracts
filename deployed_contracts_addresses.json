@@ -1,22 +1,22 @@
 {
     "processRegistry": {
-        "sepolia": "0xddaedB42eF4505f1f361f1c76B5f96653406094E",
-        "uzh": "0x6efd087679F5E098A2B0A916763238959fA9EE9B",
+        "sepolia": "0xe3E73E831a059203d41Ae27D6D39d62726775379",
+        "uzh": "0x650937867b8c9D7261DEAD8d94eb47cf15A80Ded",
         "mainnet": "0x0"
     },
     "organizationRegistry": {
-        "sepolia": "0x86BA935567B0027696271E99A5d93529496fdb53",
-        "uzh": "0x61324Fd74Aa4e0DF7D72B42bC1A1bb833F3859f8",
+        "sepolia": "0x78025f376d662b9C21a5f9465b091763048bCcCC",
+        "uzh": "0x49E2E261a734454f07b27D1A6978FFAE44618D03",
         "mainnet": "0x0"
     },
     "stateTransitionVerifierGroth16": {
-        "sepolia": "0x30D455C5C7ee44736fa170b51502f4867219EF14",
-        "uzh": "0xb0670e143c876Ea63D482c612610A97894140958",
+        "sepolia": "0x81C58e330E35Ba5D54439ECaC59c6FE503F05Fc7",
+        "uzh": "0xAaE00882AD969543c308Ed60c3145db7264A02f4",
         "mainnet": "0x0"
     },
     "resultsVerifierGroth16": {
-        "sepolia": "0xdD17519045Db932cF29557cFeE6697347fCD84Bd",
-        "uzh": "0x117281BcF7A0980e51a401E96B98972B573631cB",
+        "sepolia": "0x9eAC754B0848F5549AE6d3740e1A6202f19BE8A6",
+        "uzh": "0xfc14B2Bbcee53d74362416b1031dE78c667016b6",
         "mainnet": "0x0"
     },
     "sequencerRegistry": {
