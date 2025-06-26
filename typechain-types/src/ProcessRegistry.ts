@@ -184,7 +184,7 @@ export interface ProcessRegistryInterface extends Interface {
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getNextProcessId",
-    values?: undefined
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getProcess",
@@ -558,7 +558,11 @@ export interface ProcessRegistry extends BaseContract {
 
   chainID: TypedContractMethod<[], [bigint], "view">;
 
-  getNextProcessId: TypedContractMethod<[], [string], "view">;
+  getNextProcessId: TypedContractMethod<
+    [organizationId: AddressLike],
+    [string],
+    "view"
+  >;
 
   getProcess: TypedContractMethod<
     [processId: BytesLike],
@@ -703,7 +707,7 @@ export interface ProcessRegistry extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getNextProcessId"
-  ): TypedContractMethod<[], [string], "view">;
+  ): TypedContractMethod<[organizationId: AddressLike], [string], "view">;
   getFunction(
     nameOrSignature: "getProcess"
   ): TypedContractMethod<
