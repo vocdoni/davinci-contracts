@@ -928,4 +928,26 @@ contract ProcessRegistryTest is Test {
         vm.expectRevert(); // Should revert as input must have at least one result
         processRegistry.setProcessResults(processId, rzkp, emptyInput);
     }
+
+    // ========== Process Getters Tests ==========
+    function test_GetNextProcessId_Basic() public {
+        // Get the next process ID for the organization
+        vm.startPrank(orgId);
+        bytes32 nextProcessId = processRegistry.getNextProcessId(orgId);
+        uint64 currentNonce = processRegistry.processNonce(orgId);
+        assertEq(currentNonce, uint64(0));
+        // Create a new process
+        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+
+        // Verify that the next process ID matches the created process ID
+        assertEq(nextProcessId, processId);
+        uint64 nextCurrentNonce = processRegistry.processNonce(orgId);
+        assertEq(nextCurrentNonce, uint64(1));
+
+        // Create another process
+        bytes32 otherNextProcessId = processRegistry.getNextProcessId(orgId);
+        bytes32 otherProcessId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        assertEq(otherNextProcessId, otherProcessId);
+        vm.stopPrank();
+    }
 }

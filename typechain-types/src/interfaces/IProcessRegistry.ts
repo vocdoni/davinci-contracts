@@ -153,7 +153,7 @@ export interface IProcessRegistryInterface extends Interface {
 
   encodeFunctionData(
     functionFragment: "getNextProcessId",
-    values?: undefined
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getProcess",
@@ -405,7 +405,11 @@ export interface IProcessRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  getNextProcessId: TypedContractMethod<[], [string], "view">;
+  getNextProcessId: TypedContractMethod<
+    [organizationId: AddressLike],
+    [string],
+    "view"
+  >;
 
   getProcess: TypedContractMethod<
     [processId: BytesLike],
@@ -474,7 +478,7 @@ export interface IProcessRegistry extends BaseContract {
 
   getFunction(
     nameOrSignature: "getNextProcessId"
-  ): TypedContractMethod<[], [string], "view">;
+  ): TypedContractMethod<[organizationId: AddressLike], [string], "view">;
   getFunction(
     nameOrSignature: "getProcess"
   ): TypedContractMethod<

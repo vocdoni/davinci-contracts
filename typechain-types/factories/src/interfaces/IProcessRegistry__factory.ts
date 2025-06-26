@@ -269,7 +269,13 @@ const _abi = [
     type: "event",
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "address",
+        name: "organizationId",
+        type: "address",
+      },
+    ],
     name: "getNextProcessId",
     outputs: [
       {
