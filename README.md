@@ -44,6 +44,8 @@ The Vocdoni DAVINCI contracts work together with a set of sequencers that implem
 - [Node.js](https://nodejs.org/) >= 16.0.0
 - [Foundry](https://getfoundry.sh/)
 - [Git](https://git-scm.com/)
+- [Abigen](https://geth.ethereum.org/docs/tools/abigen)
+- [jq](https://jqlang.org/)
 
 ### Setup
 
