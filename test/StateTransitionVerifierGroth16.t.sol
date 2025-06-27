@@ -13,7 +13,7 @@ contract StateTransitionVerifierGroth16Test is Test {
     uint256 public constant ROOT_HASH_AFTER_BAD =
         4033651216511111400175039953981700650715262298138585644694383935611028748527;
     uint256 public constant NUM_NEW_VOTES = 5;
-    uint256 public constant NUM_OVERWRITES = 0;
+    uint256 public constant NUM_OVERWRITES = 5;
 
     bytes public zkp =
         hex"005699b8baf41495cabc2f0fb63afc4361babe681ee2549f93822ef048fd8e5f0e6c314ce9cdc7efa0c1e5c11f2d3cc9dfaa037c0dc1cfaaee04093c551bf8f828151dbe684f08e922289420cef5e4d1207aa6451dd27618f5dc548a1da2ae59188cd0cc991ac8a5c11f4307f02f8c9cd7a6ebed7d811006053a324a3b6902a62737e479a360a13c70d97bec2ce756ceebda5449d278075c9a5ed9cb775794740fd97d58037e5ed76a14363d13c3406bf4cabc1f8b7fc968cfdea693fb1e799a03d965be7e447c30a5d4a5c743b3be7ab1466b1665954b82cb64cf2006f9249100cb2b09eef198db726779b852b353cdcbc63507991de67a20f4df2f70e011300a03db667a6f0c4af1a9e74ff046f35846dfab0bf3cb74280c4e9aa91fed35362ea9fb9f1b7c7d6db01504eb794acb3ee3c89fccd7790f58e3af1f8e6b9b00772cebbe9327f28bedbb32d1626651bef57d9ec9cf648dde45e206e495f2ce89010e04a637078ca3cea563333742b9173537a9a7584bcd1c6ab9615399a3676b92";
@@ -103,9 +103,7 @@ contract StateTransitionVerifierGroth16Test is Test {
 
     function test_Encode_Inputs() public view {
         bytes memory _encodedInputs = encodeInputs([ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES]);
-        if (keccak256(_encodedInputs) != keccak256(encodedInputs)) {
-            revert();
-        }
+        assertEq(_encodedInputs, encodedInputs);
     }
 
     function test_Decode_Inputs() public view {
