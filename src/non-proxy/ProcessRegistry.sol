@@ -259,9 +259,6 @@ contract ProcessRegistry is IProcessRegistry {
         // validate ballot mode
         if (ballotMode.maxCount == 0) revert InvalidMaxCount();
         if (ballotMode.maxValue < ballotMode.minValue) revert InvalidMinValue();
-        if (!ballotMode.costFromWeight && ballotMode.maxTotalCost == 0) revert InvalidMaxTotalCost();
-        if (ballotMode.maxTotalCost > 0 && (ballotMode.maxTotalCost < ballotMode.minTotalCost))
-            revert InvalidTotalCostBounds();
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
