@@ -263,8 +263,10 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
         if (processes[processId].organizationId == sender) revert ProcessAlreadyExists();
 
         // validate ballot mode
-        if (ballotMode.maxCount == 0) revert InvalidMaxCount();
-        if (ballotMode.maxValue < ballotMode.minValue) revert InvalidMinValue();
+        if (ballotMode.maxCount == 0 || ballotMode.maxCount > 8) revert InvalidMaxCount();
+        if (ballotMode.maxTotalCost > 65535) revert InvalidMaxTotalCost();
+        if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
+        if (ballotMode.minTotalCost > ballotMode.maxTotalCost) revert InvalidTotalCostBounds();
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
