@@ -41,6 +41,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidMaxMinValueBounds",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidMaxTotalCost",
     type: "error",
   },
