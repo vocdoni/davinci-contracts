@@ -91,6 +91,10 @@ interface IProcessRegistry {
      */
     error InvalidTotalCostBounds();
     /**
+     * @notice InvalidMaxMinValueBounds error is emitted when the maximum and minimum value bounds are invalid.
+     */
+    error InvalidMaxMinValueBounds();
+    /**
      * @notice InvalidMaxVotes error is emitted when the maximum number of votes is invalid.
      */
     error InvalidMaxVotes();
