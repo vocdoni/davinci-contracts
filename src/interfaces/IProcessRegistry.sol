@@ -156,6 +156,10 @@ interface IProcessRegistry {
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
+    /**
+     * @notice Thrown when blob attached to the state transition is not valid.
+     */
+    error InvalidBlob();
 
     /// ENUMS ///
 
@@ -371,6 +375,12 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @param proof The proof for validating the process state transition.
      * @param input The public inputs data for the state transition.
+     * @param expectedBlobHash  Blob hash expected for DA verification
      */
-    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external;
+    function submitStateTransition(
+        bytes32 processId,
+        bytes calldata proof,
+        bytes calldata input,
+        bytes32 expectedBlobHash
+    ) external;
 }

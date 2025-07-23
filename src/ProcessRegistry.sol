@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
+import { BlobsLib } from "./libraries/BlobsLib.sol";
+
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
@@ -192,13 +194,34 @@ contract ProcessRegistry is IProcessRegistry {
         emit ProcessDurationChanged(processId, _duration);
     }
 
-    /// @inheritdoc IProcessRegistry
-    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
+    ///@inheritdoc IProcessRegistry
+    function submitStateTransition(
+        bytes32 processId,
+        bytes calldata proof,
+        bytes calldata input,
+        bytes32 expectedBlobHash
+    ) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        // The tx **must** be type-3 and contain *one* blob at one of the available indexes.
+        // We do not attempt to verify the full KZG proof on-chain – the
+        // circuit already guarantees consistency between the votes and
+        // the commitment, we only check availability.
+
+        // TODO: Check all available blobs ?
+        for (uint256 i = 0; i < 6; i++) {
+            bytes32 actual = BlobsLib.blobHash(i);
+            if (actual == expectedBlobHash) {
+                break;
+            }
+            if (actual == bytes32(0)) {
+                revert InvalidBlob();
+            }
+        }
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
