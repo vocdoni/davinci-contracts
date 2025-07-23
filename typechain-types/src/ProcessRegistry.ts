@@ -130,43 +130,33 @@ export interface ProcessRegistryInterface extends Interface {
     nameOrSignature:
       | "MAX_CENSUS_ORIGIN"
       | "MAX_STATUS"
-      | "UPGRADE_INTERFACE_VERSION"
       | "chainID"
       | "getNextProcessId"
       | "getProcess"
       | "getProcessEndTime"
       | "getRVerifierVKeyHash"
       | "getSTVerifierVKeyHash"
-      | "initialize"
       | "newProcess"
-      | "owner"
       | "processCount"
       | "processNonce"
       | "processes"
-      | "proxiableUUID"
       | "rVerifier"
-      | "renounceOwnership"
       | "setProcessCensus"
       | "setProcessDuration"
       | "setProcessResults"
       | "setProcessStatus"
       | "stVerifier"
       | "submitStateTransition"
-      | "transferOwnership"
-      | "upgradeToAndCall"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
       | "CensusUpdated"
-      | "Initialized"
-      | "OwnershipTransferred"
       | "ProcessCreated"
       | "ProcessDurationChanged"
       | "ProcessResultsSet"
       | "ProcessStateRootUpdated"
       | "ProcessStatusChanged"
-      | "Upgraded"
   ): EventFragment;
 
   encodeFunctionData(
@@ -175,10 +165,6 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "MAX_STATUS",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "UPGRADE_INTERFACE_VERSION",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
@@ -203,10 +189,6 @@ export interface ProcessRegistryInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "initialize",
-    values: [BigNumberish, AddressLike, AddressLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "newProcess",
     values: [
       BigNumberish,
@@ -219,7 +201,6 @@ export interface ProcessRegistryInterface extends Interface {
       BigNumberish
     ]
   ): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "processCount",
     values?: undefined
@@ -232,15 +213,7 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "processes",
     values: [BytesLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "proxiableUUID",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "rVerifier", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "setProcessCensus",
     values: [BytesLike, IProcessRegistry.CensusStruct]
@@ -265,24 +238,12 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "submitStateTransition",
     values: [BytesLike, BytesLike, BytesLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "upgradeToAndCall",
-    values: [AddressLike, BytesLike]
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "MAX_CENSUS_ORIGIN",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "MAX_STATUS", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "UPGRADE_INTERFACE_VERSION",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getNextProcessId",
@@ -301,9 +262,7 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "getSTVerifierVKeyHash",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "processCount",
     data: BytesLike
@@ -313,15 +272,7 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "processes", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "proxiableUUID",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "rVerifier", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "renounceOwnership",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "setProcessCensus",
     data: BytesLike
@@ -341,14 +292,6 @@ export interface ProcessRegistryInterface extends Interface {
   decodeFunctionResult(functionFragment: "stVerifier", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "submitStateTransition",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "upgradeToAndCall",
     data: BytesLike
   ): Result;
 }
@@ -371,31 +314,6 @@ export namespace CensusUpdatedEvent {
     censusRoot: string;
     censusURI: string;
     maxVotes: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace InitializedEvent {
-  export type InputTuple = [version: BigNumberish];
-  export type OutputTuple = [version: bigint];
-  export interface OutputObject {
-    version: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace OwnershipTransferredEvent {
-  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
-  export type OutputTuple = [previousOwner: string, newOwner: string];
-  export interface OutputObject {
-    previousOwner: string;
-    newOwner: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -495,18 +413,6 @@ export namespace ProcessStatusChangedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace UpgradedEvent {
-  export type InputTuple = [implementation: AddressLike];
-  export type OutputTuple = [implementation: string];
-  export interface OutputObject {
-    implementation: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export interface ProcessRegistry extends BaseContract {
   connect(runner?: ContractRunner | null): ProcessRegistry;
   waitForDeployment(): Promise<this>;
@@ -554,8 +460,6 @@ export interface ProcessRegistry extends BaseContract {
 
   MAX_STATUS: TypedContractMethod<[], [bigint], "view">;
 
-  UPGRADE_INTERFACE_VERSION: TypedContractMethod<[], [string], "view">;
-
   chainID: TypedContractMethod<[], [bigint], "view">;
 
   getNextProcessId: TypedContractMethod<
@@ -580,12 +484,6 @@ export interface ProcessRegistry extends BaseContract {
 
   getSTVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
 
-  initialize: TypedContractMethod<
-    [_chainID: BigNumberish, _stVerifier: AddressLike, _rVerifier: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
   newProcess: TypedContractMethod<
     [
       status: BigNumberish,
@@ -600,8 +498,6 @@ export interface ProcessRegistry extends BaseContract {
     [string],
     "nonpayable"
   >;
-
-  owner: TypedContractMethod<[], [string], "view">;
 
   processCount: TypedContractMethod<[], [bigint], "view">;
 
@@ -639,11 +535,7 @@ export interface ProcessRegistry extends BaseContract {
     "view"
   >;
 
-  proxiableUUID: TypedContractMethod<[], [string], "view">;
-
   rVerifier: TypedContractMethod<[], [string], "view">;
-
-  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   setProcessCensus: TypedContractMethod<
     [processId: BytesLike, census: IProcessRegistry.CensusStruct],
@@ -677,18 +569,6 @@ export interface ProcessRegistry extends BaseContract {
     "nonpayable"
   >;
 
-  transferOwnership: TypedContractMethod<
-    [newOwner: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
-  upgradeToAndCall: TypedContractMethod<
-    [newImplementation: AddressLike, data: BytesLike],
-    [void],
-    "payable"
-  >;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -699,9 +579,6 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "MAX_STATUS"
   ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "UPGRADE_INTERFACE_VERSION"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -725,13 +602,6 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "getSTVerifierVKeyHash"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "initialize"
-  ): TypedContractMethod<
-    [_chainID: BigNumberish, _stVerifier: AddressLike, _rVerifier: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
     nameOrSignature: "newProcess"
   ): TypedContractMethod<
     [
@@ -747,9 +617,6 @@ export interface ProcessRegistry extends BaseContract {
     [string],
     "nonpayable"
   >;
-  getFunction(
-    nameOrSignature: "owner"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "processCount"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -790,14 +657,8 @@ export interface ProcessRegistry extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "proxiableUUID"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
     nameOrSignature: "rVerifier"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "renounceOwnership"
-  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setProcessCensus"
   ): TypedContractMethod<
@@ -836,16 +697,6 @@ export interface ProcessRegistry extends BaseContract {
     [void],
     "nonpayable"
   >;
-  getFunction(
-    nameOrSignature: "transferOwnership"
-  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "upgradeToAndCall"
-  ): TypedContractMethod<
-    [newImplementation: AddressLike, data: BytesLike],
-    [void],
-    "payable"
-  >;
 
   getEvent(
     key: "CensusUpdated"
@@ -853,20 +704,6 @@ export interface ProcessRegistry extends BaseContract {
     CensusUpdatedEvent.InputTuple,
     CensusUpdatedEvent.OutputTuple,
     CensusUpdatedEvent.OutputObject
-  >;
-  getEvent(
-    key: "Initialized"
-  ): TypedContractEvent<
-    InitializedEvent.InputTuple,
-    InitializedEvent.OutputTuple,
-    InitializedEvent.OutputObject
-  >;
-  getEvent(
-    key: "OwnershipTransferred"
-  ): TypedContractEvent<
-    OwnershipTransferredEvent.InputTuple,
-    OwnershipTransferredEvent.OutputTuple,
-    OwnershipTransferredEvent.OutputObject
   >;
   getEvent(
     key: "ProcessCreated"
@@ -903,13 +740,6 @@ export interface ProcessRegistry extends BaseContract {
     ProcessStatusChangedEvent.OutputTuple,
     ProcessStatusChangedEvent.OutputObject
   >;
-  getEvent(
-    key: "Upgraded"
-  ): TypedContractEvent<
-    UpgradedEvent.InputTuple,
-    UpgradedEvent.OutputTuple,
-    UpgradedEvent.OutputObject
-  >;
 
   filters: {
     "CensusUpdated(bytes32,bytes32,string,uint256)": TypedContractEvent<
@@ -921,28 +751,6 @@ export interface ProcessRegistry extends BaseContract {
       CensusUpdatedEvent.InputTuple,
       CensusUpdatedEvent.OutputTuple,
       CensusUpdatedEvent.OutputObject
-    >;
-
-    "Initialized(uint64)": TypedContractEvent<
-      InitializedEvent.InputTuple,
-      InitializedEvent.OutputTuple,
-      InitializedEvent.OutputObject
-    >;
-    Initialized: TypedContractEvent<
-      InitializedEvent.InputTuple,
-      InitializedEvent.OutputTuple,
-      InitializedEvent.OutputObject
-    >;
-
-    "OwnershipTransferred(address,address)": TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
-    >;
-    OwnershipTransferred: TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
     >;
 
     "ProcessCreated(bytes32,address)": TypedContractEvent<
@@ -998,17 +806,6 @@ export interface ProcessRegistry extends BaseContract {
       ProcessStatusChangedEvent.InputTuple,
       ProcessStatusChangedEvent.OutputTuple,
       ProcessStatusChangedEvent.OutputObject
-    >;
-
-    "Upgraded(address)": TypedContractEvent<
-      UpgradedEvent.InputTuple,
-      UpgradedEvent.OutputTuple,
-      UpgradedEvent.OutputObject
-    >;
-    Upgraded: TypedContractEvent<
-      UpgradedEvent.InputTuple,
-      UpgradedEvent.OutputTuple,
-      UpgradedEvent.OutputObject
     >;
   };
 }

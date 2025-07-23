@@ -38,7 +38,7 @@ echo "Testing contracts"
 forge test --fork-url http://localhost:8545
 
 echo "Deploying contracts"
-forge script script/non-proxy/DeployAll.s.sol:DeployAllScript --fork-url http://localhost:8545 --broadcast
+forge script script/DeployAll.s.sol:DeployAllScript --fork-url http://localhost:8545 --broadcast
 
 echo "Tailing anvil log. Press Ctrl+C to stop and shut down anvil."
 tail -f "$ANVIL_LOG"

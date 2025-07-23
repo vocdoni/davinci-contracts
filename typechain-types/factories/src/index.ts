@@ -2,7 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as interfaces from "./interfaces";
-export * as nonProxy from "./non-proxy";
 export * as verifiers from "./verifiers";
 export { OrganizationRegistry__factory } from "./OrganizationRegistry__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";

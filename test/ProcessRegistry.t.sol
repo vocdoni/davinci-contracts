@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
-import { ProcessRegistry } from "../src/non-proxy/ProcessRegistry.sol";
-import { OrganizationRegistry } from "../src/non-proxy/OrganizationRegistry.sol";
+import { ProcessRegistry } from "../src/ProcessRegistry.sol";
+import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";

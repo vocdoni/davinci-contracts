@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
 import { Script, console } from "forge-std/Script.sol";
@@ -6,17 +6,16 @@ import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
 import { ProcessRegistry } from "../src/ProcessRegistry.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
-import { Upgrades } from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract DeployAllScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address deployerAddress = vm.addr(deployerPrivateKey);
+        console.log("Deployer address:", deployerAddress);
         vm.startBroadcast(deployerPrivateKey);
-        address proxy = Upgrades.deployUUPSProxy(
-            "OrganizationRegistry.sol:OrganizationRegistry",
-            abi.encodeCall(OrganizationRegistry.initialize, ())
-        );
-        console.log("OrganizationRegistry deployed at:", proxy);
+
+        OrganizationRegistry organizationRegistry = new OrganizationRegistry();
+        console.log("OrganizationRegistry deployed at:", address(organizationRegistry));
 
         StateTransitionVerifierGroth16 stv = new StateTransitionVerifierGroth16();
         console.log("StateTransitionVerifierGroth16 deployed at:", address(stv));
@@ -25,11 +24,13 @@ contract DeployAllScript is Script {
         console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
         uint256 chainId = vm.envUint("CHAIN_ID");
-        address proxy2 = Upgrades.deployUUPSProxy(
-            "ProcessRegistry:ProcessRegistry.sol",
-            abi.encodeCall(ProcessRegistry.initialize, (uint32(chainId), address(stv), address(rv)))
+        ProcessRegistry processRegistry = new ProcessRegistry(
+            uint32(chainId), // change this to the desired chain ID
+            address(stv),
+            address(rv)
         );
-        console.log("ProcessRegistry deployed at:", proxy2);
+        console.log("ProcessRegistry deployed at:", address(processRegistry));
+
         vm.stopBroadcast();
     }
 }

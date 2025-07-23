@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
-
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
-contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IProcessRegistry {
+contract ProcessRegistry is IProcessRegistry {
     using ProcessIdLib for bytes32;
 
     /**
@@ -51,15 +47,13 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     /**
      * @notice Initializes the contract.
      * @param _chainID The ID of the chain.
-     * @param _stVerifier The address of the ZK verifier contract.
+     * @param _stVerifier The address of the state transition ZK verifier contract.
      * @param _rVerifier The address of the results ZK verifier contract.
      */
-    function initialize(uint32 _chainID, address _stVerifier, address _rVerifier) public initializer {
-        __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
-        chainID = _chainID;
+    constructor(uint32 _chainID, address _stVerifier, address _rVerifier) {
         stVerifier = _stVerifier;
         rVerifier = _rVerifier;
+        chainID = _chainID;
     }
 
     /// @inheritdoc IProcessRegistry
@@ -327,5 +321,4 @@ contract ProcessRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
 
         return false;
     }
-    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

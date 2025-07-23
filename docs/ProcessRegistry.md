@@ -148,28 +148,6 @@ struct EncryptionKey {
 
 ## Functions
 
-### Constructor / Initializer (if Upgradeable)
-
-```solidity
-function initialize(uint32 _chainID, address _stVerifier, address _rVerifier) public initializer {
-    __Ownable_init(msg.sender);
-    __UUPSUpgradeable_init();
-    chainID = _chainID;
-    stVerifier = _stVerifier;
-    rVerifier = _rVerifier;
-}
-```
-
-Initializes the contract with required dependencies.
-
-**Parameters:**
-
-- `_chainID`: Chain identifier for process ID generation
-- `_stVerifier`: State transition ZK verifier address
-- `_rVerifier`: Results ZK verifier address
-
-### Process Management Functions
-
 #### newProcess
 
 ```solidity
@@ -292,8 +270,6 @@ Extends the duration of an ongoing process.
 - New end time must be later than current end time
 
 **Events:** `ProcessDurationChanged`
-
-### Vote Processing Functions
 
 #### submitStateTransition
 
@@ -567,19 +543,3 @@ Emitted when process status changes.
 3. Submit results with ZK proof
 4. Status automatically changes to RESULTS
 5. Results become immutable
-
-## Upgradeability
-
-The contract implements UUPS (Universal Upgradeable Proxy Standard) upgradeability pattern:
-
-### \_authorizeUpgrade
-
-```solidity
-function _authorizeUpgrade(address) internal override onlyOwner
-```
-
-Internal function that authorizes contract upgrades.
-
-**Access Control:** Only contract owner
-
-**Note:** This function is required by the UUPS pattern and ensures only the owner can upgrade the contract implementation.

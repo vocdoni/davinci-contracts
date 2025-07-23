@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import "./interfaces/IOrganizationRegistry.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title OrganizationRegistry
@@ -12,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
  * @notice The OrganizationRegistry contract is a registry of organizations.
  * @dev Uses OpenZeppelin's Initializable contract to manage the contract's initialization.
  */
-contract OrganizationRegistry is IOrganizationRegistry, Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract OrganizationRegistry is IOrganizationRegistry, Ownable {
     /**
      * @notice Modifier to check if the caller is an administrator of the organization
      * @param orgId The organization's unique identifier
@@ -31,12 +29,9 @@ contract OrganizationRegistry is IOrganizationRegistry, Initializable, UUPSUpgra
     uint32 public organizationCount;
 
     /**
-     * @notice Initializes the contract using OpenZeppelin's UUPS pattern.
+     * @notice Initializes the contract
      */
-    function initialize() public initializer {
-        __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
-    }
+    constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IOrganizationRegistry
     function createOrganization(
@@ -181,6 +176,4 @@ contract OrganizationRegistry is IOrganizationRegistry, Initializable, UUPSUpgra
         }
         return false;
     }
-
-    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

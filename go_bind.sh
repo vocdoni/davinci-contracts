@@ -43,14 +43,6 @@ abi() {
     sed_in_place "s/^package $pkg_name/package contracts/" "$output_file"
 }
 
-abi "./artifacts/src/OrganizationRegistry.sol/OrganizationRegistry.json" \
-    "OrganizationRegistry" \
-    "./golang-types/OrganizationRegistry.go"
-
-abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
-    "ProcessRegistry" \
-    "./golang-types/ProcessRegistry.go"
-
 abi "./artifacts/src/verifiers/StateTransitionVerifierGroth16.sol/StateTransitionVerifierGroth16.json" \
     "StateTransitionVerifierGroth16" \
     "./golang-types/verifiers/StateTransitionVerifierGroth16.go"
@@ -59,10 +51,10 @@ abi "./artifacts/src/verifiers/ResultsVerifierGroth16.sol/ResultsVerifierGroth16
     "ResultsVerifierGroth16" \
     "./golang-types/verifiers/ResultsVerifierGroth16.go"
 
-abi "./artifacts/src/non-proxy/OrganizationRegistry.sol/OrganizationRegistry.json" \
+abi "./artifacts/src/OrganizationRegistry.sol/OrganizationRegistry.json" \
     "OrganizationRegistry" \
-    "./golang-types/non-proxy/OrganizationRegistry.go"
+    "./golang-types/OrganizationRegistry.go"
 
-abi "./artifacts/src/non-proxy/ProcessRegistry.sol/ProcessRegistry.json" \
+abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
-    "./golang-types/non-proxy/ProcessRegistry.go"
+    "./golang-types/ProcessRegistry.go"

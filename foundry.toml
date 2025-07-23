@@ -21,6 +21,7 @@ max_test_rejects = 150000
 [rpc_endpoints]
 localhost = "${LOCALHOST_RPC_URL}"
 sepolia = "${SEPOLIA_RPC_URL}"
+uzh = "${UZH_RPC_URL}"
 
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }

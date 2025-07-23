@@ -3,8 +3,6 @@
 /* eslint-disable */
 import type * as interfaces from "./interfaces";
 export type { interfaces };
-import type * as nonProxy from "./non-proxy";
-export type { nonProxy };
 import type * as verifiers from "./verifiers";
 export type { verifiers };
 export type { OrganizationRegistry } from "./OrganizationRegistry";

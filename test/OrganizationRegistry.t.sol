@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
-import { OrganizationRegistry } from "../src/non-proxy/OrganizationRegistry.sol";
+import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
 import { IOrganizationRegistry } from "../src/interfaces/IOrganizationRegistry.sol";
 
 contract OrganizationRegistryTest is Test {

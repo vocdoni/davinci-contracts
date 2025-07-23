@@ -153,8 +153,6 @@ forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
 
 ### Testnet/Mainnet Deployment
 
-**Modify to non-proxy if required**
-
 1. Configure network in `.env`:
 
 ```bash
@@ -167,10 +165,6 @@ RPC_URL=your_rpc_endpoint
 ```bash
 forge script script/DeployAll.s.sol --rpc-url $RPC_URL --broadcast --verify
 ```
-
-### Deployment Addresses
-
-Deployed contract addresses are saved in `deployed_contracts_addresses.json`.
 
 ## 📚 Documentation
 
