@@ -77,25 +77,22 @@ contract BlobsLibTest is Test {
     function test_VerifyKZG_InvalidInputLength_TooShort() public {
         bytes memory shortInputMem = new bytes(191); // One byte short
 
-        vm.expectRevert(abi.encodeWithSelector(BlobsLib.InvalidKZGInputLength.selector, 191, 192));
-        BlobsLib.verifyKZG(shortInputMem);
+        assertFalse(BlobsLib.verifyKZG(shortInputMem));
     }
 
     function test_VerifyKZG_InvalidInputLength_TooLong() public {
         bytes memory longInputMem = new bytes(193); // One byte too long
-
-        vm.expectRevert(abi.encodeWithSelector(BlobsLib.InvalidKZGInputLength.selector, 193, 192));
-        BlobsLib.verifyKZG(longInputMem);
+        // expect vm error
+        assertFalse(BlobsLib.verifyKZG(longInputMem));
     }
 
     function test_VerifyKZG_ValidInputLength_PrecompileFails() public {
         bytes memory validInputMem = new bytes(192);
 
         // Mock the precompile to fail
-        vm.mockCall(address(0x0A), validInputMem, abi.encode(false, ""));
 
-        vm.expectRevert(BlobsLib.KZGVerificationFailed.selector);
-        BlobsLib.verifyKZG(validInputMem);
+        vm.mockCall(address(0x0A), validInputMem, abi.encode(""));
+        assertFalse(BlobsLib.verifyKZG(validInputMem));
     }
 
     function test_VerifyKZG_InvalidOutputLength() public {
@@ -103,10 +100,9 @@ contract BlobsLibTest is Test {
         bytes memory invalidOutput = new bytes(32); // Should be 64 bytes
 
         // Mock the precompile to return invalid output length
-        vm.mockCall(address(0x0A), validInputMem, abi.encode(true, invalidOutput));
+        vm.mockCall(address(0x0A), validInputMem, abi.encode(invalidOutput));
 
-        vm.expectRevert(abi.encodeWithSelector(BlobsLib.InvalidKZGOutputLength.selector, 32));
-        BlobsLib.verifyKZG(validInputMem);
+        assertFalse(BlobsLib.verifyKZG(validInputMem));
     }
 
     function test_VerifyKZG_ValidProof() public {
@@ -119,7 +115,7 @@ contract BlobsLibTest is Test {
         }
 
         // Mock the precompile to return success
-        vm.mockCall(address(0x0A), validInputMem, abi.encode(true, validOutput));
+        vm.mockCall(address(0x0A), validInputMem, validOutput);
 
         bool result = BlobsLib.verifyKZG(validInputMem);
         assertTrue(result);
@@ -135,46 +131,10 @@ contract BlobsLibTest is Test {
         }
 
         // Mock the precompile to return failure
-        vm.mockCall(address(0x0A), validInputMem, abi.encode(true, validOutput));
+        vm.mockCall(address(0x0A), validInputMem, validOutput);
 
         bool result = BlobsLib.verifyKZG(validInputMem);
         assertFalse(result);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        TRY VERIFY KZG TESTS
-    //////////////////////////////////////////////////////////////*/
-
-    function test_TryVerifyKZG_InvalidInputLength() public view {
-        bytes memory shortInput = new bytes(191);
-        bool result = BlobsLib.tryVerifyKZG(shortInput);
-        assertFalse(result);
-    }
-
-    function test_TryVerifyKZG_PrecompileFails() public {
-        bytes memory validInput = new bytes(192);
-
-        // Mock the precompile to fail
-        vm.mockCall(address(0x0A), validInput, abi.encode(false, ""));
-
-        bool result = BlobsLib.tryVerifyKZG(validInput);
-        assertFalse(result);
-    }
-
-    function test_TryVerifyKZG_ValidProof() public {
-        bytes memory validInput = new bytes(192);
-        bytes memory validOutput = new bytes(64);
-
-        // Set first 32 bytes to 1 (successful verification)
-        assembly {
-            mstore(add(validOutput, 0x20), 1)
-        }
-
-        // Mock the precompile to return success
-        vm.mockCall(address(0x0A), validInput, abi.encode(true, validOutput));
-
-        bool result = BlobsLib.tryVerifyKZG(validInput);
-        assertTrue(result);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -194,14 +154,24 @@ contract BlobsLibTest is Test {
     }
 
     function test_GetBlobCount_SafetyLimit() public {
+        bytes32 hash1 = keccak256("blob1");
+        bytes32 hash2 = keccak256("blob2");
+        bytes32 hash3 = keccak256("blob3");
+        bytes32 hash4 = keccak256("blob4");
+        bytes32 hash5 = keccak256("blob5");
+        bytes32 hash6 = keccak256("blob6");
+        bytes32 hash7 = keccak256("blob7");
+
         // Mock blob hashes to test safety limit
-        for (uint256 i = 0; i < 10; i++) {
-            vm.mockCall(
-                address(this),
-                abi.encodeWithSignature("blobhashes(uint256)", i),
-                abi.encode(bytes32(uint256(i + 1)))
-            );
-        }
+        bytes32[] memory blobshashes = new bytes32[](7);
+        blobshashes[0] = hash1;
+        blobshashes[1] = hash2;
+        blobshashes[2] = hash3;
+        blobshashes[3] = hash4;
+        blobshashes[4] = hash5;
+        blobshashes[5] = hash6;
+        blobshashes[6] = hash7;
+        vm.blobhashes(blobshashes);
 
         // Should stop at 6 due to safety limit
         uint256 count = BlobsLib.getBlobCount();
@@ -219,10 +189,12 @@ contract BlobsLibTest is Test {
         bytes32 hash2 = keccak256("blob2");
         bytes32 hash3 = keccak256("blob3");
 
-        vm.mockCall(address(this), abi.encodeWithSignature("blobhashes(uint256)", 0), abi.encode(hash1));
-        vm.mockCall(address(this), abi.encodeWithSignature("blobhashes(uint256)", 1), abi.encode(hash2));
-        vm.mockCall(address(this), abi.encodeWithSignature("blobhashes(uint256)", 2), abi.encode(hash3));
-        vm.mockCall(address(this), abi.encodeWithSignature("blobhashes(uint256)", 3), abi.encode(bytes32(0)));
+        bytes32[] memory blobshashes = new bytes32[](4);
+        blobshashes[0] = hash1;
+        blobshashes[1] = hash2;
+        blobshashes[2] = hash3;
+        blobshashes[3] = bytes32(0);
+        vm.blobhashes(blobshashes);
 
         bytes32[] memory hashes = BlobsLib.getAllBlobHashes();
         assertEq(hashes.length, 3);
@@ -264,12 +236,7 @@ contract BlobsLibTest is Test {
         // Test both verification methods with invalid input
         bytes memory invalidInput = new bytes(100);
 
-        // tryVerifyKZG should return false for invalid input
-        bool tryResult = BlobsLib.tryVerifyKZG(invalidInput);
-        assertFalse(tryResult);
-
         // verifyKZG should revert for invalid input
-        vm.expectRevert();
-        BlobsLib.verifyKZG(invalidInput);
+        assertFalse(BlobsLib.verifyKZG(invalidInput));
     }
 }

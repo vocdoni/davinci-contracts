@@ -20,19 +20,6 @@ library BlobsLib {
     uint256 private constant KZG_OUTPUT_LENGTH = 64;
 
     /*//////////////////////////////////////////////////////////////
-                                ERRORS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Thrown when KZG input data has invalid length
-    error InvalidKZGInputLength(uint256 provided, uint256 expected);
-
-    /// @dev Thrown when KZG precompile call fails
-    error KZGVerificationFailed();
-
-    /// @dev Thrown when KZG precompile returns invalid output length
-    error InvalidKZGOutputLength(uint256 length);
-
-    /*//////////////////////////////////////////////////////////////
                             BLOB OPERATIONS
     //////////////////////////////////////////////////////////////*/
 
@@ -81,40 +68,16 @@ library BlobsLib {
     /// @return success True if the proof is valid, false otherwise
     function verifyKZG(bytes memory input) internal view returns (bool success) {
         if (input.length != KZG_INPUT_LENGTH) {
-            revert InvalidKZGInputLength(input.length, KZG_INPUT_LENGTH);
-        }
-
-        (bool callSuccess, bytes memory result) = KZG_PRECOMPILE.staticcall(input);
-
-        if (!callSuccess) {
-            revert KZGVerificationFailed();
-        }
-
-        if (result.length != KZG_OUTPUT_LENGTH) {
-            revert InvalidKZGOutputLength(result.length);
-        }
-
-        // The precompile returns 64 bytes on success, with the first 32 bytes being the result
-        // A successful verification returns 0x000...001 in the first 32 bytes
-        bytes32 resultValue;
-        assembly {
-            resultValue := mload(add(result, 0x20))
-        }
-        success = result.length == KZG_OUTPUT_LENGTH && resultValue == bytes32(uint256(1));
-    }
-
-    /// @notice Verifies a KZG proof without reverting on invalid input
-    /// @dev Safe version that returns false instead of reverting on invalid input
-    /// @param input The KZG proof data
-    /// @return success True if the proof is valid and input is correctly formatted
-    function tryVerifyKZG(bytes memory input) internal view returns (bool success) {
-        if (input.length != KZG_INPUT_LENGTH) {
             return false;
         }
 
         (bool callSuccess, bytes memory result) = KZG_PRECOMPILE.staticcall(input);
 
-        if (!callSuccess || result.length != KZG_OUTPUT_LENGTH) {
+        if (!callSuccess) {
+           return false;
+        }
+
+        if (result.length != KZG_OUTPUT_LENGTH) {
             return false;
         }
 

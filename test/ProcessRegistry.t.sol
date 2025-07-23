@@ -621,7 +621,7 @@ contract ProcessRegistryTest is Test {
             17835852697581905354318759729521767940424740307802761986573785697616889279907,
             1
         );
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        processRegistry.submitStateTransition(processId, stzkp, stei, bytes32(0));
 
         // Verify state after transition
         process = processRegistry.getProcess(processId);
@@ -636,7 +636,7 @@ contract ProcessRegistryTest is Test {
 
     function test_SubmitStateTransition_NonExistentProcess() public {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.submitStateTransition(bytes32(0), stzkp, stei);
+        processRegistry.submitStateTransition(bytes32(0), stzkp, stei, bytes32(0));
     }
 
     function test_SubmitStateTransition_InvalidStatus_Paused() public {
@@ -646,7 +646,7 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
 
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        processRegistry.submitStateTransition(processId, stzkp, stei, bytes32(0));
     }
 
     function test_SubmitStateTransition_InvalidStatus_Ended() public {
@@ -656,7 +656,7 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
 
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        processRegistry.submitStateTransition(processId, stzkp, stei, bytes32(0));
     }
 
     function test_SubmitStateTransition_InvalidStatus_Canceled() public {
@@ -666,7 +666,7 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
 
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        processRegistry.submitStateTransition(processId, stzkp, stei, bytes32(0));
     }
 
     function test_SubmitStateTransition_InvalidStatus_Results() public {
@@ -677,7 +677,7 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessResults(processId, rzkp, rei);
 
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        processRegistry.submitStateTransition(processId, stzkp, stei, bytes32(0));
     }
 
     function test_SubmitStateTransition_ProofInvalid() public {
@@ -694,7 +694,7 @@ contract ProcessRegistryTest is Test {
         );
 
         vm.expectRevert(IProcessRegistry.ProofInvalid.selector);
-        processRegistry.submitStateTransition(processId, stzkp, invalidEncodedInputs);
+        processRegistry.submitStateTransition(processId, stzkp, invalidEncodedInputs, bytes32(0));
     }
 
     function test_SubmitStateTransition_InvalidTimeBounds() public {
@@ -704,7 +704,7 @@ contract ProcessRegistryTest is Test {
         vm.warp(block.timestamp + 1000001);
 
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        processRegistry.submitStateTransition(processId, stzkp, stei,bytes32(0));
     }
 
     // ========== Process Results Tests ==========
