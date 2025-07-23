@@ -91,6 +91,7 @@ export declare namespace IProcessRegistry {
     duration: BigNumberish;
     voteCount: BigNumberish;
     voteOverwriteCount: BigNumberish;
+    batchNumber: BigNumberish;
     metadataURI: string;
     ballotMode: IProcessRegistry.BallotModeStruct;
     census: IProcessRegistry.CensusStruct;
@@ -106,6 +107,7 @@ export declare namespace IProcessRegistry {
     duration: bigint,
     voteCount: bigint,
     voteOverwriteCount: bigint,
+    batchNumber: bigint,
     metadataURI: string,
     ballotMode: IProcessRegistry.BallotModeStructOutput,
     census: IProcessRegistry.CensusStructOutput
@@ -119,6 +121,7 @@ export declare namespace IProcessRegistry {
     duration: bigint;
     voteCount: bigint;
     voteOverwriteCount: bigint;
+    batchNumber: bigint;
     metadataURI: string;
     ballotMode: IProcessRegistry.BallotModeStructOutput;
     census: IProcessRegistry.CensusStructOutput;
@@ -322,17 +325,20 @@ export namespace ProcessStateRootUpdatedEvent {
   export type InputTuple = [
     processId: BytesLike,
     sender: AddressLike,
-    newStateRoot: BigNumberish
+    newStateRoot: BigNumberish,
+    batchNumber: BigNumberish
   ];
   export type OutputTuple = [
     processId: string,
     sender: string,
-    newStateRoot: bigint
+    newStateRoot: bigint,
+    batchNumber: bigint
   ];
   export interface OutputObject {
     processId: string;
     sender: string;
     newStateRoot: bigint;
+    batchNumber: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -635,7 +641,7 @@ export interface IProcessRegistry extends BaseContract {
       ProcessResultsSetEvent.OutputObject
     >;
 
-    "ProcessStateRootUpdated(bytes32,address,uint256)": TypedContractEvent<
+    "ProcessStateRootUpdated(bytes32,address,uint256,uint256)": TypedContractEvent<
       ProcessStateRootUpdatedEvent.InputTuple,
       ProcessStateRootUpdatedEvent.OutputTuple,
       ProcessStateRootUpdatedEvent.OutputObject

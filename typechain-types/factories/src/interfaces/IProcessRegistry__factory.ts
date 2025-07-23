@@ -244,6 +244,12 @@ const _abi = [
         name: "newStateRoot",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "batchNumber",
+        type: "uint256",
+      },
     ],
     name: "ProcessStateRootUpdated",
     type: "event",
@@ -359,6 +365,11 @@ const _abi = [
           {
             internalType: "uint256",
             name: "voteOverwriteCount",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "batchNumber",
             type: "uint256",
           },
           {

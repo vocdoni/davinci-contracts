@@ -612,12 +612,14 @@ contract ProcessRegistryTest is Test {
         assertEq(process.latestStateRoot, stInitStateRoot);
         assertEq(process.voteCount, 0);
         assertEq(process.voteOverwriteCount, 0);
+        assertEq(process.batchNumber, 0);
 
         // Submit state transition
         emit IProcessRegistry.ProcessStateRootUpdated(
             processId,
             address(this),
-            17835852697581905354318759729521767940424740307802761986573785697616889279907
+            17835852697581905354318759729521767940424740307802761986573785697616889279907,
+            1
         );
         processRegistry.submitStateTransition(processId, stzkp, stei);
 
@@ -629,6 +631,7 @@ contract ProcessRegistryTest is Test {
         );
         assertEq(process.voteCount, uint256(abi.decode(stei, (uint256[4]))[2]));
         assertEq(process.voteOverwriteCount, uint256(abi.decode(stei, (uint256[4]))[3]));
+        assertEq(process.batchNumber, 1);
     }
 
     function test_SubmitStateTransition_NonExistentProcess() public {

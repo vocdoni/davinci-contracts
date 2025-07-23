@@ -210,8 +210,9 @@ contract ProcessRegistry is IProcessRegistry {
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
         p.voteOverwriteCount += decompressedInput[3];
+        p.batchNumber++;
 
-        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
+        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1], p.batchNumber);
     }
 
     /// @inheritdoc IProcessRegistry

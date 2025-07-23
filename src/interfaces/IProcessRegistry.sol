@@ -34,8 +34,14 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @param sender The address of the sender.
      * @param newStateRoot The new state root of the process.
+     * @param batchNumber The batch number of the process.
      */
-    event ProcessStateRootUpdated(bytes32 indexed processId, address indexed sender, uint256 newStateRoot);
+    event ProcessStateRootUpdated(
+        bytes32 indexed processId,
+        address indexed sender,
+        uint256 newStateRoot,
+        uint256 batchNumber
+    );
 
     /*
      * @notice Emitted when the results of a process are set.
@@ -251,6 +257,7 @@ interface IProcessRegistry {
      * @param duration The duration of the process.
      * @param voteCount The number of actual votes included in the state.
      * @param voteOverwriteCount The number of actual vote overwrites included in the state.
+     * @param batchNumber The batch number of the process.
      * @param metadataURI The URI of the metadata.
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
@@ -265,6 +272,7 @@ interface IProcessRegistry {
         uint256 duration;
         uint256 voteCount;
         uint256 voteOverwriteCount;
+        uint256 batchNumber;
         string metadataURI;
         BallotMode ballotMode;
         Census census;
