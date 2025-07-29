@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 /// @title BlobsLib - Low-level helpers for EIP-4844 blob opcodes & precompile
 /// @notice This library provides secure and efficient access to EIP-4844 blob functionality
-/// @dev All functions are marked as internal view for gas efficiency and security
 library BlobsLib {
     /*//////////////////////////////////////////////////////////////
                                 CONSTANTS
@@ -18,6 +17,19 @@ library BlobsLib {
 
     /// @dev Expected output length for successful KZG verification (64 bytes)
     uint256 private constant KZG_OUTPUT_LENGTH = 64;
+
+    /// @dev Length of the KZG commitment (48 bytes, G1 compressed)
+    uint256 private constant KZG_COMMITMENT_LENGTH = 48;
+
+    /// @dev Length of the KZG proof (48 bytes, G1 compressed)
+    uint256 private constant KZG_PROOF_LENGTH = 48;
+
+    /// @dev Number of field elements per blob (as per EIP-4844)
+    uint256 private constant FIELD_ELEMENTS_PER_BLOB = 4096;
+
+    /// @dev Mask to keep the lower 31 bytes, clearing the MSB
+    uint256 private constant MASK_LOW_31_BYTES =
+        0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     /*//////////////////////////////////////////////////////////////
                             BLOB OPERATIONS
@@ -61,33 +73,35 @@ library BlobsLib {
                             KZG OPERATIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Verifies a KZG point-evaluation proof using the precompile
-    /// @dev Calls the KZG point evaluation precompile at address 0x0A
-    /// @dev Input format: versioned_hash (32) + z (32) + y (32) + commitment (48) + proof (48) = 192 bytes
-    /// @param input The KZG proof data (must be exactly 192 bytes)
-    /// @return success True if the proof is valid, false otherwise
+    
+    /// @notice Verifies a KZG point‑evaluation proof through the
+    ///         EIP‑4844 precompile at address 0x0A.
+    ///
+    /// @dev  Input  (192 bytes) = versionedHash ‖ z ‖ y ‖ commitment ‖ proof
+    ///       Return (64 bytes)  = FIELD_ELEMENTS_PER_BLOB (4096) ‖
+    ///                            BLS_MODULUS
+    ///
+    ///       A correct proof *always* returns 64 bytes; the call reverts
+    ///       or returns empty data on failure. See EIP‑4844.
+    ///
+    /// @param input  Exactly 192 bytes, formatted as above.
+    /// @return success  True if the precompile accepted the proof.
     function verifyKZG(bytes memory input) internal view returns (bool success) {
-        if (input.length != KZG_INPUT_LENGTH) {
-            return false;
-        }
+        if (input.length != KZG_INPUT_LENGTH) return false; // 192 bytes
 
-        (bool callSuccess, bytes memory result) = KZG_PRECOMPILE.staticcall(input);
+        (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
 
-        if (!callSuccess) {
-           return false;
-        }
+        // call did not revert and returned the canonical 64‑byte payload
+        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false; 
 
-        if (result.length != KZG_OUTPUT_LENGTH) {
-            return false;
-        }
-
-        // The precompile returns 64 bytes on success, with the first 32 bytes being the result
-        // A successful verification returns 0x000...001 in the first 32 bytes
-        bytes32 resultValue;
+        uint256 resultValue;
         assembly {
-            resultValue := mload(add(result, 0x20))
+            resultValue := mload(add(out, 0x20))
         }
-        success = resultValue == bytes32(uint256(1));
+        // the first 32 bytes of the output should be FIELD_ELEMENTS_PER_BLOB
+        if (resultValue != FIELD_ELEMENTS_PER_BLOB) return false;
+
+        return true;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -127,5 +141,46 @@ library BlobsLib {
                 ++i;
             }
         }
+    }
+
+    /// @param commitment  KZG commitment (48 bytes).  Zero‑length is allowed and
+    ///                    returns 0x00…00 (same as the Go nil‑check).
+    /// @return vh         32‑byte versioned blob hash whose first byte is 0x01
+    ///                    and the remaining 31 bytes are SHA‑256(commitment).
+    function calcBlobHashV1(bytes memory commitment) internal pure returns (bytes32 vh) {
+        if (commitment.length == 0) {
+            return bytes32(0);
+        }
+
+        vh = sha256(commitment);
+
+        unchecked {
+            uint256 v = (uint256(vh) & MASK_LOW_31_BYTES) | (uint256(0x01) << 248);
+            vh = bytes32(v);
+        }
+    }
+
+
+    /// @notice Builds the input for the KZG precompile
+    /// @param versionedHash  32 bytes (0x01‖sha256(commitment))
+    /// @param z              32 bytes challenge point   (BLS12‑381 Fr, big‑endian)
+    /// @param y              32 bytes evaluation value  (BLS12‑381 Fr, big‑endian)
+    /// @param commitment     48 bytes G1 (BLS12‑381)
+    /// @param proof          48 bytes G1 (BLS12‑381)
+    /// @return input         192‑byte input
+    function buildKZGInput(
+        bytes32 versionedHash,
+        bytes32 z,
+        bytes32 y,
+        bytes memory commitment,
+        bytes memory proof
+    ) internal pure returns (bytes memory input) {
+        if (commitment.length != KZG_COMMITMENT_LENGTH || proof.length != KZG_PROOF_LENGTH) {
+            revert("KZGInput: bad G1 length");
+        }
+
+        input = abi.encodePacked(versionedHash, z, y, commitment, proof);
+
+        assert(input.length == KZG_INPUT_LENGTH);
     }
 }

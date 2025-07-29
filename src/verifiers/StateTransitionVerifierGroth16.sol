@@ -11,6 +11,7 @@ contract StateTransitionVerifierGroth16 is IZKVerifier, StateTransitionVerifierB
         (uint256[8] memory proof, uint256[2] memory commitments, uint256[2] memory commitmentPok) = _decodeProof(
             _proof
         );
+        // TODO: UPDATE BASE VERIFIER TO MATCH NEW INPUT FORMAT
         this.verifyProof(proof, commitments, commitmentPok, _decodeInput(_input));
     }
 
@@ -25,7 +26,7 @@ contract StateTransitionVerifierGroth16 is IZKVerifier, StateTransitionVerifierB
         return abi.decode(encodedProof, (uint256[8], uint256[2], uint256[2]));
     }
 
-    function _decodeInput(bytes calldata encodedInputs) internal pure returns (uint256[4] memory) {
-        return abi.decode(encodedInputs, (uint256[4]));
+    function _decodeInput(bytes calldata encodedInputs) internal pure returns (uint256[6] memory) {
+        return abi.decode(encodedInputs, (uint256[6]));
     }
 }

@@ -3,11 +3,11 @@ pragma solidity ^0.8.28;
 
 library ProcessIdLib {
     /**
-     * @notice Computes a deterministic processId (bytes32) from chainId, address, and its current blockchain nonce.
+     * @notice Computes a deterministic processId (bytes32) from chainId, address, and a nonce.
      * Format:
      * - [0..3]   : chainId (uint32, big endian)
      * - [4..23]  : address (20 bytes)
-     * - [24..31] : nonce (uint64, big endian) pulled from address nonce
+     * - [24..31] : nonce (uint64, big endian) pulled from address custom nonce
      * @dev Note: nonce is limited to uint64 (truncates high bits of uint256)
      */
     function computeProcessId(

@@ -199,7 +199,8 @@ contract ProcessRegistry is IProcessRegistry {
         bytes32 processId,
         bytes calldata proof,
         bytes calldata input,
-        bytes32 expectedBlobHash
+        bytes calldata kzgCommitment,
+        bytes calldata kzgProof
     ) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         Process storage p = processes[processId];
@@ -207,35 +208,34 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        // The tx **must** be type-3 and contain *one* blob at one of the available indexes.
-        // We do not attempt to verify the full KZG proof on-chain – the
-        // circuit already guarantees consistency between the votes and
-        // the commitment, we only check availability.
+        bytes32 vh = BlobsLib.calcBlobHashV1(kzgCommitment);
+        if (vh != BlobsLib.blobHash(0) ) revert InvalidBlobHash();
 
-        // TODO: Check all available blobs ?
-        for (uint256 i = 0; i < 6; i++) {
-            bytes32 actual = BlobsLib.blobHash(i);
-            if (actual == expectedBlobHash) {
-                break;
-            }
-            if (actual == bytes32(0)) {
-                revert InvalidBlob();
-            }
-        }
-
-        IZKVerifier(stVerifier).verifyProof(proof, input);
-
-        uint256[4] memory decompressedInput = abi.decode(input, (uint256[4]));
+        uint256[6] memory decompressedInput = abi.decode(input, (uint256[6]));
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
+
+        // create the input for the KZG precompile
+        bytes memory kzgInput = BlobsLib.buildKZGInput(
+            vh,
+            bytes32(decompressedInput[4]), // z
+            bytes32(decompressedInput[5]), // y
+            kzgCommitment,
+            kzgProof
+        );
+
+        if (!BlobsLib.verifyKZG(kzgInput)) revert InvalidBlobHash();
+
+        IZKVerifier(stVerifier).verifyProof(proof, input);
+
 
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
         p.voteOverwriteCount += decompressedInput[3];
         p.batchNumber++;
 
-        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1], p.batchNumber);
+        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1], p.batchNumber, vh);
     }
 
     /// @inheritdoc IProcessRegistry

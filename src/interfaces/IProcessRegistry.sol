@@ -35,12 +35,14 @@ interface IProcessRegistry {
      * @param sender The address of the sender.
      * @param newStateRoot The new state root of the process.
      * @param batchNumber The batch number of the process.
+     * @param blobHash The hash of the blob used in the state transition.
      */
     event ProcessStateRootUpdated(
         bytes32 indexed processId,
         address indexed sender,
         uint256 newStateRoot,
-        uint256 batchNumber
+        uint256 batchNumber,
+        bytes32 blobHash
     );
 
     /*
@@ -157,9 +159,9 @@ interface IProcessRegistry {
      */
     error Unauthorized();
     /**
-     * @notice Thrown when blob attached to the state transition is not valid.
+     * @notice Thrown when blob hash attached to the state transition function is not valid.
      */
-    error InvalidBlob();
+    error InvalidBlobHash();
 
     /// ENUMS ///
 
@@ -374,13 +376,15 @@ interface IProcessRegistry {
      * @notice Submits a process state transition.
      * @param processId The ID of the process.
      * @param proof The proof for validating the process state transition.
-     * @param input The public inputs data for the state transition.
-     * @param expectedBlobHash  Blob hash expected for DA verification
+     * @param input The public inputs data for the state transition [oldRoot, newRoot, voteCount, overwriteCount, z, y]
+     * @param kzgCommitment The KZG commitment (C) for the blob.
+     * @param kzgProof KZG opening proof (π).
      */
     function submitStateTransition(
         bytes32 processId,
         bytes calldata proof,
         bytes calldata input,
-        bytes32 expectedBlobHash
+        bytes calldata kzgCommitment,
+        bytes calldata kzgProof 
     ) external;
 }
