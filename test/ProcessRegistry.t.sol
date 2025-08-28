@@ -35,13 +35,13 @@ contract ProcessRegistryTest is Test {
     IProcessRegistry.BallotMode public defaultBallotMode =
         IProcessRegistry.BallotMode({
             costFromWeight: false,
-            forceUniqueness: false,
-            maxCount: 5,
+            uniqueValues: false,
+            numFields: 5,
             costExponent: 2,
             maxValue: 16,
             minValue: 0,
-            maxTotalCost: 1280,
-            minTotalCost: 5
+            maxValueSum: 1280,
+            minValueSum: 5
         });
 
     function setUp() public {
@@ -409,13 +409,13 @@ contract ProcessRegistryTest is Test {
         // Test case 1: Basic valid ballot mode
         IProcessRegistry.BallotMode memory validBallotMode1 = IProcessRegistry.BallotMode({
             costFromWeight: false,
-            forceUniqueness: false,
-            maxCount: 1,
+            uniqueValues: false,
+            numFields: 1,
             costExponent: 1,
             maxValue: 10,
             minValue: 0,
-            maxTotalCost: 100,
-            minTotalCost: 50
+            maxValueSum: 100,
+            minValueSum: 50
         });
         bytes32 processId1 = createTestProcess(validBallotMode1, stInitStateRoot);
         assertTrue(processId1 != bytes32(0));
@@ -423,13 +423,13 @@ contract ProcessRegistryTest is Test {
         // Test case 2: Valid ballot with costFromWeight true
         IProcessRegistry.BallotMode memory validBallotMode2 = IProcessRegistry.BallotMode({
             costFromWeight: true,
-            forceUniqueness: true,
-            maxCount: 5,
+            uniqueValues: true,
+            numFields: 5,
             costExponent: 2,
             maxValue: 100,
             minValue: 1,
-            maxTotalCost: 0, // This is valid when costFromWeight is true
-            minTotalCost: 0
+            maxValueSum: 0, // This is valid when costFromWeight is true
+            minValueSum: 0
         });
         bytes32 processId2 = createTestProcess(validBallotMode2, stInitStateRoot);
         assertTrue(processId2 != bytes32(0));
@@ -437,13 +437,13 @@ contract ProcessRegistryTest is Test {
         // Test case 3: Edge case - maxValue equals minValue
         IProcessRegistry.BallotMode memory validBallotMode3 = IProcessRegistry.BallotMode({
             costFromWeight: false,
-            forceUniqueness: false,
-            maxCount: 8,
+            uniqueValues: false,
+            numFields: 8,
             costExponent: 1,
             maxValue: 5,
             minValue: 5,
-            maxTotalCost: 50,
-            minTotalCost: 50
+            maxValueSum: 50,
+            minValueSum: 50
         });
         bytes32 processId3 = createTestProcess(validBallotMode3, stInitStateRoot);
         assertTrue(processId3 != bytes32(0));
@@ -452,13 +452,13 @@ contract ProcessRegistryTest is Test {
     function test_ValidateBallotMode_InvalidMaxCount() public {
         IProcessRegistry.BallotMode memory invalidBallotMode = IProcessRegistry.BallotMode({
             costFromWeight: false,
-            forceUniqueness: false,
-            maxCount: 0, // Invalid: must be >= 1
+            uniqueValues: false,
+            numFields: 0, // Invalid: must be >= 1
             costExponent: 1,
             maxValue: 10,
             minValue: 0,
-            maxTotalCost: 100,
-            minTotalCost: 50
+            maxValueSum: 100,
+            minValueSum: 50
         });
 
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
@@ -489,13 +489,13 @@ contract ProcessRegistryTest is Test {
     function test_ValidateBallotMode_InvalidValueRange() public {
         IProcessRegistry.BallotMode memory invalidBallotMode = IProcessRegistry.BallotMode({
             costFromWeight: false,
-            forceUniqueness: false,
-            maxCount: 1,
+            uniqueValues: false,
+            numFields: 1,
             costExponent: 1,
             maxValue: 5,
             minValue: 10, // Invalid: maxValue < minValue
-            maxTotalCost: 100,
-            minTotalCost: 50
+            maxValueSum: 100,
+            minValueSum: 50
         });
 
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({

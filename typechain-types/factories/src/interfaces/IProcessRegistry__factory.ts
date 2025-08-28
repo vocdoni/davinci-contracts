@@ -46,12 +46,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InvalidMaxTotalCost",
+    name: "InvalidMaxValue",
     type: "error",
   },
   {
     inputs: [],
-    name: "InvalidMaxValue",
+    name: "InvalidMaxValueSum",
     type: "error",
   },
   {
@@ -96,12 +96,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InvalidTotalCostBounds",
+    name: "InvalidUniqueValues",
     type: "error",
   },
   {
     inputs: [],
-    name: "InvalidUniqueValues",
+    name: "InvalidValueSumBounds",
     type: "error",
   },
   {
@@ -375,12 +375,12 @@ const _abi = [
               },
               {
                 internalType: "bool",
-                name: "forceUniqueness",
+                name: "uniqueValues",
                 type: "bool",
               },
               {
                 internalType: "uint8",
-                name: "maxCount",
+                name: "numFields",
                 type: "uint8",
               },
               {
@@ -400,12 +400,12 @@ const _abi = [
               },
               {
                 internalType: "uint256",
-                name: "maxTotalCost",
+                name: "maxValueSum",
                 type: "uint256",
               },
               {
                 internalType: "uint256",
-                name: "minTotalCost",
+                name: "minValueSum",
                 type: "uint256",
               },
             ],
@@ -520,12 +520,12 @@ const _abi = [
           },
           {
             internalType: "bool",
-            name: "forceUniqueness",
+            name: "uniqueValues",
             type: "bool",
           },
           {
             internalType: "uint8",
-            name: "maxCount",
+            name: "numFields",
             type: "uint8",
           },
           {
@@ -545,12 +545,12 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "maxTotalCost",
+            name: "maxValueSum",
             type: "uint256",
           },
           {
             internalType: "uint256",
-            name: "minTotalCost",
+            name: "minValueSum",
             type: "uint256",
           },
         ],

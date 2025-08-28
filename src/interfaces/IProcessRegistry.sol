@@ -79,17 +79,17 @@ interface IProcessRegistry {
      */
     error InvalidMinValue();
     /**
-     * @notice InvalidMaxTotalCost error is emitted when the maximum total cost of the ballot mode is invalid.
+     * @notice InvalidMaxValueSum error is emitted when the maximum value sum of the ballot mode is invalid.
      */
-    error InvalidMaxTotalCost();
+    error InvalidMaxValueSum();
     /**
      * @notice InvalidMinTotalCost error is emitted when the minimum total cost of the ballot mode is invalid.
      */
     error InvalidMinTotalCost();
     /**
-     * @notice InvalidTotalCostBounds error is emitted when the total cost bounds of the ballot mode are invalid.
+     * @notice InvalidValueSumBounds error is emitted when the total cost bounds of the ballot mode are invalid.
      */
-    error InvalidTotalCostBounds();
+    error InvalidValueSumBounds();
     /**
      * @notice InvalidMaxMinValueBounds error is emitted when the maximum and minimum value bounds are invalid.
      */
@@ -184,24 +184,24 @@ interface IProcessRegistry {
 
     /**
      * @notice The ballot mode define the parameters of the vote.
-     * @param costFromWeight If weighted census, the ballot weight is used as maxTotalCost.
-     * @param forceUniqueness Choices cannot appear twice or more.
-     * @param maxCount The maximum number of fields per ballot.
+     * @param costFromWeight If weighted census, the ballot weight is used as maxValueSum.
+     * @param uniqueValues Choices cannot appear twice or more.
+     * @param numFields The maximum number of fields per ballot.
      * @param costExponent The exponent that will be used to compute the "cost" of the field values.
      * @param maxValue The maximum value for all fields.
      * @param minValue The minimum value for all fields.
-     * @param maxTotalCost Maximum limit on the total sum of all ballot fields' values. 0 => Not applicable.
-     * @param minTotalCost Minimum limit on the total sum of all ballot fields' values. 0 => Not applicable.
+     * @param maxValueSum Maximum limit on the total sum of all ballot fields' values. 0 => Not applicable.
+     * @param minValueSum Minimum limit on the total sum of all ballot fields' values. 0 => Not applicable.
      */
     struct BallotMode {
         bool costFromWeight;
-        bool forceUniqueness;
-        uint8 maxCount;
+        bool uniqueValues;
+        uint8 numFields;
         uint8 costExponent;
         uint256 maxValue;
         uint256 minValue;
-        uint256 maxTotalCost;
-        uint256 minTotalCost;
+        uint256 maxValueSum;
+        uint256 minValueSum;
     }
 
     /**

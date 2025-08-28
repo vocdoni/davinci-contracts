@@ -33,33 +33,33 @@ export declare namespace IProcessRegistry {
 
   export type BallotModeStruct = {
     costFromWeight: boolean;
-    forceUniqueness: boolean;
-    maxCount: BigNumberish;
+    uniqueValues: boolean;
+    numFields: BigNumberish;
     costExponent: BigNumberish;
     maxValue: BigNumberish;
     minValue: BigNumberish;
-    maxTotalCost: BigNumberish;
-    minTotalCost: BigNumberish;
+    maxValueSum: BigNumberish;
+    minValueSum: BigNumberish;
   };
 
   export type BallotModeStructOutput = [
     costFromWeight: boolean,
-    forceUniqueness: boolean,
-    maxCount: bigint,
+    uniqueValues: boolean,
+    numFields: bigint,
     costExponent: bigint,
     maxValue: bigint,
     minValue: bigint,
-    maxTotalCost: bigint,
-    minTotalCost: bigint
+    maxValueSum: bigint,
+    minValueSum: bigint
   ] & {
     costFromWeight: boolean;
-    forceUniqueness: boolean;
-    maxCount: bigint;
+    uniqueValues: boolean;
+    numFields: bigint;
     costExponent: bigint;
     maxValue: bigint;
     minValue: bigint;
-    maxTotalCost: bigint;
-    minTotalCost: bigint;
+    maxValueSum: bigint;
+    minValueSum: bigint;
   };
 
   export type CensusStruct = {
