@@ -1,0 +1,27 @@
+{
+    "processRegistry": {
+        "sepolia": "0xF5A88C2D71a4acf65E8e3BB5bE44B847e38b5960",
+        "uzh": "0x69B16f67Bd2fB18bD720379E9C1Ef5EaD3872d67",
+        "mainnet": "0x0"
+    },
+    "organizationRegistry": {
+        "sepolia": "0x4DE13cf0543E17F7528ED540992B9A157bA5158b",
+        "uzh": "0xf7BCE4546805547bE526Ca864d6722Ed193E51Aa",
+        "mainnet": "0x0"
+    },
+    "stateTransitionVerifierGroth16": {
+        "sepolia": "0xeb9ABb2Ee8b96bFF6B67967055301a8c57a93965",
+        "uzh": "0x5e4673CD378F05cc3Ae25804539c91E711548741",
+        "mainnet": "0x0"
+    },
+    "resultsVerifierGroth16": {
+        "sepolia": "0x0d1BAAc1c9dAca35Db05f8682F6b8eE2493587D7",
+        "uzh": "0x00c7F87731346F592197E49A90Ad6EC236Ad9985",
+        "mainnet": "0x0"
+    },
+    "sequencerRegistry": {
+        "sepolia": "0x0",
+        "uzh": "0x0",
+        "mainnet": "0x0"
+    }
+}

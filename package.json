@@ -1,6 +1,6 @@
 {
     "name": "@vocdoni/davinci-contracts",
-    "version": "0.0.15",
+    "version": "0.0.17",
     "description": "Smart contracts powering DAVINCI's digital voting protocol",
     "directories": {
         "lib": "lib",
@@ -8,7 +8,8 @@
         "src": "src"
     },
     "files": [
-        "dist"
+        "dist",
+        "deployed_contracts_addresses.json"
     ],
     "repository": {
         "type": "git",
