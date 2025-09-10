@@ -39,7 +39,7 @@ export interface StateTransitionVerifierBaseGroth16Interface extends Interface {
       [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       [BigNumberish],
       BigNumberish,
-      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      BigNumberish[]
     ]
   ): string;
   encodeFunctionData(
@@ -48,7 +48,7 @@ export interface StateTransitionVerifierBaseGroth16Interface extends Interface {
       BigNumberish[],
       [BigNumberish, BigNumberish],
       [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      BigNumberish[]
     ]
   ): string;
 
@@ -130,7 +130,7 @@ export interface StateTransitionVerifierBaseGroth16 extends BaseContract {
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       compressedCommitments: [BigNumberish],
       compressedCommitmentPok: BigNumberish,
-      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      input: BigNumberish[]
     ],
     [void],
     "view"
@@ -141,7 +141,7 @@ export interface StateTransitionVerifierBaseGroth16 extends BaseContract {
       proof: BigNumberish[],
       commitments: [BigNumberish, BigNumberish],
       commitmentPok: [BigNumberish, BigNumberish],
-      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      input: BigNumberish[]
     ],
     [void],
     "view"
@@ -175,7 +175,7 @@ export interface StateTransitionVerifierBaseGroth16 extends BaseContract {
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       compressedCommitments: [BigNumberish],
       compressedCommitmentPok: BigNumberish,
-      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      input: BigNumberish[]
     ],
     [void],
     "view"
@@ -187,7 +187,7 @@ export interface StateTransitionVerifierBaseGroth16 extends BaseContract {
       proof: BigNumberish[],
       commitments: [BigNumberish, BigNumberish],
       commitmentPok: [BigNumberish, BigNumberish],
-      input: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      input: BigNumberish[]
     ],
     [void],
     "view"
