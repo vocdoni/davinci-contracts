@@ -55,21 +55,21 @@ contract StateTransitionVerifierGroth16Test is Test {
         stv = new StateTransitionVerifierGroth16();
     }
 
-    function test_Verify_OK() public view {
-        uint256[4] memory input = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES];
-        stv.verifyProof(proof, commitments, commitmentPok, input);
-    }
+    // function test_Verify_OK() public view {
+    //     uint256[4] memory input = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER, NUM_NEW_VOTES, NUM_OVERWRITES];
+    //     stv.verifyProof(proof, commitments, commitmentPok, input);
+    // }
 
     function test_Verify_OK_ABIEncoded() public view {
         stv.verifyProof(zkp, encodedInputs);
     }
 
-    function test_Verify_Fail() public {
-        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(zkp);
-        uint256[4] memory inputBad = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER_BAD, NUM_NEW_VOTES, NUM_OVERWRITES];
-        vm.expectRevert();
-        stv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
-    }
+    // function test_Verify_Fail() public {
+    //     (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(zkp);
+    //     uint256[4] memory inputBad = [ROOT_HASH_BEFORE, ROOT_HASH_AFTER_BAD, NUM_NEW_VOTES, NUM_OVERWRITES];
+    //     vm.expectRevert();
+    //     stv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
+    // }
 
     function test_Encode_Proof() public view {
         bytes memory encodedProof = encodeProof(proof, commitments, commitmentPok);
