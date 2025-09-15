@@ -4,12 +4,15 @@ pragma solidity ^0.8.28;
 import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
+import { BlobsLib } from "./libraries/BlobsLib.sol";
+
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
 contract ProcessRegistry is IProcessRegistry {
     using ProcessIdLib for bytes32;
+    using BlobsLib for bytes;
 
     /**
      * @notice The maximum value of the census origin.
@@ -19,6 +22,10 @@ contract ProcessRegistry is IProcessRegistry {
      * @notice The maximum value of the process status.
      */
     uint8 public constant MAX_STATUS = 4;
+    /**
+     * @notice The index of the blob in the blob transaction.
+     */
+    uint8 public constant BLOB_INDEX = 0;
     /**
      * @notice The process mapping is a mapping of process IDs to processes.
      */
@@ -110,6 +117,7 @@ contract ProcessRegistry is IProcessRegistry {
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
+        p.creationBlock = block.number;
 
         processCount++;
         processNonce[sender]++;
@@ -200,16 +208,28 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        IZKVerifier(stVerifier).verifyProof(proof, input);
-
-        uint256[4] memory decompressedInput = abi.decode(input, (uint256[4]));
+        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
 
+        bytes memory kgzInput = BlobsLib.buildKZGInput(
+            bytes32(decompressedInput[4]), // versionedHash
+            bytes32(decompressedInput[5]), // z
+            bytes32(decompressedInput[6]), // y
+            abi.encodePacked(decompressedInput[7]), // commitment
+            abi.encodePacked(decompressedInput[8])  // proof
+        );
+
+        if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
+        if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
+
+        IZKVerifier(stVerifier).verifyProof(proof, input);
+
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
         p.voteOverwriteCount += decompressedInput[3];
+        p.batchNumber++;
 
         emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
     }

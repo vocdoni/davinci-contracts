@@ -7,7 +7,7 @@ library ProcessIdLib {
      * Format:
      * - [0..3]   : chainId (uint32, big endian)
      * - [4..23]  : address (20 bytes)
-     * - [24..31] : nonce (uint64, big endian) pulled from address nonce
+     * - [24..31] : nonce (uint64, big endian) pulled from address custom nonce
      * @dev Note: nonce is limited to uint64 (truncates high bits of uint256)
      */
     function computeProcessId(

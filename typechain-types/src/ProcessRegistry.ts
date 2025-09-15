@@ -91,6 +91,8 @@ export declare namespace IProcessRegistry {
     duration: BigNumberish;
     voteCount: BigNumberish;
     voteOverwriteCount: BigNumberish;
+    creationBlock: BigNumberish;
+    batchNumber: BigNumberish;
     metadataURI: string;
     ballotMode: IProcessRegistry.BallotModeStruct;
     census: IProcessRegistry.CensusStruct;
@@ -106,6 +108,8 @@ export declare namespace IProcessRegistry {
     duration: bigint,
     voteCount: bigint,
     voteOverwriteCount: bigint,
+    creationBlock: bigint,
+    batchNumber: bigint,
     metadataURI: string,
     ballotMode: IProcessRegistry.BallotModeStructOutput,
     census: IProcessRegistry.CensusStructOutput
@@ -119,6 +123,8 @@ export declare namespace IProcessRegistry {
     duration: bigint;
     voteCount: bigint;
     voteOverwriteCount: bigint;
+    creationBlock: bigint;
+    batchNumber: bigint;
     metadataURI: string;
     ballotMode: IProcessRegistry.BallotModeStructOutput;
     census: IProcessRegistry.CensusStructOutput;
@@ -128,6 +134,7 @@ export declare namespace IProcessRegistry {
 export interface ProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "BLOB_INDEX"
       | "MAX_CENSUS_ORIGIN"
       | "MAX_STATUS"
       | "chainID"
@@ -159,6 +166,10 @@ export interface ProcessRegistryInterface extends Interface {
       | "ProcessStatusChanged"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "BLOB_INDEX",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "MAX_CENSUS_ORIGIN",
     values?: undefined
@@ -239,6 +250,7 @@ export interface ProcessRegistryInterface extends Interface {
     values: [BytesLike, BytesLike, BytesLike]
   ): string;
 
+  decodeFunctionResult(functionFragment: "BLOB_INDEX", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "MAX_CENSUS_ORIGIN",
     data: BytesLike
@@ -456,6 +468,8 @@ export interface ProcessRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  BLOB_INDEX: TypedContractMethod<[], [bigint], "view">;
+
   MAX_CENSUS_ORIGIN: TypedContractMethod<[], [bigint], "view">;
 
   MAX_STATUS: TypedContractMethod<[], [bigint], "view">;
@@ -515,6 +529,8 @@ export interface ProcessRegistry extends BaseContract {
         bigint,
         bigint,
         bigint,
+        bigint,
+        bigint,
         string,
         IProcessRegistry.BallotModeStructOutput,
         IProcessRegistry.CensusStructOutput
@@ -527,6 +543,8 @@ export interface ProcessRegistry extends BaseContract {
         duration: bigint;
         voteCount: bigint;
         voteOverwriteCount: bigint;
+        creationBlock: bigint;
+        batchNumber: bigint;
         metadataURI: string;
         ballotMode: IProcessRegistry.BallotModeStructOutput;
         census: IProcessRegistry.CensusStructOutput;
@@ -573,6 +591,9 @@ export interface ProcessRegistry extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "BLOB_INDEX"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "MAX_CENSUS_ORIGIN"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -637,6 +658,8 @@ export interface ProcessRegistry extends BaseContract {
         bigint,
         bigint,
         bigint,
+        bigint,
+        bigint,
         string,
         IProcessRegistry.BallotModeStructOutput,
         IProcessRegistry.CensusStructOutput
@@ -649,6 +672,8 @@ export interface ProcessRegistry extends BaseContract {
         duration: bigint;
         voteCount: bigint;
         voteOverwriteCount: bigint;
+        creationBlock: bigint;
+        batchNumber: bigint;
         metadataURI: string;
         ballotMode: IProcessRegistry.BallotModeStructOutput;
         census: IProcessRegistry.CensusStructOutput;
