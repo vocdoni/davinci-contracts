@@ -91,6 +91,8 @@ export declare namespace IProcessRegistry {
     duration: BigNumberish;
     voteCount: BigNumberish;
     voteOverwriteCount: BigNumberish;
+    creationBlock: BigNumberish;
+    batchNumber: BigNumberish;
     metadataURI: string;
     ballotMode: IProcessRegistry.BallotModeStruct;
     census: IProcessRegistry.CensusStruct;
@@ -106,6 +108,8 @@ export declare namespace IProcessRegistry {
     duration: bigint,
     voteCount: bigint,
     voteOverwriteCount: bigint,
+    creationBlock: bigint,
+    batchNumber: bigint,
     metadataURI: string,
     ballotMode: IProcessRegistry.BallotModeStructOutput,
     census: IProcessRegistry.CensusStructOutput
@@ -119,6 +123,8 @@ export declare namespace IProcessRegistry {
     duration: bigint;
     voteCount: bigint;
     voteOverwriteCount: bigint;
+    creationBlock: bigint;
+    batchNumber: bigint;
     metadataURI: string;
     ballotMode: IProcessRegistry.BallotModeStructOutput;
     census: IProcessRegistry.CensusStructOutput;

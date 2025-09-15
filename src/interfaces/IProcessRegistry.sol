@@ -150,6 +150,14 @@ interface IProcessRegistry {
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
+    /**
+     * @notice Thrown when the blob hash does not match the expected value.
+     */
+    error InvalidBlobHash();
+    /**
+     * @notice Thrown when the Blob verification fails.
+     */
+    error BlobVerificationFailed();
 
     /// ENUMS ///
 
@@ -251,6 +259,8 @@ interface IProcessRegistry {
      * @param duration The duration of the process.
      * @param voteCount The number of actual votes included in the state.
      * @param voteOverwriteCount The number of actual vote overwrites included in the state.
+     * @param creationBlock The block number when the process was created.
+     * @param batchNumber The batch number of the process that increments with each state transition.
      * @param metadataURI The URI of the metadata.
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
@@ -265,6 +275,8 @@ interface IProcessRegistry {
         uint256 duration;
         uint256 voteCount;
         uint256 voteOverwriteCount;
+        uint256 creationBlock;
+        uint256 batchNumber;
         string metadataURI;
         BallotMode ballotMode;
         Census census;

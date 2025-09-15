@@ -11,7 +11,17 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "BlobVerificationFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "CannotAcceptResult",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidBlobHash",
     type: "error",
   },
   {
@@ -359,6 +369,16 @@ const _abi = [
           {
             internalType: "uint256",
             name: "voteOverwriteCount",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "creationBlock",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "batchNumber",
             type: "uint256",
           },
           {
