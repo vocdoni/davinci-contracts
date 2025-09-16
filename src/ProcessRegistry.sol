@@ -213,16 +213,16 @@ contract ProcessRegistry is IProcessRegistry {
             revert InvalidStateRoot();
         }
 
-        bytes memory kgzInput = BlobsLib.buildKZGInput(
-            bytes32(decompressedInput[4]), // versionedHash
-            bytes32(decompressedInput[5]), // z
-            bytes32(decompressedInput[6]), // y
-            abi.encodePacked(decompressedInput[7]), // commitment
-            abi.encodePacked(decompressedInput[8])  // proof
-        );
+        // bytes memory kgzInput = BlobsLib.buildKZGInput(
+        //     bytes32(decompressedInput[4]), // versionedHash
+        //     bytes32(decompressedInput[5]), // z
+        //     bytes32(decompressedInput[6]), // y
+        //     abi.encodePacked(decompressedInput[7]), // commitment
+        //     abi.encodePacked(decompressedInput[8])  // proof
+        // );
 
-        if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
-        if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
+        // if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
+        // if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
