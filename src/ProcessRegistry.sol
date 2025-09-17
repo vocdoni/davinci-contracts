@@ -208,21 +208,36 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
+        (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(input, (uint256[9], bytes, bytes));
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
 
-        bytes memory kgzInput = BlobsLib.buildKZGInput(
-            bytes32(decompressedInput[4]), // versionedHash
-            bytes32(decompressedInput[5]), // z
-            bytes32(decompressedInput[6]), // y
-            abi.encodePacked(decompressedInput[7]), // commitment
-            abi.encodePacked(decompressedInput[8])  // proof
+        bytes32 versionedHash = BlobsLib.blobHash(BLOB_INDEX);
+        if (versionedHash == bytes32(0)) revert InvalidBlobHash();
+
+        bytes32 z = bytes32(decompressedInput[4]);
+        
+        bytes32 y;
+        unchecked {
+            uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
+            y = bytes32(
+                ((decompressedInput[5] & MASK) << 192) |
+                ((decompressedInput[6] & MASK) << 128) |
+                ((decompressedInput[7] & MASK) << 64) |
+                (decompressedInput[8] & MASK)
+            );
+        }
+
+        bytes memory kzgInput = BlobsLib.buildKZGInput(
+            versionedHash,
+            z,
+            y,
+            blobCommitment,
+            blobProof
         );
 
-        if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
-        if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
+        if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
 

@@ -26,6 +26,6 @@ contract ResultsVerifierGroth16 is IZKVerifier, ResultsVerifierBaseGroth16 {
     }
 
     function _decodeInput(bytes calldata encodedInputs) internal pure returns (uint256[9] memory) {
-        return abi.decode(encodedInputs, (uint256[9]));
+        return abi.decode(encodedInputs, (uint256[9])); // TODO: BLOBS
     }
 }
