@@ -213,8 +213,8 @@ contract ProcessRegistry is IProcessRegistry {
             revert InvalidStateRoot();
         }
 
-        bytes32 versionedHash = BlobsLib.blobHash(BLOB_INDEX);
-        if (versionedHash == bytes32(0)) revert InvalidBlobHash();
+        bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
+        if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
 
         bytes32 z = bytes32(decompressedInput[4]);
         
