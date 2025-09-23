@@ -3,37 +3,33 @@ pragma solidity ^0.8.28;
 
 library ProcessIdLib {
     /**
-     * @notice Computes a deterministic processId (bytes32) from chainId, address, and its current blockchain nonce.
-     * Format:
-     * - [0..3]   : chainId (uint32, big endian)
+     * @notice Computes a processId with a hashed 4-byte prefix.
+     * Prefix is the last 4 bytes of keccak256(abi.encodePacked(chainId, otherAddr)).
+     * Layout (big-endian where applicable):
+     * - [0..3]   : hashed prefix (uint32, big endian)
      * - [4..23]  : address (20 bytes)
-     * - [24..31] : nonce (uint64, big endian) pulled from address custom nonce
-     * @dev Note: nonce is limited to uint64 (truncates high bits of uint256)
+     * - [24..31] : nonce (uint64, big endian)
+     *
+     * @dev nonce is limited to uint64 (truncates high bits of uint256 if any).
      */
     function computeProcessId(
         uint32 chainId,
-        address _address,
+        address contractAddr,
+        address creatorAddr,
         uint64 nonce
     ) internal pure returns (bytes32 processId) {
-        processId = bytes32(0);
+        // keccak(chainId, otherAddr) and take the LAST 4 bytes (least significant 32 bits)
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        uint32 prefix = uint32(uint256(h)); // last 4 bytes
 
-        // encode chainId (big endian, 4 bytes)
-        processId |= bytes32(uint256(uint8(chainId >> 24)) << 248);
-        processId |= bytes32(uint256(uint8(chainId >> 16)) << 240);
-        processId |= bytes32(uint256(uint8(chainId >> 8)) << 232);
-        processId |= bytes32(uint256(uint8(chainId)) << 224);
-
-        // encode address (middle 20 bytes)
-        processId |= bytes32(uint256(uint160(_address)) << 64);
-
-        // encode nonce (big endian, last 8 bytes)
-        processId |= bytes32(uint256(uint8(nonce >> 56)) << 56);
-        processId |= bytes32(uint256(uint8(nonce >> 48)) << 48);
-        processId |= bytes32(uint256(uint8(nonce >> 40)) << 40);
-        processId |= bytes32(uint256(uint8(nonce >> 32)) << 32);
-        processId |= bytes32(uint256(uint8(nonce >> 24)) << 24);
-        processId |= bytes32(uint256(uint8(nonce >> 16)) << 16);
-        processId |= bytes32(uint256(uint8(nonce >> 8)) << 8);
-        processId |= bytes32(uint256(uint8(nonce)));
+        // Build the 32-byte value:
+        // - prefix in the top 4 bytes (<< 224)
+        // - mainAddr in the middle 20 bytes (<< 64)
+        // - nonce in the last 8 bytes (no shift; goes to least significant 64 bits)
+        processId = bytes32(
+            (uint256(prefix) << 224) |
+            (uint256(uint160(creatorAddr)) << 64) |
+            uint256(nonce)
+        );
     }
 }

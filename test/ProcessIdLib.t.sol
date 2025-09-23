@@ -5,97 +5,130 @@ import { Test } from "forge-std/Test.sol";
 import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 
 contract ProcessIdLibTest is Test {
-    using ProcessIdLib for bytes32;
+    // NOTE: `using ProcessIdLib for bytes32;` not needed anymore
 
     function test_ComputeProcessId_Basic() public {
         uint32 chainId = 1;
-        address addr = address(0x1234567890123456789012345678901234567890);
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0x000000000000000000000000000000000000dEaD);
         uint64 nonce = 42;
 
-        bytes32 expectedProcessId = 0x000000011234567890123456789012345678901234567890000000000000002a;
+        // Expected prefix = last 4 bytes of keccak256(chainId, contractAddr)
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        uint32 prefix = uint32(uint256(h));
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
+        bytes32 expectedProcessId = bytes32(
+            (uint256(prefix) << 224) |
+            (uint256(uint160(creatorAddr)) << 64) |
+            uint256(nonce)
+        );
 
-        assertEq(uint32(uint256(processId >> 224)), chainId);
-        assertEq(address(uint160(uint256(processId >> 64))), addr);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+
+        // Assert layout
+        assertEq(uint32(uint256(processId >> 224)), prefix);
+        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
         assertEq(uint64(uint256(processId)), nonce);
         assertEq(processId, expectedProcessId);
     }
 
     function test_ComputeProcessId_MaxValues() public {
-        uint32 maxChainId = type(uint32).max;
-        address maxAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
-        uint64 maxNonce = type(uint64).max;
+        uint32 chainId = type(uint32).max;
+        address creatorAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
+        address contractAddr = address(0x7777777777777777777777777777777777777777);
+        uint64 nonce = type(uint64).max;
 
-        bytes32 processId = ProcessIdLib.computeProcessId(maxChainId, maxAddr, maxNonce);
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        uint32 prefix = uint32(uint256(h));
 
-        assertEq(uint32(uint256(processId >> 224)), maxChainId);
-        assertEq(address(uint160(uint256(processId >> 64))), maxAddr);
-        assertEq(uint64(uint256(processId)), maxNonce);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+
+        assertEq(uint32(uint256(processId >> 224)), prefix);
+        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
+        assertEq(uint64(uint256(processId)), nonce);
     }
 
     function test_ComputeProcessId_ZeroValues() public {
         uint32 chainId = 0;
-        address addr = address(0);
+        address creatorAddr = address(0);
+        address contractAddr = address(0);
         uint64 nonce = 0;
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        uint32 prefix = uint32(uint256(h));
 
-        assertEq(uint32(uint256(processId >> 224)), chainId);
-        assertEq(address(uint160(uint256(processId >> 64))), addr);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+
+        assertEq(uint32(uint256(processId >> 224)), prefix);
+        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
         assertEq(uint64(uint256(processId)), nonce);
     }
 
     function test_ComputeProcessId_NonceTruncation() public {
         uint32 chainId = 1;
-        address addr = address(0x1234567890123456789012345678901234567890);
-        uint256 largeNonce = type(uint256).max; // This will be truncated to uint64
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0x7777777777777777777777777777777777777777);
+        uint256 largeNonce = type(uint256).max; // truncated to uint64
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, uint64(largeNonce));
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, uint64(largeNonce));
         assertEq(uint64(uint256(processId)), uint64(largeNonce));
     }
 
-    function test_ComputeProcessId_ChainIdOverflow() public {
+    function test_ComputeProcessId_PrefixMatchesHashTail() public {
         uint32 chainId = type(uint32).max;
-        address addr = address(0x1234567890123456789012345678901234567890);
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
         uint64 nonce = 42;
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
-        assertEq(uint32(uint256(processId >> 224)), chainId);
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        uint32 expectedPrefix = uint32(uint256(h));
+
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+        assertEq(uint32(uint256(processId >> 224)), expectedPrefix);
     }
 
-    function test_ComputeProcessId_AddressOverflow() public {
+    function test_ComputeProcessId_AddressPlacement() public {
         uint32 chainId = 1;
-        address addr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
+        address creatorAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
+        address contractAddr = address(0x0000000000000000000000000000000000000001);
         uint64 nonce = 42;
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
-        assertEq(address(uint160(uint256(processId >> 64))), addr);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
     }
 
-    function test_ComputeProcessId_NonceOverflow() public {
+    function test_ComputeProcessId_NoncePlacement() public {
         uint32 chainId = 1;
-        address addr = address(0x1234567890123456789012345678901234567890);
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0x0000000000000000000000000000000000000002);
         uint64 nonce = type(uint64).max;
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
         assertEq(uint64(uint256(processId)), nonce);
     }
 
     function test_ComputeProcessId_BitManipulation() public {
         uint32 chainId = 0x12345678;
-        address addr = address(0x1234567890123456789012345678901234567890);
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0x7777777777777777777777777777777777777777);
         uint64 nonce = 0x1234567890ABCDEF;
 
-        bytes32 processId = ProcessIdLib.computeProcessId(chainId, addr, nonce);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
 
-        assertEq(uint8(uint256(processId >> 248)), 0x12);
-        assertEq(uint8(uint256(processId >> 240)), 0x34);
-        assertEq(uint8(uint256(processId >> 232)), 0x56);
-        assertEq(uint8(uint256(processId >> 224)), 0x78);
+        // Compute expected top-4 bytes from the hash tail
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        uint32 prefix = uint32(uint256(h));
 
-        assertEq(uint8(uint256(processId)), 0xEF);
-        assertEq(uint8(uint256(processId >> 8)), 0xCD);
+        // Check the *big-endian* view of the top 4 bytes equals prefix
+        // Byte 0 (MSB) of prefix lives at bits [255..248] of processId, etc.
+        assertEq(uint8(uint256(processId >> 248)), uint8(prefix >> 24));
+        assertEq(uint8(uint256(processId >> 240)), uint8(prefix >> 16));
+        assertEq(uint8(uint256(processId >> 232)), uint8(prefix >> 8));
+        assertEq(uint8(uint256(processId >> 224)), uint8(prefix));
+
+        // Check the last 8 bytes (nonce) little→big order via shifts
+        assertEq(uint8(uint256(processId)),       0xEF);
+        assertEq(uint8(uint256(processId >> 8)),  0xCD);
         assertEq(uint8(uint256(processId >> 16)), 0xAB);
         assertEq(uint8(uint256(processId >> 24)), 0x90);
         assertEq(uint8(uint256(processId >> 32)), 0x78);

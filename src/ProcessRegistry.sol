@@ -86,7 +86,7 @@ contract ProcessRegistry is IProcessRegistry {
 
     /// @inheritdoc IProcessRegistry
     function getNextProcessId(address organizationId) external view override returns (bytes32) {
-        return ProcessIdLib.computeProcessId(chainID, organizationId, processNonce[organizationId]);
+        return ProcessIdLib.computeProcessId(chainID, address(this), organizationId, processNonce[organizationId]);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -101,7 +101,7 @@ contract ProcessRegistry is IProcessRegistry {
         uint256 initStateRoot
     ) external override returns (bytes32) {
         address sender = msg.sender;
-        bytes32 processId = ProcessIdLib.computeProcessId(chainID, sender, processNonce[sender]);
+        bytes32 processId = ProcessIdLib.computeProcessId(chainID, address(this), sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
         _validateNewProcess(processId, sender, status, startTime, duration, ballotMode, census);
@@ -208,6 +208,8 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
+        IZKVerifier(stVerifier).verifyProof(proof, input);
+
         uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
@@ -223,8 +225,6 @@ contract ProcessRegistry is IProcessRegistry {
 
         // if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
         // if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
-
-        IZKVerifier(stVerifier).verifyProof(proof, input);
 
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
