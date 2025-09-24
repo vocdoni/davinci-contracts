@@ -4,10 +4,10 @@ pragma solidity ^0.8.28;
 library ProcessIdLib {
     /**
      * @notice Computes a processId with a hashed 4-byte prefix.
-     * Prefix is the last 4 bytes of keccak256(abi.encodePacked(chainId, otherAddr)).
+     * Prefix is the last 4 bytes of keccak256(abi.encodePacked(chainId, contractAddr)).
      * Layout (big-endian where applicable):
      * - [0..3]   : hashed prefix (uint32, big endian)
-     * - [4..23]  : address (20 bytes)
+     * - [4..23]  : creatorAddr (20 bytes)
      * - [24..31] : nonce (uint64, big endian)
      *
      * @dev nonce is limited to uint64 (truncates high bits of uint256 if any).
@@ -18,10 +18,7 @@ library ProcessIdLib {
         address creatorAddr,
         uint64 nonce
     ) internal pure returns (bytes32 processId) {
-        // keccak(chainId, otherAddr) and take the LAST 4 bytes (least significant 32 bits)
-        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
-        uint32 prefix = uint32(uint256(h)); // last 4 bytes
-
+        uint32 prefix = getPrefix(chainId, contractAddr);
         // Build the 32-byte value:
         // - prefix in the top 4 bytes (<< 224)
         // - mainAddr in the middle 20 bytes (<< 64)
@@ -31,5 +28,11 @@ library ProcessIdLib {
             (uint256(uint160(creatorAddr)) << 64) |
             uint256(nonce)
         );
+    }
+
+    function getPrefix(uint32 chainId, address contractAddr) internal pure returns (uint32 prefix) {
+        // keccak(chainId, otherAddr) and take the LAST 4 bytes (least significant 32 bits)
+        bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
+        prefix = uint32(uint256(h)); // last 4 bytes
     }
 }

@@ -5,8 +5,6 @@ import { Test } from "forge-std/Test.sol";
 import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 
 contract ProcessIdLibTest is Test {
-    // NOTE: `using ProcessIdLib for bytes32;` not needed anymore
-
     function test_ComputeProcessId_Basic() public {
         uint32 chainId = 1;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
