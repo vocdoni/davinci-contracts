@@ -66,7 +66,7 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Test blobHash function with various indices
-    function test_blobHash() public {
+    function test_blobHash() public view {
         // Test with index 0 (should return 0 in normal test environment)
         bytes32 hash0 = BlobsLib.blobHash(0);
         assertEq(hash0, bytes32(0), "blobHash(0) should return 0 in test environment");
@@ -80,13 +80,13 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test blobHash with maximum index
-    function test_blobHash_MaxIndex() public {
+    function test_blobHash_MaxIndex() public view {
         bytes32 hashMax = BlobsLib.blobHash(type(uint256).max);
         assertEq(hashMax, bytes32(0), "blobHash with max index should return 0");
     }
 
     /// @notice Test blobBaseFee function
-    function test_blobBaseFee() public {
+    function test_blobBaseFee() public view {
         uint256 baseFee = BlobsLib.blobBaseFee();
         // In test environment, this should return 0 or a default value
         // We just verify it doesn't revert
@@ -94,13 +94,13 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test calculateBlobFee with zero blobs
-    function test_calculateBlobFee_ZeroBlobs() public {
+    function test_calculateBlobFee_ZeroBlobs() public view {
         uint256 fee = BlobsLib.calculateBlobFee(0);
         assertEq(fee, 0, "Fee for 0 blobs should be 0");
     }
 
     /// @notice Test calculateBlobFee with various blob counts
-    function test_calculateBlobFee_VariousCounts() public {
+    function test_calculateBlobFee_VariousCounts() public view {
         uint256 fee1 = BlobsLib.calculateBlobFee(1);
         uint256 fee2 = BlobsLib.calculateBlobFee(2);
         uint256 fee6 = BlobsLib.calculateBlobFee(6);
@@ -112,7 +112,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test calculateBlobFee with maximum blob count
-    function test_calculateBlobFee_MaxBlobs() public {
+    function test_calculateBlobFee_MaxBlobs() public view {
         // Test with maximum reasonable blob count (6 as per EIP-4844)
         uint256 fee = BlobsLib.calculateBlobFee(6);
         assertTrue(fee >= 0, "Fee calculation should not revert for max blobs");
@@ -123,7 +123,7 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Test verifyKZG with invalid input length
-    function test_verifyKZG_InvalidInputLength() public {
+    function test_verifyKZG_InvalidInputLength() public view {
         bytes memory shortInput = new bytes(100);
         bool result = BlobsLib.verifyKZG(shortInput);
         assertFalse(result, "verifyKZG should return false for invalid input length");
@@ -134,7 +134,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test verifyKZG with correct input length
-    function test_verifyKZG_CorrectInputLength() public {
+    function test_verifyKZG_CorrectInputLength() public view {
         bytes memory validInput = new bytes(KZG_INPUT_LENGTH);
         // Fill with test data
         for (uint256 i = 0; i < KZG_INPUT_LENGTH; i++) {
@@ -147,7 +147,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test verifyKZG with empty input
-    function test_verifyKZG_EmptyInput() public {
+    function test_verifyKZG_EmptyInput() public view {
         bytes memory emptyInput = new bytes(0);
         bool result = BlobsLib.verifyKZG(emptyInput);
         assertFalse(result, "verifyKZG should return false for empty input");
@@ -158,32 +158,32 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Test isBlobDataAvailable function
-    function test_isBlobDataAvailable() public {
+    function test_isBlobDataAvailable() public view {
         bool available = BlobsLib.isBlobDataAvailable();
         assertFalse(available, "Blob data should not be available in test environment");
     }
 
     /// @notice Test getBlobCount function
-    function test_getBlobCount() public {
+    function test_getBlobCount() public view {
         uint256 count = BlobsLib.getBlobCount();
         assertEq(count, 0, "Blob count should be 0 in test environment");
     }
 
     /// @notice Test getAllBlobHashes function
-    function test_getAllBlobHashes() public {
+    function test_getAllBlobHashes() public view {
         bytes32[] memory hashes = BlobsLib.getAllBlobHashes();
         assertEq(hashes.length, 0, "Should return empty array in test environment");
     }
 
     /// @notice Test calcBlobHashV1 with empty commitment
-    function test_calcBlobHashV1_EmptyCommitment() public {
+    function test_calcBlobHashV1_EmptyCommitment() public pure {
         bytes memory emptyCommitment = new bytes(0);
         bytes32 hash = BlobsLib.calcBlobHashV1(emptyCommitment);
         assertEq(hash, bytes32(0), "Empty commitment should return zero hash");
     }
 
     /// @notice Test calcBlobHashV1 with valid commitment
-    function test_calcBlobHashV1_ValidCommitment() public {
+    function test_calcBlobHashV1_ValidCommitment() public pure {
         bytes32 hash = BlobsLib.calcBlobHashV1(TEST_COMMITMENT);
         
         // Verify the hash has version byte 0x01
@@ -195,7 +195,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test calcBlobHashV1 with various commitment sizes
-    function test_calcBlobHashV1_VariousSizes() public {
+    function test_calcBlobHashV1_VariousSizes() public pure {
         // Test with 1 byte
         bytes memory smallCommitment = new bytes(1);
         smallCommitment[0] = 0xFF;
@@ -221,7 +221,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test buildKZGInput with valid parameters
-    function test_buildKZGInput_ValidParameters() public {
+    function test_buildKZGInput_ValidParameters() public pure {
         bytes memory input = BlobsLib.buildKZGInput(
             TEST_VERSIONED_HASH,
             TEST_Z,
@@ -297,7 +297,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test decodeKZGInput with valid input
-    function test_decodeKZGInput_ValidInput() public {
+    function test_decodeKZGInput_ValidInput() public pure {
         bytes memory input = BlobsLib.buildKZGInput(
             TEST_VERSIONED_HASH,
             TEST_Z,
@@ -354,7 +354,7 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Test round-trip encoding/decoding of KZG input
-    function test_KZGInput_RoundTrip() public {
+    function test_KZGInput_RoundTrip() public pure {
         // Build input
         bytes memory input = BlobsLib.buildKZGInput(
             TEST_VERSIONED_HASH,
@@ -384,7 +384,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test calcBlobHashV1 with commitment from buildKZGInput
-    function test_calcBlobHashV1_Integration() public {
+    function test_calcBlobHashV1_Integration() public pure {
         bytes32 calculatedHash = BlobsLib.calcBlobHashV1(TEST_COMMITMENT);
         
         bytes memory input = BlobsLib.buildKZGInput(
@@ -404,7 +404,7 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Fuzz test for calcBlobHashV1
-    function testFuzz_calcBlobHashV1(bytes memory commitment) public {
+    function testFuzz_calcBlobHashV1(bytes memory commitment) public pure {
         bytes32 hash = BlobsLib.calcBlobHashV1(commitment);
         
         if (commitment.length == 0) {
@@ -417,7 +417,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Fuzz test for calculateBlobFee
-    function testFuzz_calculateBlobFee(uint256 blobCount) public {
+    function testFuzz_calculateBlobFee(uint256 blobCount) public view {
         // Limit blob count to reasonable range to avoid overflow
         blobCount = bound(blobCount, 0, 100);
         
@@ -431,7 +431,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Fuzz test for blobHash
-    function testFuzz_blobHash(uint256 idx) public {
+    function testFuzz_blobHash(uint256 idx) public view {
         // Limit index to reasonable range
         idx = bound(idx, 0, 1000);
         
@@ -445,7 +445,7 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Test gas usage for calcBlobHashV1
-    function test_gas_calcBlobHashV1() public {
+    function test_gas_calcBlobHashV1() public view {
         uint256 gasBefore = gasleft();
         BlobsLib.calcBlobHashV1(TEST_COMMITMENT);
         uint256 gasUsed = gasBefore - gasleft();
@@ -455,7 +455,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test gas usage for buildKZGInput
-    function test_gas_buildKZGInput() public {
+    function test_gas_buildKZGInput() public view {
         uint256 gasBefore = gasleft();
         BlobsLib.buildKZGInput(
             TEST_VERSIONED_HASH,
@@ -471,7 +471,7 @@ contract BlobsLibTest is Test {
     }
 
     /// @notice Test gas usage for decodeKZGInput
-    function test_gas_decodeKZGInput() public {
+    function test_gas_decodeKZGInput() public view {
         bytes memory input = BlobsLib.buildKZGInput(
             TEST_VERSIONED_HASH,
             TEST_Z,

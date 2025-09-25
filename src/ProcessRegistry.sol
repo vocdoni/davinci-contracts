@@ -129,6 +129,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (ProcessIdLib.hasPrefix(processId, ProcessIdLib.getPrefix(chainID, address(this))) == false) revert UnknownProcessIdPrefix();
         if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
 
         Process storage p = processes[processId];
@@ -153,6 +154,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function setProcessCensus(bytes32 processId, Census calldata census) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (ProcessIdLib.hasPrefix(processId, ProcessIdLib.getPrefix(chainID, address(this))) == false) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -178,6 +180,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @dev Note that the end time of the process is startTime + duration.
     function setProcessDuration(bytes32 processId, uint256 _duration) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (ProcessIdLib.hasPrefix(processId, ProcessIdLib.getPrefix(chainID, address(this))) == false) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -203,6 +206,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (ProcessIdLib.hasPrefix(processId, ProcessIdLib.getPrefix(chainID, address(this))) == false) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
@@ -237,6 +241,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (ProcessIdLib.hasPrefix(processId, ProcessIdLib.getPrefix(chainID, address(this))) == false) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != ProcessStatus.ENDED) revert InvalidStatus();

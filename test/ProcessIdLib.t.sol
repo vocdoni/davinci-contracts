@@ -5,7 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 
 contract ProcessIdLibTest is Test {
-    function test_ComputeProcessId_Basic() public {
+    function test_ComputeProcessId_Basic() public pure {
         uint32 chainId = 1;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0x000000000000000000000000000000000000dEaD);
@@ -30,7 +30,7 @@ contract ProcessIdLibTest is Test {
         assertEq(processId, expectedProcessId);
     }
 
-    function test_ComputeProcessId_MaxValues() public {
+    function test_ComputeProcessId_MaxValues() public pure {
         uint32 chainId = type(uint32).max;
         address creatorAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
         address contractAddr = address(0x7777777777777777777777777777777777777777);
@@ -46,7 +46,7 @@ contract ProcessIdLibTest is Test {
         assertEq(uint64(uint256(processId)), nonce);
     }
 
-    function test_ComputeProcessId_ZeroValues() public {
+    function test_ComputeProcessId_ZeroValues() public pure {
         uint32 chainId = 0;
         address creatorAddr = address(0);
         address contractAddr = address(0);
@@ -62,7 +62,7 @@ contract ProcessIdLibTest is Test {
         assertEq(uint64(uint256(processId)), nonce);
     }
 
-    function test_ComputeProcessId_NonceTruncation() public {
+    function test_ComputeProcessId_NonceTruncation() public pure {
         uint32 chainId = 1;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0x7777777777777777777777777777777777777777);
@@ -72,7 +72,7 @@ contract ProcessIdLibTest is Test {
         assertEq(uint64(uint256(processId)), uint64(largeNonce));
     }
 
-    function test_ComputeProcessId_PrefixMatchesHashTail() public {
+    function test_ComputeProcessId_PrefixMatchesHashTail() public pure {
         uint32 chainId = type(uint32).max;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
@@ -85,7 +85,7 @@ contract ProcessIdLibTest is Test {
         assertEq(uint32(uint256(processId >> 224)), expectedPrefix);
     }
 
-    function test_ComputeProcessId_AddressPlacement() public {
+    function test_ComputeProcessId_AddressPlacement() public pure {
         uint32 chainId = 1;
         address creatorAddr = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
         address contractAddr = address(0x0000000000000000000000000000000000000001);
@@ -95,7 +95,7 @@ contract ProcessIdLibTest is Test {
         assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
     }
 
-    function test_ComputeProcessId_NoncePlacement() public {
+    function test_ComputeProcessId_NoncePlacement() public pure {
         uint32 chainId = 1;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0x0000000000000000000000000000000000000002);
@@ -105,7 +105,7 @@ contract ProcessIdLibTest is Test {
         assertEq(uint64(uint256(processId)), nonce);
     }
 
-    function test_ComputeProcessId_BitManipulation() public {
+    function test_ComputeProcessId_BitManipulation() public pure {
         uint32 chainId = 0x12345678;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0x7777777777777777777777777777777777777777);
@@ -133,5 +133,25 @@ contract ProcessIdLibTest is Test {
         assertEq(uint8(uint256(processId >> 40)), 0x56);
         assertEq(uint8(uint256(processId >> 48)), 0x34);
         assertEq(uint8(uint256(processId >> 56)), 0x12);
+    }
+
+    function test_HasPrefix_True() public pure {
+        uint32 chainId = 1;
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0x000000000000000000000000000000000000dEaD);
+        uint64 nonce = 42;
+
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+        assertTrue(ProcessIdLib.hasPrefix(processId, ProcessIdLib.getPrefix(chainId, contractAddr)));
+    }
+
+    function test_HasPrefix_False() public pure {
+        uint32 chainId = 1;
+        address creatorAddr = address(0x1234567890123456789012345678901234567890);
+        address contractAddr = address(0x000000000000000000000000000000000000dEaD);
+        uint64 nonce = 42; 
+
+        bytes32 processId = ProcessIdLib.computeProcessId(chainId, contractAddr, creatorAddr, nonce);
+        assertFalse(ProcessIdLib.hasPrefix(processId, 0xDEADBEEF));
     }
 }
