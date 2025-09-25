@@ -135,6 +135,10 @@ interface IProcessRegistry {
      */
     error InvalidProcessId();
     /**
+     * @notice Thrown when the process ID prefix is unknown (does not match this contract)
+     */
+    error UnknownProcessIdPrefix();
+    /**
      * @notice Thrown when attempting to transition to RESULTS state before process has ended
      */
     error ProcessNotEnded();

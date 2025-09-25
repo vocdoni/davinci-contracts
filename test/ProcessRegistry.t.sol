@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import { Test } from "forge-std/Test.sol";
 import { ProcessRegistry } from "../src/ProcessRegistry.sol";
 import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
+import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";
@@ -96,6 +97,20 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessStatus(bytes32(0), IProcessRegistry.ProcessStatus.ENDED);
 
         vm.expectRevert(IProcessRegistry.ProcessNotFound.selector);
+        bytes32 invalidProcessId = ProcessIdLib.computeProcessId(
+            11155111,
+            address(processRegistry),
+            address(0x1234567890123456789012345678901234567890),
+            1
+        );
+        processRegistry.setProcessStatus(invalidProcessId, IProcessRegistry.ProcessStatus.ENDED);
+    }
+
+    function test_SetProcessStatus_UnknownProcessIdPrefix() public {
+        vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
+        processRegistry.setProcessStatus(bytes32(0), IProcessRegistry.ProcessStatus.ENDED);
+
+        vm.expectRevert(IProcessRegistry.UnknownProcessIdPrefix.selector);
         processRegistry.setProcessStatus(
             bytes32(0x1000000000000000000000000000000000000000000000000000000000000001),
             IProcessRegistry.ProcessStatus.ENDED
