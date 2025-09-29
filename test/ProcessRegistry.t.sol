@@ -97,9 +97,11 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessStatus(bytes32(0), IProcessRegistry.ProcessStatus.ENDED);
 
         vm.expectRevert(IProcessRegistry.ProcessNotFound.selector);
+
+        bytes32 h = keccak256(abi.encodePacked(uint32(11155111), address(processRegistry)));
+        uint32 prefix = uint32(uint256(h));
         bytes32 invalidProcessId = ProcessIdLib.computeProcessId(
-            11155111,
-            address(processRegistry),
+            prefix,
             address(0x1234567890123456789012345678901234567890),
             1
         );

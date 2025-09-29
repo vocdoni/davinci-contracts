@@ -12,12 +12,10 @@ library ProcessIdLib {
      * @dev nonce is limited to uint64 (truncates high bits of uint256 if any).
      */
     function computeProcessId(
-        uint32 chainId,
-        address contractAddr,
+        uint32 prefix,
         address creatorAddr,
         uint64 nonce
     ) internal pure returns (bytes32 processId) {
-        uint32 prefix = getPrefix(chainId, contractAddr);
         // Build the 32-byte value:
         // - prefix in the top 4 bytes (<< 224)
         // - mainAddr in the middle 20 bytes (<< 64)
@@ -33,10 +31,10 @@ library ProcessIdLib {
      * @notice Computes the 4-byte prefix from chainId and contractAddr.
      * Prefix is the last 4 bytes of keccak256(abi.encodePacked(chainId, contractAddr)).
      */
-    function getPrefix(uint32 chainId, address contractAddr) internal pure returns (uint32 prefix) {
+    function getPrefix(uint32 chainId, address contractAddr) internal pure returns (uint32) {
         // keccak(chainId, otherAddr) and take the LAST 4 bytes (least significant 32 bits)
         bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
-        prefix = uint32(uint256(h)); // last 4 bytes
+        return uint32(uint256(h)); // last 4 bytes
     }
 
     /**
