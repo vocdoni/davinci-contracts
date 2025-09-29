@@ -16,16 +16,16 @@ contract ProcessIdLibTest is Test {
         uint32 prefix = uint32(uint256(h));
 
         bytes32 expectedProcessId = bytes32(
-            (uint256(prefix) << 224) |
-            (uint256(uint160(creatorAddr)) << 64) |
+            (uint256(uint160(creatorAddr)) << 96) |
+            (uint256(prefix) << 64) |
             uint256(nonce)
         );
 
         bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, nonce);
 
         // Assert layout
-        assertEq(uint32(uint256(processId >> 224)), prefix);
-        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
+        assertEq(address(uint160(uint256(processId >> 96))), creatorAddr);
+        assertEq(uint32(uint256(processId >> 64)), prefix);
         assertEq(uint64(uint256(processId)), nonce);
         assertEq(processId, expectedProcessId);
     }
@@ -41,8 +41,8 @@ contract ProcessIdLibTest is Test {
 
         bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, nonce);
 
-        assertEq(uint32(uint256(processId >> 224)), prefix);
-        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
+        assertEq(address(uint160(uint256(processId >> 96))), creatorAddr);
+        assertEq(uint32(uint256(processId >> 64)), prefix);
         assertEq(uint64(uint256(processId)), nonce);
     }
 
@@ -57,8 +57,8 @@ contract ProcessIdLibTest is Test {
 
         bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, nonce);
 
-        assertEq(uint32(uint256(processId >> 224)), prefix);
-        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
+        assertEq(address(uint160(uint256(processId >> 96))), creatorAddr);
+        assertEq(uint32(uint256(processId >> 64)), prefix);
         assertEq(uint64(uint256(processId)), nonce);
     }
 
@@ -85,7 +85,7 @@ contract ProcessIdLibTest is Test {
         uint32 expectedPrefix = uint32(uint256(h));
 
         bytes32 processId = ProcessIdLib.computeProcessId(expectedPrefix, creatorAddr, nonce);
-        assertEq(uint32(uint256(processId >> 224)), expectedPrefix);
+        assertEq(uint32(uint256(processId >> 64)), expectedPrefix);
     }
 
     function test_ComputeProcessId_AddressPlacement() public pure {
@@ -98,7 +98,7 @@ contract ProcessIdLibTest is Test {
         uint32 prefix = uint32(uint256(h));
 
         bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, nonce);
-        assertEq(address(uint160(uint256(processId >> 64))), creatorAddr);
+        assertEq(address(uint160(uint256(processId >> 96))), creatorAddr);
     }
 
     function test_ComputeProcessId_NoncePlacement() public pure {
@@ -125,12 +125,12 @@ contract ProcessIdLibTest is Test {
 
         bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, nonce);
 
-        // Check the *big-endian* view of the top 4 bytes equals prefix
-        // Byte 0 (MSB) of prefix lives at bits [255..248] of processId, etc.
-        assertEq(uint8(uint256(processId >> 248)), uint8(prefix >> 24));
-        assertEq(uint8(uint256(processId >> 240)), uint8(prefix >> 16));
-        assertEq(uint8(uint256(processId >> 232)), uint8(prefix >> 8));
-        assertEq(uint8(uint256(processId >> 224)), uint8(prefix));
+        // Check the prefix is in bytes 20-23 (bits 95-64)
+        // Byte 20 (MSB of prefix) lives at bits [95..88] of processId, etc.
+        assertEq(uint8(uint256(processId >> 88)), uint8(prefix >> 24));
+        assertEq(uint8(uint256(processId >> 80)), uint8(prefix >> 16));
+        assertEq(uint8(uint256(processId >> 72)), uint8(prefix >> 8));
+        assertEq(uint8(uint256(processId >> 64)), uint8(prefix));
 
         // Check the last 8 bytes (nonce) little→big order via shifts
         assertEq(uint8(uint256(processId)),       0xEF);

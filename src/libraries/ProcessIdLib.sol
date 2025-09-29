@@ -5,8 +5,8 @@ library ProcessIdLib {
     /**
      * @notice Computes a processId with a hashed 4-byte prefix of chainId and contractAddr.
      * Layout (big-endian where applicable):
-     * - [0..3]   : hashed prefix (uint32, big endian)
-     * - [4..23]  : creatorAddr (20 bytes)
+     * - [0..19]  : creatorAddr (20 bytes)
+     * - [20..23] : hashed prefix (uint32, big endian)
      * - [24..31] : nonce (uint64, big endian)
      *
      * @dev nonce is limited to uint64 (truncates high bits of uint256 if any).
@@ -17,12 +17,12 @@ library ProcessIdLib {
         uint64 nonce
     ) internal pure returns (bytes32 processId) {
         // Build the 32-byte value:
-        // - prefix in the top 4 bytes (<< 224)
-        // - mainAddr in the middle 20 bytes (<< 64)
+        // - creatorAddr in the top 20 bytes (<< 96)
+        // - prefix in bytes 20-23 (<< 64)
         // - nonce in the last 8 bytes (no shift; goes to least significant 64 bits)
         processId = bytes32(
-            (uint256(prefix) << 224) |
-            (uint256(uint160(creatorAddr)) << 64) |
+            (uint256(uint160(creatorAddr)) << 96) |
+            (uint256(prefix) << 64) |
             uint256(nonce)
         );
     }
@@ -41,6 +41,6 @@ library ProcessIdLib {
      * @notice Checks if the given processId has the expected prefix.
      */
     function hasPrefix(bytes32 processId, uint32 expectedPrefix) internal pure returns (bool) {
-        return uint32(uint256(processId >> 224)) == expectedPrefix;
+        return uint32(uint256(processId >> 64)) == expectedPrefix;
     }
 }
