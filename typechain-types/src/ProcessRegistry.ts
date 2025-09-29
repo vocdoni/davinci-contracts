@@ -144,6 +144,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "getRVerifierVKeyHash"
       | "getSTVerifierVKeyHash"
       | "newProcess"
+      | "pidPrefix"
       | "processCount"
       | "processNonce"
       | "processes"
@@ -212,6 +213,7 @@ export interface ProcessRegistryInterface extends Interface {
       BigNumberish
     ]
   ): string;
+  encodeFunctionData(functionFragment: "pidPrefix", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "processCount",
     values?: undefined
@@ -275,6 +277,7 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "pidPrefix", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "processCount",
     data: BytesLike
@@ -513,6 +516,8 @@ export interface ProcessRegistry extends BaseContract {
     "nonpayable"
   >;
 
+  pidPrefix: TypedContractMethod<[], [bigint], "view">;
+
   processCount: TypedContractMethod<[], [bigint], "view">;
 
   processNonce: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
@@ -638,6 +643,9 @@ export interface ProcessRegistry extends BaseContract {
     [string],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "pidPrefix"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "processCount"
   ): TypedContractMethod<[], [bigint], "view">;

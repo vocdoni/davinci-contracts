@@ -214,7 +214,7 @@ contract OrganizationRegistryTest is Test {
         assertEq(org.administrators[2], ORGANIZATION_ID);
     }
 
-    function test_GetOrganization_NonExistent() public {
+    function test_GetOrganization_NonExistent() public view {
         // Getting non-existent organization should return empty struct
         IOrganizationRegistry.Organization memory org = organizationRegistry.getOrganization(ORGANIZATION_ID);
         assertEq(org.name, "");
@@ -227,7 +227,7 @@ contract OrganizationRegistryTest is Test {
         assertTrue(organizationRegistry.exists(ORGANIZATION_ID));
     }
 
-    function test_Exists_False() public {
+    function test_Exists_False() public view {
         assertFalse(organizationRegistry.exists(ORGANIZATION_ID));
     }
 

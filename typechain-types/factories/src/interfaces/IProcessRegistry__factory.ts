@@ -140,6 +140,11 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "UnknownProcessIdPrefix",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {

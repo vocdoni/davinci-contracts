@@ -50,6 +50,11 @@ contract ProcessRegistry is IProcessRegistry {
      * @notice The rVerifier is the address of the results ZK verifier contract.
      */
     address public rVerifier;
+    /**
+     * @notice The pidPrefix is the 4-byte prefix used in process IDs.
+     * This is computed as the last 4 bytes of keccak256(abi.encodePacked(chainID, address(this))).
+     */
+    uint32 public pidPrefix;
 
     /**
      * @notice Initializes the contract.
@@ -61,6 +66,7 @@ contract ProcessRegistry is IProcessRegistry {
         stVerifier = _stVerifier;
         rVerifier = _rVerifier;
         chainID = _chainID;
+        pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
     }
 
     /// @inheritdoc IProcessRegistry
@@ -86,7 +92,7 @@ contract ProcessRegistry is IProcessRegistry {
 
     /// @inheritdoc IProcessRegistry
     function getNextProcessId(address organizationId) external view override returns (bytes32) {
-        return ProcessIdLib.computeProcessId(chainID, organizationId, processNonce[organizationId]);
+        return ProcessIdLib.computeProcessId(pidPrefix, organizationId, processNonce[organizationId]);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -101,7 +107,7 @@ contract ProcessRegistry is IProcessRegistry {
         uint256 initStateRoot
     ) external override returns (bytes32) {
         address sender = msg.sender;
-        bytes32 processId = ProcessIdLib.computeProcessId(chainID, sender, processNonce[sender]);
+        bytes32 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
         _validateNewProcess(processId, sender, status, startTime, duration, ballotMode, census);
@@ -129,6 +135,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
 
         Process storage p = processes[processId];
@@ -153,6 +160,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function setProcessCensus(bytes32 processId, Census calldata census) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -178,6 +186,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @dev Note that the end time of the process is startTime + duration.
     function setProcessDuration(bytes32 processId, uint256 _duration) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -203,10 +212,13 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        IZKVerifier(stVerifier).verifyProof(proof, input);
 
         uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
         if (decompressedInput[0] != p.latestStateRoot) {
@@ -224,8 +236,6 @@ contract ProcessRegistry is IProcessRegistry {
         // if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
         // if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
 
-        IZKVerifier(stVerifier).verifyProof(proof, input);
-
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
         p.voteOverwriteCount += decompressedInput[3];
@@ -237,6 +247,7 @@ contract ProcessRegistry is IProcessRegistry {
     /// @inheritdoc IProcessRegistry
     function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != ProcessStatus.ENDED) revert InvalidStatus();
