@@ -42,7 +42,27 @@ const (
 	SepoliaNetwork = "sepolia"
 	UzhNetwork     = "uzh"
 	MainnetNetwork = "mainnet"
+	CeloNetwork    = "celo"
+	TestNetwork    = "test"
 )
+
+// AvailableNetworksByName contains the list of networks where Davinci is deployed.
+var AvailableNetworksByName = map[string]uint32{
+	SepoliaNetwork:  11155111,
+	UzhNetwork:      710,
+	CeloNetwork:     42220,
+	MainnetNetwork:  1,
+	TestNetwork:     1337, // Local test network
+}
+
+// AvailableNetworksByID contains the list of networks where Davinci is deployed.
+var AvailableNetworksByID = map[uint32]string{
+	11155111: SepoliaNetwork,
+	710:      UzhNetwork,
+	42220:    CeloNetwork,
+	1:        MainnetNetwork,
+	1337:     TestNetwork,
+}
 
 // Contract name constants
 const (
@@ -91,6 +111,8 @@ func GetContractAddress(contract, network string) string {
 			return ProcessRegistryUzhAddress
 		case MainnetNetwork:
 			return ProcessRegistryMainnetAddress
+		case CeloNetwork:
+			return ProcessRegistryCeloAddress
 		}
 	case OrganizationRegistryContract:
 		switch network {
@@ -100,6 +122,8 @@ func GetContractAddress(contract, network string) string {
 			return OrganizationRegistryUzhAddress
 		case MainnetNetwork:
 			return OrganizationRegistryMainnetAddress
+		case CeloNetwork:
+			return OrganizationRegistryCeloAddress
 		}
 	case StateTransitionVerifierGroth16Contract:
 		switch network {
@@ -109,6 +133,8 @@ func GetContractAddress(contract, network string) string {
 			return StateTransitionVerifierGroth16UzhAddress
 		case MainnetNetwork:
 			return StateTransitionVerifierGroth16MainnetAddress
+		case CeloNetwork:
+			return StateTransitionVerifierGroth16CeloAddress
 		}
 	case ResultsVerifierGroth16Contract:
 		switch network {
@@ -118,6 +144,8 @@ func GetContractAddress(contract, network string) string {
 			return ResultsVerifierGroth16UzhAddress
 		case MainnetNetwork:
 			return ResultsVerifierGroth16MainnetAddress
+		case CeloNetwork:
+			return ResultsVerifierGroth16CeloAddress
 		}
 	case SequencerRegistryContract:
 		switch network {
@@ -127,6 +155,8 @@ func GetContractAddress(contract, network string) string {
 			return SequencerRegistryUzhAddress
 		case MainnetNetwork:
 			return SequencerRegistryMainnetAddress
+		case CeloNetwork:
+			return SequencerRegistryCeloAddress
 		}
 	}
 	return ""
@@ -166,6 +196,11 @@ func GetUzhAddresses() map[string]string {
 // GetMainnetAddresses returns all contract addresses for Mainnet network
 func GetMainnetAddresses() map[string]string {
 	return GetAllContractAddresses(MainnetNetwork)
+}
+
+// GetCeloAddresses returns all contract addresses for Celo network
+func GetCeloAddresses() map[string]string {
+	return GetAllContractAddresses(CeloNetwork)
 }
 EOF
 
