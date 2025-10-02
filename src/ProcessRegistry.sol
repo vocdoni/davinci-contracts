@@ -250,8 +250,17 @@ contract ProcessRegistry is IProcessRegistry {
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        if (p.status != ProcessStatus.ENDED) revert InvalidStatus();
-        if (p.startTime + p.duration > block.timestamp) revert InvalidTimeBounds();
+        
+        // Cannot set results on CANCELLED or RESULTS processes
+        if (p.status == ProcessStatus.CANCELED || p.status == ProcessStatus.RESULTS) revert InvalidStatus();
+        
+        // Require that the process has ended, either by status or by time
+        if (p.status != ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
+            revert InvalidTimeBounds();
+        }
+        
+        // Store the old status for the event
+        ProcessStatus oldStatus = p.status;
 
         IZKVerifier(rVerifier).verifyProof(proof, input);
 
@@ -269,7 +278,7 @@ contract ProcessRegistry is IProcessRegistry {
         p.status = ProcessStatus.RESULTS;
         p.result = result;
 
-        emit ProcessStatusChanged(processId, ProcessStatus.ENDED, ProcessStatus.RESULTS);
+        emit ProcessStatusChanged(processId, oldStatus, ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, msg.sender, result);
     }
 

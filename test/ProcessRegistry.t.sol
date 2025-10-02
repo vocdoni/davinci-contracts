@@ -766,16 +766,17 @@ contract ProcessRegistryTest is Test {
     function test_SetProcessResults_NotEndedStatus() public {
         bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
 
-        // Try to set results when process is in READY state
-        vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
+        // Try to set results when process is in READY state (time not expired)
+        // Should fail with InvalidTimeBounds because time check happens after status check
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         processRegistry.setProcessResults(processId, rzkp, rei);
 
-        // Set to PAUSED and try
+        // Set to PAUSED and try (time not expired)
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
-        vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         processRegistry.setProcessResults(processId, rzkp, rei);
 
-        // Set to CANCELED and try
+        // Set to CANCELED and try - this should fail with InvalidStatus
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.READY);
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -875,6 +876,345 @@ contract ProcessRegistryTest is Test {
 
         vm.expectRevert(); // Should revert as input must have at least one result
         processRegistry.setProcessResults(processId, rzkp, emptyInput);
+    }
+
+    function test_SetProcessResults_UnknownProcessIdPrefix() public {
+        // Create a process ID with invalid prefix
+        bytes32 invalidProcessId = bytes32(0x1000000000000000000000000000000000000000000000000000000000000001);
+        
+        vm.expectRevert(IProcessRegistry.UnknownProcessIdPrefix.selector);
+        processRegistry.setProcessResults(invalidProcessId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_TimeExpired_ReadyStatus() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Process is in READY status, fast forward time beyond duration
+        vm.warp(block.timestamp + 1001);
+
+        // Should succeed because time has expired
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify process state
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+        assertEq(process.result.length, results.length);
+        for (uint i = 0; i < results.length; i++) {
+            assertEq(process.result[i], results[i]);
+        }
+    }
+
+    function test_SetProcessResults_TimeExpired_PausedStatus() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to PAUSED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
+
+        // Fast forward time beyond duration
+        vm.warp(block.timestamp + 1001);
+
+        // Should succeed because time has expired
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify process state
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+        assertEq(process.result.length, results.length);
+    }
+
+    function test_SetProcessResults_TimeNotExpired_ReadyStatus() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Process is in READY status and time has NOT expired
+        // Should fail because neither ENDED status nor time expired
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessResults(processId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_TimeNotExpired_PausedStatus() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to PAUSED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
+
+        // Time has NOT expired
+        // Should fail because neither ENDED status nor time expired
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessResults(processId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_ExactlyAtExpiration() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Get process to check start time and duration
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        uint256 expirationTime = process.startTime + process.duration;
+
+        // Warp to exact expiration time
+        vm.warp(expirationTime);
+
+        // Should succeed at exact expiration boundary
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify results were set
+        process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+    }
+
+    function test_SetProcessResults_OneSecondBeforeExpiration() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Get process to check start time and duration
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        uint256 expirationTime = process.startTime + process.duration;
+
+        // Warp to 1 second before expiration
+        vm.warp(expirationTime - 1);
+
+        // Should fail because time has not expired
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessResults(processId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_OneSecondAfterExpiration() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Get process to check start time and duration
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        uint256 expirationTime = process.startTime + process.duration;
+
+        // Warp to 1 second after expiration
+        vm.warp(expirationTime + 1);
+
+        // Should succeed
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify results were set
+        process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+    }
+
+    function test_SetProcessResults_ByNonAdmin() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Submit results from different address (not the process admin)
+        address randomUser = address(0xbeef);
+        vm.prank(randomUser);
+        processRegistry.setProcessResults(processId, rzkp, rei);
+        vm.stopPrank();
+
+        // Verify results were set successfully (permissionless)
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+    }
+
+    function test_SetProcessResults_EventsEmitted() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Prepare expected results array
+        uint256[] memory expectedResults = new uint256[](results.length);
+        for (uint256 i = 0; i < results.length; i++) {
+            expectedResults[i] = results[i];
+        }
+
+        // Expect both events
+        vm.expectEmit(true, true, true, true);
+        emit IProcessRegistry.ProcessStatusChanged(
+            processId,
+            IProcessRegistry.ProcessStatus.ENDED,
+            IProcessRegistry.ProcessStatus.RESULTS
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IProcessRegistry.ProcessResultsSet(processId, address(this), expectedResults);
+
+        processRegistry.setProcessResults(processId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_OldStatusCaptured_FromReady() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Fast forward time to expiration
+        vm.warp(block.timestamp + 1001);
+
+        // Expect event with READY as old status
+        vm.expectEmit(true, true, true, true);
+        emit IProcessRegistry.ProcessStatusChanged(
+            processId,
+            IProcessRegistry.ProcessStatus.READY,
+            IProcessRegistry.ProcessStatus.RESULTS
+        );
+
+        processRegistry.setProcessResults(processId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_OldStatusCaptured_FromPaused() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set to PAUSED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
+
+        // Fast forward time to expiration
+        vm.warp(block.timestamp + 1001);
+
+        // Expect event with PAUSED as old status
+        vm.expectEmit(true, true, true, true);
+        emit IProcessRegistry.ProcessStatusChanged(
+            processId,
+            IProcessRegistry.ProcessStatus.PAUSED,
+            IProcessRegistry.ProcessStatus.RESULTS
+        );
+
+        processRegistry.setProcessResults(processId, rzkp, rei);
+    }
+
+    function test_SetProcessResults_ShortDurationProcess() public {
+        // Create a process with very short duration (1 second)
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        bytes32 processId = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp,
+            1, // 1 second duration
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            rInitStateRoot
+        );
+
+        // Wait for 1 second
+        vm.warp(block.timestamp + 1);
+
+        // Should succeed
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify results
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+    }
+
+    function test_SetProcessResults_SingleResultValue() public {
+        // The rei constant already has valid proof for 8 results, but we're testing decode behavior
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Set results (will extract all values after state root)
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify results array is created correctly
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+        assertEq(process.result.length, 8); // 9 inputs - 1 state root = 8 results
+    }
+
+    function test_SetProcessResults_VerifyStateRootMatch() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Verify the process has the correct state root before setting results
+        IProcessRegistry.Process memory processBefore = processRegistry.getProcess(processId);
+        assertEq(processBefore.latestStateRoot, rInitStateRoot);
+
+        // Set results
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify state root remains the same after setting results
+        IProcessRegistry.Process memory processAfter = processRegistry.getProcess(processId);
+        assertEq(processAfter.latestStateRoot, rInitStateRoot);
+    }
+
+    function test_SetProcessResults_ResultsArrayLengthCorrect() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Set results
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify results array length matches input (9 inputs - 1 state root = 8 results)
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(process.result.length, 8);
+    }
+
+    function test_SetProcessResults_MultipleProcessesSameOrganization() public {
+        // Create first process
+        bytes32 processId1 = createTestProcess(defaultBallotMode, rInitStateRoot);
+        processRegistry.setProcessStatus(processId1, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Create second process with different state root
+        bytes32 processId2 = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processRegistry.setProcessStatus(processId2, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Set results for first process
+        processRegistry.setProcessResults(processId1, rzkp, rei);
+
+        // Verify first process has results
+        IProcessRegistry.Process memory process1 = processRegistry.getProcess(processId1);
+        assertEq(uint(process1.status), uint(IProcessRegistry.ProcessStatus.RESULTS));
+
+        // Verify second process is still in ENDED state
+        IProcessRegistry.Process memory process2 = processRegistry.getProcess(processId2);
+        assertEq(uint(process2.status), uint(IProcessRegistry.ProcessStatus.ENDED));
+    }
+
+    function test_SetProcessResults_ProcessCountersUnaffected() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Get initial counters
+        IProcessRegistry.Process memory processBefore = processRegistry.getProcess(processId);
+        uint256 voteCountBefore = processBefore.voteCount;
+        uint256 voteOverwriteCountBefore = processBefore.voteOverwriteCount;
+        uint256 batchNumberBefore = processBefore.batchNumber;
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Set results
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify counters remain unchanged
+        IProcessRegistry.Process memory processAfter = processRegistry.getProcess(processId);
+        assertEq(processAfter.voteCount, voteCountBefore);
+        assertEq(processAfter.voteOverwriteCount, voteOverwriteCountBefore);
+        assertEq(processAfter.batchNumber, batchNumberBefore);
+    }
+
+    function test_SetProcessResults_ResultsMatchInput() public {
+        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+
+        // Set process to ENDED
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Set results
+        processRegistry.setProcessResults(processId, rzkp, rei);
+
+        // Verify each result value matches the expected values
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        for (uint256 i = 0; i < results.length; i++) {
+            assertEq(process.result[i], results[i], "Result mismatch at index");
+        }
     }
 
     // ========== Process Getters Tests ==========
