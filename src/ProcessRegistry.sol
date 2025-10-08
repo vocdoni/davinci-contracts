@@ -149,6 +149,9 @@ contract ProcessRegistry is IProcessRegistry {
         p.status = newStatus;
         // if newStatus is ENDED, update duration to the time difference between current time and start time
         if (newStatus == ProcessStatus.ENDED) {
+            // Add check to prevent underflow
+            if (block.timestamp < p.startTime) revert ProcessNotStarted();
+            
             uint256 newDuration = block.timestamp - p.startTime;
             p.duration = newDuration;
             emit ProcessDurationChanged(processId, newDuration);
