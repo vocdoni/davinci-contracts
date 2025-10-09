@@ -123,10 +123,6 @@ interface IProcessRegistry {
      */
     error ProcessAlreadyExists();
     /**
-     * @notice ProcessNotStarted error is emitted when a process is not started
-     */
-    error ProcessNotStarted();
-    /**
      * @notice ProcessNotFound error is emitted when a process is not found
      */
     error ProcessNotFound();
