@@ -291,6 +291,270 @@ contract ProcessRegistryTest is Test {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
     }
 
+    function test_SetProcessStatus_EndedBeforeStart_FromReady() public {
+        // Create a process with start time in the future
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        uint256 futureStartTime = block.timestamp + 1000; // Start in 1000 seconds
+        
+        bytes32 processId = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            futureStartTime,
+            2000, // Duration of 2000 seconds
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+
+        // Verify initial state
+        IProcessRegistry.Process memory processBefore = processRegistry.getProcess(processId);
+        assertEq(processBefore.startTime, futureStartTime);
+        assertEq(processBefore.duration, 2000);
+        assertEq(uint(processBefore.status), uint(IProcessRegistry.ProcessStatus.READY));
+
+        // Set status to ENDED before start time
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Verify the process is ENDED and duration is 0
+        IProcessRegistry.Process memory processAfter = processRegistry.getProcess(processId);
+        assertEq(uint(processAfter.status), uint(IProcessRegistry.ProcessStatus.ENDED));
+        assertEq(processAfter.duration, 0, "Duration should be 0 when ended before start");
+        assertEq(processAfter.startTime, futureStartTime, "Start time should remain unchanged");
+    }
+
+    function test_SetProcessStatus_EndedBeforeStart_FromPaused() public {
+        // Create a process with start time in the future
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        uint256 futureStartTime = block.timestamp + 500;
+        
+        bytes32 processId = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.PAUSED, // Start in PAUSED state
+            futureStartTime,
+            1000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+
+        // Verify initial state
+        IProcessRegistry.Process memory processBefore = processRegistry.getProcess(processId);
+        assertEq(uint(processBefore.status), uint(IProcessRegistry.ProcessStatus.PAUSED));
+
+        // Set status to ENDED before start time (from PAUSED)
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Verify the process is ENDED and duration is 0
+        IProcessRegistry.Process memory processAfter = processRegistry.getProcess(processId);
+        assertEq(uint(processAfter.status), uint(IProcessRegistry.ProcessStatus.ENDED));
+        assertEq(processAfter.duration, 0, "Duration should be 0 when ended before start from PAUSED");
+    }
+
+    function test_SetProcessStatus_EndedBeforeStart_EventEmitted() public {
+        // Create a process with start time in the future
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        uint256 futureStartTime = block.timestamp + 1000;
+        
+        bytes32 processId = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            futureStartTime,
+            2000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+
+        // Expect both status change and duration change events
+        vm.expectEmit(true, true, true, true);
+        emit IProcessRegistry.ProcessDurationChanged(processId, 0);
+        
+        vm.expectEmit(true, true, true, true);
+        emit IProcessRegistry.ProcessStatusChanged(
+            processId,
+            IProcessRegistry.ProcessStatus.READY,
+            IProcessRegistry.ProcessStatus.ENDED
+        );
+
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+    }
+
+    function test_SetProcessStatus_EndedAfterStart_NormalDuration() public {
+        // Create a process that starts immediately
+        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+
+        // Warp time forward 500 seconds (half the duration)
+        vm.warp(block.timestamp + 500);
+
+        // Set status to ENDED after process has started
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Verify duration is calculated correctly (500 seconds elapsed)
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(uint(process.status), uint(IProcessRegistry.ProcessStatus.ENDED));
+        assertEq(process.duration, 500, "Duration should be time elapsed since start");
+    }
+
+    function test_SetProcessStatus_EndedExactlyAtStartTime() public {
+        // Create a process with start time equal to current time
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        bytes32 processId = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp, // Start now
+            1000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+
+        // End process at exact start time (same block)
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Duration should be 0 (no time elapsed)
+        IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
+        assertEq(process.duration, 0, "Duration should be 0 when ended at start time");
+    }
+
+    function test_GetProcessEndTime_WhenEndedBeforeStart() public {
+        // Create a process with start time in the future
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        uint256 futureStartTime = block.timestamp + 1000;
+        
+        bytes32 processId = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            futureStartTime,
+            2000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+
+        // End process before start time
+        processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Get process end time - should equal start time (since duration is 0)
+        uint256 endTime = processRegistry.getProcessEndTime(processId);
+        assertEq(endTime, futureStartTime, "End time should equal start time when ended before start");
+    }
+
+    function test_SetProcessStatus_EndedBeforeStart_MultipleTimes() public {
+        // Create process 1 - ended immediately
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
+            maxVotes: 1000,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census"
+        });
+
+        IProcessRegistry.EncryptionKey memory key1 = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x1"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y1")))
+        });
+
+        bytes32 processId1 = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp + 1000,
+            2000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key1,
+            stInitStateRoot
+        );
+
+        processRegistry.setProcessStatus(processId1, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Create process 2 - also ended before start
+        IProcessRegistry.EncryptionKey memory key2 = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x2"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y2")))
+        });
+
+        bytes32 processId2 = processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp + 500,
+            1000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key2,
+            stInitStateRoot
+        );
+
+        processRegistry.setProcessStatus(processId2, IProcessRegistry.ProcessStatus.ENDED);
+
+        // Verify both processes
+        IProcessRegistry.Process memory process1 = processRegistry.getProcess(processId1);
+        IProcessRegistry.Process memory process2 = processRegistry.getProcess(processId2);
+
+        assertEq(process1.duration, 0, "Process 1 duration should be 0");
+        assertEq(process2.duration, 0, "Process 2 duration should be 0");
+        assertEq(uint(process1.status), uint(IProcessRegistry.ProcessStatus.ENDED));
+        assertEq(uint(process2.status), uint(IProcessRegistry.ProcessStatus.ENDED));
+    }
+
     // ========== Process Census Tests ==========
 
     function test_SetProcessCensus_Success() public {
