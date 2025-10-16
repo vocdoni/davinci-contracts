@@ -24,10 +24,12 @@ contract DeployAllScript is Script {
         console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
         uint256 chainId = vm.envUint("CHAIN_ID");
+        bool blobs = vm.envBool("ACTIVATE_BLOBS");
         ProcessRegistry processRegistry = new ProcessRegistry(
             uint32(chainId), // change this to the desired chain ID
             address(stv),
-            address(rv)
+            address(rv),
+            bool(blobs)
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
 

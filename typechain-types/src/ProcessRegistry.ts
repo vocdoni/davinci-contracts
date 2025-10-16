@@ -137,6 +137,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "BLOB_INDEX"
       | "MAX_CENSUS_ORIGIN"
       | "MAX_STATUS"
+      | "blobsDA"
       | "chainID"
       | "getNextProcessId"
       | "getProcess"
@@ -179,6 +180,7 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "MAX_STATUS",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "blobsDA", values?: undefined): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getNextProcessId",
@@ -258,6 +260,7 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "MAX_STATUS", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "blobsDA", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getNextProcessId",
@@ -477,6 +480,8 @@ export interface ProcessRegistry extends BaseContract {
 
   MAX_STATUS: TypedContractMethod<[], [bigint], "view">;
 
+  blobsDA: TypedContractMethod<[], [boolean], "view">;
+
   chainID: TypedContractMethod<[], [bigint], "view">;
 
   getNextProcessId: TypedContractMethod<
@@ -605,6 +610,9 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "MAX_STATUS"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "blobsDA"
+  ): TypedContractMethod<[], [boolean], "view">;
   getFunction(
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [bigint], "view">;

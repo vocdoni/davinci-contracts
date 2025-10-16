@@ -49,7 +49,7 @@ contract ProcessRegistryTest is Test {
         organizationRegistry = new OrganizationRegistry();
         stv = new StateTransitionVerifierGroth16();
         rv = new ResultsVerifierGroth16();
-        processRegistry = new ProcessRegistry(11155111, address(stv), address(rv));
+        processRegistry = new ProcessRegistry(11155111, address(stv), address(rv), false); // TODO SET TRUE FOR BLOB TEST
 
         createTestOrganization();
     }
