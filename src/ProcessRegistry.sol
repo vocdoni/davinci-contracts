@@ -55,6 +55,12 @@ contract ProcessRegistry is IProcessRegistry {
      * This is computed as the last 4 bytes of keccak256(abi.encodePacked(chainID, address(this))).
      */
     uint32 public pidPrefix;
+    /**
+     * @notice blobsDA is a boolean indicating if the contract uses EIP4844 blobs.
+     * If true, the contract expects blob-related data in proofs and verifies them.
+     * @dev This is required to ensure compatibility with networks that uses other DA mechanisms.
+     */
+    bool public blobsDA;
 
     /**
      * @notice Initializes the contract.
@@ -62,10 +68,11 @@ contract ProcessRegistry is IProcessRegistry {
      * @param _stVerifier The address of the state transition ZK verifier contract.
      * @param _rVerifier The address of the results ZK verifier contract.
      */
-    constructor(uint32 _chainID, address _stVerifier, address _rVerifier) {
+    constructor(uint32 _chainID, address _stVerifier, address _rVerifier, bool _blobsDA) {
         stVerifier = _stVerifier;
         rVerifier = _rVerifier;
         chainID = _chainID;
+        blobsDA = _blobsDA;
         pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
     }
 
@@ -230,16 +237,18 @@ contract ProcessRegistry is IProcessRegistry {
             revert InvalidStateRoot();
         }
 
-        // bytes memory kgzInput = BlobsLib.buildKZGInput(
-        //     bytes32(decompressedInput[4]), // versionedHash
-        //     bytes32(decompressedInput[5]), // z
-        //     bytes32(decompressedInput[6]), // y
-        //     abi.encodePacked(decompressedInput[7]), // commitment
-        //     abi.encodePacked(decompressedInput[8])  // proof
-        // );
+        if (blobsDA) {
+            bytes memory kgzInput = BlobsLib.buildKZGInput(
+                bytes32(decompressedInput[4]), // versionedHash
+                bytes32(decompressedInput[5]), // z
+                bytes32(decompressedInput[6]), // y
+                abi.encodePacked(decompressedInput[7]), // commitment
+                abi.encodePacked(decompressedInput[8])  // proof
+            );
 
-        // if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
-        // if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
+            if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
+            if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
+        }
 
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
