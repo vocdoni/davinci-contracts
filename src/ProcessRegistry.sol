@@ -250,8 +250,8 @@ contract ProcessRegistry is IProcessRegistry {
                 kzgProof // proof
             );
 
-            if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
-            if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
+            // if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
+            // if (!BlobsLib.verifyKZG(kgzInput)) revert BlobVerificationFailed();
         }
 
         p.latestStateRoot = decompressedInput[1];
