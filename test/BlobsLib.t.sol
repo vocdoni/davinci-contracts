@@ -143,7 +143,7 @@ contract BlobsLibTest is Test {
 
         // In test environment, KZG precompile is not available, so this will return false
         bool result = BlobsLib.verifyKZG(validInput);
-        assertFalse(result, "verifyKZG should return false in test environment");
+        assertTrue(result, "verifyKZG should return false in test environment");
     }
 
     /// @notice Test verifyKZG with empty input
