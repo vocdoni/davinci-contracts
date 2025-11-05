@@ -245,7 +245,7 @@ contract ProcessRegistry is IProcessRegistry {
             bytes memory kgzInput = BlobsLib.buildKZGInput(
                 bytes32(decompressedInput[4]), // versionedHash
                 bytes32(decompressedInput[5]), // z
-                bytes32(decompressedInput[6]), // y
+                bytes32(decompressedInput[6]), // y // TODO: should reconstruct from limbs in 6,7,8,9?
                 commitment, // commitment
                 kzgProof // proof
             );
