@@ -232,7 +232,11 @@ contract ProcessRegistry is IProcessRegistry {
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
-        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
+        (uint256[10] memory decompressedInput, bytes memory commitment, bytes memory kzgProof) = abi.decode(
+            input,
+            (uint256[10], bytes, bytes)
+        );
+
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
@@ -242,8 +246,8 @@ contract ProcessRegistry is IProcessRegistry {
                 bytes32(decompressedInput[4]), // versionedHash
                 bytes32(decompressedInput[5]), // z
                 bytes32(decompressedInput[6]), // y
-                abi.encodePacked(decompressedInput[7]), // commitment
-                abi.encodePacked(decompressedInput[8])  // proof
+                commitment, // commitment
+                kzgProof // proof
             );
 
             if (BlobsLib.blobHash(BLOB_INDEX) != bytes32(decompressedInput[4])) revert InvalidBlobHash();
