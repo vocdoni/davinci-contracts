@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
+import { TestHelpers } from "./TestHelpers.t.sol";
 import { ProcessRegistry } from "../src/ProcessRegistry.sol";
 import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
 import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
@@ -9,7 +10,7 @@ import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransition
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";
 
-contract ProcessRegistryTest is Test {
+contract ProcessRegistryTest is Test, TestHelpers {
     ProcessRegistry public processRegistry;
     OrganizationRegistry public organizationRegistry;
     StateTransitionVerifierGroth16 public stv;
@@ -31,7 +32,6 @@ contract ProcessRegistryTest is Test {
         15977845708338371169793025518832793983533753933654506631846328160167915014374;
 
     address orgId = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    uint256[8] public results = [43,40,30,39,22,0,0,0];
 
     IProcessRegistry.BallotMode public defaultBallotMode =
         IProcessRegistry.BallotMode({
@@ -306,7 +306,7 @@ contract ProcessRegistryTest is Test {
         });
 
         uint256 futureStartTime = block.timestamp + 1000; // Start in 1000 seconds
-        
+
         bytes32 processId = processRegistry.newProcess(
             IProcessRegistry.ProcessStatus.READY,
             futureStartTime,
@@ -349,7 +349,7 @@ contract ProcessRegistryTest is Test {
         });
 
         uint256 futureStartTime = block.timestamp + 500;
-        
+
         bytes32 processId = processRegistry.newProcess(
             IProcessRegistry.ProcessStatus.PAUSED, // Start in PAUSED state
             futureStartTime,
@@ -389,7 +389,7 @@ contract ProcessRegistryTest is Test {
         });
 
         uint256 futureStartTime = block.timestamp + 1000;
-        
+
         bytes32 processId = processRegistry.newProcess(
             IProcessRegistry.ProcessStatus.READY,
             futureStartTime,
@@ -404,7 +404,7 @@ contract ProcessRegistryTest is Test {
         // Expect both status change and duration change events
         vm.expectEmit(true, true, true, true);
         emit IProcessRegistry.ProcessDurationChanged(processId, 0);
-        
+
         vm.expectEmit(true, true, true, true);
         emit IProcessRegistry.ProcessStatusChanged(
             processId,
@@ -479,7 +479,7 @@ contract ProcessRegistryTest is Test {
         });
 
         uint256 futureStartTime = block.timestamp + 1000;
-        
+
         bytes32 processId = processRegistry.newProcess(
             IProcessRegistry.ProcessStatus.READY,
             futureStartTime,
@@ -886,30 +886,23 @@ contract ProcessRegistryTest is Test {
     // ========== State Transition Tests ==========
 
     function test_SubmitStateTransition_Success() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(defaultBallotMode, ROOT_HASH_BEFORE);
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
 
         // Verify initial state
-        assertEq(process.latestStateRoot, stInitStateRoot);
+        assertEq(process.latestStateRoot, ROOT_HASH_BEFORE);
         assertEq(process.voteCount, 0);
         assertEq(process.voteOverwriteCount, 0);
 
         // Submit state transition
-        emit IProcessRegistry.ProcessStateRootUpdated(
-            processId,
-            address(this),
-            rInitStateRoot
-        );
-        processRegistry.submitStateTransition(processId, stzkp, stei);
+        emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_AFTER);
+        processRegistry.submitStateTransition(processId, stateTransitionZKProof, stateTransitionInputs());
 
         // Verify state after transition
         process = processRegistry.getProcess(processId);
-        assertEq(
-            process.latestStateRoot,
-            rInitStateRoot
-        );
-        assertEq(process.voteCount, uint256(abi.decode(stei, (uint256[4]))[2]));
-        assertEq(process.voteOverwriteCount, uint256(abi.decode(stei, (uint256[4]))[3]));
+        assertEq(process.latestStateRoot, ROOT_HASH_AFTER);
+        assertEq(process.voteCount, NUM_NEW_VOTES);
+        assertEq(process.voteOverwriteCount, NUM_OVERWRITES);
     }
 
     function test_SubmitStateTransition_NonExistentProcess() public {
@@ -959,25 +952,10 @@ contract ProcessRegistryTest is Test {
     }
 
     function test_SubmitStateTransition_ProofInvalid() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
-
-        // Create invalid encoded inputs with wrong state root
-        bytes memory invalidEncodedInputs = abi.encode(
-            [
-                uint256(123), // Wrong state root
-                uint256(13999159323556783713340982889683090407637562075598756749526547570965285300122),
-                uint256(5),
-                uint256(0),
-                uint256(16),
-                uint256(1280),
-                uint256(5),
-                uint256(0),
-                uint256(0)
-            ]
-        );
+        bytes32 processId = createTestProcess(defaultBallotMode, ROOT_HASH_BEFORE);
 
         vm.expectRevert(IProcessRegistry.ProofInvalid.selector);
-        processRegistry.submitStateTransition(processId, stzkp, invalidEncodedInputs);
+        processRegistry.submitStateTransition(processId, stateTransitionZKProof_Invalid, stateTransitionInputs());
     }
 
     function test_SubmitStateTransition_InvalidTimeBounds() public {
@@ -1145,7 +1123,7 @@ contract ProcessRegistryTest is Test {
     function test_SetProcessResults_UnknownProcessIdPrefix() public {
         // Create a process ID with invalid prefix
         bytes32 invalidProcessId = bytes32(0x1000000000000000000000000000000000000000000000000000000000000001);
-        
+
         vm.expectRevert(IProcessRegistry.UnknownProcessIdPrefix.selector);
         processRegistry.setProcessResults(invalidProcessId, rzkp, rei);
     }
