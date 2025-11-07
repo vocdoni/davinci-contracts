@@ -243,12 +243,11 @@ contract ProcessRegistry is IProcessRegistry {
 
         if (blobsDA) {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
-            bytes32 expectedHash = BlobsLib.blobHash(0);
 
-            console.log("versionedHash:");
-            console.logBytes32(versionedHash);
-            console.log("expectedHash (blobHash(0)):");
-            console.logBytes32(expectedHash);
+            // Replace the revert line temporarily:
+            if (versionedHash != BlobsLib.blobHash(0)) {
+                revert DebugBlobHash(versionedHash, BlobsLib.blobHash(0));
+            }
 
             if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
 

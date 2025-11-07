@@ -163,6 +163,9 @@ interface IProcessRegistry {
      */
     error BlobVerificationFailed();
 
+    // DEBUG
+    error DebugBlobHash(bytes32 versioned, bytes32 expected);
+
     /// ENUMS ///
 
     /**
