@@ -5,7 +5,6 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
-import "forge-std/console.sol";
 
 /**
  * @title ProcessRegistry

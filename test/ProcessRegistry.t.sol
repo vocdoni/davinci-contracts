@@ -894,6 +894,16 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(process.voteCount, 0);
         assertEq(process.voteOverwriteCount, 0);
 
+        // Calculate what the versioned hash should be
+        bytes32 expectedVersionedHash = BlobsLib.calcBlobHashV1(BLOB_COMMITMENT);
+
+        // Mock BlobsLib.blobHash(0) to return the expected hash
+        vm.mockCall(
+            address(BlobsLib), // This won't work directly since it's a library
+            abi.encodeWithSignature("blobHash(uint256)", 0),
+            abi.encode(expectedVersionedHash)
+        );
+
         // Submit state transition
         emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_AFTER);
         processRegistry.submitStateTransition(processId, stateTransitionZKProof, stateTransitionInputs());
