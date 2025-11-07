@@ -9,6 +9,7 @@ import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";
+import { BlobsLib } from "./libraries/BlobsLib.sol";
 
 contract ProcessRegistryTest is Test, TestHelpers {
     ProcessRegistry public processRegistry;
