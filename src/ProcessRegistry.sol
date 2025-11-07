@@ -5,6 +5,7 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
+import "forge-std/console.sol";
 
 /**
  * @title ProcessRegistry
@@ -242,6 +243,13 @@ contract ProcessRegistry is IProcessRegistry {
 
         if (blobsDA) {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
+            bytes32 expectedHash = BlobsLib.blobHash(0);
+
+            console.log("versionedHash:");
+            console.logBytes32(versionedHash);
+            console.log("expectedHash (blobHash(0)):");
+            console.logBytes32(expectedHash);
+
             if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
 
             bytes32 z = bytes32(decompressedInput[4]);
