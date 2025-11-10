@@ -148,7 +148,8 @@ library BlobsLib {
             resultValue := mload(add(out, 0x20))
         }
         // the first 32 bytes of the output should be FIELD_ELEMENTS_PER_BLOB
-        if (resultValue != FIELD_ELEMENTS_PER_BLOB) revert InvalidFieldElement(resultValue, FIELD_ELEMENTS_PER_BLOB);
+        if (resultValue != FIELD_ELEMENTS_PER_BLOB)
+            revert BlobVerificationInvalidFieldElement(resultValue, FIELD_ELEMENTS_PER_BLOB);
     }
 
     /*//////////////////////////////////////////////////////////////
