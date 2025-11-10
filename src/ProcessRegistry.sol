@@ -5,6 +5,7 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
+import "forge-std/console.sol";
 
 /**
  * @title ProcessRegistry
@@ -242,13 +243,15 @@ contract ProcessRegistry is IProcessRegistry {
 
         if (blobsDA) {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
+            console.log("versionedHash:");
+            console.logBytes32(versionedHash);
 
-            // Replace the revert line temporarily:
-            if (versionedHash != BlobsLib.blobHash(0)) {
-                revert DebugBlobHash(versionedHash, BlobsLib.blobHash(0));
-            }
+            // // Replace the revert line temporarily:
+            // if (versionedHash != BlobsLib.blobHash(0)) {
+            //     revert DebugBlobHash(versionedHash, BlobsLib.blobHash(0));
+            // }
 
-            if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
+            // if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
 
             bytes32 z = bytes32(decompressedInput[4]);
 
@@ -257,19 +260,20 @@ contract ProcessRegistry is IProcessRegistry {
                 uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
                 y = bytes32(
                     ((decompressedInput[5] & MASK) << 192) |
-                    ((decompressedInput[6] & MASK) << 128) |
-                    ((decompressedInput[7] & MASK) << 64) |
-                    (decompressedInput[8] & MASK)
+                        ((decompressedInput[6] & MASK) << 128) |
+                        ((decompressedInput[7] & MASK) << 64) |
+                        (decompressedInput[8] & MASK)
                 );
             }
 
-            bytes memory kzgInput = BlobsLib.buildKZGInput(
-                versionedHash,
-                z,
-                y,
-                blobCommitment,
-                blobProof
-            );
+            console.log("z, y, blobCommitment, blobProof:");
+            console.logBytes32(z);
+            console.logBytes32(y);
+            console.logBytes(blobCommitment);
+            console.logBytes(blobProof);
+
+            bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
+            console.logBytes(kzgInput);
 
             if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
         }

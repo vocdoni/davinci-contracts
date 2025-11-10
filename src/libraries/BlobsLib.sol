@@ -111,7 +111,30 @@ library BlobsLib {
         (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
 
         // call did not revert and returned the canonical 64‑byte payload
-        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false; 
+        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false;
+
+        uint256 resultValue;
+        assembly {
+            resultValue := mload(add(out, 0x20))
+        }
+        // the first 32 bytes of the output should be FIELD_ELEMENTS_PER_BLOB
+        if (resultValue != FIELD_ELEMENTS_PER_BLOB) return false;
+
+        return true;
+    }
+
+    function mockKZGPrecompile(bytes memory input) internal view returns (bool ok, bytes memory out) {
+        return true, hex"cafedecaca";
+
+    }
+
+    function mockVerifyKZG(bytes memory input) internal view returns (bool success) {
+        if (input.length != KZG_INPUT_LENGTH) return false; // 192 bytes
+
+        (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
+
+        // call did not revert and returned the canonical 64‑byte payload
+        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false;
 
         uint256 resultValue;
         assembly {
