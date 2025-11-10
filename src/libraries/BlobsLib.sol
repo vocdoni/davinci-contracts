@@ -127,7 +127,10 @@ library BlobsLib {
     }
 
     function mockKZGPrecompile(bytes memory input) internal pure returns (bool ok, bytes memory out) {
-        return (true, hex"cafedecaca");
+        return (
+            true,
+            hex"cafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedecacacafedeca"
+        );
     }
 
     /**
