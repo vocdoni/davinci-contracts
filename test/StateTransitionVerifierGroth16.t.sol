@@ -25,11 +25,12 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_OK() public view {
-        uint256[9] memory input = [
+        uint256[10] memory input = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER,
             NUM_NEW_VOTES,
             NUM_OVERWRITES,
+            CENSUS_ROOT,
             BLOB_EVALUATION_POINT_Z,
             BLOB_EVALUATION_POINT_Y_L1,
             BLOB_EVALUATION_POINT_Y_L2,
@@ -47,11 +48,12 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(
             stateTransitionZKProof
         );
-        uint256[9] memory inputBad = [
+        uint256[10] memory inputBad = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER_BAD,
             NUM_NEW_VOTES,
             NUM_OVERWRITES,
+            CENSUS_ROOT,
             BLOB_EVALUATION_POINT_Z,
             BLOB_EVALUATION_POINT_Y_L1,
             BLOB_EVALUATION_POINT_Y_L2,
@@ -91,8 +93,8 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         }
     }
 
-    function test_Decode_Inputs() public pure {
-        (uint256[9] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
+    function test_Decode_Inputs() public view {
+        (uint256[10] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
             stateTransitionInputs()
         );
         if (
@@ -100,11 +102,12 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             inputs[1] != ROOT_HASH_AFTER ||
             inputs[2] != NUM_NEW_VOTES ||
             inputs[3] != NUM_OVERWRITES ||
-            inputs[4] != BLOB_EVALUATION_POINT_Z ||
-            inputs[5] != BLOB_EVALUATION_POINT_Y_L1 ||
-            inputs[6] != BLOB_EVALUATION_POINT_Y_L2 ||
-            inputs[7] != BLOB_EVALUATION_POINT_Y_L3 ||
-            inputs[8] != BLOB_EVALUATION_POINT_Y_L4 ||
+            inputs[4] != CENSUS_ROOT ||
+            inputs[5] != BLOB_EVALUATION_POINT_Z ||
+            inputs[6] != BLOB_EVALUATION_POINT_Y_L1 ||
+            inputs[7] != BLOB_EVALUATION_POINT_Y_L2 ||
+            inputs[8] != BLOB_EVALUATION_POINT_Y_L3 ||
+            inputs[9] != BLOB_EVALUATION_POINT_Y_L4 ||
             keccak256(blobCommitment) != keccak256(BLOB_COMMITMENT) ||
             keccak256(blobProof) != keccak256(BLOB_PROOF)
         ) {

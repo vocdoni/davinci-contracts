@@ -230,9 +230,9 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+        (uint256[10] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
             input,
-            (uint256[9], bytes, bytes)
+            (uint256[10], bytes, bytes)
         );
 
         if (decompressedInput[0] != p.latestStateRoot) {
@@ -244,12 +244,12 @@ contract ProcessRegistry is IProcessRegistry {
 
             _verifyBlobDataIsAvailable(versionedHash);
 
-            bytes32 z = bytes32(decompressedInput[4]);
+            bytes32 z = bytes32(decompressedInput[5]);
             bytes32 y = BlobsLib.packYFromLELimbs(
-                decompressedInput[5],
                 decompressedInput[6],
                 decompressedInput[7],
-                decompressedInput[8]
+                decompressedInput[8],
+                decompressedInput[9]
             );
             bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
 

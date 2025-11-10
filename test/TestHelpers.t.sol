@@ -9,7 +9,8 @@ abstract contract TestHelpers {
     uint256 public constant ROOT_HASH_AFTER_BAD =
         4033651216511111400175039953981700650715262298138585644694383935611028748527;
     uint256 public constant NUM_NEW_VOTES = 5;
-    uint256 public constant NUM_OVERWRITES = 5;
+    uint256 public constant NUM_OVERWRITES = 0;
+    uint256 public constant CENSUS_ROOT = 5635465933697407994856253033999012801458042285248466599268679150980884016331;
     uint256 public constant BLOB_EVALUATION_POINT_Z =
         599167127392922207579004858769981027405123358559235195094224755125660299289;
     uint256 public constant BLOB_EVALUATION_POINT_Y_L1 = 13638905466418695812;
@@ -41,12 +42,12 @@ abstract contract TestHelpers {
 
     function decodeStateTransitionInputs(
         bytes memory _encodedInputs
-    ) internal pure returns (uint256[9] memory, bytes memory, bytes memory) {
-        return abi.decode(_encodedInputs, (uint256[9], bytes, bytes));
+    ) internal pure returns (uint256[10] memory, bytes memory, bytes memory) {
+        return abi.decode(_encodedInputs, (uint256[10], bytes, bytes));
     }
 
     function encodeStateTransitionInputs(
-        uint256[9] memory inputs,
+        uint256[10] memory inputs,
         bytes memory blobCommitment,
         bytes memory blobProof
     ) public pure returns (bytes memory) {
@@ -61,6 +62,7 @@ abstract contract TestHelpers {
                     ROOT_HASH_AFTER,
                     NUM_NEW_VOTES,
                     NUM_OVERWRITES,
+                    CENSUS_ROOT,
                     BLOB_EVALUATION_POINT_Z,
                     BLOB_EVALUATION_POINT_Y_L1,
                     BLOB_EVALUATION_POINT_Y_L2,
