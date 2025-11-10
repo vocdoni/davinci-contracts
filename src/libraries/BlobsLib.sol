@@ -125,22 +125,25 @@ library BlobsLib {
         return (true, hex"cafedecaca");
     }
 
-    function mockVerifyKZG(bytes memory input) internal view returns (bool success) {
-        if (input.length != KZG_INPUT_LENGTH) return false; // 192 bytes
+    /**
+     * @notice Verify a ZK proof.
+     * @notice There is no return value. If the function does not revert, the proof was successfully verified.
+     */
+    function mockVerifyKZG(bytes memory input) internal view {
+        if (input.length != KZG_INPUT_LENGTH) revert BlobVerificationInvalidInputLength(input.length, KZG_INPUT_LENGTH);
 
         (bool ok, bytes memory out) = mockKZGPrecompile(input);
+        if (!ok) revert BlobVerificationPrecompileFailed();
+        if (out.length != KZG_OUTPUT_LENGTH) revert BlobVerificationInvalidOutputLength(out.length, KZG_OUTPUT_LENGTH);
 
         // call did not revert and returned the canonical 64‑byte payload
-        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false;
 
         uint256 resultValue;
         assembly {
             resultValue := mload(add(out, 0x20))
         }
         // the first 32 bytes of the output should be FIELD_ELEMENTS_PER_BLOB
-        if (resultValue != FIELD_ELEMENTS_PER_BLOB) return false;
-
-        return true;
+        if (resultValue != FIELD_ELEMENTS_PER_BLOB) revert InvalidFieldElement(resultValue, FIELD_ELEMENTS_PER_BLOB);
     }
 
     /*//////////////////////////////////////////////////////////////

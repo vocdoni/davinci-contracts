@@ -162,6 +162,10 @@ interface IProcessRegistry {
      * @notice Thrown when the Blob verification fails.
      */
     error BlobVerificationFailed();
+    error BlobVerificationInvalidInputLength(uint256 got, uint256 expected);
+    error BlobVerificationPrecompileFailed();
+    error BlobVerificationInvalidOutputLength(uint256 got, uint256 expected);
+    error BlobVerificationInvalidFieldElement(uint256 got, uint256 expected);
 
     // DEBUG
     error DebugBlobHash(bytes32 versioned, bytes32 expected);
