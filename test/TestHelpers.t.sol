@@ -44,7 +44,7 @@ abstract contract TestHelpers {
         return abi.encode(inputs, blobCommitment, blobProof);
     }
 
-    function stateTransitionInputs() internal pure returns (bytes memory) {
+    function stateTransitionInputs() internal view returns (bytes memory) {
         return
             encodeStateTransitionInputs(
                 [

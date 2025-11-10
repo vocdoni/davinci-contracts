@@ -9,7 +9,6 @@ import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";
-import { BlobsLib } from "../src/libraries/BlobsLib.sol";
 
 contract ProcessRegistryTest is Test, TestHelpers {
     ProcessRegistry public processRegistry;
@@ -50,7 +49,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         organizationRegistry = new OrganizationRegistry();
         stv = new StateTransitionVerifierGroth16();
         rv = new ResultsVerifierGroth16();
-        processRegistry = new ProcessRegistry(11155111, address(stv), address(rv), true); // TODO SET TRUE FOR BLOB TEST
+        processRegistry = new ProcessRegistry(11155111, address(stv), address(rv), false); // TODO SET TRUE FOR BLOB TEST
 
         createTestOrganization();
     }
@@ -894,16 +893,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(process.latestStateRoot, ROOT_HASH_BEFORE);
         assertEq(process.voteCount, 0);
         assertEq(process.voteOverwriteCount, 0);
-
-        // Calculate what the versioned hash should be
-        bytes32 expectedVersionedHash = BlobsLib.calcBlobHashV1(BLOB_COMMITMENT);
-
-        // Mock BlobsLib.blobHash(0) to return the expected hash
-        vm.mockCall(
-            address(BlobsLib), // This won't work directly since it's a library
-            abi.encodeWithSignature("blobHash(uint256)", 0),
-            abi.encode(expectedVersionedHash)
-        );
 
         // Submit state transition
         emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_AFTER);

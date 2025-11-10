@@ -5,7 +5,6 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
-import "forge-std/console.sol";
 
 /**
  * @title ProcessRegistry
@@ -14,8 +13,6 @@ import "forge-std/console.sol";
 contract ProcessRegistry is IProcessRegistry {
     using ProcessIdLib for bytes32;
     using BlobsLib for bytes;
-
-    event DebugStep(uint256 step);
 
     /**
      * @notice The maximum value of the census origin.
@@ -233,30 +230,19 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        emit DebugStep(1);
-        (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
-            input,
-            (uint256[9], bytes, bytes)
-        );
+        (
+            uint256[9] memory decompressedInput,
+            bytes memory blobCommitment,
+            bytes memory blobProof
+        ) = abi.decode(input, (uint256[9], bytes, bytes));
 
-        emit DebugStep(2);
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
 
-        emit DebugStep(3);
         if (blobsDA) {
-            emit DebugStep(4);
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
-            console.log("versionedHash:");
-            console.logBytes32(versionedHash);
-
-            // // Replace the revert line temporarily:
-            // if (versionedHash != BlobsLib.blobHash(0)) {
-            //     revert DebugBlobHash(versionedHash, BlobsLib.blobHash(0));
-            // }
-
-            // if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
+            if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
 
             bytes32 z = bytes32(decompressedInput[4]);
 
@@ -265,23 +251,21 @@ contract ProcessRegistry is IProcessRegistry {
                 uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
                 y = bytes32(
                     ((decompressedInput[5] & MASK) << 192) |
-                        ((decompressedInput[6] & MASK) << 128) |
-                        ((decompressedInput[7] & MASK) << 64) |
-                        (decompressedInput[8] & MASK)
+                    ((decompressedInput[6] & MASK) << 128) |
+                    ((decompressedInput[7] & MASK) << 64) |
+                    (decompressedInput[8] & MASK)
                 );
             }
 
-            console.log("z, y, blobCommitment, blobProof:");
-            console.logBytes32(z);
-            console.logBytes32(y);
-            console.logBytes(blobCommitment);
-            console.logBytes(blobProof);
+            bytes memory kzgInput = BlobsLib.buildKZGInput(
+                versionedHash,
+                z,
+                y,
+                blobCommitment,
+                blobProof
+            );
 
-            bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
-            console.logBytes(kzgInput);
-
-            // if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
-            BlobsLib.mockVerifyKZG(kzgInput);
+            if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
         }
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
@@ -300,15 +284,15 @@ contract ProcessRegistry is IProcessRegistry {
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-
+        
         // Cannot set results on CANCELLED or RESULTS processes
         if (p.status == ProcessStatus.CANCELED || p.status == ProcessStatus.RESULTS) revert InvalidStatus();
-
+        
         // Require that the process has ended, either by status or by time
         if (p.status != ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
-
+        
         // Store the old status for the event
         ProcessStatus oldStatus = p.status;
 
