@@ -37,7 +37,7 @@ abstract contract TestHelpers {
     }
 
     function encodeStateTransitionInputs(
-        uint256[8] memory inputs,
+        uint256[9] memory inputs,
         bytes memory blobCommitment,
         bytes memory blobProof
     ) public pure returns (bytes memory) {
@@ -55,7 +55,7 @@ abstract contract TestHelpers {
                     BLOB_EVALUATION_POINT_Z,
                     BLOB_EVALUATION_POINT_Y_L1,
                     BLOB_EVALUATION_POINT_Y_L2,
-                    // BLOB_EVALUATION_POINT_Y_L3,
+                    BLOB_EVALUATION_POINT_Y_L3,
                     BLOB_EVALUATION_POINT_Y_L4
                 ],
                 BLOB_COMMITMENT,
