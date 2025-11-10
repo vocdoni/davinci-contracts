@@ -5,6 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { TestHelpers } from "./TestHelpers.t.sol";
 import { stdError } from "forge-std/StdError.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
+import "forge-std/console.sol";
 
 contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     uint256[2] public AR = [
@@ -106,6 +107,41 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             _commitments[1] != commitments[1] ||
             _commitmentPok[0] != commitmentPok[0] ||
             _commitmentPok[1] != commitmentPok[1]
+        ) {
+            revert();
+        }
+    }
+
+    function test_Decode_Hardcoded_Input() public view {
+        (uint256[9] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
+            hex"017c2047b5b3775355debb8edda7d965154bb237c12f9243d4534202c62335bd2df50f4371e067a7b7feeed39a548155042b41664954ec9e3783f77b211377b700000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000034ff526fd1c7d7b621163d0df1b5c0bfab3f7b730ea4cd1b4378f73303f52bf00000000000000000000000000000000000000000000000093c64fa7a276c8c20000000000000000000000000000000000000000000000003b2d4177ec858e6a0000000000000000000000000000000000000000000000002d51e893c147190c00000000000000000000000000000000000000000000000031e9726cc73da86b000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000001c000000000000000000000000000000000000000000000000000000000000000308812392a4fd59e34d9a61f312bf59a07988794b9e5aaaacaa662912947841ee8e225d3a6d3b3feec85608305f8a6438e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030b927d8b4f1b80e7e7f5d70dfcb2797ca8ede0c5b27cc81c7c5c0bc60f040c581bf97f4b930d308820b2ad4ddfc9eb00b00000000000000000000000000000000"
+        );
+        // dump inputs[0..8]
+        unchecked {
+            for (uint256 i; i < inputs.length; ++i) {
+                console.log(string.concat("inputs[", vm.toString(i), "] = ", vm.toString(inputs[i])));
+            }
+        }
+
+        // dump commitment/proof (lengths + hex)
+        console.log(string.concat("blobCommitment.length = ", vm.toString(blobCommitment.length)));
+        console.logBytes(blobCommitment);
+
+        console.log(string.concat("blobProof.length = ", vm.toString(blobProof.length)));
+        console.logBytes(blobProof);
+
+        if (
+            inputs[0] != ROOT_HASH_BEFORE ||
+            inputs[1] != ROOT_HASH_AFTER ||
+            inputs[2] != NUM_NEW_VOTES ||
+            inputs[3] != NUM_OVERWRITES ||
+            inputs[4] != BLOB_EVALUATION_POINT_Z ||
+            inputs[5] != BLOB_EVALUATION_POINT_Y_L1 ||
+            inputs[6] != BLOB_EVALUATION_POINT_Y_L2 ||
+            inputs[7] != BLOB_EVALUATION_POINT_Y_L3 ||
+            inputs[8] != BLOB_EVALUATION_POINT_Y_L4 ||
+            keccak256(blobCommitment) != keccak256(BLOB_COMMITMENT) ||
+            keccak256(blobProof) != keccak256(BLOB_PROOF)
         ) {
             revert();
         }
