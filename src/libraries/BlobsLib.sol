@@ -121,9 +121,8 @@ library BlobsLib {
         return true;
     }
 
-    function mockKZGPrecompile(bytes memory input) internal view returns (bool ok, bytes memory out) {
-        return true, hex"cafedecaca";
-
+    function mockKZGPrecompile(bytes memory input) internal pure returns (bool ok, bytes memory out) {
+        return (true, hex"cafedecaca");
     }
 
     function mockVerifyKZG(bytes memory input) internal view returns (bool success) {
