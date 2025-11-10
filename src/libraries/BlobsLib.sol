@@ -23,6 +23,11 @@ library BlobsLib {
         bytes proof;
     }
 
+    error BlobVerificationInvalidInputLength(uint256 got, uint256 expected);
+    error BlobVerificationPrecompileFailed();
+    error BlobVerificationInvalidOutputLength(uint256 got, uint256 expected);
+    error BlobVerificationInvalidFieldElement(uint256 got, uint256 expected);
+
     /*//////////////////////////////////////////////////////////////
                                 CONSTANTS
     //////////////////////////////////////////////////////////////*/
