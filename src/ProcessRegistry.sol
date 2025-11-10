@@ -15,6 +15,8 @@ contract ProcessRegistry is IProcessRegistry {
     using ProcessIdLib for bytes32;
     using BlobsLib for bytes;
 
+    event DebugStep(uint256 step);
+
     /**
      * @notice The maximum value of the census origin.
      */
@@ -231,16 +233,20 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
+        emit DebugStep(1);
         (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
             input,
             (uint256[9], bytes, bytes)
         );
 
+        emit DebugStep(2);
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
 
+        emit DebugStep(3);
         if (blobsDA) {
+            emit DebugStep(4);
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
             console.log("versionedHash:");
             console.logBytes32(versionedHash);
