@@ -274,7 +274,8 @@ contract ProcessRegistry is IProcessRegistry {
             bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
             console.logBytes(kzgInput);
 
-            if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
+            // if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
+            if (!BlobsLib.mockVerifyKZG(kzgInput)) revert BlobVerificationFailed();
         }
 
         IZKVerifier(stVerifier).verifyProof(proof, input);

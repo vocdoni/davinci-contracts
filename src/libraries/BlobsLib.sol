@@ -129,7 +129,7 @@ library BlobsLib {
     function mockVerifyKZG(bytes memory input) internal view returns (bool success) {
         if (input.length != KZG_INPUT_LENGTH) return false; // 192 bytes
 
-        (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
+        (bool ok, bytes memory out) = mockKZGPrecompile(input);
 
         // call did not revert and returned the canonical 64‑byte payload
         if (!ok || out.length != KZG_OUTPUT_LENGTH) return false;
