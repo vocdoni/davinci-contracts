@@ -161,6 +161,7 @@ export interface ProcessRegistryInterface extends Interface {
   getEvent(
     nameOrSignatureOrTopic:
       | "CensusUpdated"
+      | "DebugStep"
       | "ProcessCreated"
       | "ProcessDurationChanged"
       | "ProcessResultsSet"
@@ -332,6 +333,18 @@ export namespace CensusUpdatedEvent {
     censusRoot: string;
     censusURI: string;
     maxVotes: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DebugStepEvent {
+  export type InputTuple = [step: BigNumberish];
+  export type OutputTuple = [step: bigint];
+  export interface OutputObject {
+    step: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -747,6 +760,13 @@ export interface ProcessRegistry extends BaseContract {
     CensusUpdatedEvent.OutputObject
   >;
   getEvent(
+    key: "DebugStep"
+  ): TypedContractEvent<
+    DebugStepEvent.InputTuple,
+    DebugStepEvent.OutputTuple,
+    DebugStepEvent.OutputObject
+  >;
+  getEvent(
     key: "ProcessCreated"
   ): TypedContractEvent<
     ProcessCreatedEvent.InputTuple,
@@ -792,6 +812,17 @@ export interface ProcessRegistry extends BaseContract {
       CensusUpdatedEvent.InputTuple,
       CensusUpdatedEvent.OutputTuple,
       CensusUpdatedEvent.OutputObject
+    >;
+
+    "DebugStep(uint256)": TypedContractEvent<
+      DebugStepEvent.InputTuple,
+      DebugStepEvent.OutputTuple,
+      DebugStepEvent.OutputObject
+    >;
+    DebugStep: TypedContractEvent<
+      DebugStepEvent.InputTuple,
+      DebugStepEvent.OutputTuple,
+      DebugStepEvent.OutputObject
     >;
 
     "ProcessCreated(bytes32,address)": TypedContractEvent<
