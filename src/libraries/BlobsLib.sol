@@ -47,8 +47,7 @@ library BlobsLib {
     uint256 private constant FIELD_ELEMENTS_PER_BLOB = 4096;
 
     /// @dev Mask to keep the lower 31 bytes, clearing the MSB
-    uint256 private constant MASK_LOW_31_BYTES =
-        0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256 private constant MASK_LOW_31_BYTES = 0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     /*//////////////////////////////////////////////////////////////
                             BLOB OPERATIONS
@@ -91,7 +90,6 @@ library BlobsLib {
     /*//////////////////////////////////////////////////////////////
                             KZG OPERATIONS
     //////////////////////////////////////////////////////////////*/
-
 
     /// @notice Verifies a KZG point‑evaluation proof through the
     ///         EIP‑4844 precompile at address 0x0A.
@@ -201,7 +199,6 @@ library BlobsLib {
             vh = bytes32(v);
         }
     }
-
 
     /// @notice Builds the input for the KZG precompile
     /// @param versionedHash  32 bytes (0x01‖sha256(commitment))

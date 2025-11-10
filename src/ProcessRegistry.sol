@@ -231,11 +231,10 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        (
-            uint256[9] memory decompressedInput,
-            bytes memory blobCommitment,
-            bytes memory blobProof
-        ) = abi.decode(input, (uint256[9], bytes, bytes));
+        (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+            input,
+            (uint256[9], bytes, bytes)
+        );
 
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
@@ -294,15 +293,15 @@ contract ProcessRegistry is IProcessRegistry {
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        
+
         // Cannot set results on CANCELLED or RESULTS processes
         if (p.status == ProcessStatus.CANCELED || p.status == ProcessStatus.RESULTS) revert InvalidStatus();
-        
+
         // Require that the process has ended, either by status or by time
         if (p.status != ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
-        
+
         // Store the old status for the event
         ProcessStatus oldStatus = p.status;
 
