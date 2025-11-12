@@ -156,7 +156,6 @@ ProcessRegistry.BallotMode memory ballotMode = ProcessRegistry.BallotMode({
 
 ProcessRegistry.Census memory census = ProcessRegistry.Census({
     censusOrigin: ProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-    maxVotes: 1000,
     censusRoot: bytes32(0xabc...),
     censusURI: "ipfs://census-data"
 });

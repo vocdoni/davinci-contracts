@@ -17,7 +17,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The maximum value of the census origin.
      */
-    uint8 public constant MAX_CENSUS_ORIGIN = 9;
+    uint8 public constant MAX_CENSUS_ORIGIN = 2;
     /**
      * @notice The maximum value of the process status.
      */
@@ -179,7 +179,6 @@ contract ProcessRegistry is IProcessRegistry {
 
         // check census
         if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
-        if (p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
@@ -187,11 +186,10 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        p.census.maxVotes = census.maxVotes;
         p.census.censusRoot = census.censusRoot;
         p.census.censusURI = census.censusURI;
 
-        emit CensusUpdated(processId, census.censusRoot, census.censusURI, census.maxVotes);
+        emit CensusUpdated(processId, census.censusRoot, census.censusURI);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -326,9 +324,16 @@ contract ProcessRegistry is IProcessRegistry {
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
-        if (census.maxVotes == 0) revert InvalidMaxVotes();
+
+        // Census origin with initial census root:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Root
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Root (could change via tx)
+        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Census manage contract address (should be queried once)
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Census manage contract address (should be queried on each transition)
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+        if (bytes(census.censusURI).length == 0 && census.censusOrigin != CensusOrigin.CSP_EDDSA_BN254_V1)
+            revert InvalidCensusURI();
 
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))

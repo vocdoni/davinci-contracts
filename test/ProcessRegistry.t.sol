@@ -88,12 +88,12 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function createTestProcess(
         IProcessRegistry.BallotMode memory ballotMode,
-        uint256 initStateRoot
+        uint256 initStateRoot,
+        IProcessRegistry.CensusOrigin censusOrigin
     ) internal returns (bytes32) {
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
-            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusOrigin: censusOrigin,
+            censusRoot: bytes32(TestHelpers.CENSUS_ROOT),
             censusURI: "https://example.com/census"
         });
 
@@ -146,7 +146,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_NotAdmin() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         vm.prank(address(0xdead));
         vm.expectRevert(IProcessRegistry.Unauthorized.selector);
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -154,13 +158,21 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_SameStatus() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.READY);
     }
 
     function test_SetProcessStatus_FromReady() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         // READY -> PAUSED (valid)
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
         assertEq(uint(processRegistry.getProcess(processId).status), uint(IProcessRegistry.ProcessStatus.PAUSED));
@@ -173,14 +185,22 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(uint(processRegistry.getProcess(processId).status), uint(IProcessRegistry.ProcessStatus.CANCELED));
 
         // Reset process for next test
-        processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // READY -> ENDED (valid)
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
         assertEq(uint(processRegistry.getProcess(processId).status), uint(IProcessRegistry.ProcessStatus.ENDED));
 
         // Reset process for next test
-        processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // READY -> RESULTS (invalid)
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -188,7 +208,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromPaused() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set initial state to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
@@ -205,7 +229,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(uint(processRegistry.getProcess(processId).status), uint(IProcessRegistry.ProcessStatus.CANCELED));
 
         // Reset process for next test
-        processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
 
         // PAUSED -> ENDED (valid)
@@ -213,7 +241,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(uint(processRegistry.getProcess(processId).status), uint(IProcessRegistry.ProcessStatus.ENDED));
 
         // Reset process for next test
-        processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
 
         // PAUSED -> RESULTS (invalid)
@@ -222,7 +254,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromEnded() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set initial state to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -231,7 +267,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.RESULTS);
 
         // Reset process for next test
-        processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         vm.warp(block.timestamp + 1001);
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
 
@@ -240,7 +280,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
 
         // Reset process for next test
-        processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
 
         // ENDED -> READY (invalid)
@@ -253,7 +297,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromCanceled() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set initial state to CANCELED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
@@ -273,7 +321,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromResults() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set initial state to RESULTS
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -293,7 +345,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_Events() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         emit IProcessRegistry.ProcessStatusChanged(
             processId,
@@ -320,8 +376,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_FromReady() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -363,8 +418,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_FromPaused() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -403,8 +457,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_EventEmitted() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -443,7 +496,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessStatus_EndedAfterStart_NormalDuration() public {
         // Create a process that starts immediately
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Warp time forward 500 seconds (half the duration)
         vm.warp(block.timestamp + 500);
@@ -460,8 +517,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedExactlyAtStartTime() public {
         // Create a process with start time equal to current time
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -493,8 +549,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_GetProcessEndTime_WhenEndedBeforeStart() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -528,8 +583,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_MultipleTimes() public {
         // Create process 1 - ended immediately
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -584,11 +638,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== Process Census Tests ==========
 
     function test_SetProcessCensus_Success() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000, // Increased from initial 1000
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -596,15 +653,13 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessCensus(processId, newCensus);
 
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
-        assertEq(process.census.maxVotes, newCensus.maxVotes);
         assertEq(process.census.censusRoot, newCensus.censusRoot);
         assertEq(process.census.censusURI, newCensus.censusURI);
     }
 
     function test_SetProcessCensus_NonExistentProcess() public {
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -614,11 +669,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_NotAdmin() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -630,11 +688,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_InvalidCensus_EmptyURI() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: ""
         });
@@ -644,11 +705,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_InvalidCensus_ZeroCensusRoot() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0,
             censusURI: "https://example.com/new-census"
         });
@@ -657,29 +721,18 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessCensus(processId, newCensus);
     }
 
-    function test_SetProcessCensus_InvalidCensus_DecreaseMaxVotes() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
-
-        IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 500, // Less than initial 1000
-            censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
-        });
-
-        vm.expectRevert(IProcessRegistry.InvalidMaxVotes.selector);
-        processRegistry.setProcessCensus(processId, newCensus);
-    }
-
     function test_SetProcessCensus_InvalidStatus_Canceled() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to CANCELED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -689,14 +742,17 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_ValidStatus_Paused() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 2000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -705,7 +761,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessCensus(processId, newCensus);
 
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
-        assertEq(process.census.maxVotes, newCensus.maxVotes);
         assertEq(process.census.censusRoot, newCensus.censusRoot);
         assertEq(process.census.censusURI, newCensus.censusURI);
     }
@@ -724,7 +779,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
             maxValueSum: 100,
             minValueSum: 50
         });
-        bytes32 processId1 = createTestProcess(validBallotMode1, stInitStateRoot);
+        bytes32 processId1 = createTestProcess(
+            validBallotMode1,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         assertTrue(processId1 != bytes32(0));
 
         // Test case 2: Valid ballot with costFromWeight true
@@ -738,7 +797,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
             maxValueSum: 0, // This is valid when costFromWeight is true
             minValueSum: 0
         });
-        bytes32 processId2 = createTestProcess(validBallotMode2, stInitStateRoot);
+        bytes32 processId2 = createTestProcess(
+            validBallotMode2,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         assertTrue(processId2 != bytes32(0));
 
         // Test case 3: Edge case - maxValue equals minValue
@@ -752,7 +815,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
             maxValueSum: 50,
             minValueSum: 50
         });
-        bytes32 processId3 = createTestProcess(validBallotMode3, stInitStateRoot);
+        bytes32 processId3 = createTestProcess(
+            validBallotMode3,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         assertTrue(processId3 != bytes32(0));
     }
 
@@ -769,8 +836,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         });
 
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -806,8 +872,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         });
 
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -833,7 +898,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== Process Duration Tests ==========
 
     function test_SetProcessDuration_Success() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         uint256 newDuration = 2000000;
 
         emit IProcessRegistry.ProcessDurationChanged(processId, newDuration);
@@ -849,7 +918,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_NotAdmin() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         vm.prank(address(0xdead));
         vm.expectRevert(IProcessRegistry.Unauthorized.selector);
@@ -858,7 +931,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_InvalidStatus_Canceled() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to CANCELED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
@@ -868,7 +945,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_ValidStatus_Paused() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         uint256 newDuration = 2000000;
 
         // Set process to PAUSED
@@ -882,14 +963,22 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_InvalidDuration_Zero() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         vm.expectRevert(IProcessRegistry.InvalidDuration.selector);
         processRegistry.setProcessDuration(processId, 0);
     }
 
     function test_SetProcessDuration_InvalidDuration_PastEndTime() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Try to set a duration that would make the process end in the past
         uint256 invalidDuration = 1; // Very short duration that will definitely be in the past
@@ -899,7 +988,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_MaxDuration() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         uint256 maxDuration = type(uint256).max - block.timestamp;
 
         emit IProcessRegistry.ProcessDurationChanged(processId, maxDuration);
@@ -912,7 +1005,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== State Transition Tests ==========
 
     function test_SubmitStateTransition_Success() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, ROOT_HASH_BEFORE);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            ROOT_HASH_BEFORE,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
 
         // Verify initial state
@@ -925,7 +1022,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         vm.mockCall(KZG_PRECOMPILE, "", abi.encode(FIELD_ELEMENTS_PER_BLOB, BLS_MODULUS));
 
         // Submit state transition
-        emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_AFTER);
+        emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_BEFORE);
         processRegistry.submitStateTransition(processId, stateTransitionZKProof, stateTransitionInputs());
 
         // Verify state after transition
@@ -941,7 +1038,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Paused() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
@@ -951,7 +1052,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Ended() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -961,7 +1066,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Canceled() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to CANCELED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
@@ -971,7 +1080,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Results() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED then RESULTS
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -982,7 +1095,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_ProofInvalid() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, ROOT_HASH_BEFORE);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            ROOT_HASH_BEFORE,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
 
@@ -991,7 +1108,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidTimeBounds() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Fast forward time beyond process duration
         vm.warp(block.timestamp + 1000001);
@@ -1003,7 +1124,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== Process Results Tests ==========
 
     function test_SetProcessResults_Success() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1038,7 +1163,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_NotEndedStatus() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Try to set results when process is in READY state (time not expired)
         // Should fail with InvalidTimeBounds because time check happens after status check
@@ -1058,7 +1187,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ProcessNotEndedByTime() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1076,7 +1209,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_InvalidStateRoot() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot); // Using different state root
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        ); // Using different state root
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1090,7 +1227,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_CannotSetTwice() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1107,7 +1248,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_InvalidProof() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1122,7 +1267,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_InvalidInput() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1137,7 +1286,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_EmptyResults() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1161,7 +1314,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeExpired_ReadyStatus() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Process is in READY status, fast forward time beyond duration
         vm.warp(block.timestamp + 1001);
@@ -1179,7 +1336,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeExpired_PausedStatus() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
@@ -1197,7 +1358,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeNotExpired_ReadyStatus() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Process is in READY status and time has NOT expired
         // Should fail because neither ENDED status nor time expired
@@ -1206,7 +1371,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeNotExpired_PausedStatus() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
@@ -1218,7 +1387,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ExactlyAtExpiration() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Get process to check start time and duration
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
@@ -1236,7 +1409,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OneSecondBeforeExpiration() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Get process to check start time and duration
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
@@ -1251,7 +1428,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OneSecondAfterExpiration() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Get process to check start time and duration
         IProcessRegistry.Process memory process = processRegistry.getProcess(processId);
@@ -1269,7 +1450,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ByNonAdmin() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1286,7 +1471,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_EventsEmitted() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1312,7 +1501,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OldStatusCaptured_FromReady() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Fast forward time to expiration
         vm.warp(block.timestamp + 1001);
@@ -1329,7 +1522,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OldStatusCaptured_FromPaused() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
@@ -1351,8 +1548,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessResults_ShortDurationProcess() public {
         // Create a process with very short duration (1 second)
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.OFF_CHAIN_TREE,
-            maxVotes: 1000,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
         });
@@ -1386,7 +1582,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessResults_SingleResultValue() public {
         // The rei constant already has valid proof for 8 results, but we're testing decode behavior
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1401,7 +1601,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_VerifyStateRootMatch() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1419,7 +1623,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ResultsArrayLengthCorrect() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1434,11 +1642,19 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessResults_MultipleProcessesSameOrganization() public {
         // Create first process
-        bytes32 processId1 = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId1 = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         processRegistry.setProcessStatus(processId1, IProcessRegistry.ProcessStatus.ENDED);
 
         // Create second process with different state root
-        bytes32 processId2 = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId2 = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         processRegistry.setProcessStatus(processId2, IProcessRegistry.ProcessStatus.ENDED);
 
         // Set results for first process
@@ -1454,7 +1670,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ProcessCountersUnaffected() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Get initial counters
         IProcessRegistry.Process memory processBefore = processRegistry.getProcess(processId);
@@ -1476,7 +1696,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ResultsMatchInput() public {
-        bytes32 processId = createTestProcess(defaultBallotMode, rInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            rInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Set process to ENDED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.ENDED);
@@ -1499,7 +1723,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         uint64 currentNonce = processRegistry.processNonce(orgId);
         assertEq(currentNonce, uint64(0));
         // Create a new process
-        bytes32 processId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
 
         // Verify that the next process ID matches the created process ID
         assertEq(nextProcessId, processId);
@@ -1508,8 +1736,72 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         // Create another process
         bytes32 otherNextProcessId = processRegistry.getNextProcessId(orgId);
-        bytes32 otherProcessId = createTestProcess(defaultBallotMode, stInitStateRoot);
+        bytes32 otherProcessId = createTestProcess(
+            defaultBallotMode,
+            stInitStateRoot,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
         assertEq(otherNextProcessId, otherProcessId);
+        vm.stopPrank();
+    }
+
+    function test_newProcess_CensusOrigin() public {
+        // Create a process with very short duration (1 second)
+        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusRoot: 0x0,
+            censusURI: "https://example.com/census"
+        });
+        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
+        processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp, // current time
+            1000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+        cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
+            censusRoot: 0x0,
+            censusURI: "https://example.com/census"
+        });
+
+        vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
+        processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp, // current time
+            1000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
+
+        cen = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
+            censusRoot: bytes32(TestHelpers.CENSUS_ROOT),
+            censusURI: "https://example.com/census"
+        });
+
+        processRegistry.newProcess(
+            IProcessRegistry.ProcessStatus.READY,
+            block.timestamp, // current time
+            1000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key,
+            stInitStateRoot
+        );
         vm.stopPrank();
     }
 }

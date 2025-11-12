@@ -20,9 +20,8 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @param censusRoot The new root of the census.
      * @param censusURI The URI of the census.
-     * @param maxVotes The maximum number of votes.
      */
-    event CensusUpdated(bytes32 indexed processId, bytes32 censusRoot, string censusURI, uint256 maxVotes);
+    event CensusUpdated(bytes32 indexed processId, bytes32 censusRoot, string censusURI);
     /*
      * @notice Emitted when the duration of a process is modified.
      * @param processId The ID of the process.
@@ -94,10 +93,6 @@ interface IProcessRegistry {
      * @notice InvalidMaxMinValueBounds error is emitted when the maximum and minimum value bounds are invalid.
      */
     error InvalidMaxMinValueBounds();
-    /**
-     * @notice InvalidMaxVotes error is emitted when the maximum number of votes is invalid.
-     */
-    error InvalidMaxVotes();
     /**
      * @notice InvalidUniqueValues error is emitted when the unique values are invalid.
      */
@@ -173,15 +168,8 @@ interface IProcessRegistry {
      */
     enum CensusOrigin {
         CENSUS_UNKNOWN,
-        OFF_CHAIN_TREE,
-        OFF_CHAIN_TREE_WEIGHTED,
-        OFF_CHAIN_CA,
-        ERC20,
-        ERC721,
-        ERC1155,
-        ERC777,
-        MINI_ME,
-        FARCASTER_FRAME
+        MERKLE_TREE_OFFCHAIN_STATIC_V1,
+        CSP_EDDSA_BN254_V1
     }
 
     /// STRUCTS ///
@@ -211,13 +199,11 @@ interface IProcessRegistry {
     /**
      * @notice The census defines the parameters of the census.
      * @param censusOrigin The origin of the census.
-     * @param maxVotes The maximum number of votes.
      * @param censusRoot The root of the census.
      * @param censusURI The URI of the census.
      */
     struct Census {
         CensusOrigin censusOrigin;
-        uint256 maxVotes;
         bytes32 censusRoot;
         string censusURI;
     }
