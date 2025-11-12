@@ -66,11 +66,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InvalidMaxVotes",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "InvalidMinTotalCost",
     type: "error",
   },
@@ -164,12 +159,6 @@ const _abi = [
         internalType: "string",
         name: "censusURI",
         type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "maxVotes",
-        type: "uint256",
       },
     ],
     name: "CensusUpdated",
@@ -446,11 +435,6 @@ const _abi = [
                 type: "uint8",
               },
               {
-                internalType: "uint256",
-                name: "maxVotes",
-                type: "uint256",
-              },
-              {
                 internalType: "bytes32",
                 name: "censusRoot",
                 type: "bytes32",
@@ -591,11 +575,6 @@ const _abi = [
             type: "uint8",
           },
           {
-            internalType: "uint256",
-            name: "maxVotes",
-            type: "uint256",
-          },
-          {
             internalType: "bytes32",
             name: "censusRoot",
             type: "bytes32",
@@ -662,11 +641,6 @@ const _abi = [
             internalType: "enum IProcessRegistry.CensusOrigin",
             name: "censusOrigin",
             type: "uint8",
-          },
-          {
-            internalType: "uint256",
-            name: "maxVotes",
-            type: "uint256",
           },
           {
             internalType: "bytes32",
