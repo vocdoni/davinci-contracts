@@ -246,28 +246,6 @@ contract ProcessRegistry is IProcessRegistry {
         emit DebugStep(3);
         if (blobsDA) {
             emit DebugStep(4);
-            bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
-            emit DebugStep(5);
-            if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
-            emit DebugStep(6);
-            bytes32 z = bytes32(decompressedInput[4]);
-            emit DebugStep(7);
-
-            bytes32 y;
-            unchecked {
-                uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
-                y = bytes32(
-                    ((decompressedInput[5] & MASK) << 192) |
-                        ((decompressedInput[6] & MASK) << 128) |
-                        ((decompressedInput[7] & MASK) << 64) |
-                        (decompressedInput[8] & MASK)
-                );
-            }
-            emit DebugStep(8);
-            bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
-            emit DebugStep(9);
-            if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
-            emit DebugStep(10);
         }
         emit DebugStep(11);
         IZKVerifier(stVerifier).verifyProof(proof, input);
