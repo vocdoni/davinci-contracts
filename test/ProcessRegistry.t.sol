@@ -1745,63 +1745,88 @@ contract ProcessRegistryTest is Test, TestHelpers {
         vm.stopPrank();
     }
 
+    struct CensusOriginTestCase {
+        IProcessRegistry.CensusOrigin censusOrigin;
+        bytes32 censusRoot;
+        string censusURI;
+        bytes4 revertData;
+    }
+
     function test_newProcess_CensusOrigin() public {
-        // Create a process with very short duration (1 second)
-        IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+        // 6 test cases
+        CensusOriginTestCase[] memory testCases = new CensusOriginTestCase[](6);
+
+        testCases[0] = CensusOriginTestCase({
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
-            censusRoot: 0x0,
-            censusURI: "https://example.com/census"
-        });
-        IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
-            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
-            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+            censusRoot: bytes32(0),
+            censusURI: "https://example.com/census",
+            revertData: IProcessRegistry.InvalidCensusRoot.selector
         });
 
-        vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
-        processRegistry.newProcess(
-            IProcessRegistry.ProcessStatus.READY,
-            block.timestamp, // current time
-            1000,
-            defaultBallotMode,
-            cen,
-            "https://example.com/metadata/",
-            key,
-            stInitStateRoot
-        );
-        cen = IProcessRegistry.Census({
+        testCases[1] = CensusOriginTestCase({
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusRoot: bytes32(TestHelpers.CENSUS_ROOT),
+            censusURI: "",
+            revertData: IProcessRegistry.InvalidCensusURI.selector
+        });
+
+        testCases[2] = CensusOriginTestCase({
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusRoot: bytes32(TestHelpers.CENSUS_ROOT),
+            censusURI: "https://example.com/census",
+            revertData: bytes4(0)
+        });
+
+        testCases[3] = CensusOriginTestCase({
             censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
-            censusRoot: 0x0,
-            censusURI: "https://example.com/census"
+            censusRoot: bytes32(0),
+            censusURI: "https://example.com/census",
+            revertData: IProcessRegistry.InvalidCensusRoot.selector
         });
 
-        vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
-        processRegistry.newProcess(
-            IProcessRegistry.ProcessStatus.READY,
-            block.timestamp, // current time
-            1000,
-            defaultBallotMode,
-            cen,
-            "https://example.com/metadata/",
-            key,
-            stInitStateRoot
-        );
-
-        cen = IProcessRegistry.Census({
+        testCases[4] = CensusOriginTestCase({
             censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
             censusRoot: bytes32(TestHelpers.CENSUS_ROOT),
-            censusURI: "https://example.com/census"
+            censusURI: "",
+            revertData: IProcessRegistry.InvalidCensusURI.selector
         });
 
-        processRegistry.newProcess(
-            IProcessRegistry.ProcessStatus.READY,
-            block.timestamp, // current time
-            1000,
-            defaultBallotMode,
-            cen,
-            "https://example.com/metadata/",
-            key,
-            stInitStateRoot
-        );
-        vm.stopPrank();
+        testCases[5] = CensusOriginTestCase({
+            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
+            censusRoot: bytes32(TestHelpers.CENSUS_ROOT),
+            censusURI: "https://example.com/census",
+            revertData: bytes4(0)
+        });
+
+        // Iterate over test cases
+        for (uint256 i = 0; i < testCases.length; i++) {
+            CensusOriginTestCase memory tc = testCases[i];
+
+            IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+                censusOrigin: tc.censusOrigin,
+                censusRoot: tc.censusRoot,
+                censusURI: tc.censusURI
+            });
+
+            IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
+                x: uint256(keccak256(abi.encodePacked(block.timestamp, "x", i))),
+                y: uint256(keccak256(abi.encodePacked(block.timestamp, "y", i)))
+            });
+
+            if (tc.revertData != bytes4(0)) {
+                vm.expectRevert(tc.revertData);
+            }
+
+            processRegistry.newProcess(
+                IProcessRegistry.ProcessStatus.READY,
+                block.timestamp,
+                1000,
+                defaultBallotMode,
+                cen,
+                "https://example.com/metadata/",
+                key,
+                stInitStateRoot
+            );
+        }
     }
 }

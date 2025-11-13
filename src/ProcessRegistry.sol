@@ -325,15 +325,20 @@ contract ProcessRegistry is IProcessRegistry {
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
 
-        // Census origin with initial census root:
-        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Root
-        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Root (could change via tx)
-        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey
-        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Census manage contract address (should be queried once)
-        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Census manage contract address (should be queried on each transition)
+        // Census root based on census origin:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Address of census manager contract (should be queried once, during process creation)
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (should be queried on each transition, during state transitions verification)
+        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey (fixed)
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        if (bytes(census.censusURI).length == 0 && census.censusOrigin != CensusOrigin.CSP_EDDSA_BN254_V1)
-            revert InvalidCensusURI();
+        // CensusURI based on census origin:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 ───┤
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
+        //  - CSP_EDDSA_BN254_V1 -> URL where the voters can generate their signatures
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
