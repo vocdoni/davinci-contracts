@@ -14,6 +14,13 @@ contract ProcessRegistry is IProcessRegistry {
     using ProcessIdLib for bytes32;
     using BlobsLib for bytes;
 
+    event DebugStep(uint256 step);
+    error DebugStop(uint256 step);
+    function _hit(uint256 step, uint256 stopAt) internal pure {
+        // stopAt == 1 means "no debug cutoff"
+        if (stopAt > 1 && step == stopAt) revert DebugStop(step);
+    }
+
     /**
      * @notice The maximum value of the census origin.
      */
@@ -230,45 +237,38 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        (
-            uint256[9] memory decompressedInput,
-            bytes memory blobCommitment,
-            bytes memory blobProof
-        ) = abi.decode(input, (uint256[9], bytes, bytes));
+        emit DebugStep(1);
+        (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+            input,
+            (uint256[9], bytes, bytes)
+        );
 
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
 
-        if (blobsDA) {
+        uint256 stopAt = decompressedInput[2]; // abuse voteCount to debug steps
+        if (blobsDA && stopAt != 11) {
+            _hit(2, stopAt);
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
+            _hit(3, stopAt);
             if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
-
+            _hit(4, stopAt);
             bytes32 z = bytes32(decompressedInput[4]);
-
-            bytes32 y;
-            unchecked {
-                uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
-                y = bytes32(
-                    ((decompressedInput[5] & MASK) << 192) |
-                    ((decompressedInput[6] & MASK) << 128) |
-                    ((decompressedInput[7] & MASK) << 64) |
-                    (decompressedInput[8] & MASK)
-                );
-            }
-
-            bytes memory kzgInput = BlobsLib.buildKZGInput(
-                versionedHash,
-                z,
-                y,
-                blobCommitment,
-                blobProof
+            _hit(5, stopAt);
+            bytes32 y = BlobsLib.packYFromLELimbs(
+                decompressedInput[5],
+                decompressedInput[6],
+                decompressedInput[7],
+                decompressedInput[8]
             );
-
+            bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
+            _hit(8, stopAt);
             if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
+            _hit(9, stopAt);
         }
-
         IZKVerifier(stVerifier).verifyProof(proof, input);
+        _hit(10, stopAt);
 
         p.latestStateRoot = decompressedInput[1];
         p.voteCount += decompressedInput[2];
@@ -284,15 +284,15 @@ contract ProcessRegistry is IProcessRegistry {
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        
+
         // Cannot set results on CANCELLED or RESULTS processes
         if (p.status == ProcessStatus.CANCELED || p.status == ProcessStatus.RESULTS) revert InvalidStatus();
-        
+
         // Require that the process has ended, either by status or by time
         if (p.status != ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
-        
+
         // Store the old status for the event
         ProcessStatus oldStatus = p.status;
 

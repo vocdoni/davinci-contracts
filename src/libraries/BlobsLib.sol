@@ -47,8 +47,7 @@ library BlobsLib {
     uint256 private constant FIELD_ELEMENTS_PER_BLOB = 4096;
 
     /// @dev Mask to keep the lower 31 bytes, clearing the MSB
-    uint256 private constant MASK_LOW_31_BYTES =
-        0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256 private constant MASK_LOW_31_BYTES = 0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     /*//////////////////////////////////////////////////////////////
                             BLOB OPERATIONS
@@ -92,7 +91,6 @@ library BlobsLib {
                             KZG OPERATIONS
     //////////////////////////////////////////////////////////////*/
 
-
     /// @notice Verifies a KZG point‑evaluation proof through the
     ///         EIP‑4844 precompile at address 0x0A.
     ///
@@ -111,7 +109,7 @@ library BlobsLib {
         (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
 
         // call did not revert and returned the canonical 64‑byte payload
-        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false; 
+        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false;
 
         uint256 resultValue;
         assembly {
@@ -178,7 +176,24 @@ library BlobsLib {
             vh = bytes32(v);
         }
     }
-
+    /// @notice Packs four little-endian 64-bit limbs into a single 32-byte field element.
+    /// @dev Each limb represents a consecutive 64-bit slice of a 256-bit value, where
+    ///      l0 is the least-significant word and l3 is the most-significant.
+    ///      The result is the big-endian `bytes32` encoding of that 256-bit integer,
+    ///      matching Solidity’s native numeric representation.
+    /// @param l0  Least-significant 64-bit limb  (bits [63 : 0])
+    /// @param l1  Second limb                    (bits [127 : 64])
+    /// @param l2  Third limb                     (bits [191 : 128])
+    /// @param l3  Most-significant 64-bit limb   (bits [255 : 192])
+    /// @return y  The assembled 32-byte value (`bytes32`) equivalent to
+    ///            `(l3<<192) | (l2<<128) | (l1<<64) | l0`
+    function packYFromLELimbs(uint256 l0, uint256 l1, uint256 l2, uint256 l3) internal pure returns (bytes32 y) {
+        unchecked {
+            uint256 MASK = type(uint64).max; // 0xffffffffffffffff
+            uint256 v = ((l3 & MASK) << 192) | ((l2 & MASK) << 128) | ((l1 & MASK) << 64) | (l0 & MASK);
+            y = bytes32(v);
+        }
+    }
 
     /// @notice Builds the input for the KZG precompile
     /// @param versionedHash  32 bytes (0x01‖sha256(commitment))
