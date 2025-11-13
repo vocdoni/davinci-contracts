@@ -17,7 +17,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The maximum value of the census origin.
      */
-    uint8 public constant MAX_CENSUS_ORIGIN = 9;
+    uint8 public constant MAX_CENSUS_ORIGIN = 2;
     /**
      * @notice The maximum value of the process status.
      */
@@ -179,7 +179,6 @@ contract ProcessRegistry is IProcessRegistry {
 
         // check census
         if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
-        if (p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
@@ -187,11 +186,10 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        p.census.maxVotes = census.maxVotes;
         p.census.censusRoot = census.censusRoot;
         p.census.censusURI = census.censusURI;
 
-        emit CensusUpdated(processId, census.censusRoot, census.censusURI, census.maxVotes);
+        emit CensusUpdated(processId, census.censusRoot, census.censusURI);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -230,11 +228,10 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        (
-            uint256[9] memory decompressedInput,
-            bytes memory blobCommitment,
-            bytes memory blobProof
-        ) = abi.decode(input, (uint256[9], bytes, bytes));
+        (uint256[10] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+            input,
+            (uint256[10], bytes, bytes)
+        );
 
         if (decompressedInput[0] != p.latestStateRoot) {
             revert InvalidStateRoot();
@@ -244,26 +241,20 @@ contract ProcessRegistry is IProcessRegistry {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
             if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
 
-            bytes32 z = bytes32(decompressedInput[4]);
+            bytes32 z = bytes32(decompressedInput[5]);
 
             bytes32 y;
             unchecked {
                 uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
                 y = bytes32(
-                    ((decompressedInput[5] & MASK) << 192) |
-                    ((decompressedInput[6] & MASK) << 128) |
-                    ((decompressedInput[7] & MASK) << 64) |
-                    (decompressedInput[8] & MASK)
+                    ((decompressedInput[6] & MASK) << 192) |
+                        ((decompressedInput[7] & MASK) << 128) |
+                        ((decompressedInput[8] & MASK) << 64) |
+                        (decompressedInput[9] & MASK)
                 );
             }
 
-            bytes memory kzgInput = BlobsLib.buildKZGInput(
-                versionedHash,
-                z,
-                y,
-                blobCommitment,
-                blobProof
-            );
+            bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
 
             if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
         }
@@ -284,15 +275,15 @@ contract ProcessRegistry is IProcessRegistry {
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        
+
         // Cannot set results on CANCELLED or RESULTS processes
         if (p.status == ProcessStatus.CANCELED || p.status == ProcessStatus.RESULTS) revert InvalidStatus();
-        
+
         // Require that the process has ended, either by status or by time
         if (p.status != ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
-        
+
         // Store the old status for the event
         ProcessStatus oldStatus = p.status;
 
@@ -338,8 +329,20 @@ contract ProcessRegistry is IProcessRegistry {
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
-        if (census.maxVotes == 0) revert InvalidMaxVotes();
+
+        // Census root based on census origin:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Address of census manager contract (should be queried once, during process creation)
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (should be queried on each transition, during state transitions verification)
+        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey (fixed)
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        // CensusURI based on census origin:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 ───┤
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
+        //  - CSP_EDDSA_BN254_V1 -> URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status

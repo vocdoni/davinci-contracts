@@ -64,22 +64,15 @@ export declare namespace IProcessRegistry {
 
   export type CensusStruct = {
     censusOrigin: BigNumberish;
-    maxVotes: BigNumberish;
     censusRoot: BytesLike;
     censusURI: string;
   };
 
   export type CensusStructOutput = [
     censusOrigin: bigint,
-    maxVotes: bigint,
     censusRoot: string,
     censusURI: string
-  ] & {
-    censusOrigin: bigint;
-    maxVotes: bigint;
-    censusRoot: string;
-    censusURI: string;
-  };
+  ] & { censusOrigin: bigint; censusRoot: string; censusURI: string };
 
   export type ProcessStruct = {
     status: BigNumberish;
@@ -318,20 +311,17 @@ export namespace CensusUpdatedEvent {
   export type InputTuple = [
     processId: BytesLike,
     censusRoot: BytesLike,
-    censusURI: string,
-    maxVotes: BigNumberish
+    censusURI: string
   ];
   export type OutputTuple = [
     processId: string,
     censusRoot: string,
-    censusURI: string,
-    maxVotes: bigint
+    censusURI: string
   ];
   export interface OutputObject {
     processId: string;
     censusRoot: string;
     censusURI: string;
-    maxVotes: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -783,7 +773,7 @@ export interface ProcessRegistry extends BaseContract {
   >;
 
   filters: {
-    "CensusUpdated(bytes32,bytes32,string,uint256)": TypedContractEvent<
+    "CensusUpdated(bytes32,bytes32,string)": TypedContractEvent<
       CensusUpdatedEvent.InputTuple,
       CensusUpdatedEvent.OutputTuple,
       CensusUpdatedEvent.OutputObject
