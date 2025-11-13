@@ -256,19 +256,12 @@ contract ProcessRegistry is IProcessRegistry {
             _hit(4, stopAt);
             bytes32 z = bytes32(decompressedInput[4]);
             _hit(5, stopAt);
-
-            bytes32 y;
-            unchecked {
-                uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
-                _hit(6, stopAt);
-                y = bytes32(
-                    ((decompressedInput[5] & MASK) << 192) |
-                        ((decompressedInput[6] & MASK) << 128) |
-                        ((decompressedInput[7] & MASK) << 64) |
-                        (decompressedInput[8] & MASK)
-                );
-                _hit(7, stopAt);
-            }
+            bytes32 y = BlobsLib.packYFromLELimbs(
+                decompressedInput[5],
+                decompressedInput[6],
+                decompressedInput[7],
+                decompressedInput[8]
+            );
             bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
             _hit(8, stopAt);
             if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
