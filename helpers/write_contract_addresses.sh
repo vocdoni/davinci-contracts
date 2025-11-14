@@ -42,17 +42,19 @@ const (
 	SepoliaNetwork = "sepolia"
 	UzhNetwork     = "uzh"
 	MainnetNetwork = "mainnet"
+	BaseNetwork    = "base"
 	CeloNetwork    = "celo"
 	TestNetwork    = "test"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
 var AvailableNetworksByName = map[string]uint32{
-	SepoliaNetwork:  11155111,
-	UzhNetwork:      710,
-	CeloNetwork:     42220,
-	MainnetNetwork:  1,
-	TestNetwork:     1337, // Local test network
+	SepoliaNetwork: 11155111,
+	UzhNetwork:     710,
+	CeloNetwork:    42220,
+	MainnetNetwork: 1,
+	BaseNetwork:    8453,
+	TestNetwork:    1337, // Local test network
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
@@ -61,6 +63,7 @@ var AvailableNetworksByID = map[uint32]string{
 	710:      UzhNetwork,
 	42220:    CeloNetwork,
 	1:        MainnetNetwork,
+	8453:     BaseNetwork,
 	1337:     TestNetwork,
 }
 
@@ -81,14 +84,14 @@ EOF
 for contract in $(jq -r 'keys[]' "$JSON_FILE"); do
     # Convert contract name to Go constant format (camelCase to PascalCase)
     contract_const=$(echo "$contract" | sed -r 's/(^|_)([a-z])/\U\2/g')
-    
+
     for network in $(jq -r ".$contract | keys[]" "$JSON_FILE"); do
         # Convert network name to Go constant format
         network_const=$(echo "$network" | sed 's/^./\U&/')
-        
+
         # Get the address
         address=$(jq -r ".$contract.$network" "$JSON_FILE")
-        
+
         # Generate the constant
         echo "	${contract_const}${network_const}Address = \"$address\"" >> "$OUTPUT_FILE"
     done
@@ -111,6 +114,8 @@ func GetContractAddress(contract, network string) string {
 			return ProcessRegistryUzhAddress
 		case MainnetNetwork:
 			return ProcessRegistryMainnetAddress
+		case BaseNetwork:
+			return ProcessRegistryBaseAddress
 		case CeloNetwork:
 			return ProcessRegistryCeloAddress
 		}
@@ -122,6 +127,8 @@ func GetContractAddress(contract, network string) string {
 			return OrganizationRegistryUzhAddress
 		case MainnetNetwork:
 			return OrganizationRegistryMainnetAddress
+		case BaseNetwork:
+			return OrganizationRegistryBaseAddress
 		case CeloNetwork:
 			return OrganizationRegistryCeloAddress
 		}
@@ -133,6 +140,8 @@ func GetContractAddress(contract, network string) string {
 			return StateTransitionVerifierGroth16UzhAddress
 		case MainnetNetwork:
 			return StateTransitionVerifierGroth16MainnetAddress
+		case BaseNetwork:
+			return StateTransitionVerifierGroth16BaseAddress
 		case CeloNetwork:
 			return StateTransitionVerifierGroth16CeloAddress
 		}
@@ -144,6 +153,8 @@ func GetContractAddress(contract, network string) string {
 			return ResultsVerifierGroth16UzhAddress
 		case MainnetNetwork:
 			return ResultsVerifierGroth16MainnetAddress
+		case BaseNetwork:
+			return ResultsVerifierGroth16BaseAddress
 		case CeloNetwork:
 			return ResultsVerifierGroth16CeloAddress
 		}
@@ -155,6 +166,8 @@ func GetContractAddress(contract, network string) string {
 			return SequencerRegistryUzhAddress
 		case MainnetNetwork:
 			return SequencerRegistryMainnetAddress
+		case BaseNetwork:
+			return SequencerRegistryBaseAddress
 		case CeloNetwork:
 			return SequencerRegistryCeloAddress
 		}
@@ -165,7 +178,7 @@ func GetContractAddress(contract, network string) string {
 // GetAllContractAddresses returns a map of all contract addresses for a given network
 func GetAllContractAddresses(network string) map[string]string {
 	addresses := make(map[string]string)
-	
+
 	contracts := []string{
 		ProcessRegistryContract,
 		OrganizationRegistryContract,
@@ -173,13 +186,13 @@ func GetAllContractAddresses(network string) map[string]string {
 		ResultsVerifierGroth16Contract,
 		SequencerRegistryContract,
 	}
-	
+
 	for _, contract := range contracts {
 		if addr := GetContractAddress(contract, network); addr != "" && addr != "0x0" {
 			addresses[contract] = addr
 		}
 	}
-	
+
 	return addresses
 }
 
@@ -196,6 +209,11 @@ func GetUzhAddresses() map[string]string {
 // GetMainnetAddresses returns all contract addresses for Mainnet network
 func GetMainnetAddresses() map[string]string {
 	return GetAllContractAddresses(MainnetNetwork)
+}
+
+// GetBaseAddresses returns all contract addresses for Base network
+func GetBaseAddresses() map[string]string {
+	return GetAllContractAddresses(BaseNetwork)
 }
 
 // GetCeloAddresses returns all contract addresses for Celo network
