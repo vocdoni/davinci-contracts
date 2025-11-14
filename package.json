@@ -1,6 +1,6 @@
 {
     "name": "@vocdoni/davinci-contracts",
-    "version": "0.0.23",
+    "version": "0.0.24",
     "description": "Smart contracts powering DAVINCI's digital voting protocol",
     "directories": {
         "lib": "lib",
