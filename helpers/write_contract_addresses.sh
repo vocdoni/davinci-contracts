@@ -42,6 +42,7 @@ const (
 	SepoliaNetwork = "sepolia"
 	UzhNetwork     = "uzh"
 	MainnetNetwork = "mainnet"
+	BaseNetwork    = "base"
 	CeloNetwork    = "celo"
 	TestNetwork    = "test"
 )
@@ -52,6 +53,7 @@ var AvailableNetworksByName = map[string]uint32{
 	UzhNetwork:      710,
 	CeloNetwork:     42220,
 	MainnetNetwork:  1,
+	BaseNetwork:     8453,
 	TestNetwork:     1337, // Local test network
 }
 
@@ -61,6 +63,7 @@ var AvailableNetworksByID = map[uint32]string{
 	710:      UzhNetwork,
 	42220:    CeloNetwork,
 	1:        MainnetNetwork,
+	8453:	  BaseNetwork,
 	1337:     TestNetwork,
 }
 
@@ -111,6 +114,8 @@ func GetContractAddress(contract, network string) string {
 			return ProcessRegistryUzhAddress
 		case MainnetNetwork:
 			return ProcessRegistryMainnetAddress
+		case BaseNetwork:
+			return ProcessRegistryBaseAddress
 		case CeloNetwork:
 			return ProcessRegistryCeloAddress
 		}
@@ -122,6 +127,8 @@ func GetContractAddress(contract, network string) string {
 			return OrganizationRegistryUzhAddress
 		case MainnetNetwork:
 			return OrganizationRegistryMainnetAddress
+		case BaseNetwork:
+			return OrganizationRegistryBaseAddress
 		case CeloNetwork:
 			return OrganizationRegistryCeloAddress
 		}
@@ -133,6 +140,8 @@ func GetContractAddress(contract, network string) string {
 			return StateTransitionVerifierGroth16UzhAddress
 		case MainnetNetwork:
 			return StateTransitionVerifierGroth16MainnetAddress
+		case BaseNetwork:
+			return StateTransitionVerifierGroth16BaseAddress
 		case CeloNetwork:
 			return StateTransitionVerifierGroth16CeloAddress
 		}
@@ -144,6 +153,8 @@ func GetContractAddress(contract, network string) string {
 			return ResultsVerifierGroth16UzhAddress
 		case MainnetNetwork:
 			return ResultsVerifierGroth16MainnetAddress
+		case BaseNetwork:
+			return ResultsVerifierGroth16BaseAddress
 		case CeloNetwork:
 			return ResultsVerifierGroth16CeloAddress
 		}
@@ -155,6 +166,8 @@ func GetContractAddress(contract, network string) string {
 			return SequencerRegistryUzhAddress
 		case MainnetNetwork:
 			return SequencerRegistryMainnetAddress
+		case BaseNetwork:
+			return SequencerRegistryBaseAddress
 		case CeloNetwork:
 			return SequencerRegistryCeloAddress
 		}
@@ -196,6 +209,11 @@ func GetUzhAddresses() map[string]string {
 // GetMainnetAddresses returns all contract addresses for Mainnet network
 func GetMainnetAddresses() map[string]string {
 	return GetAllContractAddresses(MainnetNetwork)
+}
+
+// GetBaseAddresses returns all contract addresses for Base network
+func GetBaseAddresses() map[string]string {
+	return GetAllContractAddresses(BaseNetwork)
 }
 
 // GetCeloAddresses returns all contract addresses for Celo network
