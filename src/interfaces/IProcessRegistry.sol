@@ -154,14 +154,6 @@ interface IProcessRegistry {
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
-    /**
-     * @notice Thrown when the blob hash does not match the expected value.
-     */
-    error InvalidBlobHash();
-    /**
-     * @notice Thrown when the Blob verification fails.
-     */
-    error BlobVerificationFailed();
 
     /// ENUMS ///
 

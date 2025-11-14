@@ -5,6 +5,20 @@ pragma solidity ^0.8.28;
 /// @notice This library provides secure and efficient access to EIP-4844 blob functionality
 library BlobsLib {
     /*//////////////////////////////////////////////////////////////
+                                ERRORS
+    //////////////////////////////////////////////////////////////*/
+
+    error BlobNotFoundInTx();
+    error BlobVerificationInvalidInputLength(uint256 got, uint256 expected);
+    error BlobVerificationPointEvaluationFailed();
+    error BlobVerificationInvalidOutputLength(uint256 got, uint256 expected);
+    error BlobVerificationInvalidFieldElementCount(uint256 got, uint256 expected);
+    error BlobVerificationInvalidBLSModulus(uint256 got, uint256 expected);
+    error KZGInputBadCommitmentLength(uint256 got, uint256 expected);
+    error KZGInputBadProofLength(uint256 got, uint256 expected);
+    error KZGInputBadInputLength(uint256 got, uint256 expected);
+
+    /*//////////////////////////////////////////////////////////////
                                 STRUCTS
     //////////////////////////////////////////////////////////////*/
 
@@ -48,6 +62,10 @@ library BlobsLib {
 
     /// @dev Mask to keep the lower 31 bytes, clearing the MSB
     uint256 private constant MASK_LOW_31_BYTES = 0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
+    /// @dev The modulus used in the BLS signature scheme.
+    uint256 private constant BLS_MODULUS =
+        52435875175126190479447740508185965837690552500527637822603658699938581184513;
 
     /*//////////////////////////////////////////////////////////////
                             BLOB OPERATIONS
@@ -95,41 +113,42 @@ library BlobsLib {
     ///         EIP‑4844 precompile at address 0x0A.
     ///
     /// @dev  Input  (192 bytes) = versionedHash ‖ z ‖ y ‖ commitment ‖ proof
-    ///       Return (64 bytes)  = FIELD_ELEMENTS_PER_BLOB (4096) ‖
-    ///                            BLS_MODULUS
-    ///
-    ///       A correct proof *always* returns 64 bytes; the call reverts
-    ///       or returns empty data on failure. See EIP‑4844.
-    ///
+    /// @dev There is no return value. If the function does not revert, the proof was successfully verified.
     /// @param input  Exactly 192 bytes, formatted as above.
-    /// @return success  True if the precompile accepted the proof.
-    function verifyKZG(bytes memory input) internal view returns (bool success) {
-        if (input.length != KZG_INPUT_LENGTH) return false; // 192 bytes
+    function verifyKZG(bytes memory input) internal view {
+        if (input.length != KZG_INPUT_LENGTH) revert BlobVerificationInvalidInputLength(input.length, KZG_INPUT_LENGTH);
 
         (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
+        if (!ok) revert BlobVerificationPointEvaluationFailed();
 
-        // call did not revert and returned the canonical 64‑byte payload
-        if (!ok || out.length != KZG_OUTPUT_LENGTH) return false;
+        // Since call did not revert, check the canonical 64‑byte payload:
+        // The output from the KZG precompile should be:
+        // [0..31]  FIELD_ELEMENTS_PER_BLOB
+        // [32..63] BLS_MODULUS
 
-        uint256 resultValue;
-        assembly {
-            resultValue := mload(add(out, 0x20))
-        }
-        // the first 32 bytes of the output should be FIELD_ELEMENTS_PER_BLOB
-        if (resultValue != FIELD_ELEMENTS_PER_BLOB) return false;
+        if (out.length != KZG_OUTPUT_LENGTH) revert BlobVerificationInvalidOutputLength(out.length, KZG_OUTPUT_LENGTH);
 
-        return true;
+        (uint256 fieldCount, uint256 modulus) = abi.decode(out, (uint256, uint256));
+
+        if (fieldCount != FIELD_ELEMENTS_PER_BLOB)
+            revert BlobVerificationInvalidFieldElementCount(fieldCount, FIELD_ELEMENTS_PER_BLOB);
+
+        if (modulus != BLS_MODULUS) revert BlobVerificationInvalidBLSModulus(modulus, BLS_MODULUS);
     }
 
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Checks if blob data is available for the current transaction
-    /// @dev Verifies that at least one blob hash exists
-    /// @return available True if blob data is available
-    function isBlobDataAvailable() internal view returns (bool available) {
-        return blobHash(0) != bytes32(0);
+    /// @notice Checks that blob data is available for the current transaction
+    /// @dev Verifies that the blob (identified by versioned hash) exists in the current tx.
+    function verifyBlobDataIsAvailable(bytes32 versionedHash) internal view {
+        // Probe blobhash(i) until zero sentinel; protocol caps the count to a small number.
+        for (uint256 i = 0; ; ++i) {
+            bytes32 h = blobHash(i);
+            if (h == bytes32(0)) revert BlobNotFoundInTx(); // no more blobs, not found
+            if (h == versionedHash) return;
+        }
     }
 
     /// @notice Gets the number of blobs in the current transaction
@@ -177,6 +196,25 @@ library BlobsLib {
         }
     }
 
+    /// @notice Packs four little-endian 64-bit limbs into a single 32-byte field element.
+    /// @dev Each limb represents a consecutive 64-bit slice of a 256-bit value, where
+    ///      l0 is the least-significant word and l3 is the most-significant.
+    ///      The result is the big-endian `bytes32` encoding of that 256-bit integer,
+    ///      matching Solidity’s native numeric representation.
+    /// @param l0  Least-significant 64-bit limb  (bits [63 : 0])
+    /// @param l1  Second limb                    (bits [127 : 64])
+    /// @param l2  Third limb                     (bits [191 : 128])
+    /// @param l3  Most-significant 64-bit limb   (bits [255 : 192])
+    /// @return y  The assembled 32-byte value (`bytes32`) equivalent to
+    ///            `(l3<<192) | (l2<<128) | (l1<<64) | l0`
+    function packYFromLELimbs(uint256 l0, uint256 l1, uint256 l2, uint256 l3) internal pure returns (bytes32 y) {
+        unchecked {
+            uint256 MASK = type(uint64).max; // 0xffffffffffffffff
+            uint256 v = ((l3 & MASK) << 192) | ((l2 & MASK) << 128) | ((l1 & MASK) << 64) | (l0 & MASK);
+            y = bytes32(v);
+        }
+    }
+
     /// @notice Builds the input for the KZG precompile
     /// @param versionedHash  32 bytes (0x01‖sha256(commitment))
     /// @param z              32 bytes challenge point   (BLS12‑381 Fr, big‑endian)
@@ -191,8 +229,12 @@ library BlobsLib {
         bytes memory commitment,
         bytes memory proof
     ) internal pure returns (bytes memory input) {
-        if (commitment.length != KZG_COMMITMENT_LENGTH || proof.length != KZG_PROOF_LENGTH) {
-            revert("KZGInput: bad G1 length");
+        if (commitment.length != KZG_COMMITMENT_LENGTH) {
+            revert KZGInputBadCommitmentLength(commitment.length, KZG_COMMITMENT_LENGTH);
+        }
+
+        if (proof.length != KZG_PROOF_LENGTH) {
+            revert KZGInputBadProofLength(proof.length, KZG_PROOF_LENGTH);
         }
 
         input = abi.encodePacked(versionedHash, z, y, commitment, proof);
@@ -205,7 +247,7 @@ library BlobsLib {
     /// @return kzgProof The decoded KZG proof components
     function decodeKZGInput(bytes memory input) internal pure returns (KZGProof memory kzgProof) {
         if (input.length != KZG_INPUT_LENGTH) {
-            revert("KZGInput: invalid input length");
+            revert KZGInputBadInputLength(input.length, KZG_INPUT_LENGTH);
         }
 
         // Extract versionedHash (bytes 0-31)

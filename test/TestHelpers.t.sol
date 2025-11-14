@@ -22,6 +22,15 @@ abstract contract TestHelpers {
     bytes public constant BLOB_PROOF =
         hex"8ce25251ee4c0af5ac3b4e244b868d3b3db06844169a0b3e3f90bc7c59b321a5014dd1ce56b258546cb28a33c381d42b";
 
+    bytes32 public constant BLOB_VERSIONEDHASH = hex"01ecef29fce7ec91320e0a2181f4dea1978cbb33368d6a7b1ab6ecdd736f0134";
+
+    /// @dev KZG precompile address as per EIP-4844
+    address public constant KZG_PRECOMPILE = address(0x0A);
+    /// @dev Number of field elements per blob (as per EIP-4844)
+    uint256 public constant FIELD_ELEMENTS_PER_BLOB = 4096;
+    /// @dev The modulus used in the BLS signature scheme.
+    uint256 public constant BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513;
+
     bytes public constant stateTransitionZKProof =
         hex"086ec5219abc982c5a8e6cd096bb646374e60184c7e39aed1601a8baedde22210072d91fd89f5636275b0541739dc3d409003b2fa64217f1f0a82b34f321e9aa06d22bdc176de2bdeca3c3fce1ee9a941193bf6cd54bfa2e70b3eb55fa5590831efca9355060e01ceba0cb937d59561dc2ca8a84d9e7b252bb0ce7b58d1744a803147837f5adc943acc272418ee4e4e5b9e718e007bba29f206cf0a9e5d120cb04976da1ecf8d800b9f44a88ce935933197d3d973fc628a5c76d3f04542dbaa12aa1de244013f7a60c6b06a3e639e19332a9bd0a37016f1a3e4d49161e2ee66f1c23566a57598e52ddaf10a08693bf27832e9d94ce869d5c4f5a54f3cbb2537f1b44ba87f35cd75fddd02918733e46020600db2bac48ac7698bb625f78bb08f6031622cbd0212ab4c25fd8bded0f0e0723cfb7ac718b9f37464131743a376f81255a8855f70b81da5cd7d29bb6948ba8b8108ab7c3fb2f19b63b0fbb77cfeb8e0a27fa3db5145182be67bfd4e826bafaf950cb24bc880a45ec9c923c374bb8cf";
 
@@ -44,7 +53,7 @@ abstract contract TestHelpers {
         return abi.encode(inputs, blobCommitment, blobProof);
     }
 
-    function stateTransitionInputs() internal view returns (bytes memory) {
+    function stateTransitionInputs() internal pure returns (bytes memory) {
         return
             encodeStateTransitionInputs(
                 [
