@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to generate Go constants from deployed_contracts_addresses.json
+# Script to generate Go constants from deployed contract addresses found in broadcast/DeployAll.s.sol/*/run-latest.json
 # This script reads the JSON file and creates hardcoded address constants
 
 set -euo pipefail
