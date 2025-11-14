@@ -111,7 +111,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         }
     }
 
-    function test_Decode_Inputs() public view {
+    function test_Decode_Inputs() public pure {
         (uint256[9] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
             stateTransitionInputs()
         );

@@ -241,24 +241,19 @@ contract ProcessRegistry is IProcessRegistry {
 
         if (blobsDA) {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
-            if (versionedHash != BlobsLib.blobHash(0)) revert InvalidBlobHash();
+
+            _verifyBlobDataIsAvailable(versionedHash);
 
             bytes32 z = bytes32(decompressedInput[4]);
-
-            bytes32 y;
-            unchecked {
-                uint256 MASK = (uint256(1) << 64) - 1; // 0xffffffffffffffff
-                y = bytes32(
-                    ((decompressedInput[5] & MASK) << 192) |
-                        ((decompressedInput[6] & MASK) << 128) |
-                        ((decompressedInput[7] & MASK) << 64) |
-                        (decompressedInput[8] & MASK)
-                );
-            }
-
+            bytes32 y = BlobsLib.packYFromLELimbs(
+                decompressedInput[5],
+                decompressedInput[6],
+                decompressedInput[7],
+                decompressedInput[8]
+            );
             bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
 
-            if (!BlobsLib.verifyKZG(kzgInput)) revert BlobVerificationFailed();
+            BlobsLib.verifyKZG(kzgInput);
         }
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
@@ -387,5 +382,12 @@ contract ProcessRegistry is IProcessRegistry {
         }
 
         return false;
+    }
+
+    /// @notice Checks that blob data is available for the current transaction
+    /// @dev Wrapper for BlobsLib.verifyBlobDataIsAvailable, that can be overridden in tests
+    /// @param versionedHash The blob versioned hash
+    function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view virtual {
+        BlobsLib.verifyBlobDataIsAvailable(versionedHash);
     }
 }

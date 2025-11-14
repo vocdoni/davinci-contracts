@@ -9,9 +9,35 @@ import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";
+import { BlobsLib } from "../src/libraries/BlobsLib.sol";
+
+/**
+ * @title ProcessRegistryMock
+ * @notice Test contract that allows overriding blob hash behavior for testing
+ * @dev This demonstrates how to override the _blobHash function from Blobhashable
+ */
+contract ProcessRegistryMock is ProcessRegistry {
+    mapping(bytes32 => bool) public availableBlobs;
+
+    constructor(
+        uint32 _chainID,
+        address _stVerifier,
+        address _rVerifier,
+        bool _blobsDA
+    ) ProcessRegistry(_chainID, _stVerifier, _rVerifier, _blobsDA) {}
+
+    // there's no way to verify blob data availability in tests
+    function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view override {
+        if (!availableBlobs[versionedHash]) revert BlobsLib.BlobNotFoundInTx();
+    }
+
+    function setMockBlobDataAvailable(bytes32 versionedHash, bool available) external {
+        availableBlobs[versionedHash] = available;
+    }
+}
 
 contract ProcessRegistryTest is Test, TestHelpers {
-    ProcessRegistry public processRegistry;
+    ProcessRegistryMock public processRegistry;
     OrganizationRegistry public organizationRegistry;
     StateTransitionVerifierGroth16 public stv;
     ResultsVerifierGroth16 public rv;
@@ -31,7 +57,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     uint256 public constant rInitStateRoot =
         15977845708338371169793025518832793983533753933654506631846328160167915014374;
 
-    address orgId = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address private orgId = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     IProcessRegistry.BallotMode public defaultBallotMode =
         IProcessRegistry.BallotMode({
@@ -49,7 +75,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         organizationRegistry = new OrganizationRegistry();
         stv = new StateTransitionVerifierGroth16();
         rv = new ResultsVerifierGroth16();
-        processRegistry = new ProcessRegistry(11155111, address(stv), address(rv), false); // TODO SET TRUE FOR BLOB TEST
+        processRegistry = new ProcessRegistryMock(11155111, address(stv), address(rv), true);
 
         createTestOrganization();
     }
@@ -894,6 +920,10 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(process.voteCount, 0);
         assertEq(process.voteOverwriteCount, 0);
 
+        processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
+
+        vm.mockCall(KZG_PRECOMPILE, "", abi.encode(FIELD_ELEMENTS_PER_BLOB, BLS_MODULUS));
+
         // Submit state transition
         emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_AFTER);
         processRegistry.submitStateTransition(processId, stateTransitionZKProof, stateTransitionInputs());
@@ -953,6 +983,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SubmitStateTransition_ProofInvalid() public {
         bytes32 processId = createTestProcess(defaultBallotMode, ROOT_HASH_BEFORE);
+
+        processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
 
         vm.expectRevert(IProcessRegistry.ProofInvalid.selector);
         processRegistry.submitStateTransition(processId, stateTransitionZKProof_Invalid, stateTransitionInputs());
