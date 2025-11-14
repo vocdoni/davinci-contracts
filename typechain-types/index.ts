@@ -14,6 +14,8 @@ export type { IProcessRegistry } from "./src/interfaces/IProcessRegistry";
 export { IProcessRegistry__factory } from "./factories/src/interfaces/IProcessRegistry__factory";
 export type { IZKVerifier } from "./src/interfaces/IZKVerifier";
 export { IZKVerifier__factory } from "./factories/src/interfaces/IZKVerifier__factory";
+export type { BlobsLib } from "./src/libraries/BlobsLib";
+export { BlobsLib__factory } from "./factories/src/libraries/BlobsLib__factory";
 export type { OrganizationRegistry } from "./src/OrganizationRegistry";
 export { OrganizationRegistry__factory } from "./factories/src/OrganizationRegistry__factory";
 export type { ProcessRegistry } from "./src/ProcessRegistry";

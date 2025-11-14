@@ -11,17 +11,7 @@ import type {
 const _abi = [
   {
     inputs: [],
-    name: "BlobVerificationFailed",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "CannotAcceptResult",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InvalidBlobHash",
     type: "error",
   },
   {

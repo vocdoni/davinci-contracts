@@ -30,6 +30,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IZKVerifier__factory>;
     getContractFactory(
+      name: "BlobsLib",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BlobsLib__factory>;
+    getContractFactory(
       name: "OrganizationRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OrganizationRegistry__factory>;
@@ -75,6 +79,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IZKVerifier>;
     getContractAt(
+      name: "BlobsLib",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BlobsLib>;
+    getContractAt(
       name: "OrganizationRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -122,6 +131,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IZKVerifier>;
     deployContract(
+      name: "BlobsLib",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.BlobsLib>;
+    deployContract(
       name: "OrganizationRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OrganizationRegistry>;
@@ -166,6 +179,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IZKVerifier>;
+    deployContract(
+      name: "BlobsLib",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.BlobsLib>;
     deployContract(
       name: "OrganizationRegistry",
       args: any[],
