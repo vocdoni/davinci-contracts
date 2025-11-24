@@ -45,6 +45,7 @@ const (
 
 // Contract addresses by network
 const (
+<<<<<<< HEAD
 	OrganizationRegistryBaseAddress              = "0xcb3a0C65c206998962aaE9629c728e1Ed79e2791"
 	OrganizationRegistryCeloAddress              = "0x4FEc6320A1e73820e04364E92f313E8b0d7C3238"
 	OrganizationRegistryMainnetAddress           = "0x0"
@@ -70,6 +71,28 @@ const (
 	StateTransitionVerifierGroth16MainnetAddress = "0x0"
 	StateTransitionVerifierGroth16SepoliaAddress = "0xe8Db7444751901325781d082D21f32992E7F0f0E"
 	StateTransitionVerifierGroth16UzhAddress     = "0x5e4673CD378F05cc3Ae25804539c91E711548741"
+=======
+	OrganizationRegistryCeloAddress = "0x4FEc6320A1e73820e04364E92f313E8b0d7C3238"
+	OrganizationRegistryMainnetAddress = "0x0"
+	OrganizationRegistrySepoliaAddress = "0x887de62b441DE4a7c68bf2456316b1e603ff729D"
+	OrganizationRegistryUzhAddress = "0xf7BCE4546805547bE526Ca864d6722Ed193E51Aa"
+	ProcessRegistryCeloAddress = "0x339E16CF6C084789F231C5Ccde969797279D9C8F"
+	ProcessRegistryMainnetAddress = "0x0"
+	ProcessRegistrySepoliaAddress = "0xC4de781346bb97f7eF63Da8B81B26461ab259217 "
+	ProcessRegistryUzhAddress = "0x69B16f67Bd2fB18bD720379E9C1Ef5EaD3872d67"
+	ResultsVerifierGroth16CeloAddress = "0x7E42F542365b4bb1643Ae6411004EF76a0CCedF1"
+	ResultsVerifierGroth16MainnetAddress = "0x0"
+	ResultsVerifierGroth16SepoliaAddress = "0x4e16552F239e485C189Fed9f70e682d7EF6E31C4"
+	ResultsVerifierGroth16UzhAddress = "0x00c7F87731346F592197E49A90Ad6EC236Ad9985"
+	SequencerRegistryCeloAddress = "0x0"
+	SequencerRegistryMainnetAddress = "0x0"
+	SequencerRegistrySepoliaAddress = "0x0"
+	SequencerRegistryUzhAddress = "0x0"
+	StateTransitionVerifierGroth16CeloAddress = "0xED7A5A2b67a674617209291e2EE3346C535BebD0"
+	StateTransitionVerifierGroth16MainnetAddress = "0x0"
+	StateTransitionVerifierGroth16SepoliaAddress = "0xcCedf1F4E4b08681Ee03BDB7B63E6EEf573af358"
+	StateTransitionVerifierGroth16UzhAddress = "0x5e4673CD378F05cc3Ae25804539c91E711548741"
+>>>>>>> 5de36e6 (new contracts deployed)
 )
 
 // GetContractAddress returns the address for a given contract and network
