@@ -23,7 +23,7 @@ abstract contract TestHelpers {
     bytes public constant BLOB_PROOF =
         hex"b6ddbfb1b41ba0eec428185b77865f814d65c313a308ce06c65caf22fd45978b78e075e614237983eb09215e4c575615";
 
-    bytes32 public constant BLOB_VERSIONEDHASH = hex"01ecef29fce7ec91320e0a2181f4dea1978cbb33368d6a7b1ab6ecdd736f0134";
+    bytes32 public constant BLOB_VERSIONEDHASH = hex"01dba6ec0ba00974bef74e9522dfe72ae9a78b72f78358b8787f3e9e23d834e9";
 
     /// @dev KZG precompile address as per EIP-4844
     address public constant KZG_PRECOMPILE = address(0x0A);

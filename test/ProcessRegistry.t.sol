@@ -19,6 +19,8 @@ import { BlobsLib } from "../src/libraries/BlobsLib.sol";
 contract ProcessRegistryMock is ProcessRegistry {
     mapping(bytes32 => bool) public availableBlobs;
 
+    error BlobNotFoundInTx(bytes32 versionedHash);
+
     constructor(
         uint32 _chainID,
         address _stVerifier,
@@ -28,7 +30,7 @@ contract ProcessRegistryMock is ProcessRegistry {
 
     // there's no way to verify blob data availability in tests
     function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view override {
-        if (!availableBlobs[versionedHash]) revert BlobsLib.BlobNotFoundInTx();
+        if (!availableBlobs[versionedHash]) revert BlobNotFoundInTx(versionedHash);
     }
 
     function setMockBlobDataAvailable(bytes32 versionedHash, bool available) external {
