@@ -35,7 +35,14 @@ interface IProcessRegistry {
      * @param sender The address of the sender.
      * @param newStateRoot The new state root of the process.
      */
-    event ProcessStateRootUpdated(bytes32 indexed processId, address indexed sender, uint256 newStateRoot);
+    event ProcessStateTransitioned(
+        bytes32 indexed processId,
+        address indexed sender,
+        uint256 oldStateRoot,
+        uint256 newStateRoot,
+        uint256 newVoteCount,
+        uint256 newVoteOverwrittenCount
+    );
 
     /*
      * @notice Emitted when the results of a process are set.
