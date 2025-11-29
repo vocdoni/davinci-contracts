@@ -307,7 +307,7 @@ Submits a state transition with zero-knowledge proof.
 
 - Updates latest state root
 - Increments vote counts
-- Emits `ProcessStateRootUpdated`
+- Emits `ProcessStateTransitioned`
 
 #### setProcessResults
 
@@ -418,10 +418,10 @@ event ProcessDurationChanged(bytes32 indexed processId, uint256 duration)
 
 Emitted when process duration is modified.
 
-### ProcessStateRootUpdated
+### ProcessStateTransitioned
 
 ```solidity
-event ProcessStateRootUpdated(
+event ProcessStateTransitioned(
     bytes32 indexed processId,
     address indexed sender,
     uint256 newStateRoot

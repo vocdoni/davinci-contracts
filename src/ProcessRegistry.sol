@@ -263,7 +263,14 @@ contract ProcessRegistry is IProcessRegistry {
         p.voteOverwriteCount += decompressedInput[3];
         p.batchNumber++;
 
-        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
+        emit ProcessStateTransitioned(
+            processId,
+            msg.sender,
+            decompressedInput[0],
+            decompressedInput[1],
+            p.voteCount,
+            p.voteOverwriteCount
+        );
     }
 
     /// @inheritdoc IProcessRegistry
