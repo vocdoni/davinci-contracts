@@ -31,8 +31,8 @@ abstract contract TestHelpers is TestInputs {
                 [
                     ROOT_HASH_BEFORE,
                     ROOT_HASH_AFTER,
-                    NUM_NEW_VOTES,
-                    NUM_OVERWRITES,
+                    VOTERS_COUNT,
+                    OVERWRITTEN_VOTES_COUNT,
                     CENSUS_ROOT,
                     BLOB_EVALUATION_POINT_Z,
                     BLOB_EVALUATION_POINT_Y_L1,

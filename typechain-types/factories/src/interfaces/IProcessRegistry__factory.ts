@@ -347,12 +347,12 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "voteCount",
+            name: "votersCount",
             type: "uint256",
           },
           {
             internalType: "uint256",
-            name: "voteOverwriteCount",
+            name: "overwrittenVotesCount",
             type: "uint256",
           },
           {

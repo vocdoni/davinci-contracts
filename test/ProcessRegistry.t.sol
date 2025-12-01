@@ -999,8 +999,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         // Verify initial state
         assertEq(process.latestStateRoot, ROOT_HASH_BEFORE);
-        assertEq(process.voteCount, 0);
-        assertEq(process.voteOverwriteCount, 0);
+        assertEq(process.votersCount, 0);
+        assertEq(process.overwrittenVotesCount, 0);
 
         processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
 
@@ -1013,8 +1013,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
         // Verify state after transition
         process = processRegistry.getProcess(processId);
         assertEq(process.latestStateRoot, ROOT_HASH_AFTER);
-        assertEq(process.voteCount, NUM_NEW_VOTES);
-        assertEq(process.voteOverwriteCount, NUM_OVERWRITES);
+        assertEq(process.votersCount, VOTERS_COUNT);
+        assertEq(process.overwrittenVotesCount, OVERWRITTEN_VOTES_COUNT);
     }
 
     function test_SubmitStateTransition_NonExistentProcess() public {
@@ -1663,8 +1663,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         // Get initial counters
         IProcessRegistry.Process memory processBefore = processRegistry.getProcess(processId);
-        uint256 voteCountBefore = processBefore.voteCount;
-        uint256 voteOverwriteCountBefore = processBefore.voteOverwriteCount;
+        uint256 votersCountBefore = processBefore.votersCount;
+        uint256 overwrittenVotesCountBefore = processBefore.overwrittenVotesCount;
         uint256 batchNumberBefore = processBefore.batchNumber;
 
         // Set process to ENDED
@@ -1675,8 +1675,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         // Verify counters remain unchanged
         IProcessRegistry.Process memory processAfter = processRegistry.getProcess(processId);
-        assertEq(processAfter.voteCount, voteCountBefore);
-        assertEq(processAfter.voteOverwriteCount, voteOverwriteCountBefore);
+        assertEq(processAfter.votersCount, votersCountBefore);
+        assertEq(processAfter.overwrittenVotesCount, overwrittenVotesCountBefore);
         assertEq(processAfter.batchNumber, batchNumberBefore);
     }
 

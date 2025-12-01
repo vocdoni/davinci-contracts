@@ -19,8 +19,8 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         uint256[10] memory input = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER,
-            NUM_NEW_VOTES,
-            NUM_OVERWRITES,
+            VOTERS_COUNT,
+            OVERWRITTEN_VOTES_COUNT,
             CENSUS_ROOT,
             BLOB_EVALUATION_POINT_Z,
             BLOB_EVALUATION_POINT_Y_L1,
@@ -42,8 +42,8 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         uint256[10] memory inputBad = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER_BAD,
-            NUM_NEW_VOTES,
-            NUM_OVERWRITES,
+            VOTERS_COUNT,
+            OVERWRITTEN_VOTES_COUNT,
             CENSUS_ROOT,
             BLOB_EVALUATION_POINT_Z,
             BLOB_EVALUATION_POINT_Y_L1,
@@ -91,8 +91,8 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         if (
             inputs[0] != ROOT_HASH_BEFORE ||
             inputs[1] != ROOT_HASH_AFTER ||
-            inputs[2] != NUM_NEW_VOTES ||
-            inputs[3] != NUM_OVERWRITES ||
+            inputs[2] != VOTERS_COUNT ||
+            inputs[3] != OVERWRITTEN_VOTES_COUNT ||
             inputs[4] != CENSUS_ROOT ||
             inputs[5] != BLOB_EVALUATION_POINT_Z ||
             inputs[6] != BLOB_EVALUATION_POINT_Y_L1 ||

@@ -257,9 +257,9 @@ contract ProcessRegistry is IProcessRegistry {
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
         p.latestStateRoot = decompressedInput[1];
-        p.voteCount += decompressedInput[2];
-        p.voteOverwriteCount += decompressedInput[3];
-        p.batchNumber++;
+        p.votersCount += decompressedInput[2]; // TODO: should be p.votersCount += (st.VotersCount - st.OverwrittenVotesCount)
+        p.overwrittenVotesCount += decompressedInput[3];
+        ++p.batchNumber;
 
         emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
     }

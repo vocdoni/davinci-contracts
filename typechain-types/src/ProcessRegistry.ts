@@ -82,8 +82,8 @@ export declare namespace IProcessRegistry {
     result: BigNumberish[];
     startTime: BigNumberish;
     duration: BigNumberish;
-    voteCount: BigNumberish;
-    voteOverwriteCount: BigNumberish;
+    votersCount: BigNumberish;
+    overwrittenVotesCount: BigNumberish;
     creationBlock: BigNumberish;
     batchNumber: BigNumberish;
     metadataURI: string;
@@ -99,8 +99,8 @@ export declare namespace IProcessRegistry {
     result: bigint[],
     startTime: bigint,
     duration: bigint,
-    voteCount: bigint,
-    voteOverwriteCount: bigint,
+    votersCount: bigint,
+    overwrittenVotesCount: bigint,
     creationBlock: bigint,
     batchNumber: bigint,
     metadataURI: string,
@@ -114,8 +114,8 @@ export declare namespace IProcessRegistry {
     result: bigint[];
     startTime: bigint;
     duration: bigint;
-    voteCount: bigint;
-    voteOverwriteCount: bigint;
+    votersCount: bigint;
+    overwrittenVotesCount: bigint;
     creationBlock: bigint;
     batchNumber: bigint;
     metadataURI: string;
@@ -541,8 +541,8 @@ export interface ProcessRegistry extends BaseContract {
         latestStateRoot: bigint;
         startTime: bigint;
         duration: bigint;
-        voteCount: bigint;
-        voteOverwriteCount: bigint;
+        votersCount: bigint;
+        overwrittenVotesCount: bigint;
         creationBlock: bigint;
         batchNumber: bigint;
         metadataURI: string;
@@ -676,8 +676,8 @@ export interface ProcessRegistry extends BaseContract {
         latestStateRoot: bigint;
         startTime: bigint;
         duration: bigint;
-        voteCount: bigint;
-        voteOverwriteCount: bigint;
+        votersCount: bigint;
+        overwrittenVotesCount: bigint;
         creationBlock: bigint;
         batchNumber: bigint;
         metadataURI: string;

@@ -90,8 +90,8 @@ struct Process {
     uint256[] result; // Final voting results
     uint256 startTime; // Process start timestamp
     uint256 duration; // Process duration in seconds
-    uint256 voteCount; // Total votes cast
-    uint256 voteOverwriteCount; // Total vote overwrites
+    uint256 votersCount; // Total voters that participated
+    uint256 overwrittenVotesCount; // Total vote overwrites
     string metadataURI; // URI to process metadata
     BallotMode ballotMode; // Voting configuration
     Census census; // Voter eligibility data
