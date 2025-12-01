@@ -76,6 +76,21 @@ contract ProcessRegistry is IProcessRegistry {
         pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
     }
 
+    struct StateTransitionBatchProofInputs {
+        uint256 rootHashBefore;
+        uint256 rootHashAfter;
+        uint256 votersCount;
+        uint256 overwrittenVotesCount;
+        uint256 censusRoot;
+        uint256 blobEvaluationPointZ;
+        uint256 blobEvaluationPointYLimb0;
+        uint256 blobEvaluationPointYLimb1;
+        uint256 blobEvaluationPointYLimb2;
+        uint256 blobEvaluationPointYLimb3;
+        bytes blobCommitment;
+        bytes blobProof;
+    }
+
     /// @inheritdoc IProcessRegistry
     function getProcess(bytes32 processId) external view override returns (Process memory) {
         return processes[processId];
@@ -228,40 +243,41 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        (uint256[10] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
-            input,
-            (uint256[10], bytes, bytes)
-        );
+        StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
 
-        if (decompressedInput[0] != p.latestStateRoot) {
+        if (st.rootHashBefore != p.latestStateRoot) {
             revert InvalidStateRoot();
         }
 
         if (blobsDA) {
-            bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
+            bytes32 versionedHash = BlobsLib.calcBlobHashV1(st.blobCommitment);
 
             _verifyBlobDataIsAvailable(versionedHash);
 
-            bytes32 z = bytes32(decompressedInput[5]);
-            bytes32 y = BlobsLib.packYFromLELimbs(
-                decompressedInput[6],
-                decompressedInput[7],
-                decompressedInput[8],
-                decompressedInput[9]
+            BlobsLib.verifyKZG(
+                BlobsLib.buildKZGInput(
+                    versionedHash,
+                    bytes32(st.blobEvaluationPointZ),
+                    BlobsLib.packYFromLELimbs(
+                        st.blobEvaluationPointYLimb0,
+                        st.blobEvaluationPointYLimb1,
+                        st.blobEvaluationPointYLimb2,
+                        st.blobEvaluationPointYLimb3
+                    ),
+                    st.blobCommitment,
+                    st.blobProof
+                )
             );
-            bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
-
-            BlobsLib.verifyKZG(kzgInput);
         }
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
-        p.latestStateRoot = decompressedInput[1];
-        p.votersCount += decompressedInput[2]; // TODO: should be p.votersCount += (st.VotersCount - st.OverwrittenVotesCount)
-        p.overwrittenVotesCount += decompressedInput[3];
+        p.latestStateRoot = st.rootHashAfter;
+        p.votersCount += st.votersCount; // TODO: should be p.votersCount += (st.VotersCount - st.OverwrittenVotesCount)
+        p.overwrittenVotesCount += st.overwrittenVotesCount;
         ++p.batchNumber;
 
-        emit ProcessStateRootUpdated(processId, msg.sender, decompressedInput[1]);
+        emit ProcessStateRootUpdated(processId, msg.sender, st.rootHashAfter);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -399,5 +415,34 @@ contract ProcessRegistry is IProcessRegistry {
     /// @param versionedHash The blob versioned hash
     function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view virtual {
         BlobsLib.verifyBlobDataIsAvailable(versionedHash);
+    }
+
+    /// @notice Decodes state transition batch proof inputs
+    /// @dev Wrapper around abi.decode for (uint256[10], bytes, bytes) produced by the sequencer.
+    ///      Returns a named struct for readability and to avoid magic indices.
+    /// @param input ABI-encoded batch inputs: (uint256[10], blobCommitment, blobProof)
+    /// @return st The decoded inputs as StateTransitionBatchProofInputs
+    function _decodeStateTransitionBatchProofInputs(
+        bytes calldata input
+    ) internal pure returns (StateTransitionBatchProofInputs memory st) {
+        (uint256[10] memory d, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+            input,
+            (uint256[10], bytes, bytes)
+        );
+
+        st = StateTransitionBatchProofInputs({
+            rootHashBefore: d[0],
+            rootHashAfter: d[1],
+            votersCount: d[2],
+            overwrittenVotesCount: d[3],
+            censusRoot: d[4],
+            blobEvaluationPointZ: d[5],
+            blobEvaluationPointYLimb0: d[6],
+            blobEvaluationPointYLimb1: d[7],
+            blobEvaluationPointYLimb2: d[8],
+            blobEvaluationPointYLimb3: d[9],
+            blobCommitment: blobCommitment,
+            blobProof: blobProof
+        });
     }
 }
