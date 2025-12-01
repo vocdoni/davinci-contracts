@@ -26,8 +26,8 @@ export interface StateTransitionVerifierGroth16Interface extends Interface {
       | "compressProof"
       | "provingKeyHash"
       | "verifyCompressedProof"
-      | "verifyProof(uint256[8],uint256[2],uint256[2],uint256[9])"
       | "verifyProof(bytes,bytes)"
+      | "verifyProof(uint256[8],uint256[2],uint256[2],uint256[10])"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -52,17 +52,17 @@ export interface StateTransitionVerifierGroth16Interface extends Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[9])",
+    functionFragment: "verifyProof(bytes,bytes)",
+    values: [BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[10])",
     values: [
       BigNumberish[],
       [BigNumberish, BigNumberish],
       [BigNumberish, BigNumberish],
       BigNumberish[]
     ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "verifyProof(bytes,bytes)",
-    values: [BytesLike, BytesLike]
   ): string;
 
   decodeFunctionResult(
@@ -78,11 +78,11 @@ export interface StateTransitionVerifierGroth16Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[9])",
+    functionFragment: "verifyProof(bytes,bytes)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "verifyProof(bytes,bytes)",
+    functionFragment: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[10])",
     data: BytesLike
   ): Result;
 }
@@ -159,19 +159,19 @@ export interface StateTransitionVerifierGroth16 extends BaseContract {
     "view"
   >;
 
-  "verifyProof(uint256[8],uint256[2],uint256[2],uint256[9])": TypedContractMethod<
+  "verifyProof(bytes,bytes)": TypedContractMethod<
+    [_proof: BytesLike, _input: BytesLike],
+    [void],
+    "view"
+  >;
+
+  "verifyProof(uint256[8],uint256[2],uint256[2],uint256[10])": TypedContractMethod<
     [
       proof: BigNumberish[],
       commitments: [BigNumberish, BigNumberish],
       commitmentPok: [BigNumberish, BigNumberish],
       input: BigNumberish[]
     ],
-    [void],
-    "view"
-  >;
-
-  "verifyProof(bytes,bytes)": TypedContractMethod<
-    [_proof: BytesLike, _input: BytesLike],
     [void],
     "view"
   >;
@@ -213,7 +213,14 @@ export interface StateTransitionVerifierGroth16 extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[9])"
+    nameOrSignature: "verifyProof(bytes,bytes)"
+  ): TypedContractMethod<
+    [_proof: BytesLike, _input: BytesLike],
+    [void],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "verifyProof(uint256[8],uint256[2],uint256[2],uint256[10])"
   ): TypedContractMethod<
     [
       proof: BigNumberish[],
@@ -221,13 +228,6 @@ export interface StateTransitionVerifierGroth16 extends BaseContract {
       commitmentPok: [BigNumberish, BigNumberish],
       input: BigNumberish[]
     ],
-    [void],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "verifyProof(bytes,bytes)"
-  ): TypedContractMethod<
-    [_proof: BytesLike, _input: BytesLike],
     [void],
     "view"
   >;

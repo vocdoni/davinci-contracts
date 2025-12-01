@@ -31,7 +31,7 @@ ProcessRegistry ──implements──> IProcessRegistry
 
 | Name                | Type    | Value | Description                           |
 | ------------------- | ------- | ----- | ------------------------------------- |
-| `MAX_CENSUS_ORIGIN` | `uint8` | 9     | Maximum value for census origin enum  |
+| `MAX_CENSUS_ORIGIN` | `uint8` | 2     | Maximum value for census origin enum  |
 | `MAX_STATUS`        | `uint8` | 4     | Maximum value for process status enum |
 
 ### Storage Variables
@@ -69,16 +69,9 @@ Specifies the type of census used for voter eligibility:
 
 ```solidity
 enum CensusOrigin {
-    CENSUS_UNKNOWN, // Unknown census type
-    OFF_CHAIN_TREE, // Off-chain Merkle tree
-    OFF_CHAIN_TREE_WEIGHTED, // Weighted off-chain tree
-    OFF_CHAIN_CA, // Off-chain certificate authority
-    ERC20, // ERC20 token holders
-    ERC721, // ERC721 NFT holders
-    ERC1155, // ERC1155 token holders
-    ERC777, // ERC777 token holders
-    MINI_ME, // MiniMe token holders
-    FARCASTER_FRAME // Farcaster frame census
+    CENSUS_UNKNOWN,                 // Unknown census type
+    MERKLE_TREE_OFFCHAIN_STATIC_V1, // Off-chain static Merkle tree
+    CSP_EDDSA_BN254_V1              // CSP over BN254
 }
 ```
 
@@ -129,7 +122,6 @@ Voter eligibility configuration:
 ```solidity
 struct Census {
     CensusOrigin censusOrigin; // Type of census
-    uint256 maxVotes; // Maximum allowed votes
     bytes32 censusRoot; // Merkle root of census
     string censusURI; // URI to census data
 }
@@ -404,7 +396,6 @@ event CensusUpdated(
     bytes32 indexed processId,
     bytes32 censusRoot,
     string censusURI,
-    uint256 maxVotes
 )
 ```
 
@@ -481,7 +472,6 @@ Emitted when process status changes.
 
 ### Census Errors
 
-- `InvalidMaxVotes()`: Max votes is zero or decreasing
 - `InvalidCensusRoot()`: Census root is zero
 - `InvalidCensusURI()`: Census URI is empty
 - `InvalidCensusOrigin()`: Invalid census origin

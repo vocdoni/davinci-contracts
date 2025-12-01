@@ -50,11 +50,6 @@
     },
     {
       "inputs": [],
-      "name": "InvalidMaxVotes",
-      "type": "error"
-    },
-    {
-      "inputs": [],
       "name": "InvalidMinTotalCost",
       "type": "error"
     },
@@ -148,12 +143,6 @@
           "internalType": "string",
           "name": "censusURI",
           "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "maxVotes",
-          "type": "uint256"
         }
       ],
       "name": "CensusUpdated",
@@ -430,11 +419,6 @@
                   "type": "uint8"
                 },
                 {
-                  "internalType": "uint256",
-                  "name": "maxVotes",
-                  "type": "uint256"
-                },
-                {
                   "internalType": "bytes32",
                   "name": "censusRoot",
                   "type": "bytes32"
@@ -575,11 +559,6 @@
               "type": "uint8"
             },
             {
-              "internalType": "uint256",
-              "name": "maxVotes",
-              "type": "uint256"
-            },
-            {
               "internalType": "bytes32",
               "name": "censusRoot",
               "type": "bytes32"
@@ -646,11 +625,6 @@
               "internalType": "enum IProcessRegistry.CensusOrigin",
               "name": "censusOrigin",
               "type": "uint8"
-            },
-            {
-              "internalType": "uint256",
-              "name": "maxVotes",
-              "type": "uint256"
             },
             {
               "internalType": "bytes32",

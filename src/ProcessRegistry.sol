@@ -17,7 +17,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The maximum value of the census origin.
      */
-    uint8 public constant MAX_CENSUS_ORIGIN = 9;
+    uint8 public constant MAX_CENSUS_ORIGIN = 2;
     /**
      * @notice The maximum value of the process status.
      */
@@ -179,7 +179,6 @@ contract ProcessRegistry is IProcessRegistry {
 
         // check census
         if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
-        if (p.census.maxVotes > census.maxVotes) revert InvalidMaxVotes();
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
@@ -187,11 +186,10 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        p.census.maxVotes = census.maxVotes;
         p.census.censusRoot = census.censusRoot;
         p.census.censusURI = census.censusURI;
 
-        emit CensusUpdated(processId, census.censusRoot, census.censusURI, census.maxVotes);
+        emit CensusUpdated(processId, census.censusRoot, census.censusURI);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -230,9 +228,9 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.status != ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
-        (uint256[9] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+        (uint256[10] memory decompressedInput, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
             input,
-            (uint256[9], bytes, bytes)
+            (uint256[10], bytes, bytes)
         );
 
         if (decompressedInput[0] != p.latestStateRoot) {
@@ -244,12 +242,12 @@ contract ProcessRegistry is IProcessRegistry {
 
             _verifyBlobDataIsAvailable(versionedHash);
 
-            bytes32 z = bytes32(decompressedInput[4]);
+            bytes32 z = bytes32(decompressedInput[5]);
             bytes32 y = BlobsLib.packYFromLELimbs(
-                decompressedInput[5],
                 decompressedInput[6],
                 decompressedInput[7],
-                decompressedInput[8]
+                decompressedInput[8],
+                decompressedInput[9]
             );
             bytes memory kzgInput = BlobsLib.buildKZGInput(versionedHash, z, y, blobCommitment, blobProof);
 
@@ -326,8 +324,20 @@ contract ProcessRegistry is IProcessRegistry {
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
-        if (census.maxVotes == 0) revert InvalidMaxVotes();
+
+        // Census root based on census origin:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Address of census manager contract (should be queried once, during process creation)
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (should be queried on each transition, during state transitions verification)
+        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey (fixed)
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        // CensusURI based on census origin:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
+        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 ───┤
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
+        //  - CSP_EDDSA_BN254_V1 -> URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
