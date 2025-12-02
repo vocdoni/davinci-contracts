@@ -21,3 +21,6 @@ forge script script/DeployAll.s.sol:DeployAllScript \
     --optimizer-runs 200 \
     --verify \
     -vvvv
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+$SCRIPT_DIR/helpers/write_contract_addresses.sh

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+JSON_FILE="$(mktemp)"
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+$SCRIPT_DIR/parse_deployall_runs.sh > $JSON_FILE
+
 # Script to generate Go constants from deployed_contracts_addresses.json
 # This script reads the JSON file and creates hardcoded address constants
 
@@ -11,8 +16,7 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Define input and output files
-JSON_FILE="deployed_contracts_addresses.json"
+# Define output files
 OUTPUT_FILE="golang-types/addresses.go"
 
 # Check if JSON file exists
@@ -74,6 +78,19 @@ const (
 	StateTransitionVerifierGroth16Contract = "stateTransitionVerifierGroth16"
 	ResultsVerifierGroth16Contract         = "resultsVerifierGroth16"
 	SequencerRegistryContract              = "sequencerRegistry"
+)
+
+// Dummy consts until we deploy on Mainnet and develop SequencerRegistry
+const (
+	OrganizationRegistryMainnetAddress = "0x0"
+	ProcessRegistryMainnetAddress = "0x0"
+	ResultsVerifierGroth16MainnetAddress = "0x0"
+	SequencerRegistryBaseAddress = "0x0"
+	SequencerRegistryCeloAddress = "0x0"
+	SequencerRegistryMainnetAddress = "0x0"
+	SequencerRegistrySepoliaAddress = "0x0"
+	SequencerRegistryUzhAddress = "0x0"
+	StateTransitionVerifierGroth16MainnetAddress = "0x0"
 )
 
 // Contract addresses by network
