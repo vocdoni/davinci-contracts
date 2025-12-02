@@ -5,7 +5,7 @@ JSON_FILE="$(mktemp)"
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 $SCRIPT_DIR/parse_deployall_runs.sh > $JSON_FILE
 
-# Script to generate Go constants from deployed_contracts_addresses.json
+# Script to generate Go constants
 # This script reads the JSON file and creates hardcoded address constants
 
 set -euo pipefail

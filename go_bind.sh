@@ -59,6 +59,5 @@ abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"
 
-# Generate contract addresses from deployed_contracts_addresses.json
-echo "Generating contract addresses file..."
+echo "Generating file with Go constants of contract addresses..."
 ./helpers/write_contract_addresses.sh

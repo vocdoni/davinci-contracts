@@ -8,8 +8,7 @@
         "src": "src"
     },
     "files": [
-        "dist",
-        "deployed_contracts_addresses.json"
+        "dist"
     ],
     "repository": {
         "type": "git",
