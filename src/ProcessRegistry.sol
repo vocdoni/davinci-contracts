@@ -273,7 +273,7 @@ contract ProcessRegistry is IProcessRegistry {
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
         p.latestStateRoot = st.rootHashAfter;
-        p.votersCount += st.votersCount; // TODO: should be p.votersCount += (st.VotersCount - st.OverwrittenVotesCount)
+        p.votersCount += (st.votersCount - st.overwrittenVotesCount);
         p.overwrittenVotesCount += st.overwrittenVotesCount;
         ++p.batchNumber;
 

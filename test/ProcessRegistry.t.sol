@@ -1013,7 +1013,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         // Verify state after transition
         process = processRegistry.getProcess(processId);
         assertEq(process.latestStateRoot, ROOT_HASH_AFTER);
-        assertEq(process.votersCount, VOTERS_COUNT);
+        assertEq(process.votersCount, VOTERS_COUNT - OVERWRITTEN_VOTES_COUNT);
         assertEq(process.overwrittenVotesCount, OVERWRITTEN_VOTES_COUNT);
     }
 
