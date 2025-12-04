@@ -10,6 +10,11 @@
     },
     {
       "inputs": [],
+      "name": "CensusNotUpdatable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "InvalidCensusOrigin",
       "type": "error"
     },

@@ -16,6 +16,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "CensusNotUpdatable",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidCensusOrigin",
     type: "error",
   },
