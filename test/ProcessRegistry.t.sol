@@ -634,11 +634,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         bytes32 processId = createTestProcess(
             defaultBallotMode,
             ROOT_HASH_BEFORE,
-            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -652,7 +652,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessCensus_NonExistentProcess() public {
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -669,7 +669,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -680,7 +680,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         vm.stopPrank();
     }
 
-    function test_SetProcessCensus_InvalidCensus_EmptyURI() public {
+    function test_SetProcessCensus_NotUpdatableCensusOrigin() public {
         bytes32 processId = createTestProcess(
             defaultBallotMode,
             ROOT_HASH_BEFORE,
@@ -689,6 +689,22 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
+            censusURI: "https://example.com/new-census"
+        });
+        vm.expectRevert(IProcessRegistry.CensusNotUpdatable.selector);
+        processRegistry.setProcessCensus(processId, newCensus);
+    }
+
+    function test_SetProcessCensus_InvalidCensus_EmptyURI() public {
+        bytes32 processId = createTestProcess(
+            defaultBallotMode,
+            ROOT_HASH_BEFORE,
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
+        );
+
+        IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: ""
         });
@@ -701,11 +717,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         bytes32 processId = createTestProcess(
             defaultBallotMode,
             ROOT_HASH_BEFORE,
-            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0,
             censusURI: "https://example.com/new-census"
         });
@@ -718,14 +734,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
         bytes32 processId = createTestProcess(
             defaultBallotMode,
             ROOT_HASH_BEFORE,
-            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
         // Set process to CANCELED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });
@@ -738,14 +754,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
         bytes32 processId = createTestProcess(
             defaultBallotMode,
             ROOT_HASH_BEFORE,
-            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+            IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
         // Set process to PAUSED
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
-            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
         });

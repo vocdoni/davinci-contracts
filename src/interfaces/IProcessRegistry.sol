@@ -163,6 +163,10 @@ interface IProcessRegistry {
      */
     error ProofInvalid();
     /**
+     * @notice Thrown when the census is not updatable.
+     */
+    error CensusNotUpdatable();
+    /**
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
@@ -186,6 +190,8 @@ interface IProcessRegistry {
     enum CensusOrigin {
         CENSUS_UNKNOWN,
         MERKLE_TREE_OFFCHAIN_STATIC_V1,
+        MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
+        MERKLE_TREE_ONCHAIN_V1,
         CSP_EDDSA_BN254_V1
     }
 

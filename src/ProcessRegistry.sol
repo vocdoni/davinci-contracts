@@ -17,7 +17,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The maximum value of the census origin.
      */
-    uint8 public constant MAX_CENSUS_ORIGIN = 2;
+    uint8 public constant MAX_CENSUS_ORIGIN = 4;
     /**
      * @notice The maximum value of the process status.
      */
@@ -189,6 +189,7 @@ contract ProcessRegistry is IProcessRegistry {
         Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
+        if (p.census.censusOrigin != CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1) revert CensusNotUpdatable();
 
         // check census
         if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
