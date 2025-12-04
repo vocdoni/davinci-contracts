@@ -35,7 +35,6 @@ interface IProcessRegistry {
      * @param newStateRoot The new state root of the process.
      */
     event ProcessStateRootUpdated(bytes32 indexed processId, address indexed sender, uint256 newStateRoot);
-
     /*
      * @notice Emitted when the results of a process are set.
      * @param processId The ID of the process.
@@ -50,6 +49,12 @@ interface IProcessRegistry {
      * @param newStatus The new status of the process
      */
     event ProcessStatusChanged(bytes32 indexed processId, ProcessStatus oldStatus, ProcessStatus newStatus);
+    /**
+     * @notice Emitted when the max voters of a process is modified
+     * @param processId The ID of the process
+     * @param maxVoters The new max voters of the process
+     */
+    event ProcessMaxVotersChanged(bytes32 indexed processId, uint256 maxVoters);
 
     /// ERRORS ///
 
@@ -65,6 +70,14 @@ interface IProcessRegistry {
      * @notice InvalidDuration error is emitted when the duration of the process is invalid.
      */
     error InvalidDuration();
+    /**
+     * @notice InvalidMaxVoters error is emitted when the maximum number of voters is invalid.
+     */
+    error InvalidMaxVoters();
+    /**
+     * @notice MaxVotersReached error is emitted when the maximum number of voters has been reached.
+     */
+    error MaxVotersReached();
     /**
      * @notice InvalidMaxCount error is emitted when the maximum count of the ballot mode is invalid.
      */
@@ -239,6 +252,7 @@ interface IProcessRegistry {
      * @param result The result of the process.
      * @param startTime The start time of the process.
      * @param duration The duration of the process.
+     * @param maxVoters The maximum number of voters allowed.
      * @param votersCount The total number of voters that participated.
      * @param overwrittenVotesCount The number of times votes were overwritten in the state.
      * @param creationBlock The block number when the process was created.
@@ -255,6 +269,7 @@ interface IProcessRegistry {
         uint256[] result;
         uint256 startTime;
         uint256 duration;
+        uint256 maxVoters;
         uint256 votersCount;
         uint256 overwrittenVotesCount;
         uint256 creationBlock;
@@ -306,6 +321,7 @@ interface IProcessRegistry {
      * @param status The initial status of the process.
      * @param startTime The start time of the process.
      * @param duration The duration of the process.
+     * @param maxVoters The maximum number of voters allowed.
      * @param ballotMode The ballot mode of the process.
      * @param census The census of the process.
      * @param metadata The URI of the metadata.
@@ -316,6 +332,7 @@ interface IProcessRegistry {
         ProcessStatus status,
         uint256 startTime,
         uint256 duration,
+        uint256 maxVoters,
         BallotMode calldata ballotMode,
         Census calldata census,
         string calldata metadata,
@@ -343,6 +360,13 @@ interface IProcessRegistry {
      * @param duration The new duration of the process.
      */
     function setProcessDuration(bytes32 processId, uint256 duration) external;
+
+    /**
+     * @notice Sets the maximum number of voters allowed in a process.
+     * @param processId The ID of the process.
+     * @param maxVoters The new maximum number of voters.
+     */
+    function setProcessMaxVoters(bytes32 processId, uint256 maxVoters) external;
 
     /**
      * @notice Sets the results of a process.

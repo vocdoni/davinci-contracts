@@ -122,6 +122,7 @@ contract ProcessRegistry is IProcessRegistry {
         ProcessStatus status,
         uint256 startTime,
         uint256 duration,
+        uint256 maxVoters,
         BallotMode calldata ballotMode,
         Census calldata census,
         string calldata metadata,
@@ -132,13 +133,14 @@ contract ProcessRegistry is IProcessRegistry {
         bytes32 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
-        _validateNewProcess(processId, sender, status, startTime, duration, ballotMode, census);
+        _validateNewProcess(processId, sender, status, startTime, duration, maxVoters, ballotMode, census);
 
         Process storage p = processes[processId];
 
         p.status = status;
         p.startTime = startTime;
         p.duration = duration;
+        p.maxVoters = maxVoters;
         p.organizationId = sender;
         p.encryptionKey = encryptionKey;
         p.latestStateRoot = initStateRoot;
@@ -235,6 +237,26 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
+    function setProcessMaxVoters(bytes32 processId, uint256 _maxVoters) external override {
+        if (processId == bytes32(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        Process storage p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
+        if (p.organizationId != msg.sender) revert Unauthorized();
+
+        // check ongoing process
+        ProcessStatus status = p.status;
+        if (status != ProcessStatus.READY && status != ProcessStatus.PAUSED) revert InvalidStatus();
+
+        // check valid maxVoters
+        if (_maxVoters == 0 || _maxVoters < p.votersCount) revert InvalidMaxVoters();
+
+        p.maxVoters = _maxVoters;
+
+        emit ProcessMaxVotersChanged(processId, _maxVoters);
+    }
+
+    /// @inheritdoc IProcessRegistry
     function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
@@ -245,9 +267,13 @@ contract ProcessRegistry is IProcessRegistry {
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
 
-        if (st.rootHashBefore != p.latestStateRoot) {
-            revert InvalidStateRoot();
-        }
+        // Validate state root before matches latest state root
+        if (st.rootHashBefore != p.latestStateRoot) revert InvalidStateRoot();
+
+        // Validate max votes not exceeded after including the new votes in the batch
+        // but only if the batch contains new votes (votersCount - overwrittenVotesCount > 0)
+        uint256 newVoters = st.votersCount - st.overwrittenVotesCount;
+        if (newVoters > 0 && p.votersCount >= p.maxVoters) revert MaxVotersReached();
 
         if (blobsDA) {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(st.blobCommitment);
@@ -273,7 +299,7 @@ contract ProcessRegistry is IProcessRegistry {
         IZKVerifier(stVerifier).verifyProof(proof, input);
 
         p.latestStateRoot = st.rootHashAfter;
-        p.votersCount += (st.votersCount - st.overwrittenVotesCount);
+        p.votersCount += newVoters;
         p.overwrittenVotesCount += st.overwrittenVotesCount;
         ++p.batchNumber;
 
@@ -327,6 +353,7 @@ contract ProcessRegistry is IProcessRegistry {
         ProcessStatus status,
         uint256 startTime,
         uint256 duration,
+        uint256 maxVoters,
         BallotMode calldata ballotMode,
         Census calldata census
     ) private view {
@@ -337,6 +364,9 @@ contract ProcessRegistry is IProcessRegistry {
         if (ballotMode.maxValueSum > 65535) revert InvalidMaxValueSum();
         if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
         if (ballotMode.minValueSum > ballotMode.maxValueSum) revert InvalidValueSumBounds();
+
+        // validate max voters
+        if (maxVoters == 0) revert InvalidMaxVoters();
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();

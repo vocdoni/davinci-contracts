@@ -82,6 +82,7 @@ export declare namespace IProcessRegistry {
     result: BigNumberish[];
     startTime: BigNumberish;
     duration: BigNumberish;
+    maxVoters: BigNumberish;
     votersCount: BigNumberish;
     overwrittenVotesCount: BigNumberish;
     creationBlock: BigNumberish;
@@ -99,6 +100,7 @@ export declare namespace IProcessRegistry {
     result: bigint[],
     startTime: bigint,
     duration: bigint,
+    maxVoters: bigint,
     votersCount: bigint,
     overwrittenVotesCount: bigint,
     creationBlock: bigint,
@@ -114,6 +116,7 @@ export declare namespace IProcessRegistry {
     result: bigint[];
     startTime: bigint;
     duration: bigint;
+    maxVoters: bigint;
     votersCount: bigint;
     overwrittenVotesCount: bigint;
     creationBlock: bigint;
@@ -135,6 +138,7 @@ export interface IProcessRegistryInterface extends Interface {
       | "newProcess"
       | "setProcessCensus"
       | "setProcessDuration"
+      | "setProcessMaxVoters"
       | "setProcessResults"
       | "setProcessStatus"
       | "submitStateTransition"
@@ -145,6 +149,7 @@ export interface IProcessRegistryInterface extends Interface {
       | "CensusUpdated"
       | "ProcessCreated"
       | "ProcessDurationChanged"
+      | "ProcessMaxVotersChanged"
       | "ProcessResultsSet"
       | "ProcessStateRootUpdated"
       | "ProcessStatusChanged"
@@ -176,6 +181,7 @@ export interface IProcessRegistryInterface extends Interface {
       BigNumberish,
       BigNumberish,
       BigNumberish,
+      BigNumberish,
       IProcessRegistry.BallotModeStruct,
       IProcessRegistry.CensusStruct,
       string,
@@ -189,6 +195,10 @@ export interface IProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessDuration",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProcessMaxVoters",
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -228,6 +238,10 @@ export interface IProcessRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setProcessDuration",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProcessMaxVoters",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -285,6 +299,19 @@ export namespace ProcessDurationChangedEvent {
   export interface OutputObject {
     processId: string;
     duration: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProcessMaxVotersChangedEvent {
+  export type InputTuple = [processId: BytesLike, maxVoters: BigNumberish];
+  export type OutputTuple = [processId: string, maxVoters: bigint];
+  export interface OutputObject {
+    processId: string;
+    maxVoters: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -428,6 +455,7 @@ export interface IProcessRegistry extends BaseContract {
       status: BigNumberish,
       startTime: BigNumberish,
       duration: BigNumberish,
+      maxVoters: BigNumberish,
       ballotMode: IProcessRegistry.BallotModeStruct,
       census: IProcessRegistry.CensusStruct,
       metadata: string,
@@ -446,6 +474,12 @@ export interface IProcessRegistry extends BaseContract {
 
   setProcessDuration: TypedContractMethod<
     [processId: BytesLike, duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setProcessMaxVoters: TypedContractMethod<
+    [processId: BytesLike, maxVoters: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -498,6 +532,7 @@ export interface IProcessRegistry extends BaseContract {
       status: BigNumberish,
       startTime: BigNumberish,
       duration: BigNumberish,
+      maxVoters: BigNumberish,
       ballotMode: IProcessRegistry.BallotModeStruct,
       census: IProcessRegistry.CensusStruct,
       metadata: string,
@@ -518,6 +553,13 @@ export interface IProcessRegistry extends BaseContract {
     nameOrSignature: "setProcessDuration"
   ): TypedContractMethod<
     [processId: BytesLike, duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setProcessMaxVoters"
+  ): TypedContractMethod<
+    [processId: BytesLike, maxVoters: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -563,6 +605,13 @@ export interface IProcessRegistry extends BaseContract {
     ProcessDurationChangedEvent.InputTuple,
     ProcessDurationChangedEvent.OutputTuple,
     ProcessDurationChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProcessMaxVotersChanged"
+  ): TypedContractEvent<
+    ProcessMaxVotersChangedEvent.InputTuple,
+    ProcessMaxVotersChangedEvent.OutputTuple,
+    ProcessMaxVotersChangedEvent.OutputObject
   >;
   getEvent(
     key: "ProcessResultsSet"
@@ -618,6 +667,17 @@ export interface IProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.InputTuple,
       ProcessDurationChangedEvent.OutputTuple,
       ProcessDurationChangedEvent.OutputObject
+    >;
+
+    "ProcessMaxVotersChanged(bytes32,uint256)": TypedContractEvent<
+      ProcessMaxVotersChangedEvent.InputTuple,
+      ProcessMaxVotersChangedEvent.OutputTuple,
+      ProcessMaxVotersChangedEvent.OutputObject
+    >;
+    ProcessMaxVotersChanged: TypedContractEvent<
+      ProcessMaxVotersChangedEvent.InputTuple,
+      ProcessMaxVotersChangedEvent.OutputTuple,
+      ProcessMaxVotersChangedEvent.OutputObject
     >;
 
     "ProcessResultsSet(bytes32,address,uint256[])": TypedContractEvent<

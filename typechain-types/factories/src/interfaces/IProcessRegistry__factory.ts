@@ -56,6 +56,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidMaxVoters",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidMinTotalCost",
     type: "error",
   },
@@ -97,6 +102,11 @@ const _abi = [
   {
     inputs: [],
     name: "InvalidValueSumBounds",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "MaxVotersReached",
     type: "error",
   },
   {
@@ -190,6 +200,25 @@ const _abi = [
       },
     ],
     name: "ProcessDurationChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "processId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "maxVoters",
+        type: "uint256",
+      },
+    ],
+    name: "ProcessMaxVotersChanged",
     type: "event",
   },
   {
@@ -343,6 +372,11 @@ const _abi = [
           {
             internalType: "uint256",
             name: "duration",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "maxVoters",
             type: "uint256",
           },
           {
@@ -511,6 +545,11 @@ const _abi = [
         type: "uint256",
       },
       {
+        internalType: "uint256",
+        name: "maxVoters",
+        type: "uint256",
+      },
+      {
         components: [
           {
             internalType: "bool",
@@ -667,6 +706,24 @@ const _abi = [
       },
     ],
     name: "setProcessDuration",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "processId",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "maxVoters",
+        type: "uint256",
+      },
+    ],
+    name: "setProcessMaxVoters",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
