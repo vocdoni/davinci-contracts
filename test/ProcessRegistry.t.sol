@@ -91,6 +91,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp, // current time
             1000,
+            10000,
             ballotMode,
             cen,
             "https://example.com/metadata/",
@@ -377,6 +378,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             futureStartTime,
             2000, // Duration of 2000 seconds
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -419,6 +421,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.PAUSED, // Start in PAUSED state
             futureStartTime,
             1000,
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -458,6 +461,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             futureStartTime,
             2000,
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -516,6 +520,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp, // Start now
             1000,
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -550,6 +555,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             futureStartTime,
             2000,
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -582,6 +588,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp + 1000,
             2000,
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -601,6 +608,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp + 500,
             1000,
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -836,6 +844,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp, // current time
             1000000,
+            10000,
             invalidBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -872,6 +881,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp, // current time
             1000000,
+            10000,
             invalidBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -1547,6 +1557,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             IProcessRegistry.ProcessStatus.READY,
             block.timestamp,
             1, // 1 second duration
+            10000,
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
@@ -1806,6 +1817,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
                 IProcessRegistry.ProcessStatus.READY,
                 block.timestamp,
                 1000,
+                10000,
                 defaultBallotMode,
                 cen,
                 "https://example.com/metadata/",
