@@ -82,11 +82,9 @@ contract ProcessRegistry is IProcessRegistry {
         uint256 votersCount;
         uint256 overwrittenVotesCount;
         uint256 censusRoot;
-        uint256 blobEvaluationPointZ;
-        uint256 blobEvaluationPointYLimb0;
-        uint256 blobEvaluationPointYLimb1;
-        uint256 blobEvaluationPointYLimb2;
-        uint256 blobEvaluationPointYLimb3;
+        uint256 blobCommitmentLimb0;
+        uint256 blobCommitmentLimb1;
+        uint256 blobCommitmentLimb2;
         bytes blobCommitment;
         bytes blobProof;
     }
@@ -277,23 +275,7 @@ contract ProcessRegistry is IProcessRegistry {
 
         if (blobsDA) {
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(st.blobCommitment);
-
             _verifyBlobDataIsAvailable(versionedHash);
-
-            BlobsLib.verifyKZG(
-                BlobsLib.buildKZGInput(
-                    versionedHash,
-                    bytes32(st.blobEvaluationPointZ),
-                    BlobsLib.packYFromLELimbs(
-                        st.blobEvaluationPointYLimb0,
-                        st.blobEvaluationPointYLimb1,
-                        st.blobEvaluationPointYLimb2,
-                        st.blobEvaluationPointYLimb3
-                    ),
-                    st.blobCommitment,
-                    st.blobProof
-                )
-            );
         }
 
         IZKVerifier(stVerifier).verifyProof(proof, input);
@@ -455,9 +437,9 @@ contract ProcessRegistry is IProcessRegistry {
     function _decodeStateTransitionBatchProofInputs(
         bytes calldata input
     ) internal pure returns (StateTransitionBatchProofInputs memory st) {
-        (uint256[10] memory d, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
+        (uint256[8] memory d, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
             input,
-            (uint256[10], bytes, bytes)
+            (uint256[8], bytes, bytes)
         );
 
         st = StateTransitionBatchProofInputs({
@@ -466,11 +448,9 @@ contract ProcessRegistry is IProcessRegistry {
             votersCount: d[2],
             overwrittenVotesCount: d[3],
             censusRoot: d[4],
-            blobEvaluationPointZ: d[5],
-            blobEvaluationPointYLimb0: d[6],
-            blobEvaluationPointYLimb1: d[7],
-            blobEvaluationPointYLimb2: d[8],
-            blobEvaluationPointYLimb3: d[9],
+            blobCommitmentLimb0: d[5],
+            blobCommitmentLimb1: d[6],
+            blobCommitmentLimb2: d[7],
             blobCommitment: blobCommitment,
             blobProof: blobProof
         });

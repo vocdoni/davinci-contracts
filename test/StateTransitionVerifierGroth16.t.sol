@@ -7,7 +7,16 @@ import { stdError } from "forge-std/StdError.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 
 contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
-    uint256[8] public proof = [STATETRANITION_PROOF_AR[0], STATETRANITION_PROOF_AR[1], STATETRANITION_PROOF_BS[0][0], STATETRANITION_PROOF_BS[0][1], STATETRANITION_PROOF_BS[1][0], STATETRANITION_PROOF_BS[1][1], STATETRANITION_PROOF_KRS[0], STATETRANITION_PROOF_KRS[1]];
+    uint256[8] public proof = [
+        STATETRANITION_PROOF_AR[0],
+        STATETRANITION_PROOF_AR[1],
+        STATETRANITION_PROOF_BS[0][0],
+        STATETRANITION_PROOF_BS[0][1],
+        STATETRANITION_PROOF_BS[1][0],
+        STATETRANITION_PROOF_BS[1][1],
+        STATETRANITION_PROOF_KRS[0],
+        STATETRANITION_PROOF_KRS[1]
+    ];
 
     StateTransitionVerifierGroth16 public stv;
 
@@ -16,17 +25,15 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_OK() public view {
-        uint256[10] memory input = [
+        uint256[8] memory input = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER,
             VOTERS_COUNT,
             OVERWRITTEN_VOTES_COUNT,
             CENSUS_ROOT,
-            BLOB_EVALUATION_POINT_Z,
-            BLOB_EVALUATION_POINT_Y_L1,
-            BLOB_EVALUATION_POINT_Y_L2,
-            BLOB_EVALUATION_POINT_Y_L3,
-            BLOB_EVALUATION_POINT_Y_L4
+            BLOBS_COMMITMENT_L1,
+            BLOBS_COMMITMENT_L2,
+            BLOBS_COMMITMENT_L3
         ];
         stv.verifyProof(proof, STATETRANITION_PROOF_COMMITMENTS, STATETRANITION_PROOF_COMMITMENTSPOK, input);
     }
@@ -39,24 +46,26 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
         (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(
             STATETRANSITION_ABI_PROOF
         );
-        uint256[10] memory inputBad = [
+        uint256[8] memory inputBad = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER_BAD,
             VOTERS_COUNT,
             OVERWRITTEN_VOTES_COUNT,
             CENSUS_ROOT,
-            BLOB_EVALUATION_POINT_Z,
-            BLOB_EVALUATION_POINT_Y_L1,
-            BLOB_EVALUATION_POINT_Y_L2,
-            BLOB_EVALUATION_POINT_Y_L3,
-            BLOB_EVALUATION_POINT_Y_L4
+            BLOBS_COMMITMENT_L1,
+            BLOBS_COMMITMENT_L2,
+            BLOBS_COMMITMENT_L3
         ];
         vm.expectRevert();
         stv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
     }
 
     function test_Encode_Proof() public view {
-        bytes memory encodedProof = encodeProof(proof, STATETRANITION_PROOF_COMMITMENTS, STATETRANITION_PROOF_COMMITMENTSPOK);
+        bytes memory encodedProof = encodeProof(
+            proof,
+            STATETRANITION_PROOF_COMMITMENTS,
+            STATETRANITION_PROOF_COMMITMENTSPOK
+        );
         if (keccak256(encodedProof) != keccak256(STATETRANSITION_ABI_PROOF)) {
             revert();
         }
@@ -85,7 +94,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Decode_Inputs() public pure {
-        (uint256[10] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
+        (uint256[8] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
             stateTransitionInputs()
         );
         if (
@@ -94,11 +103,9 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             inputs[2] != VOTERS_COUNT ||
             inputs[3] != OVERWRITTEN_VOTES_COUNT ||
             inputs[4] != CENSUS_ROOT ||
-            inputs[5] != BLOB_EVALUATION_POINT_Z ||
-            inputs[6] != BLOB_EVALUATION_POINT_Y_L1 ||
-            inputs[7] != BLOB_EVALUATION_POINT_Y_L2 ||
-            inputs[8] != BLOB_EVALUATION_POINT_Y_L3 ||
-            inputs[9] != BLOB_EVALUATION_POINT_Y_L4 ||
+            inputs[5] != BLOBS_COMMITMENT_L1 ||
+            inputs[6] != BLOBS_COMMITMENT_L2 ||
+            inputs[7] != BLOBS_COMMITMENT_L3 ||
             keccak256(blobCommitment) != keccak256(BLOB_COMMITMENT) ||
             keccak256(blobProof) != keccak256(BLOB_PROOF)
         ) {
