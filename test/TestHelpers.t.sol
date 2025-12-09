@@ -13,12 +13,12 @@ abstract contract TestHelpers is TestInputs {
 
     function decodeStateTransitionInputs(
         bytes memory _encodedInputs
-    ) internal pure returns (uint256[10] memory, bytes memory, bytes memory) {
-        return abi.decode(_encodedInputs, (uint256[10], bytes, bytes));
+    ) internal pure returns (uint256[8] memory, bytes memory, bytes memory) {
+        return abi.decode(_encodedInputs, (uint256[8], bytes, bytes));
     }
 
     function encodeStateTransitionInputs(
-        uint256[10] memory inputs,
+        uint256[8] memory inputs,
         bytes memory blobCommitment,
         bytes memory blobProof
     ) public pure returns (bytes memory) {
@@ -34,11 +34,9 @@ abstract contract TestHelpers is TestInputs {
                     VOTERS_COUNT,
                     OVERWRITTEN_VOTES_COUNT,
                     CENSUS_ROOT,
-                    BLOB_EVALUATION_POINT_Z,
-                    BLOB_EVALUATION_POINT_Y_L1,
-                    BLOB_EVALUATION_POINT_Y_L2,
-                    BLOB_EVALUATION_POINT_Y_L3,
-                    BLOB_EVALUATION_POINT_Y_L4
+                    BLOBS_COMMITMENT_L1,
+                    BLOBS_COMMITMENT_L2,
+                    BLOBS_COMMITMENT_L3
                 ],
                 BLOB_COMMITMENT,
                 BLOB_PROOF
