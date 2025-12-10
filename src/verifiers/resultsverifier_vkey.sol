@@ -8,7 +8,7 @@ pragma solidity ^0.8.28;
 /// (256 bytes) and compressed (128 bytes) format. A view function is provided
 /// to compress proofs.
 /// @notice See <https://2π.com/23/bn254-compression> for further explanation.
-contract ResultsVerifierBaseGroth16 {
+contract Verifier {
     bytes32 constant PROVING_KEY_HASH = 0x6e2fe44cbdb5b75c383e4d7a2e14dd89fe0b8771ff0bfa2edb9518730a11fe96;
 
     /// Some of the provided public input values are larger than the field modulus.
@@ -86,15 +86,6 @@ contract ResultsVerifierBaseGroth16 {
 
     // Pedersen GSigmaNeg point in G2 in powers of i
     uint256 constant PEDERSEN_GSIGMANEG_X_0 =
-<<<<<<< HEAD:src/verifiers/resultsverifier_vkey.sol
-        833601705030864212802282952614148653027988021047565808207085117379913925243;
-    uint256 constant PEDERSEN_GSIGMANEG_X_1 =
-        14982813905657328340685495534688724002823625655293325261029891923388273634617;
-    uint256 constant PEDERSEN_GSIGMANEG_Y_0 =
-        15819119847486220429289585499778383142844066750414140462700246538613921793346;
-    uint256 constant PEDERSEN_GSIGMANEG_Y_1 =
-        16899090113685943177315575184052848391617471829323675283847136990351736933935;
-=======
         15153065325015393032655074942563827418750083712925947023536989633980095582660;
     uint256 constant PEDERSEN_GSIGMANEG_X_1 =
         7280835141586421236191044360870623418289057869545462981783956718315446786102;
@@ -102,7 +93,6 @@ contract ResultsVerifierBaseGroth16 {
         19199019525075202475140549845170627755205190879170939474308268121373042699122;
     uint256 constant PEDERSEN_GSIGMANEG_Y_1 =
         3149233019908394123492698863556516057155977931426333667836216999953841642951;
->>>>>>> f7a1c77 (new inputs for statetransition verifier):src/verifiers/ResultsVerifierBaseGroth16.sol
 
     // Constant and public input points
     uint256 constant CONSTANT_X = 11486570429447861009658200693334209224278058994334959026442723366403084358382;

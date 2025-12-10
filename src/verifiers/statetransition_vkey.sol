@@ -8,7 +8,7 @@ pragma solidity ^0.8.28;
 /// (256 bytes) and compressed (128 bytes) format. A view function is provided
 /// to compress proofs.
 /// @notice See <https://2π.com/23/bn254-compression> for further explanation.
-contract StateTransitionVerifierBaseGroth16 {
+contract Verifier {
     bytes32 constant PROVING_KEY_HASH = 0x95c27ede6d7d7b092ad108b5ba29f66fdeb69be78613da14c1994e94073370c0;
 
     /// Some of the provided public input values are larger than the field modulus.
