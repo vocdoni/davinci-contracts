@@ -3,25 +3,18 @@ pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
 import { TestHelpers } from "./TestHelpers.t.sol";
-import { stdError } from "forge-std/StdError.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 
 contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
-    uint256[8] public proof = [
-        STATETRANITION_PROOF_AR[0],
-        STATETRANITION_PROOF_AR[1],
-        STATETRANITION_PROOF_BS[0][0],
-        STATETRANITION_PROOF_BS[0][1],
-        STATETRANITION_PROOF_BS[1][0],
-        STATETRANITION_PROOF_BS[1][1],
-        STATETRANITION_PROOF_KRS[0],
-        STATETRANITION_PROOF_KRS[1]
-    ];
+    uint256[8] public proof;
+    uint256[2] public proofCommitments;
+    uint256[2] public proofCommitmentPok;
 
     StateTransitionVerifierGroth16 public stv;
 
     function setUp() public {
         stv = new StateTransitionVerifierGroth16();
+        (proof, proofCommitments, proofCommitmentPok) = decodedProof();
     }
 
     function test_Verify_OK() public view {
@@ -35,7 +28,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             BLOBS_COMMITMENT_L2,
             BLOBS_COMMITMENT_L3
         ];
-        stv.verifyProof(proof, STATETRANITION_PROOF_COMMITMENTS, STATETRANITION_PROOF_COMMITMENTSPOK, input);
+        stv.verifyProof(proof, proofCommitments, proofCommitmentPok, input);
     }
 
     function test_Verify_OK_ABIEncoded() public view {
@@ -61,11 +54,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Encode_Proof() public view {
-        bytes memory encodedProof = encodeProof(
-            proof,
-            STATETRANITION_PROOF_COMMITMENTS,
-            STATETRANITION_PROOF_COMMITMENTSPOK
-        );
+        bytes memory encodedProof = encodeProof(proof, proofCommitments, proofCommitmentPok);
         if (keccak256(encodedProof) != keccak256(STATETRANSITION_ABI_PROOF)) {
             revert();
         }
@@ -84,19 +73,17 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             _proof[5] != proof[5] ||
             _proof[6] != proof[6] ||
             _proof[7] != proof[7] ||
-            _commitments[0] != STATETRANITION_PROOF_COMMITMENTS[0] ||
-            _commitments[1] != STATETRANITION_PROOF_COMMITMENTS[1] ||
-            _commitmentPok[0] != STATETRANITION_PROOF_COMMITMENTSPOK[0] ||
-            _commitmentPok[1] != STATETRANITION_PROOF_COMMITMENTSPOK[1]
+            _commitments[0] != proofCommitments[0] ||
+            _commitments[1] != proofCommitments[1] ||
+            _commitmentPok[0] != proofCommitmentPok[0] ||
+            _commitmentPok[1] != proofCommitmentPok[1]
         ) {
             revert();
         }
     }
 
     function test_Decode_Inputs() public pure {
-        (uint256[8] memory inputs, bytes memory blobCommitment, bytes memory blobProof) = decodeStateTransitionInputs(
-            stateTransitionInputs()
-        );
+        uint256[8] memory inputs = decodeStateTransitionInputs(stateTransitionInputs());
         if (
             inputs[0] != ROOT_HASH_BEFORE ||
             inputs[1] != ROOT_HASH_AFTER ||
@@ -105,9 +92,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             inputs[4] != CENSUS_ROOT ||
             inputs[5] != BLOBS_COMMITMENT_L1 ||
             inputs[6] != BLOBS_COMMITMENT_L2 ||
-            inputs[7] != BLOBS_COMMITMENT_L3 ||
-            keccak256(blobCommitment) != keccak256(BLOB_COMMITMENT) ||
-            keccak256(blobProof) != keccak256(BLOB_PROOF)
+            inputs[7] != BLOBS_COMMITMENT_L3
         ) {
             revert();
         }

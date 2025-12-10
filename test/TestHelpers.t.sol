@@ -11,18 +11,14 @@ abstract contract TestHelpers is TestInputs {
     /// @dev The modulus used in the BLS signature scheme.
     uint256 public constant BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513;
 
-    function decodeStateTransitionInputs(
-        bytes memory _encodedInputs
-    ) internal pure returns (uint256[8] memory, bytes memory, bytes memory) {
-        return abi.decode(_encodedInputs, (uint256[8], bytes, bytes));
+    function decodeStateTransitionInputs(bytes memory _encodedInputs) internal pure returns (uint256[8] memory) {
+        return abi.decode(_encodedInputs, (uint256[8]));
     }
 
     function encodeStateTransitionInputs(
-        uint256[8] memory inputs,
-        bytes memory blobCommitment,
-        bytes memory blobProof
+        uint256[8] memory inputs
     ) public pure returns (bytes memory) {
-        return abi.encode(inputs, blobCommitment, blobProof);
+        return abi.encode(inputs);
     }
 
     function stateTransitionInputs() internal pure returns (bytes memory) {
@@ -37,9 +33,7 @@ abstract contract TestHelpers is TestInputs {
                     BLOBS_COMMITMENT_L1,
                     BLOBS_COMMITMENT_L2,
                     BLOBS_COMMITMENT_L3
-                ],
-                BLOB_COMMITMENT,
-                BLOB_PROOF
+                ]
             );
     }
 

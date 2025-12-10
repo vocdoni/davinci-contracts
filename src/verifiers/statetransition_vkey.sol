@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.28;
@@ -9,7 +10,7 @@ pragma solidity ^0.8.28;
 /// to compress proofs.
 /// @notice See <https://2π.com/23/bn254-compression> for further explanation.
 contract Verifier {
-    bytes32 constant PROVING_KEY_HASH = 0x95c27ede6d7d7b092ad108b5ba29f66fdeb69be78613da14c1994e94073370c0;
+    bytes32 constant PROVING_KEY_HASH = 0x1c28b11858b2731cb965b4d01c32be09bdecf766685bd5634ac82a97f371c72b;
 
     /// Some of the provided public input values are larger than the field modulus.
     /// @dev Public input elements are not automatically reduced, as this is can be
@@ -58,63 +59,59 @@ contract Verifier {
     uint256 constant EXP_SQRT_FP = 0xC19139CB84C680A6E14116DA060561765E05AA45A1C72A34F082305B61F3F52; // (P + 1) / 4;
 
     // Groth16 alpha point in G1
-    uint256 constant ALPHA_X = 1906853662925687529943917309584464981731493465541256989987305789588887147495;
-    uint256 constant ALPHA_Y = 3916039554502943594466771441258650996893527405572266053994357684457508220905;
+    uint256 constant ALPHA_X = 18724263261193270611406507125346960734890213627047060752632100884558633019786;
+    uint256 constant ALPHA_Y = 6282496760129191005282821005536997434143425416644931487512757923998865040425;
 
     // Groth16 beta point in G2 in powers of i
-    uint256 constant BETA_NEG_X_0 = 20242895810734979611978563275614304414393835403259186888833284753930991210041;
-    uint256 constant BETA_NEG_X_1 = 19890220217984768982813089120699917268013104178142739807332955837786108828108;
-    uint256 constant BETA_NEG_Y_0 = 14601058722169592182386763545827786160461528999541179468062208956843615390519;
-    uint256 constant BETA_NEG_Y_1 = 848326557349395793102957405416313474610176808072089943861530288404838918260;
+    uint256 constant BETA_NEG_X_0 = 20957750795414748707007132994369490550858679932014039325374154205244440935992;
+    uint256 constant BETA_NEG_X_1 = 9648264043391824222704595182306334163480724514266543616333317029056016322088;
+    uint256 constant BETA_NEG_Y_0 = 9940900895317624710117041925587714831603222781576432961929121450196636548043;
+    uint256 constant BETA_NEG_Y_1 = 21747596075840994676343730744922373605534123089319431824119176573681257874992;
 
     // Groth16 gamma point in G2 in powers of i
-    uint256 constant GAMMA_NEG_X_0 = 15634502782741017643972085957132025610068499130541377676708798805350057864515;
-    uint256 constant GAMMA_NEG_X_1 = 19375695958091113090850687681935247152071467398726939480334977617877532776089;
-    uint256 constant GAMMA_NEG_Y_0 = 13297114730995271224519134405743612368845089216734791856166288243338243843705;
-    uint256 constant GAMMA_NEG_Y_1 = 15511058315569176605429843116232151888102629928547702768424739752293258324611;
+    uint256 constant GAMMA_NEG_X_0 = 15272457265926775188252999272041387191480902327393005045199582708276090085444;
+    uint256 constant GAMMA_NEG_X_1 = 13498335667481249234776947769310359373527211283723332656983911614689385245718;
+    uint256 constant GAMMA_NEG_Y_0 = 9506079339152464613063859830960924023329116858003142647863940990952837042580;
+    uint256 constant GAMMA_NEG_Y_1 = 19661030494838868869890075566026411392189073921009045036343658586678039278077;
 
     // Groth16 delta point in G2 in powers of i
-    uint256 constant DELTA_NEG_X_0 = 21639542017204263978646836138922965393270776958395758704539363116669676184348;
-    uint256 constant DELTA_NEG_X_1 = 8101986638302485096362710543612139974357113996527030799397907175897023939996;
-    uint256 constant DELTA_NEG_Y_0 = 8652442903190920430652711004062099533621048505624440916749503170192502121296;
-    uint256 constant DELTA_NEG_Y_1 = 9049688854956342157224225846892965439144608761973073754151881797340362905595;
+    uint256 constant DELTA_NEG_X_0 = 19998146253912288038993560567705855820480830202508516691795466165158756725191;
+    uint256 constant DELTA_NEG_X_1 = 5290836210365909028550525135710412107764221980386198796527904405333953975516;
+    uint256 constant DELTA_NEG_Y_0 = 4769205819024767110983162287452333047044231538392958612926792541379512546861;
+    uint256 constant DELTA_NEG_Y_1 = 20738179653975574719124881129351763824825583034825274068149063963771085395209;
     // Pedersen G point in G2 in powers of i
-    uint256 constant PEDERSEN_G_X_0 = 11677703424833762851784259390319733250158996956543524000290216096584043638825;
-    uint256 constant PEDERSEN_G_X_1 = 20931684789565447067652425975890735799849730411084427716549939117505628657456;
-    uint256 constant PEDERSEN_G_Y_0 = 6045196824413537061460447514249968285226892433705017892764346717561318331252;
-    uint256 constant PEDERSEN_G_Y_1 = 142678761359000754863555354473645945982711767822327146872128180109027248460;
+    uint256 constant PEDERSEN_G_X_0 = 4168752951073486747417089663274121182855168577644457369589759321209050744186;
+    uint256 constant PEDERSEN_G_X_1 = 7068319937179845437232432694583336815223258905514546694827606570095060068984;
+    uint256 constant PEDERSEN_G_Y_0 = 7389296397742009292275052365775800107047885475188511861181363394072368544964;
+    uint256 constant PEDERSEN_G_Y_1 = 21724569236733839369366450400958017688767593200236813337382684583750166263639;
 
     // Pedersen GSigmaNeg point in G2 in powers of i
-    uint256 constant PEDERSEN_GSIGMANEG_X_0 =
-        10265833468866057949300861202027280185383690562047899386709627459852585591856;
-    uint256 constant PEDERSEN_GSIGMANEG_X_1 =
-        6389136944258793592929479794314490089722410857970670392695124541910933220975;
-    uint256 constant PEDERSEN_GSIGMANEG_Y_0 =
-        2125731287542771497484743412072165604824263035667546611596391823802400389059;
-    uint256 constant PEDERSEN_GSIGMANEG_Y_1 =
-        12617335005991849227687074605537765597811764633791655396536207106891716916600;
+    uint256 constant PEDERSEN_GSIGMANEG_X_0 = 12011673909042447522660035358970320389641904393774900053796034656774890766715;
+    uint256 constant PEDERSEN_GSIGMANEG_X_1 = 15247979017080384108056555732417515537393366532584626729769015428834033943139;
+    uint256 constant PEDERSEN_GSIGMANEG_Y_0 = 14404231093707204966199526644433079631865117897818888257547108765213646586771;
+    uint256 constant PEDERSEN_GSIGMANEG_Y_1 = 15223897502631270345921877097925415430065453041478955423584250924263903269724;
 
     // Constant and public input points
-    uint256 constant CONSTANT_X = 10388636822542313961484177591591203811643481484971218249530230469922729553805;
-    uint256 constant CONSTANT_Y = 9709021865322200313576230460653730322414736081490966145760680802614895931122;
-    uint256 constant PUB_0_X = 10149737816749178968098746613593173876702057057583880308393546589321887619175;
-    uint256 constant PUB_0_Y = 17851095591628079140473533656033695097818015672216372305032039276005932696920;
-    uint256 constant PUB_1_X = 12790274978405120355174081083769346157910771164686372253858267577415134901791;
-    uint256 constant PUB_1_Y = 16272534329858247232820048387085205294541077657675478625802588650945717199111;
-    uint256 constant PUB_2_X = 5615320901620889258095430777799127586119035884711269755653422942019073322055;
-    uint256 constant PUB_2_Y = 1389212471384624538129473350582195278084674960349758000852832223547934815808;
-    uint256 constant PUB_3_X = 1720914724612729047201813454454692548398501487052065053597824135145895255901;
-    uint256 constant PUB_3_Y = 17740070778704597034164971982142969186418734865232490405498823908053085415650;
-    uint256 constant PUB_4_X = 12748706157109657635848723101519118890528469361736122026546050926769184569757;
-    uint256 constant PUB_4_Y = 13925686904154348026162619568454434016289372711496091570561509922661121305054;
-    uint256 constant PUB_5_X = 2704341917305656613636518540338502153371844448007732626249595391397893639613;
-    uint256 constant PUB_5_Y = 9778775673345042481454999512555807022191973302608756375793012132477434138766;
-    uint256 constant PUB_6_X = 17808870789314139213891166307166939498439812522125480940454825751429111200699;
-    uint256 constant PUB_6_Y = 1342558356086145069909927532730254155465859843948056880560426378375510019567;
-    uint256 constant PUB_7_X = 8310917686662759313155937120533914967401466302447622476418583867147645117516;
-    uint256 constant PUB_7_Y = 4815889407289735063282262181111726886719164941430651240630221104066345341183;
-    uint256 constant PUB_8_X = 18743806221520297821132873525972606617142322539372447022242555688521617584635;
-    uint256 constant PUB_8_Y = 16991729549694832241785724059697632218157272638710134915616098545397004519153;
+    uint256 constant CONSTANT_X = 21697206363679747725157406409970167747311898207733300028418171900149360583598;
+    uint256 constant CONSTANT_Y = 10724266691629519687902331027317185052074142675628741899437744650588144134401;
+    uint256 constant PUB_0_X = 12366583906062640773957156874336428523501393936753591867841576168855304972771;
+    uint256 constant PUB_0_Y = 9498427512435388532800843757567138991666272657711515524875049569790911977380;
+    uint256 constant PUB_1_X = 9883824164819522250624475660643205334813305765039473354157422724073062182284;
+    uint256 constant PUB_1_Y = 5610218209840827135105601442674859351372170208027574903601237615666386255722;
+    uint256 constant PUB_2_X = 18157412902424250982855057428359269162737109308605724329505795992927410415813;
+    uint256 constant PUB_2_Y = 16841628045351851240809563609405936004565608980810656112995400055133617547419;
+    uint256 constant PUB_3_X = 5278006158473403682248248771352547726555648334903786751644799992239784005460;
+    uint256 constant PUB_3_Y = 19922584861080366433000832533992884641406279552775663296662807866216051644868;
+    uint256 constant PUB_4_X = 5559097711445048148818193833061892478149540779833289693076221572711330755528;
+    uint256 constant PUB_4_Y = 4813444178753933830065592828573201252895987360385083251928579202584032480114;
+    uint256 constant PUB_5_X = 10305135588243770969875235900865454900942493200379070243961201770681689681758;
+    uint256 constant PUB_5_Y = 6550996751859648639681557694643984077004858665120536326263819511802738800968;
+    uint256 constant PUB_6_X = 20446316353884386961471685335784754881380342056171679988901146531063849712160;
+    uint256 constant PUB_6_Y = 19767082501891603514412170036582273970358339829450671187945377023593006955410;
+    uint256 constant PUB_7_X = 17247116605730836857988491657983269473451619182846306274064555641479890570694;
+    uint256 constant PUB_7_Y = 11321557813368171962197014352045606803307057530855541254174650817345142032444;
+    uint256 constant PUB_8_X = 6651183835194611082929651821758703596252810854642964191887861260300671511229;
+    uint256 constant PUB_8_Y = 5447207397844847421581223250569979564387563028361068661446251836373210376690;
 
     /// Negation in Fp.
     /// @notice Returns a number x such that a + x = 0 in Fp.
@@ -218,7 +215,8 @@ contract Verifier {
 
         // Check result to make sure we found a root.
         // Note: this also fails if a0 or a1 is not reduced.
-        if (a0 != addmod(mulmod(x0, x0, P), negate(mulmod(x1, x1, P)), P) || a1 != mulmod(2, mulmod(x0, x1, P), P)) {
+        if (a0 != addmod(mulmod(x0, x0, P), negate(mulmod(x1, x1, P)), P)
+        ||  a1 != mulmod(2, mulmod(x0, x1, P), P)) {
             revert ProofInvalid();
         }
     }
@@ -293,12 +291,8 @@ contract Verifier {
     /// @param y1 The imaginary part of the Y coordinate.
     /// @return c0 The first half of the compresed point (x0 with two signal bits).
     /// @return c1 The second half of the compressed point (x1 unmodified).
-    function compress_g2(
-        uint256 x0,
-        uint256 x1,
-        uint256 y0,
-        uint256 y1
-    ) internal view returns (uint256 c0, uint256 c1) {
+    function compress_g2(uint256 x0, uint256 x1, uint256 y0, uint256 y1)
+    internal view returns (uint256 c0, uint256 c1) {
         if (x0 >= P || x1 >= P || y0 >= P || y1 >= P) {
             // G2 point not in field.
             revert ProofInvalid();
@@ -313,11 +307,11 @@ contract Verifier {
         uint256 y0_pos;
         uint256 y1_pos;
         {
-            uint256 n3ab = mulmod(mulmod(x0, x1, P), P - 3, P);
+            uint256 n3ab = mulmod(mulmod(x0, x1, P), P-3, P);
             uint256 a_3 = mulmod(mulmod(x0, x0, P), x0, P);
             uint256 b_3 = mulmod(mulmod(x1, x1, P), x1, P);
             y0_pos = addmod(FRACTION_27_82_FP, addmod(a_3, mulmod(n3ab, x1, P), P), P);
-            y1_pos = negate(addmod(FRACTION_3_82_FP, addmod(b_3, mulmod(n3ab, x0, P), P), P));
+            y1_pos = negate(addmod(FRACTION_3_82_FP,  addmod(b_3, mulmod(n3ab, x0, P), P), P));
         }
 
         // Determine hint bit
@@ -331,10 +325,10 @@ contract Verifier {
         // Recover y
         (y0_pos, y1_pos) = sqrt_Fp2(y0_pos, y1_pos, hint);
         if (y0 == y0_pos && y1 == y1_pos) {
-            c0 = (x0 << 2) | (hint ? 2 : 0) | 0;
+            c0 = (x0 << 2) | (hint ? 2  : 0) | 0;
             c1 = x1;
         } else if (y0 == negate(y0_pos) && y1 == negate(y1_pos)) {
-            c0 = (x0 << 2) | (hint ? 2 : 0) | 1;
+            c0 = (x0 << 2) | (hint ? 2  : 0) | 1;
             c1 = x1;
         } else {
             // G1 point not on curve.
@@ -353,10 +347,8 @@ contract Verifier {
     /// @return x1 The imaginary poart of the X coordinate.
     /// @return y0 The real part of the Y coordinate.
     /// @return y1 The imaginary part of the Y coordinate.
-    function decompress_g2(
-        uint256 c0,
-        uint256 c1
-    ) internal view returns (uint256 x0, uint256 x1, uint256 y0, uint256 y1) {
+    function decompress_g2(uint256 c0, uint256 c1)
+    internal view returns (uint256 x0, uint256 x1, uint256 y0, uint256 y1) {
         // Note that X = (0, 0) is not on the curve since 0³ + 3/(9 + i) is not a square.
         // so we can use it to represent the point at infinity.
         if (c0 == 0 && c1 == 0) {
@@ -372,12 +364,12 @@ contract Verifier {
             revert ProofInvalid();
         }
 
-        uint256 n3ab = mulmod(mulmod(x0, x1, P), P - 3, P);
+        uint256 n3ab = mulmod(mulmod(x0, x1, P), P-3, P);
         uint256 a_3 = mulmod(mulmod(x0, x0, P), x0, P);
         uint256 b_3 = mulmod(mulmod(x1, x1, P), x1, P);
 
         y0 = addmod(FRACTION_27_82_FP, addmod(a_3, mulmod(n3ab, x1, P), P), P);
-        y1 = negate(addmod(FRACTION_3_82_FP, addmod(b_3, mulmod(n3ab, x0, P), P), P));
+        y1 = negate(addmod(FRACTION_3_82_FP,  addmod(b_3, mulmod(n3ab, x0, P), P), P));
 
         // Note: sqrt_Fp2 reverts if there is no solution, i.e. the point is not on the curve.
         // Note: (X³ + 3/(9 + i)) is irreducible in Fp2, so y can not be zero.
@@ -402,7 +394,8 @@ contract Verifier {
         uint256[8] calldata input,
         uint256[1] memory publicCommitments,
         uint256[2] memory commitments
-    ) internal view returns (uint256 x, uint256 y) {
+    )
+    internal view returns (uint256 x, uint256 y) {
         // Note: The ECMUL precompile does not reject unreduced values, so we check this.
         // Note: Unrolling this loop does not cost much extra in code-size, the bulk of the
         //       code-size is in the PUB_ constants.
@@ -420,59 +413,59 @@ contract Verifier {
             mstore(add(f, 0x20), CONSTANT_Y)
             mstore(g, mload(commitments))
             mstore(add(g, 0x20), mload(add(commitments, 0x20)))
-            success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
+            success := and(success,  staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_0_X)
             mstore(add(g, 0x20), PUB_0_Y)
-            s := calldataload(input)
+            s :=  calldataload(input)
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_1_X)
             mstore(add(g, 0x20), PUB_1_Y)
-            s := calldataload(add(input, 32))
+            s :=  calldataload(add(input, 32))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_2_X)
             mstore(add(g, 0x20), PUB_2_Y)
-            s := calldataload(add(input, 64))
+            s :=  calldataload(add(input, 64))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_3_X)
             mstore(add(g, 0x20), PUB_3_Y)
-            s := calldataload(add(input, 96))
+            s :=  calldataload(add(input, 96))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_4_X)
             mstore(add(g, 0x20), PUB_4_Y)
-            s := calldataload(add(input, 128))
+            s :=  calldataload(add(input, 128))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_5_X)
             mstore(add(g, 0x20), PUB_5_Y)
-            s := calldataload(add(input, 160))
+            s :=  calldataload(add(input, 160))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_6_X)
             mstore(add(g, 0x20), PUB_6_Y)
-            s := calldataload(add(input, 192))
+            s :=  calldataload(add(input, 192))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
             mstore(g, PUB_7_X)
             mstore(add(g, 0x20), PUB_7_Y)
-            s := calldataload(add(input, 224))
+            s :=  calldataload(add(input, 224))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
@@ -511,10 +504,11 @@ contract Verifier {
         uint256[2] calldata commitments,
         uint256[2] calldata commitmentPok
     )
-        public
-        view
-        returns (uint256[4] memory compressed, uint256[1] memory compressedCommitments, uint256 compressedCommitmentPok)
-    {
+    public view returns (
+        uint256[4] memory compressed,
+        uint256[1] memory compressedCommitments,
+        uint256 compressedCommitmentPok
+    ) {
         compressed[0] = compress_g1(proof[0], proof[1]);
         (compressed[2], compressed[1]) = compress_g2(proof[3], proof[2], proof[5], proof[4]);
         compressed[3] = compress_g1(proof[6], proof[7]);
@@ -553,20 +547,26 @@ contract Verifier {
                 calldatacopy(add(publicAndCommitmentCommittedOffset, 0), add(input, 64), 32)
             }
 
-            publicCommitments[0] =
-                uint256(keccak256(abi.encodePacked(commitments[0], commitments[1], publicAndCommitmentCommitted))) %
-                R;
+            publicCommitments[0] = uint256(
+                keccak256(
+                    abi.encodePacked(
+                        commitments[0],
+                        commitments[1],
+                        publicAndCommitmentCommitted
+                    )
+                )
+            ) % R;
             // Commitments
-            pairings[0] = commitments[0];
-            pairings[1] = commitments[1];
-            pairings[2] = PEDERSEN_GSIGMANEG_X_1;
-            pairings[3] = PEDERSEN_GSIGMANEG_X_0;
-            pairings[4] = PEDERSEN_GSIGMANEG_Y_1;
-            pairings[5] = PEDERSEN_GSIGMANEG_Y_0;
-            pairings[6] = Px;
-            pairings[7] = Py;
-            pairings[8] = PEDERSEN_G_X_1;
-            pairings[9] = PEDERSEN_G_X_0;
+            pairings[ 0] = commitments[0];
+            pairings[ 1] = commitments[1];
+            pairings[ 2] = PEDERSEN_GSIGMANEG_X_1;
+            pairings[ 3] = PEDERSEN_GSIGMANEG_X_0;
+            pairings[ 4] = PEDERSEN_GSIGMANEG_Y_1;
+            pairings[ 5] = PEDERSEN_GSIGMANEG_Y_0;
+            pairings[ 6] = Px;
+            pairings[ 7] = Py;
+            pairings[ 8] = PEDERSEN_G_X_1;
+            pairings[ 9] = PEDERSEN_G_X_0;
             pairings[10] = PEDERSEN_G_Y_1;
             pairings[11] = PEDERSEN_G_Y_0;
 
@@ -585,28 +585,29 @@ contract Verifier {
 
         {
             (uint256 Ax, uint256 Ay) = decompress_g1(compressedProof[0]);
-            (uint256 Bx0, uint256 Bx1, uint256 By0, uint256 By1) = decompress_g2(
-                compressedProof[2],
-                compressedProof[1]
-            );
+            (uint256 Bx0, uint256 Bx1, uint256 By0, uint256 By1) = decompress_g2(compressedProof[2], compressedProof[1]);
             (uint256 Cx, uint256 Cy) = decompress_g1(compressedProof[3]);
-            (uint256 Lx, uint256 Ly) = publicInputMSM(input, publicCommitments, commitments);
+            (uint256 Lx, uint256 Ly) = publicInputMSM(
+                input,
+                publicCommitments,
+                commitments
+            );
 
             // Verify the pairing
             // Note: The precompile expects the F2 coefficients in big-endian order.
             // Note: The pairing precompile rejects unreduced values, so we won't check that here.
             // e(A, B)
-            pairings[0] = Ax;
-            pairings[1] = Ay;
-            pairings[2] = Bx1;
-            pairings[3] = Bx0;
-            pairings[4] = By1;
-            pairings[5] = By0;
+            pairings[ 0] = Ax;
+            pairings[ 1] = Ay;
+            pairings[ 2] = Bx1;
+            pairings[ 3] = Bx0;
+            pairings[ 4] = By1;
+            pairings[ 5] = By0;
             // e(C, -δ)
-            pairings[6] = Cx;
-            pairings[7] = Cy;
-            pairings[8] = DELTA_NEG_X_1;
-            pairings[9] = DELTA_NEG_X_0;
+            pairings[ 6] = Cx;
+            pairings[ 7] = Cy;
+            pairings[ 8] = DELTA_NEG_X_1;
+            pairings[ 9] = DELTA_NEG_X_0;
             pairings[10] = DELTA_NEG_Y_1;
             pairings[11] = DELTA_NEG_Y_0;
             // e(α, -β)
@@ -664,9 +665,15 @@ contract Verifier {
             calldatacopy(add(publicAndCommitmentCommittedOffset, 0), add(input, 64), 32)
         }
 
-        publicCommitments[0] =
-            uint256(keccak256(abi.encodePacked(commitments[0], commitments[1], publicAndCommitmentCommitted))) %
-            R;
+            publicCommitments[0] = uint256(
+                keccak256(
+                    abi.encodePacked(
+                        commitments[0],
+                        commitments[1],
+                        publicAndCommitmentCommitted
+                    )
+                )
+            ) % R;
 
         // Verify pedersen commitments
         bool success;
@@ -691,7 +698,11 @@ contract Verifier {
             revert CommitmentInvalid();
         }
 
-        (uint256 x, uint256 y) = publicInputMSM(input, publicCommitments, commitments);
+        (uint256 x, uint256 y) = publicInputMSM(
+            input,
+            publicCommitments,
+            commitments
+        );
 
         // Note: The precompile expects the F2 coefficients in big-endian order.
         // Note: The pairing precompile rejects unreduced values, so we won't check that here.

@@ -85,8 +85,6 @@ contract ProcessRegistry is IProcessRegistry {
         uint256 blobCommitmentLimb0;
         uint256 blobCommitmentLimb1;
         uint256 blobCommitmentLimb2;
-        bytes blobCommitment;
-        bytes blobProof;
     }
 
     /// @inheritdoc IProcessRegistry
@@ -274,7 +272,12 @@ contract ProcessRegistry is IProcessRegistry {
         if (newVoters > 0 && p.votersCount >= p.maxVoters) revert MaxVotersReached();
 
         if (blobsDA) {
-            bytes32 versionedHash = BlobsLib.calcBlobHashV1(st.blobCommitment);
+            bytes memory blobCommitment = _blobCommitmentFromLimbs(
+                st.blobCommitmentLimb0,
+                st.blobCommitmentLimb1,
+                st.blobCommitmentLimb2
+            );
+            bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
             _verifyBlobDataIsAvailable(versionedHash);
         }
 
@@ -430,17 +433,14 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @notice Decodes state transition batch proof inputs
-    /// @dev Wrapper around abi.decode for (uint256[10], bytes, bytes) produced by the sequencer.
+    /// @dev Wrapper around abi.decode for (uint256[8]) produced by the sequencer.
     ///      Returns a named struct for readability and to avoid magic indices.
-    /// @param input ABI-encoded batch inputs: (uint256[10], blobCommitment, blobProof)
+    /// @param input ABI-encoded batch inputs: (uint256[8])
     /// @return st The decoded inputs as StateTransitionBatchProofInputs
     function _decodeStateTransitionBatchProofInputs(
         bytes calldata input
     ) internal pure returns (StateTransitionBatchProofInputs memory st) {
-        (uint256[8] memory d, bytes memory blobCommitment, bytes memory blobProof) = abi.decode(
-            input,
-            (uint256[8], bytes, bytes)
-        );
+        uint256[8] memory d = abi.decode(input, (uint256[8]));
 
         st = StateTransitionBatchProofInputs({
             rootHashBefore: d[0],
@@ -450,9 +450,25 @@ contract ProcessRegistry is IProcessRegistry {
             censusRoot: d[4],
             blobCommitmentLimb0: d[5],
             blobCommitmentLimb1: d[6],
-            blobCommitmentLimb2: d[7],
-            blobCommitment: blobCommitment,
-            blobProof: blobProof
+            blobCommitmentLimb2: d[7]
         });
+    }
+
+    function _blobCommitmentFromLimbs(
+        uint256 limb0,
+        uint256 limb1,
+        uint256 limb2
+    ) internal pure returns (bytes memory commitment) {
+        commitment = new bytes(48);
+        _writeCommitmentLimb(commitment, 0, limb0, 0);
+        _writeCommitmentLimb(commitment, 16, limb1, 1);
+        _writeCommitmentLimb(commitment, 32, limb2, 2);
+    }
+
+    function _writeCommitmentLimb(bytes memory commitment, uint256 offset, uint256 limb, uint8 idx) private pure {
+        if (limb >> 128 != 0) revert InvalidBlobCommitmentLimb(idx);
+        assembly ("memory-safe") {
+            mstore(add(add(commitment, 32), offset), shl(128, limb))
+        }
     }
 }
