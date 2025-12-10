@@ -1033,7 +1033,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
         vm.mockCall(KZG_PRECOMPILE, "", abi.encode(FIELD_ELEMENTS_PER_BLOB, BLS_MODULUS));
 
         // Submit state transition
-        emit IProcessRegistry.ProcessStateRootUpdated(processId, address(this), ROOT_HASH_BEFORE);
+        emit IProcessRegistry.ProcessStateTransitioned(
+            processId,
+            address(this),
+            ROOT_HASH_BEFORE,
+            ROOT_HASH_AFTER,
+            VOTERS_COUNT,
+            OVERWRITTEN_VOTES_COUNT
+        );
         processRegistry.submitStateTransition(processId, STATETRANSITION_ABI_PROOF, stateTransitionInputs());
 
         // Verify state after transition
