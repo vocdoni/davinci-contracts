@@ -303,7 +303,14 @@ contract ProcessRegistry is IProcessRegistry {
         p.overwrittenVotesCount += st.overwrittenVotesCount;
         ++p.batchNumber;
 
-        emit ProcessStateRootUpdated(processId, msg.sender, st.rootHashAfter);
+        emit ProcessStateTransitioned(
+            processId,
+            msg.sender,
+            st.rootHashBefore,
+            st.rootHashAfter,
+            p.votersCount,
+            p.overwrittenVotesCount
+        );
     }
 
     /// @inheritdoc IProcessRegistry
