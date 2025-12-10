@@ -18,9 +18,9 @@ import type {
   TypedEventLog,
   TypedListener,
   TypedContractMethod,
-} from "../../common";
+} from "../../../common";
 
-export interface ResultsVerifierBaseGroth16Interface extends Interface {
+export interface VerifierInterface extends Interface {
   getFunction(
     nameOrSignature: "compressProof" | "verifyCompressedProof" | "verifyProof"
   ): FunctionFragment;
@@ -66,11 +66,11 @@ export interface ResultsVerifierBaseGroth16Interface extends Interface {
   ): Result;
 }
 
-export interface ResultsVerifierBaseGroth16 extends BaseContract {
-  connect(runner?: ContractRunner | null): ResultsVerifierBaseGroth16;
+export interface Verifier extends BaseContract {
+  connect(runner?: ContractRunner | null): Verifier;
   waitForDeployment(): Promise<this>;
 
-  interface: ResultsVerifierBaseGroth16Interface;
+  interface: VerifierInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
