@@ -3,7 +3,7 @@
 pragma solidity ^0.8.28;
 
 import { IZKVerifier } from "../interfaces/IZKVerifier.sol";
-import { ResultsVerifierBaseGroth16 } from "./ResultsVerifierBaseGroth16.sol";
+import { Verifier as ResultsVerifierBaseGroth16 } from "./resultsverifier_vkey.sol";
 
 contract ResultsVerifierGroth16 is IZKVerifier, ResultsVerifierBaseGroth16 {
     /// @inheritdoc IZKVerifier
