@@ -123,6 +123,10 @@ interface IProcessRegistry {
      */
     error InvalidCensusOrigin();
     /**
+     * @notice InvalidBlobCommitmentLimb error is emitted when a blob commitment limb exceeds 16 bytes.
+     */
+    error InvalidBlobCommitmentLimb(uint8 limbIndex);
+    /**
      * @notice InvalidStateRoot error is emitted when a state root is invalid.
      */
     error InvalidStateRoot();

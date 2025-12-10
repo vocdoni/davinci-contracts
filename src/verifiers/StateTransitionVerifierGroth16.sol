@@ -29,6 +29,7 @@ contract StateTransitionVerifierGroth16 is IZKVerifier, StateTransitionVerifierB
     function _decodeInput(
         bytes calldata encodedInputs
     ) internal pure returns (uint256[8] memory, bytes memory, bytes memory) {
-        return abi.decode(encodedInputs, (uint256[8], bytes, bytes));
+        uint256[8] memory inputs = abi.decode(encodedInputs, (uint256[8]));
+        return (inputs, "", "");
     }
 }

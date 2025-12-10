@@ -3,11 +3,12 @@ pragma solidity ^0.8.28;
 
 import { Test } from "forge-std/Test.sol";
 import { TestHelpers } from "./TestHelpers.t.sol";
-import { stdError } from "forge-std/StdError.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 
 contract ResultsVerifierGroth16Test is Test, TestHelpers {
-    uint256[8] public proof = [RESULTS_PROOF_AR[0], RESULTS_PROOF_AR[1], RESULTS_PROOF_BS[0][0], RESULTS_PROOF_BS[0][1], RESULTS_PROOF_BS[1][0], RESULTS_PROOF_BS[1][1], RESULTS_PROOF_KRS[0], RESULTS_PROOF_KRS[1]];
+    uint256[8] public proof;
+    uint256[2] public proofCommitments;
+    uint256[2] public proofCommitmentPok;
     uint256[9] public inputs = [
         ROOT_HASH_AFTER,
         FINAL_RESULTS[0],
@@ -24,10 +25,11 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
 
     function setUp() public {
         rv = new ResultsVerifierGroth16();
+        (proof, proofCommitments, proofCommitmentPok) = decodedResultsProof();
     }
 
     function test_Verify_OK() public view {
-        rv.verifyProof(proof, RESULTS_PROOF_COMMITMENTS, RESULTS_PROOF_COMMITMENTSPOK, inputs);
+        rv.verifyProof(proof, proofCommitments, proofCommitmentPok, inputs);
     }
 
     function test_Verify_OK_ABIEncoded() public view {
@@ -52,7 +54,7 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Encode_Proof() public view {
-        bytes memory encodedProof = encodeProof(proof, RESULTS_PROOF_COMMITMENTS, RESULTS_PROOF_COMMITMENTSPOK);
+        bytes memory encodedProof = encodeProof(proof, proofCommitments, proofCommitmentPok);
         if (keccak256(encodedProof) != keccak256(RESULTS_ABI_PROOF)) {
             revert();
         }
@@ -69,10 +71,10 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
             _proof[5] != proof[5] ||
             _proof[6] != proof[6] ||
             _proof[7] != proof[7] ||
-            _commitments[0] != RESULTS_PROOF_COMMITMENTS[0] ||
-            _commitments[1] != RESULTS_PROOF_COMMITMENTS[1] ||
-            _commitmentPok[0] != RESULTS_PROOF_COMMITMENTSPOK[0] ||
-            _commitmentPok[1] != RESULTS_PROOF_COMMITMENTSPOK[1]
+            _commitments[0] != proofCommitments[0] ||
+            _commitments[1] != proofCommitments[1] ||
+            _commitmentPok[0] != proofCommitmentPok[0] ||
+            _commitmentPok[1] != proofCommitmentPok[1]
         ) {
             revert();
         }
