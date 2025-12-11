@@ -162,7 +162,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "ProcessDurationChanged"
       | "ProcessMaxVotersChanged"
       | "ProcessResultsSet"
-      | "ProcessStateRootUpdated"
+      | "ProcessStateTransitioned"
       | "ProcessStatusChanged"
   ): EventFragment;
 
@@ -404,21 +404,30 @@ export namespace ProcessResultsSetEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProcessStateRootUpdatedEvent {
+export namespace ProcessStateTransitionedEvent {
   export type InputTuple = [
     processId: BytesLike,
     sender: AddressLike,
-    newStateRoot: BigNumberish
+    oldStateRoot: BigNumberish,
+    newStateRoot: BigNumberish,
+    newVotersCount: BigNumberish,
+    newOverwrittenVotesCount: BigNumberish
   ];
   export type OutputTuple = [
     processId: string,
     sender: string,
-    newStateRoot: bigint
+    oldStateRoot: bigint,
+    newStateRoot: bigint,
+    newVotersCount: bigint,
+    newOverwrittenVotesCount: bigint
   ];
   export interface OutputObject {
     processId: string;
     sender: string;
+    oldStateRoot: bigint;
     newStateRoot: bigint;
+    newVotersCount: bigint;
+    newOverwrittenVotesCount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -811,11 +820,11 @@ export interface ProcessRegistry extends BaseContract {
     ProcessResultsSetEvent.OutputObject
   >;
   getEvent(
-    key: "ProcessStateRootUpdated"
+    key: "ProcessStateTransitioned"
   ): TypedContractEvent<
-    ProcessStateRootUpdatedEvent.InputTuple,
-    ProcessStateRootUpdatedEvent.OutputTuple,
-    ProcessStateRootUpdatedEvent.OutputObject
+    ProcessStateTransitionedEvent.InputTuple,
+    ProcessStateTransitionedEvent.OutputTuple,
+    ProcessStateTransitionedEvent.OutputObject
   >;
   getEvent(
     key: "ProcessStatusChanged"
@@ -881,15 +890,15 @@ export interface ProcessRegistry extends BaseContract {
       ProcessResultsSetEvent.OutputObject
     >;
 
-    "ProcessStateRootUpdated(bytes32,address,uint256)": TypedContractEvent<
-      ProcessStateRootUpdatedEvent.InputTuple,
-      ProcessStateRootUpdatedEvent.OutputTuple,
-      ProcessStateRootUpdatedEvent.OutputObject
+    "ProcessStateTransitioned(bytes32,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
+      ProcessStateTransitionedEvent.InputTuple,
+      ProcessStateTransitionedEvent.OutputTuple,
+      ProcessStateTransitionedEvent.OutputObject
     >;
-    ProcessStateRootUpdated: TypedContractEvent<
-      ProcessStateRootUpdatedEvent.InputTuple,
-      ProcessStateRootUpdatedEvent.OutputTuple,
-      ProcessStateRootUpdatedEvent.OutputObject
+    ProcessStateTransitioned: TypedContractEvent<
+      ProcessStateTransitionedEvent.InputTuple,
+      ProcessStateTransitionedEvent.OutputTuple,
+      ProcessStateTransitionedEvent.OutputObject
     >;
 
     "ProcessStatusChanged(bytes32,uint8,uint8)": TypedContractEvent<

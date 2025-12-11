@@ -15,9 +15,7 @@ abstract contract TestHelpers is TestInputs {
         return abi.decode(_encodedInputs, (uint256[8]));
     }
 
-    function encodeStateTransitionInputs(
-        uint256[8] memory inputs
-    ) public pure returns (bytes memory) {
+    function encodeStateTransitionInputs(uint256[8] memory inputs) public pure returns (bytes memory) {
         return abi.encode(inputs);
     }
 
@@ -37,6 +35,14 @@ abstract contract TestHelpers is TestInputs {
             );
     }
 
+    function decodedResultsProof()
+        internal
+        pure
+        returns (uint256[8] memory proofArr, uint256[2] memory commitmentsArr, uint256[2] memory commitmentPokArr)
+    {
+        return abi.decode(RESULTS_ABI_PROOF, (uint256[8], uint256[2], uint256[2]));
+    }
+
     function resultsInputs() internal view returns (bytes memory) {
         return
             abi.encode(
@@ -50,5 +56,13 @@ abstract contract TestHelpers is TestInputs {
                 FINAL_RESULTS[6],
                 FINAL_RESULTS[7]
             );
+    }
+
+    function decodedProof()
+        internal
+        pure
+        returns (uint256[8] memory proofArr, uint256[2] memory commitmentsArr, uint256[2] memory commitmentPokArr)
+    {
+        return abi.decode(STATETRANSITION_ABI_PROOF, (uint256[8], uint256[2], uint256[2]));
     }
 }
