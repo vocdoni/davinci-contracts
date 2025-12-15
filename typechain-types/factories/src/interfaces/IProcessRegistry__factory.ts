@@ -27,6 +27,22 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "CensusNotUpdatable",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint8",
+        name: "limbIndex",
+        type: "uint8",
+      },
+    ],
+    name: "InvalidBlobCommitmentLimb",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidCensusOrigin",
     type: "error",
   },
@@ -275,11 +291,29 @@ const _abi = [
       {
         indexed: false,
         internalType: "uint256",
+        name: "oldStateRoot",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
         name: "newStateRoot",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newVotersCount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newOverwrittenVotesCount",
+        type: "uint256",
+      },
     ],
-    name: "ProcessStateRootUpdated",
+    name: "ProcessStateTransitioned",
     type: "event",
   },
   {
