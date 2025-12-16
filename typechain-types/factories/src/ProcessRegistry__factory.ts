@@ -58,17 +58,6 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "uint8",
-        name: "limbIndex",
-        type: "uint8",
-      },
-    ],
-    name: "InvalidBlobCommitmentLimb",
-    type: "error",
-  },
-  {
     inputs: [],
     name: "CensusNotUpdatable",
     type: "error",
