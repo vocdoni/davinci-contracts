@@ -56,11 +56,10 @@ git clone https://github.com/vocdoni/davinci-contracts.git
 cd davinci-contracts
 ```
 
-2. Install dependencies:
+2. Install dependencies using the Makefile:
 
 ```bash
-npm install
-forge install
+make install
 ```
 
 3. Set up environment variables:
@@ -70,51 +69,38 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. Build the project:
-
-```bash
-./build_all.sh
-```
-
 ## 🛠️ Development
+
+This project uses a `Makefile` to streamline common development tasks.
 
 ### Building
 
-```bash
-# Clean and build everything
-./build_all.sh
+Clean artifacts and build the project:
 
-# Or build individually
-forge build
-npx hardhat compile
+```bash
+make build
+```
+
+To clean the project (remove artifacts, cache, and generated bindings):
+
+```bash
+make clean
 ```
 
 ### Code Quality
 
-```bash
-# Linting
-npm run lint:sol
-npm run prettier
-
-# Security analysis
-npm run slither
-npm run mythril
-```
-
-### TypeScript Support
-
-The project includes TypeScript bindings:
+Run linters (Solhint and Prettier):
 
 ```bash
-npm run typechain
+make lint
 ```
 
 ### Go Bindings
 
-Generate Go bindings for contract integration:
+Generate Go bindings for contract integration (requires `abigen`):
 
 ```bash
-./go_bind.sh
+make go-bind
 ```
 
 ## 🧪 Testing
@@ -123,47 +109,75 @@ Run the comprehensive test suite:
 
 ```bash
 # Run all tests
-forge test
+make test
 
-# Run with verbosity
-forge test -vvv
+# Run with verbosity (equivalent to -vvv)
+make test-v
 
-# Run specific test file
-forge test --match-path test/ProcessRegistry.t.sol
-
-# Gas reporting
-forge test --gas-report
+# Generate gas report
+make gas-report
 ```
 
 ## 🚢 Deployment
 
-### Local Development
+The deployment process is managed via the `Makefile` and uses configuration from your `.env` file.
 
-1. Start a local node:
+### 1. Configuration
 
+Ensure your `.env` file is configured for your target network.
+
+**For Sepolia/Testnets/Mainnet:**
+```dotenv
+RPC_URL=https://rpc.sepolia.org
+PRIVATE_KEY=0xYourPrivateKey...
+CHAIN_ID=11155111
+ACTIVATE_BLOBS=false
+ETHERSCAN_API_KEY=YourEtherscanKey... # Optional, for verification
+```
+
+### 2. Deploy
+
+**Deploy to the configured network:**
+
+```bash
+make deploy
+```
+This command will:
+1. Load variables from `.env`.
+2. Deploy contracts using `forge script`.
+3. Verify contracts on Etherscan (if `ETHERSCAN_API_KEY` is provided).
+
+**Deploy to Local Node (Anvil):**
+
+Start a local node in a separate terminal:
 ```bash
 anvil
 ```
 
-2. Deploy contracts:
+Then run:
+```bash
+make deploy-local
+```
+This uses default keys and endpoints for a standard Anvil instance.
+
+### 3. Update Go Bindings
+
+After deployment, update the hardcoded address constants in the Go package:
 
 ```bash
-forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
+make update-addresses
 ```
 
-### Testnet/Mainnet Deployment
+### Full Workflow
 
-1. Configure network in `.env`:
-
-```bash
-PRIVATE_KEY=your_deployment_key
-RPC_URL=your_rpc_endpoint
-```
-
-2. Deploy:
+To build, deploy, and update addresses in one go:
 
 ```bash
-forge script script/DeployAll.s.sol --rpc-url $RPC_URL --broadcast --verify
+# For your configured network (.env)
+make all
+
+# For local development
+make all-local
 ```
 
 ## 📚 Documentation

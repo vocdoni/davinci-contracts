@@ -6,6 +6,9 @@ import { IZKVerifier } from "../interfaces/IZKVerifier.sol";
 import { Verifier as StateTransitionVerifierBaseGroth16 } from "./statetransition_vkey.sol";
 
 contract StateTransitionVerifierGroth16 is IZKVerifier, StateTransitionVerifierBaseGroth16 {
+    error InvalidProofLength(uint256 length, uint256 expected);
+    error InvalidInputLength(uint256 length, uint256 expected);
+
     /// @inheritdoc IZKVerifier
     function verifyProof(bytes calldata _proof, bytes calldata _input) external view override {
         (uint256[8] memory proof, uint256[2] memory commitments, uint256[2] memory commitmentPok) = _decodeProof(
@@ -23,12 +26,14 @@ contract StateTransitionVerifierGroth16 is IZKVerifier, StateTransitionVerifierB
     function _decodeProof(
         bytes calldata encodedProof
     ) internal pure returns (uint256[8] memory, uint256[2] memory, uint256[2] memory) {
+        if (encodedProof.length != 384) revert InvalidProofLength(encodedProof.length, 384);
         return abi.decode(encodedProof, (uint256[8], uint256[2], uint256[2]));
     }
 
     function _decodeInput(
         bytes calldata encodedInputs
     ) internal pure returns (uint256[8] memory, bytes memory, bytes memory) {
+        if (encodedInputs.length != 256) revert InvalidInputLength(encodedInputs.length, 256);
         uint256[8] memory inputs = abi.decode(encodedInputs, (uint256[8]));
         return (inputs, "", "");
     }
