@@ -5,6 +5,7 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
+import { ICensus } from "./interfaces/ICensus.sol";
 
 /**
  * @title ProcessRegistry
@@ -17,7 +18,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The maximum value of the census origin.
      */
-    uint8 public constant MAX_CENSUS_ORIGIN = 4;
+    uint8 public constant MAX_CENSUS_ORIGIN = 5;
     /**
      * @notice The maximum value of the process status.
      */
@@ -263,6 +264,12 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
+        if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_V1) {
+            (bool ok, bytes32 rootBlockNum) = ICensus(address(uint160(uint256(p.census.censusRoot)))).checkRoot(bytes32(st.censusRoot));
+            if (!ok || rootBlockNum == bytes32(0)) {
+                revert InvalidCensusRoot();
+            }
+        }
 
         // Validate state root before matches latest state root
         if (st.rootHashBefore != p.latestStateRoot) revert InvalidStateRoot();
@@ -364,19 +371,19 @@ contract ProcessRegistry is IProcessRegistry {
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
 
-        // Census root based on census origin:
+        // CensusRoot based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
-        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Address of census manager contract (should be queried once, during process creation)
-        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (should be queried on each transition, during state transitions verification)
+        //  - MERKLE_TREE_ONCHAIN_V1 -> Address of census manager contract (queried on each transition)
         //  - CSP_EDDSA_BN254_V1 -> CSP PubKey (fixed)
+        //  - CSP_EDDSA_BLS12377_V1 -> CSP PubKey (fixed)
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         // CensusURI based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
-        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 ───┤
-        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
-        //  - CSP_EDDSA_BN254_V1 -> URL where the voters can generate their signatures
+        //  - MERKLE_TREE_ONCHAIN_V1 ──────────┘
+        //  - CSP_EDDSA_BN254_V1 > URL where the voters can generate their signatures
+        //  - CSP_EDDSA_BLS12377_V1 -> URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
