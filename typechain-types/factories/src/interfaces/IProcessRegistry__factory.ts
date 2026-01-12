@@ -32,6 +32,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidBlockNumber",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidCensusOrigin",
     type: "error",
   },

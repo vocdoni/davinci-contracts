@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
@@ -19,24 +20,25 @@ import type {
   TypedContractMethod,
 } from "../../common";
 
-export interface ICensusInterface extends Interface {
-  getFunction(nameOrSignature: "checkRoot" | "getRoot"): FunctionFragment;
+export interface ICensusValidatorInterface extends Interface {
+  getFunction(nameOrSignature: "getRootBlockNumber"): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "checkRoot",
-    values: [BytesLike]
+    functionFragment: "getRootBlockNumber",
+    values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "getRoot", values?: undefined): string;
 
-  decodeFunctionResult(functionFragment: "checkRoot", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getRoot", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRootBlockNumber",
+    data: BytesLike
+  ): Result;
 }
 
-export interface ICensus extends BaseContract {
-  connect(runner?: ContractRunner | null): ICensus;
+export interface ICensusValidator extends BaseContract {
+  connect(runner?: ContractRunner | null): ICensusValidator;
   waitForDeployment(): Promise<this>;
 
-  interface: ICensusInterface;
+  interface: ICensusValidatorInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -75,28 +77,19 @@ export interface ICensus extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  checkRoot: TypedContractMethod<
-    [root: BytesLike],
-    [[boolean, string] & { ok: boolean; data: string }],
+  getRootBlockNumber: TypedContractMethod<
+    [root: BigNumberish],
+    [bigint],
     "view"
   >;
-
-  getRoot: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "checkRoot"
-  ): TypedContractMethod<
-    [root: BytesLike],
-    [[boolean, string] & { ok: boolean; data: string }],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "getRoot"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "getRootBlockNumber"
+  ): TypedContractMethod<[root: BigNumberish], [bigint], "view">;
 
   filters: {};
 }

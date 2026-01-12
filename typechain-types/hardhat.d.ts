@@ -18,9 +18,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
     getContractFactory(
-      name: "ICensus",
+      name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ICensus__factory>;
+    ): Promise<Contracts.ICensusValidator__factory>;
     getContractFactory(
       name: "IOrganizationRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -68,10 +68,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
     getContractAt(
-      name: "ICensus",
+      name: "ICensusValidator",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ICensus>;
+    ): Promise<Contracts.ICensusValidator>;
     getContractAt(
       name: "IOrganizationRegistry",
       address: string | ethers.Addressable,
@@ -128,9 +128,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Ownable>;
     deployContract(
-      name: "ICensus",
+      name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ICensus>;
+    ): Promise<Contracts.ICensusValidator>;
     deployContract(
       name: "IOrganizationRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -178,10 +178,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Ownable>;
     deployContract(
-      name: "ICensus",
+      name: "ICensusValidator",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ICensus>;
+    ): Promise<Contracts.ICensusValidator>;
     deployContract(
       name: "IOrganizationRegistry",
       args: any[],

@@ -5,7 +5,7 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
-import { ICensus } from "./interfaces/ICensus.sol";
+import { ICensusValidator } from "./interfaces/ICensusValidator.sol";
 
 /**
  * @title ProcessRegistry
@@ -130,8 +130,16 @@ contract ProcessRegistry is IProcessRegistry {
         bytes32 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
-        _validateNewProcess(processId, sender, status, startTime, duration, maxVoters, ballotMode, census);
+        _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
 
+        // validate start time, block and duration
+        uint256 currentTimestamp = block.timestamp;
+        if (startTime == 0) {
+            startTime = currentTimestamp;
+        }
+        if (startTime < currentTimestamp) revert InvalidStartTime();
+        if (startTime + duration <= currentTimestamp) revert InvalidDuration();
+        
         Process storage p = processes[processId];
 
         p.status = status;
@@ -264,9 +272,9 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
-        if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_V1) {
-            (bool ok, bytes32 rootBlockNum) = ICensus(address(uint160(uint256(p.census.censusRoot)))).checkRoot(bytes32(st.censusRoot));
-            if (!ok || rootBlockNum == bytes32(0)) {
+        if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+            uint256 rootBlockNumber = ICensusValidator(address(uint160(uint256(p.census.censusRoot)))).getRootBlockNumber(st.censusRoot);
+            if (rootBlockNumber < p.creationBlock || rootBlockNumber > block.number) {
                 revert InvalidCensusRoot();
             }
         }
@@ -351,8 +359,6 @@ contract ProcessRegistry is IProcessRegistry {
         bytes32 processId,
         address sender,
         ProcessStatus status,
-        uint256 startTime,
-        uint256 duration,
         uint256 maxVoters,
         BallotMode calldata ballotMode,
         Census calldata census
@@ -374,29 +380,19 @@ contract ProcessRegistry is IProcessRegistry {
         // CensusRoot based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
-        //  - MERKLE_TREE_ONCHAIN_V1 -> Address of census manager contract (queried on each transition)
-        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey (fixed)
-        //  - CSP_EDDSA_BLS12377_V1 -> CSP PubKey (fixed)
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (queried on each transition)
+        //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed) 
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         // CensusURI based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
-        //  - MERKLE_TREE_ONCHAIN_V1 ──────────┘
-        //  - CSP_EDDSA_BN254_V1 > URL where the voters can generate their signatures
-        //  - CSP_EDDSA_BLS12377_V1 -> URL where the voters can generate their signatures
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
+        //  - CSP_EDDSA_BABYJUBJUB_V1 > URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
             revert InvalidStatus();
-
-        // validate start time and duration
-        uint256 currentTimestamp = block.timestamp;
-        if (startTime == 0) {
-            startTime = currentTimestamp;
-        }
-        if (startTime < currentTimestamp) revert InvalidStartTime();
-        if (startTime + duration <= currentTimestamp) revert InvalidDuration();
     }
 
     /**

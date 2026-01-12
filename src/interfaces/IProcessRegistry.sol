@@ -75,6 +75,10 @@ interface IProcessRegistry {
      */
     error InvalidStartTime();
     /**
+     * InvalidBlockNumber error is emitted when a block number is invalid.
+     */
+    error InvalidBlockNumber();
+    /**
      * @notice InvalidDuration error is emitted when the duration of the process is invalid.
      */
     error InvalidDuration();
@@ -199,9 +203,8 @@ interface IProcessRegistry {
         CENSUS_UNKNOWN,
         MERKLE_TREE_OFFCHAIN_STATIC_V1,
         MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
-        MERKLE_TREE_ONCHAIN_V1,
-        CSP_EDDSA_BN254_V1,
-        CSP_EDDSA_BLS12377_V1
+        MERKLE_TREE_ONCHAIN_DYNAMIC_V1,
+        CSP_EDDSA_BABYJUBJUB_V1
     }
 
     /// STRUCTS ///
