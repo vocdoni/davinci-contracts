@@ -8,6 +8,8 @@ export type { src };
 export * as factories from "./factories";
 export type { Ownable } from "./@openzeppelin/contracts/access/Ownable";
 export { Ownable__factory } from "./factories/@openzeppelin/contracts/access/Ownable__factory";
+export type { ICensusValidator } from "./src/interfaces/ICensusValidator";
+export { ICensusValidator__factory } from "./factories/src/interfaces/ICensusValidator__factory";
 export type { IOrganizationRegistry } from "./src/interfaces/IOrganizationRegistry";
 export { IOrganizationRegistry__factory } from "./factories/src/interfaces/IOrganizationRegistry__factory";
 export type { IProcessRegistry } from "./src/interfaces/IProcessRegistry";

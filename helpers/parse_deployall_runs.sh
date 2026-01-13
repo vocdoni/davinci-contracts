@@ -29,7 +29,7 @@ chain_to_network() {
     8453)     echo "base" ;;
     42220)    echo "celo" ;;
     710)      echo "uzh" ;;
-    *)        echo "$chain" ;;
+    *)        echo "" ;;
   esac
 }
 
@@ -40,6 +40,11 @@ for run in "${RUN_FILES[@]}"; do
   fi
 
   NETWORK="$(chain_to_network "$CHAIN_ID")"
+  if [[ -z "$NETWORK" ]]; then
+    log_stderr "Skipping $run (chain=$CHAIN_ID. Not found in chain list.)"
+    continue
+  fi
+
   log_stderr "Processing $run  (chain=$CHAIN_ID -> net=$NETWORK)"
 
   jq \

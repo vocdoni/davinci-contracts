@@ -75,6 +75,10 @@ interface IProcessRegistry {
      */
     error InvalidStartTime();
     /**
+     * InvalidBlockNumber error is emitted when a block number is invalid.
+     */
+    error InvalidBlockNumber();
+    /**
      * @notice InvalidDuration error is emitted when the duration of the process is invalid.
      */
     error InvalidDuration();
@@ -199,8 +203,8 @@ interface IProcessRegistry {
         CENSUS_UNKNOWN,
         MERKLE_TREE_OFFCHAIN_STATIC_V1,
         MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
-        MERKLE_TREE_ONCHAIN_V1,
-        CSP_EDDSA_BN254_V1
+        MERKLE_TREE_ONCHAIN_DYNAMIC_V1,
+        CSP_EDDSA_BABYJUBJUB_V1
     }
 
     /// STRUCTS ///
@@ -230,7 +234,7 @@ interface IProcessRegistry {
     /**
      * @notice The census defines the parameters of the census.
      * @param censusOrigin The origin of the census.
-     * @param censusRoot The root of the census.
+     * @param censusRoot The root of the census. CSP -> A PublicKey, MerkleTree OffchainStatic, OffchainDynamic -> A Hash, MerkleTree Onchain -> A Contract address
      * @param censusURI The URI of the census.
      */
     struct Census {

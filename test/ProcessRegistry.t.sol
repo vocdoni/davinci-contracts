@@ -1797,21 +1797,21 @@ contract ProcessRegistryTest is Test, TestHelpers {
         });
 
         testCases[3] = CensusOriginTestCase({
-            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1,
             censusRoot: bytes32(0),
             censusURI: "https://example.com/census",
             revertData: IProcessRegistry.InvalidCensusRoot.selector
         });
 
         testCases[4] = CensusOriginTestCase({
-            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1,
             censusRoot: bytes32(CENSUS_ROOT),
             censusURI: "",
             revertData: IProcessRegistry.InvalidCensusURI.selector
         });
 
         testCases[5] = CensusOriginTestCase({
-            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BN254_V1,
+            censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1,
             censusRoot: bytes32(CENSUS_ROOT),
             censusURI: "https://example.com/census",
             revertData: bytes4(0)

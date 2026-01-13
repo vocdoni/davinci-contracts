@@ -5,6 +5,7 @@ import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
 import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
 import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
 import { BlobsLib } from "./libraries/BlobsLib.sol";
+import { ICensusValidator } from "./interfaces/ICensusValidator.sol";
 
 /**
  * @title ProcessRegistry
@@ -17,7 +18,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The maximum value of the census origin.
      */
-    uint8 public constant MAX_CENSUS_ORIGIN = 4;
+    uint8 public constant MAX_CENSUS_ORIGIN = 5;
     /**
      * @notice The maximum value of the process status.
      */
@@ -129,8 +130,16 @@ contract ProcessRegistry is IProcessRegistry {
         bytes32 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
-        _validateNewProcess(processId, sender, status, startTime, duration, maxVoters, ballotMode, census);
+        _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
 
+        // validate start time, block and duration
+        uint256 currentTimestamp = block.timestamp;
+        if (startTime == 0) {
+            startTime = currentTimestamp;
+        }
+        if (startTime < currentTimestamp) revert InvalidStartTime();
+        if (startTime + duration <= currentTimestamp) revert InvalidDuration();
+        
         Process storage p = processes[processId];
 
         p.status = status;
@@ -263,6 +272,12 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
+        if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+            uint256 rootBlockNumber = ICensusValidator(address(uint160(uint256(p.census.censusRoot)))).getRootBlockNumber(st.censusRoot);
+            if (rootBlockNumber < p.creationBlock || rootBlockNumber > block.number) {
+                revert InvalidCensusRoot();
+            }
+        }
 
         // Validate state root before matches latest state root
         if (st.rootHashBefore != p.latestStateRoot) revert InvalidStateRoot();
@@ -344,8 +359,6 @@ contract ProcessRegistry is IProcessRegistry {
         bytes32 processId,
         address sender,
         ProcessStatus status,
-        uint256 startTime,
-        uint256 duration,
         uint256 maxVoters,
         BallotMode calldata ballotMode,
         Census calldata census
@@ -364,32 +377,22 @@ contract ProcessRegistry is IProcessRegistry {
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
 
-        // Census root based on census origin:
+        // CensusRoot based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
-        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 -> Address of census manager contract (should be queried once, during process creation)
-        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (should be queried on each transition, during state transitions verification)
-        //  - CSP_EDDSA_BN254_V1 -> CSP PubKey (fixed)
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (queried on each transition)
+        //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed) 
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         // CensusURI based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
-        //  - MERKLE_TREE_ONCHAIN_STATIC_V1 ───┤
         //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
-        //  - CSP_EDDSA_BN254_V1 -> URL where the voters can generate their signatures
+        //  - CSP_EDDSA_BABYJUBJUB_V1 > URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
             revert InvalidStatus();
-
-        // validate start time and duration
-        uint256 currentTimestamp = block.timestamp;
-        if (startTime == 0) {
-            startTime = currentTimestamp;
-        }
-        if (startTime < currentTimestamp) revert InvalidStartTime();
-        if (startTime + duration <= currentTimestamp) revert InvalidDuration();
     }
 
     /**
