@@ -13,4 +13,8 @@ interface ICensusValidator {
     /// @param root The census Merkle root to validate
     /// @return blockNumber The block number when this root was set (0 if invalid/evicted)
     function getRootBlockNumber(uint256 root) external view returns (uint256 blockNumber);
+    
+    /// @notice Current census Merkle root (Lean-IMT).
+    /// @return root The latest census root
+    function getCensusRoot() external view returns (uint256 root);
 }

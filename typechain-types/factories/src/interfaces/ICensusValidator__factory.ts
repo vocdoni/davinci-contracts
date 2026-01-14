@@ -10,6 +10,19 @@ import type {
 
 const _abi = [
   {
+    inputs: [],
+    name: "getCensusRoot",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "root",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint256",

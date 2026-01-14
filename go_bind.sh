@@ -59,5 +59,10 @@ abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"
 
+abi "./artifacts/src/interfaces/ICensusValidator.sol/ICensusValidator.json" \
+    "ICensusValidator" \
+    "./golang-types/ICensusValidator.go"
+
+
 echo "Generating file with Go constants of contract addresses..."
 ./helpers/write_contract_addresses.sh

@@ -21,13 +21,23 @@ import type {
 } from "../../common";
 
 export interface ICensusValidatorInterface extends Interface {
-  getFunction(nameOrSignature: "getRootBlockNumber"): FunctionFragment;
+  getFunction(
+    nameOrSignature: "getCensusRoot" | "getRootBlockNumber"
+  ): FunctionFragment;
 
+  encodeFunctionData(
+    functionFragment: "getCensusRoot",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getRootBlockNumber",
     values: [BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "getCensusRoot",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getRootBlockNumber",
     data: BytesLike
@@ -77,6 +87,8 @@ export interface ICensusValidator extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  getCensusRoot: TypedContractMethod<[], [bigint], "view">;
+
   getRootBlockNumber: TypedContractMethod<
     [root: BigNumberish],
     [bigint],
@@ -87,6 +99,9 @@ export interface ICensusValidator extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "getCensusRoot"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getRootBlockNumber"
   ): TypedContractMethod<[root: BigNumberish], [bigint], "view">;
