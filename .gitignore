@@ -14,7 +14,7 @@ out/
 !/broadcast/DeployAll.s.sol/*/run-latest.json
 
 # Dotenv file
-.env
+.env*
 
 # log
 anvil_output.log
