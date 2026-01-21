@@ -66,13 +66,20 @@ export declare namespace IProcessRegistry {
     censusOrigin: BigNumberish;
     censusRoot: BytesLike;
     censusURI: string;
+    onchainAllowAnyValidRoot: boolean;
   };
 
   export type CensusStructOutput = [
     censusOrigin: bigint,
     censusRoot: string,
-    censusURI: string
-  ] & { censusOrigin: bigint; censusRoot: string; censusURI: string };
+    censusURI: string,
+    onchainAllowAnyValidRoot: boolean
+  ] & {
+    censusOrigin: bigint;
+    censusRoot: string;
+    censusURI: string;
+    onchainAllowAnyValidRoot: boolean;
+  };
 
   export type ProcessStruct = {
     status: BigNumberish;

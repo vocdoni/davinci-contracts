@@ -31,6 +31,11 @@
     },
     {
       "inputs": [],
+      "name": "InvalidCensusConfig",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "InvalidCensusOrigin",
       "type": "error"
     },
@@ -500,6 +505,11 @@
                   "internalType": "string",
                   "name": "censusURI",
                   "type": "string"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "onchainAllowAnyValidRoot",
+                  "type": "bool"
                 }
               ],
               "internalType": "struct IProcessRegistry.Census",
@@ -645,6 +655,11 @@
               "internalType": "string",
               "name": "censusURI",
               "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "onchainAllowAnyValidRoot",
+              "type": "bool"
             }
           ],
           "internalType": "struct IProcessRegistry.Census",
@@ -713,6 +728,11 @@
               "internalType": "string",
               "name": "censusURI",
               "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "onchainAllowAnyValidRoot",
+              "type": "bool"
             }
           ],
           "internalType": "struct IProcessRegistry.Census",

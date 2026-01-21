@@ -135,6 +135,10 @@ interface IProcessRegistry {
      */
     error InvalidCensusOrigin();
     /**
+     * @notice InvalidCensusConfig error is a more generic error emitted when a census configuration is invalid.
+     */
+    error InvalidCensusConfig();
+    /**
      * @notice InvalidBlobCommitmentLimb error is emitted when a blob commitment limb exceeds 16 bytes.
      */
     error InvalidBlobCommitmentLimb(uint8 limbIndex);
@@ -236,11 +240,13 @@ interface IProcessRegistry {
      * @param censusOrigin The origin of the census.
      * @param censusRoot The root of the census. CSP -> A PublicKey, MerkleTree OffchainStatic, OffchainDynamic -> A Hash, MerkleTree Onchain -> A Contract address
      * @param censusURI The URI of the census.
+     * @param onchainAllowAnyValidRoot Used for onchain censuses. If true allows to skip the census startBlock check in the state transition function. 
      */
     struct Census {
         CensusOrigin censusOrigin;
         bytes32 censusRoot;
         string censusURI;
+        bool onchainAllowAnyValidRoot;
     }
 
     /**

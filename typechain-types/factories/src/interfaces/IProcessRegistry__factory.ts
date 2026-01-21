@@ -37,6 +37,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidCensusConfig",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidCensusOrigin",
     type: "error",
   },
@@ -507,6 +512,11 @@ const _abi = [
                 name: "censusURI",
                 type: "string",
               },
+              {
+                internalType: "bool",
+                name: "onchainAllowAnyValidRoot",
+                type: "bool",
+              },
             ],
             internalType: "struct IProcessRegistry.Census",
             name: "census",
@@ -652,6 +662,11 @@ const _abi = [
             name: "censusURI",
             type: "string",
           },
+          {
+            internalType: "bool",
+            name: "onchainAllowAnyValidRoot",
+            type: "bool",
+          },
         ],
         internalType: "struct IProcessRegistry.Census",
         name: "census",
@@ -719,6 +734,11 @@ const _abi = [
             internalType: "string",
             name: "censusURI",
             type: "string",
+          },
+          {
+            internalType: "bool",
+            name: "onchainAllowAnyValidRoot",
+            type: "bool",
           },
         ],
         internalType: "struct IProcessRegistry.Census",

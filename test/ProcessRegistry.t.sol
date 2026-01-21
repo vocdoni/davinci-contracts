@@ -77,6 +77,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         IProcessRegistry.CensusOrigin censusOrigin
     ) internal returns (bytes32) {
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: censusOrigin,
             censusRoot: bytes32(CENSUS_ROOT),
             censusURI: "https://example.com/census"
@@ -362,6 +363,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_FromReady() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -405,6 +407,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_FromPaused() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -445,6 +448,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_EventEmitted() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -506,6 +510,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedExactlyAtStartTime() public {
         // Create a process with start time equal to current time
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -539,6 +544,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_GetProcessEndTime_WhenEndedBeforeStart() public {
         // Create a process with start time in the future
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -574,6 +580,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessStatus_EndedBeforeStart_MultipleTimes() public {
         // Create process 1 - ended immediately
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -638,6 +645,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
@@ -652,6 +660,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessCensus_NonExistentProcess() public {
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
@@ -669,6 +678,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
@@ -688,6 +698,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
@@ -704,6 +715,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: ""
@@ -721,6 +733,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0,
             censusURI: "https://example.com/new-census"
@@ -741,6 +754,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.CANCELED);
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
@@ -761,6 +775,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.setProcessStatus(processId, IProcessRegistry.ProcessStatus.PAUSED);
 
         IProcessRegistry.Census memory newCensus = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
             censusURI: "https://example.com/new-census"
@@ -845,6 +860,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         });
 
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -882,6 +898,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         });
 
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -1566,6 +1583,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_SetProcessResults_ShortDurationProcess() public {
         // Create a process with very short duration (1 second)
         IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+            onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
             censusURI: "https://example.com/census"
@@ -1822,6 +1840,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             CensusOriginTestCase memory tc = testCases[i];
 
             IProcessRegistry.Census memory cen = IProcessRegistry.Census({
+                onchainAllowAnyValidRoot: false,
                 censusOrigin: tc.censusOrigin,
                 censusRoot: tc.censusRoot,
                 censusURI: tc.censusURI

@@ -7,11 +7,14 @@ pragma solidity ^0.8.24;
 ///      Useful for voting systems, governance contracts, and other on-chain mechanisms
 ///      that need to validate voting power at specific block numbers
 interface ICensusValidator {
-    /// @notice Validates a census root and returns the block number when it was set
-    /// @dev Returns 0 if the root has never been set or has been evicted from history
+    /// @notice Validates a census root and returns the last block where it is/was valid
+    /// @dev Returns the last block where the root is/was valid.
+    ///      For the current root, returns block.number (still valid).
+    ///      For historical roots, returns the block number when it was replaced (last valid block).
+    ///      Returns 0 if the root has never been set or has been evicted from history.
     ///      The root history is maintained in a circular buffer (last 100 roots)
     /// @param root The census Merkle root to validate
-    /// @return blockNumber The block number when this root was set (0 if invalid/evicted)
+    /// @return blockNumber The last block where this root is/was valid (0 if invalid/evicted)
     function getRootBlockNumber(uint256 root) external view returns (uint256 blockNumber);
     
     /// @notice Current census Merkle root (Lean-IMT).

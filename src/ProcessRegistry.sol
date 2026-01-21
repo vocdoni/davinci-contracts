@@ -274,7 +274,10 @@ contract ProcessRegistry is IProcessRegistry {
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
         if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
             uint256 rootBlockNumber = ICensusValidator(address(uint160(uint256(p.census.censusRoot)))).getRootBlockNumber(st.censusRoot);
-            if (rootBlockNumber < p.creationBlock || rootBlockNumber > block.number) {
+            if (
+                (!p.census.onchainAllowAnyValidRoot && rootBlockNumber < p.creationBlock) ||
+                rootBlockNumber > block.number
+            ) {
                 revert InvalidCensusRoot();
             }
         }
@@ -376,6 +379,10 @@ contract ProcessRegistry is IProcessRegistry {
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
+        if (census.censusOrigin != CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1 &&
+            census.onchainAllowAnyValidRoot == true) {
+                revert InvalidCensusConfig();
+        }
 
         // CensusRoot based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
