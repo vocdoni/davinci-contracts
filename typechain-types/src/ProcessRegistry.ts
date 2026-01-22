@@ -65,6 +65,7 @@ export declare namespace IProcessRegistry {
   export type CensusStruct = {
     censusOrigin: BigNumberish;
     censusRoot: BytesLike;
+    contractAddress: AddressLike;
     censusURI: string;
     onchainAllowAnyValidRoot: boolean;
   };
@@ -72,11 +73,13 @@ export declare namespace IProcessRegistry {
   export type CensusStructOutput = [
     censusOrigin: bigint,
     censusRoot: string,
+    contractAddress: string,
     censusURI: string,
     onchainAllowAnyValidRoot: boolean
   ] & {
     censusOrigin: bigint;
     censusRoot: string;
+    contractAddress: string;
     censusURI: string;
     onchainAllowAnyValidRoot: boolean;
   };
