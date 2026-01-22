@@ -80,7 +80,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: censusOrigin,
             censusRoot: bytes32(CENSUS_ROOT),
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -366,7 +367,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -410,7 +412,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -451,7 +454,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -513,7 +517,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -547,7 +552,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -583,7 +589,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key1 = IProcessRegistry.EncryptionKey({
@@ -648,7 +655,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
 
         processRegistry.setProcessCensus(processId, newCensus);
@@ -663,7 +671,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
 
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
@@ -681,7 +690,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
 
         vm.prank(address(0xdead));
@@ -701,7 +711,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
         vm.expectRevert(IProcessRegistry.CensusNotUpdatable.selector);
         processRegistry.setProcessCensus(processId, newCensus);
@@ -718,7 +729,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: ""
+            censusURI: "",
+            contractAddress: address(0)
         });
 
         vm.expectRevert(IProcessRegistry.InvalidCensusURI.selector);
@@ -736,7 +748,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
 
         vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
@@ -757,7 +770,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
 
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -778,7 +792,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
             censusRoot: 0x123400000000000000000000000000000000000000000000000000000000abcd,
-            censusURI: "https://example.com/new-census"
+            censusURI: "https://example.com/new-census",
+            contractAddress: address(0)
         });
 
         // Should succeed
@@ -863,7 +878,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         // Generate random but valid EC point coordinates
@@ -901,7 +917,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         // Generate random but valid EC point coordinates
@@ -1586,7 +1603,8 @@ contract ProcessRegistryTest is Test, TestHelpers {
             onchainAllowAnyValidRoot: false,
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census"
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
         });
 
         IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({
@@ -1786,6 +1804,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         IProcessRegistry.CensusOrigin censusOrigin;
         bytes32 censusRoot;
         string censusURI;
+        address contractAddress;
         bytes4 revertData;
     }
 
@@ -1797,12 +1816,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: bytes32(0),
             censusURI: "https://example.com/census",
+            contractAddress: address(0),
             revertData: IProcessRegistry.InvalidCensusRoot.selector
         });
 
         testCases[1] = CensusOriginTestCase({
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: bytes32(CENSUS_ROOT),
+            contractAddress: address(0),
             censusURI: "",
             revertData: IProcessRegistry.InvalidCensusURI.selector
         });
@@ -1811,6 +1832,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             censusOrigin: IProcessRegistry.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
             censusRoot: bytes32(CENSUS_ROOT),
             censusURI: "https://example.com/census",
+            contractAddress: address(0),
             revertData: bytes4(0)
         });
 
@@ -1818,6 +1840,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1,
             censusRoot: bytes32(0),
             censusURI: "https://example.com/census",
+            contractAddress: address(0),
             revertData: IProcessRegistry.InvalidCensusRoot.selector
         });
 
@@ -1825,6 +1848,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1,
             censusRoot: bytes32(CENSUS_ROOT),
             censusURI: "",
+            contractAddress: address(0),
             revertData: IProcessRegistry.InvalidCensusURI.selector
         });
 
@@ -1832,6 +1856,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             censusOrigin: IProcessRegistry.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1,
             censusRoot: bytes32(CENSUS_ROOT),
             censusURI: "https://example.com/census",
+            contractAddress: address(0),
             revertData: bytes4(0)
         });
 
@@ -1843,7 +1868,9 @@ contract ProcessRegistryTest is Test, TestHelpers {
                 onchainAllowAnyValidRoot: false,
                 censusOrigin: tc.censusOrigin,
                 censusRoot: tc.censusRoot,
-                censusURI: tc.censusURI
+                censusURI: tc.censusURI,
+                contractAddress: tc.contractAddress
+
             });
 
             IProcessRegistry.EncryptionKey memory key = IProcessRegistry.EncryptionKey({

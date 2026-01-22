@@ -139,7 +139,7 @@ contract ProcessRegistry is IProcessRegistry {
         }
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
-        
+
         Process storage p = processes[processId];
 
         p.status = status;
@@ -204,6 +204,9 @@ contract ProcessRegistry is IProcessRegistry {
         if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+        if (
+            p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1 && census.contractAddress == address(0)
+        ) revert InvalidCensusAddress();
 
         // check ongoing process
         if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
@@ -273,7 +276,7 @@ contract ProcessRegistry is IProcessRegistry {
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
         if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
-            uint256 rootBlockNumber = ICensusValidator(address(uint160(uint256(p.census.censusRoot)))).getRootBlockNumber(st.censusRoot);
+            uint256 rootBlockNumber = ICensusValidator(p.census.contractAddress).getRootBlockNumber(st.censusRoot);
             if (
                 (!p.census.onchainAllowAnyValidRoot && rootBlockNumber < p.creationBlock) ||
                 rootBlockNumber > block.number
@@ -379,16 +382,18 @@ contract ProcessRegistry is IProcessRegistry {
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
-        if (census.censusOrigin != CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1 &&
-            census.onchainAllowAnyValidRoot == true) {
-                revert InvalidCensusConfig();
+        if (
+            census.censusOrigin != CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1 &&
+            census.onchainAllowAnyValidRoot == true
+        ) {
+            revert InvalidCensusConfig();
         }
 
         // CensusRoot based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
         //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (queried on each transition)
-        //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed) 
+        //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed)
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         // CensusURI based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
@@ -396,6 +401,10 @@ contract ProcessRegistry is IProcessRegistry {
         //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
         //  - CSP_EDDSA_BABYJUBJUB_V1 > URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+
+        if (census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+            if (census.contractAddress != address(0)) revert InvalidCensusAddress();
+        }
 
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
