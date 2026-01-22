@@ -12,7 +12,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/vocdoni/contracts-z.git"
+        "url": "git+https://github.com/vocdoni/davinci-contracts.git"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
