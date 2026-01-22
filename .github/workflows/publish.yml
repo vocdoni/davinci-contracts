@@ -6,8 +6,8 @@ on:
       - "v*"
 
 permissions:
-  id-token: write   # required by trusted publishing (OIDC)
-  contents: read
+  id-token: write # required by trusted publishing
+  contents: write
 
 concurrency:
   group: npm-publish-${{ github.ref }}
@@ -31,7 +31,7 @@ jobs:
           cache: "npm"
 
       - name: Upgrade npm CLI
-        run: npm i -g npm@^11.5.1 && npm --version # required by trusted publishing (OIDC)
+        run: npm i -g npm@^11.5.1 && npm --version # required by trusted publishing
 
       - name: Ensure tag matches package.json version
         shell: bash
@@ -74,3 +74,11 @@ jobs:
       - name: Publish npm Package
         if: steps.published_check.outputs.should_publish == 'true'
         run: npm publish --access public
+
+      - name: Create GitHub Release
+        if: steps.published_check.outputs.should_publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
