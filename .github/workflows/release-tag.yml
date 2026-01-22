@@ -23,6 +23,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.DAVINCI_CONTRACTS_RELEASE_PAT }}
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -47,5 +49,7 @@ jobs:
 
       - name: Push commit and tags
         run: |
+          TAG="$(git tag --points-at HEAD | head -n 1)"
+          echo "Pushing tag: $TAG"
           git push origin HEAD:${{ github.ref_name }}
-          git push origin --tags
+          git push origin "$TAG"

@@ -388,23 +388,22 @@ contract ProcessRegistry is IProcessRegistry {
         ) {
             revert InvalidCensusConfig();
         }
-
         // CensusRoot based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
         //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (queried on each transition)
         //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed)
-        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (census.censusOrigin != CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+            if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        } else {
+            if (census.contractAddress == address(0)) revert InvalidCensusAddress();
+        }
         // CensusURI based on census origin:
         //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
         //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
         //  - CSP_EDDSA_BABYJUBJUB_V1 > URL where the voters can generate their signatures
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
-
-        if (census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
-            if (census.contractAddress != address(0)) revert InvalidCensusAddress();
-        }
 
         // validate status
         if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
