@@ -1,0 +1,76 @@
+name: Publish NPM Package
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write   # required by trusted publishing (OIDC)
+  contents: read
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+
+      - name: Upgrade npm CLI
+        run: npm i -g npm@^11.5.1 && npm --version # required by trusted publishing (OIDC)
+
+      - name: Ensure tag matches package.json version
+        shell: bash
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          TAG="${GITHUB_REF_NAME}"
+          EXPECTED="v${PKG_VERSION}"
+
+          echo "Tag: ${TAG}"
+          echo "package.json version: ${PKG_VERSION}"
+
+          if [ "${TAG}" != "${EXPECTED}" ]; then
+            echo "ERROR: Tag (${TAG}) does not match package.json version (${EXPECTED})."
+            exit 1
+          fi
+
+      - name: Check if version already published
+        id: published_check
+        shell: bash
+        run: |
+          PKG_NAME="$(node -p "require('./package.json').name")"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+            echo "Version ${PKG_VERSION} already published. Skipping publish."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version ${PKG_VERSION} not published yet."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Dependencies
+        if: steps.published_check.outputs.should_publish == 'true'
+        run: npm ci
+
+      - name: Run NPM prepare
+        if: steps.published_check.outputs.should_publish == 'true'
+        run: npm run prepare
+
+      - name: Publish npm Package
+        if: steps.published_check.outputs.should_publish == 'true'
+        run: npm publish --access public

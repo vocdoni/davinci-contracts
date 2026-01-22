@@ -1,0 +1,51 @@
+name: Bump version & tag
+
+on:
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-tag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag_release:
+    # Prevent recursion: when this workflow pushes the bump commit/tag, github.actor becomes github-actions[bot]
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build / Prepare
+        run: npm run prepare
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version (patch) and create git tag
+        run: |
+          npm version patch -m "bump: v%s"
+
+      - name: Push commit and tags
+        run: |
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin --tags
