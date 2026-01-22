@@ -31,6 +31,11 @@
     },
     {
       "inputs": [],
+      "name": "InvalidCensusAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "InvalidCensusConfig",
       "type": "error"
     },
@@ -502,6 +507,11 @@
                   "type": "bytes32"
                 },
                 {
+                  "internalType": "address",
+                  "name": "contractAddress",
+                  "type": "address"
+                },
+                {
                   "internalType": "string",
                   "name": "censusURI",
                   "type": "string"
@@ -652,6 +662,11 @@
               "type": "bytes32"
             },
             {
+              "internalType": "address",
+              "name": "contractAddress",
+              "type": "address"
+            },
+            {
               "internalType": "string",
               "name": "censusURI",
               "type": "string"
@@ -723,6 +738,11 @@
               "internalType": "bytes32",
               "name": "censusRoot",
               "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "contractAddress",
+              "type": "address"
             },
             {
               "internalType": "string",

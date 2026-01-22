@@ -37,6 +37,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidCensusAddress",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidCensusConfig",
     type: "error",
   },
@@ -508,6 +513,11 @@ const _abi = [
                 type: "bytes32",
               },
               {
+                internalType: "address",
+                name: "contractAddress",
+                type: "address",
+              },
+              {
                 internalType: "string",
                 name: "censusURI",
                 type: "string",
@@ -658,6 +668,11 @@ const _abi = [
             type: "bytes32",
           },
           {
+            internalType: "address",
+            name: "contractAddress",
+            type: "address",
+          },
+          {
             internalType: "string",
             name: "censusURI",
             type: "string",
@@ -729,6 +744,11 @@ const _abi = [
             internalType: "bytes32",
             name: "censusRoot",
             type: "bytes32",
+          },
+          {
+            internalType: "address",
+            name: "contractAddress",
+            type: "address",
           },
           {
             internalType: "string",
