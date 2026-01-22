@@ -48,22 +48,29 @@ jobs:
             exit 1
           fi
 
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run NPM prepare
-        run: npm run prepare
-
-      - name: Skip if version already published
+      - name: Check if version already published
+        id: published_check
         shell: bash
         run: |
           PKG_NAME="$(node -p "require('./package.json').name")"
           PKG_VERSION="$(node -p "require('./package.json').version")"
 
           if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
-            echo "Version ${PKG_VERSION} already published. Skipping."
-            exit 0
+            echo "Version ${PKG_VERSION} already published. Skipping publish."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version ${PKG_VERSION} not published yet."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install Dependencies
+        if: steps.published_check.outputs.should_publish == 'true'
+        run: npm ci
+
+      - name: Run NPM prepare
+        if: steps.published_check.outputs.should_publish == 'true'
+        run: npm run prepare
+
       - name: Publish npm Package
+        if: steps.published_check.outputs.should_publish == 'true'
         run: npm publish --access public
