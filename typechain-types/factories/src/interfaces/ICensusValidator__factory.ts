@@ -10,6 +10,31 @@ import type {
 
 const _abi = [
   {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint88",
+        name: "previousWeight",
+        type: "uint88",
+      },
+      {
+        indexed: false,
+        internalType: "uint88",
+        name: "newWeight",
+        type: "uint88",
+      },
+    ],
+    name: "WeightChanged",
+    type: "event",
+  },
+  {
     inputs: [],
     name: "getCensusRoot",
     outputs: [

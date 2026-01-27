@@ -8,6 +8,8 @@ import type {
   FunctionFragment,
   Result,
   Interface,
+  EventFragment,
+  AddressLike,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -16,6 +18,7 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
+  TypedLogDescription,
   TypedListener,
   TypedContractMethod,
 } from "../../common";
@@ -24,6 +27,8 @@ export interface ICensusValidatorInterface extends Interface {
   getFunction(
     nameOrSignature: "getCensusRoot" | "getRootBlockNumber"
   ): FunctionFragment;
+
+  getEvent(nameOrSignatureOrTopic: "WeightChanged"): EventFragment;
 
   encodeFunctionData(
     functionFragment: "getCensusRoot",
@@ -42,6 +47,28 @@ export interface ICensusValidatorInterface extends Interface {
     functionFragment: "getRootBlockNumber",
     data: BytesLike
   ): Result;
+}
+
+export namespace WeightChangedEvent {
+  export type InputTuple = [
+    account: AddressLike,
+    previousWeight: BigNumberish,
+    newWeight: BigNumberish
+  ];
+  export type OutputTuple = [
+    account: string,
+    previousWeight: bigint,
+    newWeight: bigint
+  ];
+  export interface OutputObject {
+    account: string;
+    previousWeight: bigint;
+    newWeight: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface ICensusValidator extends BaseContract {
@@ -106,5 +133,24 @@ export interface ICensusValidator extends BaseContract {
     nameOrSignature: "getRootBlockNumber"
   ): TypedContractMethod<[root: BigNumberish], [bigint], "view">;
 
-  filters: {};
+  getEvent(
+    key: "WeightChanged"
+  ): TypedContractEvent<
+    WeightChangedEvent.InputTuple,
+    WeightChangedEvent.OutputTuple,
+    WeightChangedEvent.OutputObject
+  >;
+
+  filters: {
+    "WeightChanged(address,uint88,uint88)": TypedContractEvent<
+      WeightChangedEvent.InputTuple,
+      WeightChangedEvent.OutputTuple,
+      WeightChangedEvent.OutputObject
+    >;
+    WeightChanged: TypedContractEvent<
+      WeightChangedEvent.InputTuple,
+      WeightChangedEvent.OutputTuple,
+      WeightChangedEvent.OutputObject
+    >;
+  };
 }

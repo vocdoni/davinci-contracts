@@ -31,7 +31,7 @@ var (
 
 // ICensusValidatorMetaData contains all meta data concerning the ICensusValidator contract.
 var ICensusValidatorMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"getCensusRoot\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"name\":\"getRootBlockNumber\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint88\",\"name\":\"previousWeight\",\"type\":\"uint88\"},{\"indexed\":false,\"internalType\":\"uint88\",\"name\":\"newWeight\",\"type\":\"uint88\"}],\"name\":\"WeightChanged\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getCensusRoot\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"name\":\"getRootBlockNumber\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // ICensusValidatorABI is the input ABI used to generate the binding from.
@@ -240,4 +240,150 @@ func (_ICensusValidator *ICensusValidatorSession) GetRootBlockNumber(root *big.I
 // Solidity: function getRootBlockNumber(uint256 root) view returns(uint256 blockNumber)
 func (_ICensusValidator *ICensusValidatorCallerSession) GetRootBlockNumber(root *big.Int) (*big.Int, error) {
 	return _ICensusValidator.Contract.GetRootBlockNumber(&_ICensusValidator.CallOpts, root)
+}
+
+// ICensusValidatorWeightChangedIterator is returned from FilterWeightChanged and is used to iterate over the raw logs and unpacked data for WeightChanged events raised by the ICensusValidator contract.
+type ICensusValidatorWeightChangedIterator struct {
+	Event *ICensusValidatorWeightChanged // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ICensusValidatorWeightChangedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ICensusValidatorWeightChanged)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ICensusValidatorWeightChanged)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ICensusValidatorWeightChangedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ICensusValidatorWeightChangedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ICensusValidatorWeightChanged represents a WeightChanged event raised by the ICensusValidator contract.
+type ICensusValidatorWeightChanged struct {
+	Account        common.Address
+	PreviousWeight *big.Int
+	NewWeight      *big.Int
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// FilterWeightChanged is a free log retrieval operation binding the contract event 0xee82339564ef9f72eccdbb67b46a62198422524ab9c7e3fcbdd194fa1b46461b.
+//
+// Solidity: event WeightChanged(address indexed account, uint88 previousWeight, uint88 newWeight)
+func (_ICensusValidator *ICensusValidatorFilterer) FilterWeightChanged(opts *bind.FilterOpts, account []common.Address) (*ICensusValidatorWeightChangedIterator, error) {
+
+	var accountRule []interface{}
+	for _, accountItem := range account {
+		accountRule = append(accountRule, accountItem)
+	}
+
+	logs, sub, err := _ICensusValidator.contract.FilterLogs(opts, "WeightChanged", accountRule)
+	if err != nil {
+		return nil, err
+	}
+	return &ICensusValidatorWeightChangedIterator{contract: _ICensusValidator.contract, event: "WeightChanged", logs: logs, sub: sub}, nil
+}
+
+// WatchWeightChanged is a free log subscription operation binding the contract event 0xee82339564ef9f72eccdbb67b46a62198422524ab9c7e3fcbdd194fa1b46461b.
+//
+// Solidity: event WeightChanged(address indexed account, uint88 previousWeight, uint88 newWeight)
+func (_ICensusValidator *ICensusValidatorFilterer) WatchWeightChanged(opts *bind.WatchOpts, sink chan<- *ICensusValidatorWeightChanged, account []common.Address) (event.Subscription, error) {
+
+	var accountRule []interface{}
+	for _, accountItem := range account {
+		accountRule = append(accountRule, accountItem)
+	}
+
+	logs, sub, err := _ICensusValidator.contract.WatchLogs(opts, "WeightChanged", accountRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ICensusValidatorWeightChanged)
+				if err := _ICensusValidator.contract.UnpackLog(event, "WeightChanged", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseWeightChanged is a log parse operation binding the contract event 0xee82339564ef9f72eccdbb67b46a62198422524ab9c7e3fcbdd194fa1b46461b.
+//
+// Solidity: event WeightChanged(address indexed account, uint88 previousWeight, uint88 newWeight)
+func (_ICensusValidator *ICensusValidatorFilterer) ParseWeightChanged(log types.Log) (*ICensusValidatorWeightChanged, error) {
+	event := new(ICensusValidatorWeightChanged)
+	if err := _ICensusValidator.contract.UnpackLog(event, "WeightChanged", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
