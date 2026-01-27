@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+// SPDX-License-Identifier: AGPL-3.0-or-later
+pragma solidity ^0.8.33;
 
 /// @title ICensusValidator
 /// @notice Interface for validating census Merkle roots
@@ -7,6 +7,16 @@ pragma solidity ^0.8.24;
 ///      Useful for voting systems, governance contracts, and other on-chain mechanisms
 ///      that need to validate voting power at specific block numbers
 interface ICensusValidator {
+    /// @notice Emitted when an account's weight changes in the census
+    /// @param account The address of the account whose weight changed
+    /// @param previousWeight The previous weight of the account
+    /// @param newWeight The new weight of the account
+    event WeightChanged(
+        address indexed account,
+        uint88 previousWeight,
+        uint88 newWeight
+    );
+
     /// @notice Validates a census root and returns the last block where it is/was valid
     /// @dev Returns the last block where the root is/was valid.
     ///      For the current root, returns block.number (still valid).
@@ -15,8 +25,10 @@ interface ICensusValidator {
     ///      The root history is maintained in a circular buffer (last 100 roots)
     /// @param root The census Merkle root to validate
     /// @return blockNumber The last block where this root is/was valid (0 if invalid/evicted)
-    function getRootBlockNumber(uint256 root) external view returns (uint256 blockNumber);
-    
+    function getRootBlockNumber(
+        uint256 root
+    ) external view returns (uint256 blockNumber);
+
     /// @notice Current census Merkle root (Lean-IMT).
     /// @return root The latest census root
     function getCensusRoot() external view returns (uint256 root);
