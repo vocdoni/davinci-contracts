@@ -1155,7 +1155,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
 
-        vm.expectRevert(bytes4(keccak256("ProofInvalid()")));
+        vm.expectRevert(bytes4(keccak256("CommitmentInvalid()")));
         processRegistry.submitStateTransition(processId, STATETRANSITION_ABI_PROOF_INVALID, stateTransitionInputs());
     }
 
