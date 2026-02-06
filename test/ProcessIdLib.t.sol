@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import { Test } from "forge-std/Test.sol";
-import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
+import {Test} from "forge-std/Test.sol";
+import {ProcessIdLib} from "../src/libraries/ProcessIdLib.sol";
 
 contract ProcessIdLibTest is Test {
     function test_ComputeProcessId_Basic() public pure {
@@ -15,11 +15,8 @@ contract ProcessIdLibTest is Test {
         bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
         uint32 prefix = uint32(uint256(h));
 
-        bytes32 expectedProcessId = bytes32(
-            (uint256(uint160(creatorAddr)) << 96) |
-            (uint256(prefix) << 64) |
-            uint256(nonce)
-        );
+        bytes32 expectedProcessId =
+            bytes32((uint256(uint160(creatorAddr)) << 96) | (uint256(prefix) << 64) | uint256(nonce));
 
         bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, nonce);
 
@@ -66,13 +63,15 @@ contract ProcessIdLibTest is Test {
         uint32 chainId = 1;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0x7777777777777777777777777777777777777777);
-        uint256 largeNonce = type(uint256).max; // truncated to uint64
+        uint256 largeNonce = type(uint256).max; // low 64 bits are all ones
+        uint64 truncatedNonce = type(uint64).max;
 
         bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
         uint32 prefix = uint32(uint256(h));
 
-        bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, uint64(largeNonce));
-        assertEq(uint64(uint256(processId)), uint64(largeNonce));
+        assertEq(largeNonce & type(uint64).max, uint256(truncatedNonce));
+        bytes32 processId = ProcessIdLib.computeProcessId(prefix, creatorAddr, truncatedNonce);
+        assertEq(uint64(uint256(processId)), truncatedNonce);
     }
 
     function test_ComputeProcessId_PrefixMatchesHashTail() public pure {
@@ -127,14 +126,14 @@ contract ProcessIdLibTest is Test {
 
         // Check the prefix is in bytes 20-23 (bits 95-64)
         // Byte 20 (MSB of prefix) lives at bits [95..88] of processId, etc.
-        assertEq(uint8(uint256(processId >> 88)), uint8(prefix >> 24));
-        assertEq(uint8(uint256(processId >> 80)), uint8(prefix >> 16));
-        assertEq(uint8(uint256(processId >> 72)), uint8(prefix >> 8));
-        assertEq(uint8(uint256(processId >> 64)), uint8(prefix));
+        assertEq(uint256(processId >> 88) & 0xFF, (uint256(prefix) >> 24) & 0xFF);
+        assertEq(uint256(processId >> 80) & 0xFF, (uint256(prefix) >> 16) & 0xFF);
+        assertEq(uint256(processId >> 72) & 0xFF, (uint256(prefix) >> 8) & 0xFF);
+        assertEq(uint256(processId >> 64) & 0xFF, uint256(prefix) & 0xFF);
 
         // Check the last 8 bytes (nonce) little→big order via shifts
-        assertEq(uint8(uint256(processId)),       0xEF);
-        assertEq(uint8(uint256(processId >> 8)),  0xCD);
+        assertEq(uint8(uint256(processId)), 0xEF);
+        assertEq(uint8(uint256(processId >> 8)), 0xCD);
         assertEq(uint8(uint256(processId >> 16)), 0xAB);
         assertEq(uint8(uint256(processId >> 24)), 0x90);
         assertEq(uint8(uint256(processId >> 32)), 0x78);
@@ -160,7 +159,7 @@ contract ProcessIdLibTest is Test {
         uint32 chainId = 1;
         address creatorAddr = address(0x1234567890123456789012345678901234567890);
         address contractAddr = address(0x000000000000000000000000000000000000dEaD);
-        uint64 nonce = 42; 
+        uint64 nonce = 42;
 
         bytes32 h = keccak256(abi.encodePacked(chainId, contractAddr));
         uint32 prefix = uint32(uint256(h));

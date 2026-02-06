@@ -8,7 +8,6 @@ pragma solidity ^0.8.28;
  */
 interface IOrganizationRegistry {
     /// EVENTS ///
-
     /**
      * @notice Emitted when a new organization is created
      * @param id The organization's unique identifier
@@ -124,11 +123,8 @@ interface IOrganizationRegistry {
      * @dev Checks for organization existence by verifying that the organization's name is not empty
      * @dev msg.sender is added as an administrator by default
      */
-    function createOrganization(
-        string calldata name,
-        string calldata metadataURI,
-        address[] calldata administrators
-    ) external;
+    function createOrganization(string calldata name, string calldata metadataURI, address[] calldata administrators)
+        external;
 
     /**
      * @notice Updates an organization's data

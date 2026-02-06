@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import "./interfaces/IOrganizationRegistry.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title OrganizationRegistry
@@ -34,11 +34,9 @@ contract OrganizationRegistry is IOrganizationRegistry, Ownable {
     constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IOrganizationRegistry
-    function createOrganization(
-        string calldata name,
-        string calldata metadataURI,
-        address[] calldata administrators
-    ) public {
+    function createOrganization(string calldata name, string calldata metadataURI, address[] calldata administrators)
+        public
+    {
         address id = msg.sender;
         if (bytes(name).length <= 0) {
             revert InvalidOrganizationName();
@@ -67,11 +65,10 @@ contract OrganizationRegistry is IOrganizationRegistry, Ownable {
     }
 
     /// @inheritdoc IOrganizationRegistry
-    function updateOrganization(
-        address id,
-        string calldata name,
-        string calldata metadataURI
-    ) public onlyAdministrator(id) {
+    function updateOrganization(address id, string calldata name, string calldata metadataURI)
+        public
+        onlyAdministrator(id)
+    {
         if (bytes(name).length <= 0) {
             revert InvalidOrganizationName();
         }

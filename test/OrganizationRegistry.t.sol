@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import { Test } from "forge-std/Test.sol";
-import { OrganizationRegistry } from "../src/OrganizationRegistry.sol";
-import { IOrganizationRegistry } from "../src/interfaces/IOrganizationRegistry.sol";
+import {Test} from "forge-std/Test.sol";
+import {OrganizationRegistry} from "../src/OrganizationRegistry.sol";
+import {IOrganizationRegistry} from "../src/interfaces/IOrganizationRegistry.sol";
 
 contract OrganizationRegistryTest is Test {
     OrganizationRegistry public organizationRegistry;
@@ -628,7 +628,7 @@ contract OrganizationRegistryTest is Test {
         adminsToAdd[3] = address(0x1004);
         adminsToAdd[4] = address(0x1005);
 
-        for (uint i = 0; i < adminsToAdd.length; i++) {
+        for (uint256 i = 0; i < adminsToAdd.length; i++) {
             vm.prank(ORGANIZATION_ID);
             organizationRegistry.addAdministrator(ORGANIZATION_ID, adminsToAdd[i]);
         }
@@ -653,8 +653,8 @@ contract OrganizationRegistryTest is Test {
     }
 
     function test_CreateOrganization_LongName() public {
-        string
-            memory longName = "This is a very long organization name that contains many characters to test the limits of string handling in the contract and ensure it works properly with extended names";
+        string memory longName =
+            "This is a very long organization name that contains many characters to test the limits of string handling in the contract and ensure it works properly with extended names";
         address[] memory admins = new address[](1);
         admins[0] = ADMIN_1;
 
@@ -666,8 +666,8 @@ contract OrganizationRegistryTest is Test {
     }
 
     function test_CreateOrganization_LongMetadataURI() public {
-        string
-            memory longURI = "https://example.com/very/long/path/to/metadata/that/contains/many/segments/and/parameters?param1=value1&param2=value2&param3=value3&param4=value4&param5=value5";
+        string memory longURI =
+            "https://example.com/very/long/path/to/metadata/that/contains/many/segments/and/parameters?param1=value1&param2=value2&param3=value3&param4=value4&param5=value5";
         address[] memory admins = new address[](1);
         admins[0] = ADMIN_1;
 
@@ -711,13 +711,13 @@ contract OrganizationRegistryTest is Test {
         newAdmins[1] = ADMIN_2;
         newAdmins[2] = ADMIN_3;
 
-        for (uint i = 0; i < newAdmins.length; i++) {
+        for (uint256 i = 0; i < newAdmins.length; i++) {
             vm.prank(ORGANIZATION_ID);
             organizationRegistry.addAdministrator(ORGANIZATION_ID, newAdmins[i]);
         }
 
         // Verify all were added
-        for (uint i = 0; i < newAdmins.length; i++) {
+        for (uint256 i = 0; i < newAdmins.length; i++) {
             assertTrue(organizationRegistry.isAdministrator(ORGANIZATION_ID, newAdmins[i]));
         }
 
