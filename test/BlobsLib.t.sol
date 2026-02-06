@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.24;
 
-import { Test, console2 } from "forge-std/Test.sol";
-import { BlobsLib } from "../src/libraries/BlobsLib.sol";
+import {Test, console2} from "forge-std/Test.sol";
+import {BlobsLib} from "../src/libraries/BlobsLib.sol";
 
 /// @title Helper contract to test BlobsLib reverts
 contract BlobsLibTestHelper {
-    function buildKZGInput(
-        bytes32 versionedHash,
-        bytes32 z,
-        bytes32 y,
-        bytes memory commitment,
-        bytes memory proof
-    ) external pure returns (bytes memory) {
+    function buildKZGInput(bytes32 versionedHash, bytes32 z, bytes32 y, bytes memory commitment, bytes memory proof)
+        external
+        pure
+        returns (bytes memory)
+    {
         return BlobsLib.buildKZGInput(versionedHash, z, y, commitment, proof);
     }
 
@@ -130,7 +128,7 @@ contract BlobsLibTest is Test {
 
     /// @notice Test verifyKZG with invalid input length
     function test_verifyKZG_ShortInputLength() public {
-        uint badLength = 100;
+        uint256 badLength = 100;
         vm.expectRevert(
             abi.encodeWithSelector(BlobsLib.BlobVerificationInvalidInputLength.selector, badLength, KZG_INPUT_LENGTH)
         );
@@ -139,7 +137,7 @@ contract BlobsLibTest is Test {
 
     /// @notice Test verifyKZG with invalid input length
     function test_verifyKZG_LongInputLength() public {
-        uint badLength = 300;
+        uint256 badLength = 300;
         vm.expectRevert(
             abi.encodeWithSelector(BlobsLib.BlobVerificationInvalidInputLength.selector, badLength, KZG_INPUT_LENGTH)
         );
@@ -150,8 +148,8 @@ contract BlobsLibTest is Test {
     function test_verifyKZG_CorrectInputLength() public {
         bytes memory validInput = new bytes(KZG_INPUT_LENGTH);
         // Fill with test data
-        for (uint256 i = 0; i < KZG_INPUT_LENGTH; i++) {
-            validInput[i] = bytes1(uint8(i % 256));
+        for (uint8 i = 0; i < 192; i++) {
+            validInput[i] = bytes1(i);
         }
 
         vm.expectRevert(BlobsLib.BlobVerificationPointEvaluationFailed.selector);
@@ -160,7 +158,7 @@ contract BlobsLibTest is Test {
 
     /// @notice Test verifyKZG with empty input
     function test_verifyKZG_EmptyInput() public {
-        uint badLength = 0;
+        uint256 badLength = 0;
         vm.expectRevert(
             abi.encodeWithSelector(BlobsLib.BlobVerificationInvalidInputLength.selector, badLength, KZG_INPUT_LENGTH)
         );
@@ -212,8 +210,8 @@ contract BlobsLibTest is Test {
 
         // Test with 32 bytes
         bytes memory mediumCommitment = new bytes(32);
-        for (uint256 i = 0; i < 32; i++) {
-            mediumCommitment[i] = bytes1(uint8(i));
+        for (uint8 i = 0; i < 32; i++) {
+            mediumCommitment[i] = bytes1(i);
         }
         bytes32 hash2 = BlobsLib.calcBlobHashV1(mediumCommitment);
         assertTrue(hash2 != bytes32(0), "Should handle medium commitments");
@@ -244,7 +242,7 @@ contract BlobsLibTest is Test {
 
     /// @notice Test buildKZGInput with invalid commitment length
     function test_buildKZGInput_InvalidCommitmentLength() public {
-        uint badLength = 47;
+        uint256 badLength = 47;
         vm.expectRevert(
             abi.encodeWithSelector(BlobsLib.KZGInputBadCommitmentLength.selector, badLength, KZG_COMMITMENT_LENGTH)
         );
@@ -253,7 +251,7 @@ contract BlobsLibTest is Test {
 
     /// @notice Test buildKZGInput with invalid proof length
     function test_buildKZGInput_InvalidProofLength() public {
-        uint badLength = 47;
+        uint256 badLength = 47;
         vm.expectRevert(
             abi.encodeWithSelector(BlobsLib.KZGInputBadProofLength.selector, badLength, KZG_COMMITMENT_LENGTH)
         );
@@ -262,15 +260,13 @@ contract BlobsLibTest is Test {
 
     /// @notice Test buildKZGInput with zero-length commitment
     function test_buildKZGInput_ZeroLengthCommitment() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(BlobsLib.KZGInputBadCommitmentLength.selector, 0, KZG_COMMITMENT_LENGTH)
-        );
+        vm.expectRevert(abi.encodeWithSelector(BlobsLib.KZGInputBadCommitmentLength.selector, 0, KZG_COMMITMENT_LENGTH));
         helper.buildKZGInput(TEST_VERSIONED_HASH, TEST_Z, TEST_Y, new bytes(0), TEST_PROOF);
     }
 
     /// @notice Test buildKZGInput with oversized commitment
     function test_buildKZGInput_OversizedCommitment() public {
-        uint badLength = 49;
+        uint256 badLength = 49;
         vm.expectRevert(
             abi.encodeWithSelector(BlobsLib.KZGInputBadCommitmentLength.selector, badLength, KZG_COMMITMENT_LENGTH)
         );
@@ -302,21 +298,21 @@ contract BlobsLibTest is Test {
 
     /// @notice Test decodeKZGInput with invalid input length
     function test_decodeKZGInput_InvalidInputLength() public {
-        uint badLength = 100;
+        uint256 badLength = 100;
         vm.expectRevert(abi.encodeWithSelector(BlobsLib.KZGInputBadInputLength.selector, badLength, KZG_INPUT_LENGTH));
         helper.decodeKZGInput(new bytes(badLength));
     }
 
     /// @notice Test decodeKZGInput with empty input
     function test_decodeKZGInput_EmptyInput() public {
-        uint badLength = 0;
+        uint256 badLength = 0;
         vm.expectRevert(abi.encodeWithSelector(BlobsLib.KZGInputBadInputLength.selector, badLength, KZG_INPUT_LENGTH));
         helper.decodeKZGInput(new bytes(badLength));
     }
 
     /// @notice Test decodeKZGInput with oversized input
     function test_decodeKZGInput_OversizedInput() public {
-        uint badLength = 300;
+        uint256 badLength = 300;
         vm.expectRevert(abi.encodeWithSelector(BlobsLib.KZGInputBadInputLength.selector, badLength, KZG_INPUT_LENGTH));
         helper.decodeKZGInput(new bytes(badLength));
     }
@@ -334,13 +330,8 @@ contract BlobsLibTest is Test {
         BlobsLib.KZGProof memory proof = BlobsLib.decodeKZGInput(input);
 
         // Rebuild input from decoded proof
-        bytes memory rebuiltInput = BlobsLib.buildKZGInput(
-            proof.versionedHash,
-            proof.z,
-            proof.y,
-            proof.commitment,
-            proof.proof
-        );
+        bytes memory rebuiltInput =
+            BlobsLib.buildKZGInput(proof.versionedHash, proof.z, proof.y, proof.commitment, proof.proof);
 
         // Verify they match
         assertEq(input.length, rebuiltInput.length, "Input lengths should match");

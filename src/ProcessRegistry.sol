@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import { IProcessRegistry } from "./interfaces/IProcessRegistry.sol";
-import { IZKVerifier } from "./interfaces/IZKVerifier.sol";
-import { ProcessIdLib } from "./libraries/ProcessIdLib.sol";
-import { BlobsLib } from "./libraries/BlobsLib.sol";
-import { ICensusValidator } from "./interfaces/ICensusValidator.sol";
+import {IProcessRegistry} from "./interfaces/IProcessRegistry.sol";
+import {IZKVerifier} from "./interfaces/IZKVerifier.sol";
+import {DAVINCITypes} from "./libraries/DAVINCITypes.sol";
+import {ProcessIdLib} from "./libraries/ProcessIdLib.sol";
+import {BlobsLib} from "./libraries/BlobsLib.sol";
+import {StateRootLib} from "./libraries/StateRootLib.sol";
+import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
 
 /**
  * @title ProcessRegistry
@@ -30,7 +32,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The process mapping is a mapping of process IDs to processes.
      */
-    mapping(bytes32 => Process) public processes;
+    mapping(bytes32 => DAVINCITypes.Process) public processes;
     /**
      * @notice The process nonce mapping is a mapping of addresses to process nonces.
      */
@@ -89,13 +91,13 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function getProcess(bytes32 processId) external view override returns (Process memory) {
+    function getProcess(bytes32 processId) external view override returns (DAVINCITypes.Process memory) {
         return processes[processId];
     }
 
     /// @inheritdoc IProcessRegistry
     function getProcessEndTime(bytes32 processId) external view returns (uint256) {
-        Process memory p = processes[processId];
+        DAVINCITypes.Process memory p = processes[processId];
         return p.startTime + p.duration;
     }
 
@@ -116,15 +118,14 @@ contract ProcessRegistry is IProcessRegistry {
 
     /// @inheritdoc IProcessRegistry
     function newProcess(
-        ProcessStatus status,
+        DAVINCITypes.ProcessStatus status,
         uint256 startTime,
         uint256 duration,
         uint256 maxVoters,
-        BallotMode calldata ballotMode,
-        Census calldata census,
+        DAVINCITypes.BallotMode calldata ballotMode,
+        DAVINCITypes.Census calldata census,
         string calldata metadata,
-        EncryptionKey calldata encryptionKey,
-        uint256 initStateRoot
+        DAVINCITypes.EncryptionKey calldata encryptionKey
     ) external override returns (bytes32) {
         address sender = msg.sender;
         bytes32 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
@@ -140,7 +141,7 @@ contract ProcessRegistry is IProcessRegistry {
         if (startTime < currentTimestamp) revert InvalidStartTime();
         if (startTime + duration <= currentTimestamp) revert InvalidDuration();
 
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
 
         p.status = status;
         p.startTime = startTime;
@@ -148,7 +149,7 @@ contract ProcessRegistry is IProcessRegistry {
         p.maxVoters = maxVoters;
         p.organizationId = sender;
         p.encryptionKey = encryptionKey;
-        p.latestStateRoot = initStateRoot;
+        p.latestStateRoot = StateRootLib.computeStateRoot(processId, census.censusOrigin, ballotMode, encryptionKey);
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
@@ -162,22 +163,22 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external override {
+    function setProcessStatus(bytes32 processId, DAVINCITypes.ProcessStatus newStatus) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
 
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
 
         // validate status transition
-        ProcessStatus oldStatus = p.status;
+        DAVINCITypes.ProcessStatus oldStatus = p.status;
         if (!_validateStatusTransition(oldStatus, newStatus)) revert InvalidStatus();
 
         p.status = newStatus;
         // if newStatus is ENDED, update duration to the time difference between current time and start time
-        if (newStatus == ProcessStatus.ENDED) {
+        if (newStatus == DAVINCITypes.ProcessStatus.ENDED) {
             uint256 newDuration;
             if (block.timestamp >= p.startTime) {
                 newDuration = block.timestamp - p.startTime;
@@ -192,24 +193,29 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessCensus(bytes32 processId, Census calldata census) external override {
+    function setProcessCensus(bytes32 processId, DAVINCITypes.Census calldata census) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
-        if (p.census.censusOrigin != CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1) revert CensusNotUpdatable();
+        if (p.census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1) {
+            revert CensusNotUpdatable();
+        }
 
         // check census
         if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
         if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
         if (
-            p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1 && census.contractAddress == address(0)
+            p.census.censusOrigin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1
+                && census.contractAddress == address(0)
         ) revert InvalidCensusAddress();
 
         // check ongoing process
-        if (p.status != ProcessStatus.READY && p.status != ProcessStatus.PAUSED) revert InvalidStatus();
+        if (p.status != DAVINCITypes.ProcessStatus.READY && p.status != DAVINCITypes.ProcessStatus.PAUSED) {
+            revert InvalidStatus();
+        }
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         p.census.censusRoot = census.censusRoot;
@@ -223,21 +229,22 @@ contract ProcessRegistry is IProcessRegistry {
     function setProcessDuration(bytes32 processId, uint256 _duration) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
 
         // check ongoing process
-        ProcessStatus status = p.status;
-        if (status != ProcessStatus.READY && status != ProcessStatus.PAUSED) revert InvalidStatus();
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
+            revert InvalidStatus();
+        }
 
         // check valid duration
         uint256 startTime = p.startTime;
         uint256 oldDuration = p.duration;
         if (
-            _duration == 0 ||
-            startTime + _duration <= block.timestamp ||
-            startTime + _duration <= startTime + oldDuration
+            _duration == 0 || startTime + _duration <= block.timestamp
+                || startTime + _duration <= startTime + oldDuration
         ) revert InvalidDuration();
 
         p.duration = _duration;
@@ -249,13 +256,15 @@ contract ProcessRegistry is IProcessRegistry {
     function setProcessMaxVoters(bytes32 processId, uint256 _maxVoters) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
 
         // check ongoing process
-        ProcessStatus status = p.status;
-        if (status != ProcessStatus.READY && status != ProcessStatus.PAUSED) revert InvalidStatus();
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
+            revert InvalidStatus();
+        }
 
         // check valid maxVoters
         if (_maxVoters == 0 || _maxVoters < p.votersCount) revert InvalidMaxVoters();
@@ -269,17 +278,17 @@ contract ProcessRegistry is IProcessRegistry {
     function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
-        if (p.status != ProcessStatus.READY) revert InvalidStatus();
+        if (p.status != DAVINCITypes.ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
-        if (p.census.censusOrigin == CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+        if (p.census.censusOrigin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
             uint256 rootBlockNumber = ICensusValidator(p.census.contractAddress).getRootBlockNumber(st.censusRoot);
             if (
-                (!p.census.onchainAllowAnyValidRoot && rootBlockNumber < p.creationBlock) ||
-                rootBlockNumber > block.number
+                (!p.census.onchainAllowAnyValidRoot && rootBlockNumber < p.creationBlock)
+                    || rootBlockNumber > block.number
             ) {
                 revert InvalidCensusRoot();
             }
@@ -294,11 +303,8 @@ contract ProcessRegistry is IProcessRegistry {
         if (newVoters > 0 && p.votersCount >= p.maxVoters) revert MaxVotersReached();
 
         if (blobsDA) {
-            bytes memory blobCommitment = _blobCommitmentFromLimbs(
-                st.blobCommitmentLimb0,
-                st.blobCommitmentLimb1,
-                st.blobCommitmentLimb2
-            );
+            bytes memory blobCommitment =
+                _blobCommitmentFromLimbs(st.blobCommitmentLimb0, st.blobCommitmentLimb1, st.blobCommitmentLimb2);
             bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
             _verifyBlobDataIsAvailable(versionedHash);
         }
@@ -311,12 +317,7 @@ contract ProcessRegistry is IProcessRegistry {
         ++p.batchNumber;
 
         emit ProcessStateTransitioned(
-            processId,
-            msg.sender,
-            st.rootHashBefore,
-            st.rootHashAfter,
-            p.votersCount,
-            p.overwrittenVotesCount
+            processId, msg.sender, st.rootHashBefore, st.rootHashAfter, p.votersCount, p.overwrittenVotesCount
         );
     }
 
@@ -324,19 +325,21 @@ contract ProcessRegistry is IProcessRegistry {
     function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
         if (processId == bytes32(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        Process storage p = processes[processId];
+        DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
 
         // Cannot set results on CANCELLED or RESULTS processes
-        if (p.status == ProcessStatus.CANCELED || p.status == ProcessStatus.RESULTS) revert InvalidStatus();
+        if (p.status == DAVINCITypes.ProcessStatus.CANCELED || p.status == DAVINCITypes.ProcessStatus.RESULTS) {
+            revert InvalidStatus();
+        }
 
         // Require that the process has ended, either by status or by time
-        if (p.status != ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
+        if (p.status != DAVINCITypes.ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
 
         // Store the old status for the event
-        ProcessStatus oldStatus = p.status;
+        DAVINCITypes.ProcessStatus oldStatus = p.status;
 
         IZKVerifier(rVerifier).verifyProof(proof, input);
 
@@ -351,10 +354,10 @@ contract ProcessRegistry is IProcessRegistry {
             result[i - 1] = decompressedInput[i];
         }
 
-        p.status = ProcessStatus.RESULTS;
+        p.status = DAVINCITypes.ProcessStatus.RESULTS;
         p.result = result;
 
-        emit ProcessStatusChanged(processId, oldStatus, ProcessStatus.RESULTS);
+        emit ProcessStatusChanged(processId, oldStatus, DAVINCITypes.ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, msg.sender, result);
     }
 
@@ -364,15 +367,18 @@ contract ProcessRegistry is IProcessRegistry {
     function _validateNewProcess(
         bytes32 processId,
         address sender,
-        ProcessStatus status,
+        DAVINCITypes.ProcessStatus status,
         uint256 maxVoters,
-        BallotMode calldata ballotMode,
-        Census calldata census
+        DAVINCITypes.BallotMode calldata ballotMode,
+        DAVINCITypes.Census calldata census
     ) private view {
-        if (processes[processId].organizationId == sender) revert ProcessAlreadyExists();
+        if (processes[processId].organizationId == sender) {
+            revert ProcessAlreadyExists();
+        }
 
         // validate ballot mode
         if (ballotMode.numFields == 0 || ballotMode.numFields > 8) revert InvalidMaxCount();
+        if (ballotMode.groupSize > ballotMode.numFields) revert InvalidGroupSize();
         if (ballotMode.maxValueSum > 65535) revert InvalidMaxValueSum();
         if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
         if (ballotMode.minValueSum > ballotMode.maxValueSum) revert InvalidValueSumBounds();
@@ -383,8 +389,8 @@ contract ProcessRegistry is IProcessRegistry {
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
         if (
-            census.censusOrigin != CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1 &&
-            census.onchainAllowAnyValidRoot == true
+            census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1
+                && census.onchainAllowAnyValidRoot == true
         ) {
             revert InvalidCensusConfig();
         }
@@ -393,7 +399,7 @@ contract ProcessRegistry is IProcessRegistry {
         //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
         //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (queried on each transition)
         //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed)
-        if (census.censusOrigin != CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+        if (census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
             if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
         } else {
             if (census.contractAddress == address(0)) revert InvalidCensusAddress();
@@ -406,8 +412,12 @@ contract ProcessRegistry is IProcessRegistry {
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
-        if (uint8(status) > MAX_STATUS || (status != ProcessStatus.READY && status != ProcessStatus.PAUSED))
+        if (
+            uint8(status) > MAX_STATUS
+                || (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED)
+        ) {
             revert InvalidStatus();
+        }
     }
 
     /**
@@ -422,30 +432,26 @@ contract ProcessRegistry is IProcessRegistry {
      * - CANCELED -> No transitions allowed
      * - RESULTS -> No transitions allowed
      */
-    function _validateStatusTransition(
-        ProcessStatus currentStatus,
-        ProcessStatus newStatus
-    ) internal pure returns (bool) {
+    function _validateStatusTransition(DAVINCITypes.ProcessStatus currentStatus, DAVINCITypes.ProcessStatus newStatus)
+        internal
+        pure
+        returns (bool)
+    {
         if (newStatus == currentStatus) return false;
 
         if (
-            currentStatus == ProcessStatus.CANCELED ||
-            currentStatus == ProcessStatus.RESULTS ||
-            currentStatus == ProcessStatus.ENDED
+            currentStatus == DAVINCITypes.ProcessStatus.CANCELED || currentStatus == DAVINCITypes.ProcessStatus.RESULTS
+                || currentStatus == DAVINCITypes.ProcessStatus.ENDED
         ) return false;
 
-        if (currentStatus == ProcessStatus.READY) {
-            return
-                newStatus == ProcessStatus.PAUSED ||
-                newStatus == ProcessStatus.CANCELED ||
-                newStatus == ProcessStatus.ENDED;
+        if (currentStatus == DAVINCITypes.ProcessStatus.READY) {
+            return newStatus == DAVINCITypes.ProcessStatus.PAUSED || newStatus == DAVINCITypes.ProcessStatus.CANCELED
+                || newStatus == DAVINCITypes.ProcessStatus.ENDED;
         }
 
-        if (currentStatus == ProcessStatus.PAUSED) {
-            return
-                newStatus == ProcessStatus.READY ||
-                newStatus == ProcessStatus.CANCELED ||
-                newStatus == ProcessStatus.ENDED;
+        if (currentStatus == DAVINCITypes.ProcessStatus.PAUSED) {
+            return newStatus == DAVINCITypes.ProcessStatus.READY || newStatus == DAVINCITypes.ProcessStatus.CANCELED
+                || newStatus == DAVINCITypes.ProcessStatus.ENDED;
         }
 
         return false;
@@ -463,9 +469,11 @@ contract ProcessRegistry is IProcessRegistry {
     ///      Returns a named struct for readability and to avoid magic indices.
     /// @param input ABI-encoded batch inputs: (uint256[8])
     /// @return st The decoded inputs as StateTransitionBatchProofInputs
-    function _decodeStateTransitionBatchProofInputs(
-        bytes calldata input
-    ) internal pure returns (StateTransitionBatchProofInputs memory st) {
+    function _decodeStateTransitionBatchProofInputs(bytes calldata input)
+        internal
+        pure
+        returns (StateTransitionBatchProofInputs memory st)
+    {
         uint256[8] memory d = abi.decode(input, (uint256[8]));
 
         st = StateTransitionBatchProofInputs({
@@ -480,11 +488,11 @@ contract ProcessRegistry is IProcessRegistry {
         });
     }
 
-    function _blobCommitmentFromLimbs(
-        uint256 limb0,
-        uint256 limb1,
-        uint256 limb2
-    ) internal pure returns (bytes memory commitment) {
+    function _blobCommitmentFromLimbs(uint256 limb0, uint256 limb1, uint256 limb2)
+        internal
+        pure
+        returns (bytes memory commitment)
+    {
         commitment = new bytes(48);
         _writeCommitmentLimb(commitment, 0, limb0, 0);
         _writeCommitmentLimb(commitment, 16, limb1, 1);
