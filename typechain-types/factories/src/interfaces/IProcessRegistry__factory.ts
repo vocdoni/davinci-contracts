@@ -67,6 +67,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidGroupSize",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidMaxCount",
     type: "error",
   },
@@ -331,13 +336,13 @@ const _abi = [
       },
       {
         indexed: false,
-        internalType: "enum IProcessRegistry.ProcessStatus",
+        internalType: "enum DAVINCITypes.ProcessStatus",
         name: "oldStatus",
         type: "uint8",
       },
       {
         indexed: false,
-        internalType: "enum IProcessRegistry.ProcessStatus",
+        internalType: "enum DAVINCITypes.ProcessStatus",
         name: "newStatus",
         type: "uint8",
       },
@@ -377,7 +382,7 @@ const _abi = [
       {
         components: [
           {
-            internalType: "enum IProcessRegistry.ProcessStatus",
+            internalType: "enum DAVINCITypes.ProcessStatus",
             name: "status",
             type: "uint8",
           },
@@ -399,7 +404,7 @@ const _abi = [
                 type: "uint256",
               },
             ],
-            internalType: "struct IProcessRegistry.EncryptionKey",
+            internalType: "struct DAVINCITypes.EncryptionKey",
             name: "encryptionKey",
             type: "tuple",
           },
@@ -472,6 +477,11 @@ const _abi = [
               },
               {
                 internalType: "uint8",
+                name: "groupSize",
+                type: "uint8",
+              },
+              {
+                internalType: "uint8",
                 name: "costExponent",
                 type: "uint8",
               },
@@ -496,14 +506,14 @@ const _abi = [
                 type: "uint256",
               },
             ],
-            internalType: "struct IProcessRegistry.BallotMode",
+            internalType: "struct DAVINCITypes.BallotMode",
             name: "ballotMode",
             type: "tuple",
           },
           {
             components: [
               {
-                internalType: "enum IProcessRegistry.CensusOrigin",
+                internalType: "enum DAVINCITypes.CensusOrigin",
                 name: "censusOrigin",
                 type: "uint8",
               },
@@ -528,12 +538,12 @@ const _abi = [
                 type: "bool",
               },
             ],
-            internalType: "struct IProcessRegistry.Census",
+            internalType: "struct DAVINCITypes.Census",
             name: "census",
             type: "tuple",
           },
         ],
-        internalType: "struct IProcessRegistry.Process",
+        internalType: "struct DAVINCITypes.Process",
         name: "process",
         type: "tuple",
       },
@@ -589,7 +599,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "enum IProcessRegistry.ProcessStatus",
+        internalType: "enum DAVINCITypes.ProcessStatus",
         name: "status",
         type: "uint8",
       },
@@ -627,6 +637,11 @@ const _abi = [
           },
           {
             internalType: "uint8",
+            name: "groupSize",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
             name: "costExponent",
             type: "uint8",
           },
@@ -651,14 +666,14 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct IProcessRegistry.BallotMode",
+        internalType: "struct DAVINCITypes.BallotMode",
         name: "ballotMode",
         type: "tuple",
       },
       {
         components: [
           {
-            internalType: "enum IProcessRegistry.CensusOrigin",
+            internalType: "enum DAVINCITypes.CensusOrigin",
             name: "censusOrigin",
             type: "uint8",
           },
@@ -683,7 +698,7 @@ const _abi = [
             type: "bool",
           },
         ],
-        internalType: "struct IProcessRegistry.Census",
+        internalType: "struct DAVINCITypes.Census",
         name: "census",
         type: "tuple",
       },
@@ -705,14 +720,9 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct IProcessRegistry.EncryptionKey",
+        internalType: "struct DAVINCITypes.EncryptionKey",
         name: "encryptionKey",
         type: "tuple",
-      },
-      {
-        internalType: "uint256",
-        name: "initStateRoot",
-        type: "uint256",
       },
     ],
     name: "newProcess",
@@ -736,7 +746,7 @@ const _abi = [
       {
         components: [
           {
-            internalType: "enum IProcessRegistry.CensusOrigin",
+            internalType: "enum DAVINCITypes.CensusOrigin",
             name: "censusOrigin",
             type: "uint8",
           },
@@ -761,7 +771,7 @@ const _abi = [
             type: "bool",
           },
         ],
-        internalType: "struct IProcessRegistry.Census",
+        internalType: "struct DAVINCITypes.Census",
         name: "census",
         type: "tuple",
       },
@@ -838,7 +848,7 @@ const _abi = [
         type: "bytes32",
       },
       {
-        internalType: "enum IProcessRegistry.ProcessStatus",
+        internalType: "enum DAVINCITypes.ProcessStatus",
         name: "newStatus",
         type: "uint8",
       },
