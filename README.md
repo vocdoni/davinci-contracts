@@ -37,6 +37,12 @@ The Vocdoni DAVINCI contracts work together with a set of sequencers that implem
 3. **ZK Verifiers**: On-chain verification of zkSNARK proofs for state transitions and results
 4. **Process ID Library**: Utilities for generating unique process identifiers
 
+### Deployed libraries
+
+- **Sepolia**
+    - PoseidonT3: `0x1464bD48D1635E9B9F65cFd629d8E9f507A952dD`
+    - PoseidonT4: `0xd747896B912C1585b04007c103D10A04e71bfb25`
+
 ## 📦 Installation
 
 ### Prerequisites
