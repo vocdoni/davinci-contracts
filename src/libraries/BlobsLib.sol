@@ -116,7 +116,9 @@ library BlobsLib {
     /// @dev There is no return value. If the function does not revert, the proof was successfully verified.
     /// @param input  Exactly 192 bytes, formatted as above.
     function verifyKZG(bytes memory input) internal view {
-        if (input.length != KZG_INPUT_LENGTH) revert BlobVerificationInvalidInputLength(input.length, KZG_INPUT_LENGTH);
+        if (input.length != KZG_INPUT_LENGTH) {
+            revert BlobVerificationInvalidInputLength(input.length, KZG_INPUT_LENGTH);
+        }
 
         (bool ok, bytes memory out) = KZG_PRECOMPILE.staticcall(input);
         if (!ok) revert BlobVerificationPointEvaluationFailed();
@@ -130,8 +132,9 @@ library BlobsLib {
 
         (uint256 fieldCount, uint256 modulus) = abi.decode(out, (uint256, uint256));
 
-        if (fieldCount != FIELD_ELEMENTS_PER_BLOB)
+        if (fieldCount != FIELD_ELEMENTS_PER_BLOB) {
             revert BlobVerificationInvalidFieldElementCount(fieldCount, FIELD_ELEMENTS_PER_BLOB);
+        }
 
         if (modulus != BLS_MODULUS) revert BlobVerificationInvalidBLSModulus(modulus, BLS_MODULUS);
     }
@@ -144,7 +147,7 @@ library BlobsLib {
     /// @dev Verifies that the blob (identified by versioned hash) exists in the current tx.
     function verifyBlobDataIsAvailable(bytes32 versionedHash) internal view {
         // Probe blobhash(i) until zero sentinel; protocol caps the count to a small number.
-        for (uint256 i = 0; ; ++i) {
+        for (uint256 i = 0;; ++i) {
             bytes32 h = blobHash(i);
             if (h == bytes32(0)) revert BlobNotFoundInTx(); // no more blobs, not found
             if (h == versionedHash) return;
@@ -171,7 +174,7 @@ library BlobsLib {
         uint256 count = getBlobCount();
         hashes = new bytes32[](count);
 
-        for (uint256 i = 0; i < count; ) {
+        for (uint256 i = 0; i < count;) {
             hashes[i] = blobHash(i);
             unchecked {
                 ++i;
@@ -222,13 +225,11 @@ library BlobsLib {
     /// @param commitment     48 bytes G1 (BLS12‑381)
     /// @param proof          48 bytes G1 (BLS12‑381)
     /// @return input         192‑byte input
-    function buildKZGInput(
-        bytes32 versionedHash,
-        bytes32 z,
-        bytes32 y,
-        bytes memory commitment,
-        bytes memory proof
-    ) internal pure returns (bytes memory input) {
+    function buildKZGInput(bytes32 versionedHash, bytes32 z, bytes32 y, bytes memory commitment, bytes memory proof)
+        internal
+        pure
+        returns (bytes memory input)
+    {
         if (commitment.length != KZG_COMMITMENT_LENGTH) {
             revert KZGInputBadCommitmentLength(commitment.length, KZG_COMMITMENT_LENGTH);
         }

@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { BlobsLib } from "./BlobsLib";
+export type { StateRootLib } from "./StateRootLib";
