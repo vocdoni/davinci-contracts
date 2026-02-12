@@ -115,12 +115,12 @@ contract ProcessRegistryTest is Test, TestHelpers {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
         processRegistry.setProcessStatus(bytes32(0), DAVINCITypes.ProcessStatus.ENDED);
 
-        vm.expectRevert(IProcessRegistry.ProcessNotFound.selector);
-
         bytes32 h = keccak256(abi.encodePacked(uint32(11155111), address(processRegistry)));
         uint32 prefix = uint32(uint256(h));
         bytes32 invalidProcessId =
             ProcessIdLib.computeProcessId(prefix, address(0x1234567890123456789012345678901234567890), 1);
+
+        vm.expectRevert(IProcessRegistry.ProcessNotFound.selector);
         processRegistry.setProcessStatus(invalidProcessId, DAVINCITypes.ProcessStatus.ENDED);
     }
 
