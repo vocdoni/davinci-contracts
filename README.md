@@ -32,10 +32,9 @@ The Vocdoni DAVINCI contracts work together with a set of sequencers that implem
 
 ### Core Components
 
-1. **OrganizationRegistry**: Manages creation and administration of voting organizations
-2. **ProcessRegistry**: Handles voting process lifecycle, state transitions, and results
-3. **ZK Verifiers**: On-chain verification of zkSNARK proofs for state transitions and results
-4. **Process ID Library**: Utilities for generating unique process identifiers
+1. **ProcessRegistry**: Handles voting process lifecycle, state transitions, and results
+2. **ZK Verifiers**: On-chain verification of zkSNARK proofs for state transitions and results
+3. **Process ID Library**: Utilities for generating unique process identifiers
 
 ### Deployed libraries
 
@@ -202,7 +201,6 @@ Verification behavior is controlled by `VERIFY_MODE`:
 
 - [Whitepaper](https://whitepaper.vocdoni.io)
 - [Introduction](docs/Intro.md)
-- [OrganizationRegistry Documentation](docs/OrganizationRegistry.md)
 - [ProcessRegistry Documentation](docs/ProcessRegistry.md)
 
 ## 🤝 Contributing

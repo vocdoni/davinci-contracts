@@ -2,6 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { ICensusValidator } from "./ICensusValidator";
-export type { IOrganizationRegistry } from "./IOrganizationRegistry";
 export type { IProcessRegistry } from "./IProcessRegistry";
 export type { IZKVerifier } from "./IZKVerifier";

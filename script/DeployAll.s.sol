@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
-import {OrganizationRegistry} from "../src/OrganizationRegistry.sol";
 import {ProcessRegistry} from "../src/ProcessRegistry.sol";
 import {StateTransitionVerifierGroth16} from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import {ResultsVerifierGroth16} from "../src/verifiers/ResultsVerifierGroth16.sol";
@@ -14,8 +13,6 @@ contract DeployAllScript is Script {
         console.log("Deployer address:", deployerAddress);
         vm.startBroadcast(deployerPrivateKey);
 
-        OrganizationRegistry organizationRegistry = new OrganizationRegistry();
-        console.log("OrganizationRegistry deployed at:", address(organizationRegistry));
 
         StateTransitionVerifierGroth16 stv = new StateTransitionVerifierGroth16();
         console.log("StateTransitionVerifierGroth16 deployed at:", address(stv));

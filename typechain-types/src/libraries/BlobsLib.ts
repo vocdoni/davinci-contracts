@@ -3,7 +3,9 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BytesLike,
   FunctionFragment,
+  Result,
   Interface,
   ContractRunner,
   ContractMethod,
@@ -14,9 +16,32 @@ import type {
   TypedDeferredTopicFilter,
   TypedEventLog,
   TypedListener,
+  TypedContractMethod,
 } from "../../common";
 
-export interface BlobsLibInterface extends Interface {}
+export interface BlobsLibInterface extends Interface {
+  getFunction(
+    nameOrSignature: "calcBlobHashV1" | "verifyBlobDataIsAvailable"
+  ): FunctionFragment;
+
+  encodeFunctionData(
+    functionFragment: "calcBlobHashV1",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verifyBlobDataIsAvailable",
+    values: [BytesLike]
+  ): string;
+
+  decodeFunctionResult(
+    functionFragment: "calcBlobHashV1",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "verifyBlobDataIsAvailable",
+    data: BytesLike
+  ): Result;
+}
 
 export interface BlobsLib extends BaseContract {
   connect(runner?: ContractRunner | null): BlobsLib;
@@ -61,9 +86,28 @@ export interface BlobsLib extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  calcBlobHashV1: TypedContractMethod<
+    [commitment: BytesLike],
+    [string],
+    "view"
+  >;
+
+  verifyBlobDataIsAvailable: TypedContractMethod<
+    [versionedHash: BytesLike],
+    [void],
+    "view"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
+
+  getFunction(
+    nameOrSignature: "calcBlobHashV1"
+  ): TypedContractMethod<[commitment: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "verifyBlobDataIsAvailable"
+  ): TypedContractMethod<[versionedHash: BytesLike], [void], "view">;
 
   filters: {};
 }

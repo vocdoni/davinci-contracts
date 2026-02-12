@@ -4,5 +4,4 @@
 export * as interfaces from "./interfaces";
 export * as libraries from "./libraries";
 export * as verifiers from "./verifiers";
-export { OrganizationRegistry__factory } from "./OrganizationRegistry__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";
