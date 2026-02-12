@@ -59,6 +59,25 @@
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "root",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTotalVotingPowerAtRoot",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "totalVotingPower",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
   "bytecode": "0x",

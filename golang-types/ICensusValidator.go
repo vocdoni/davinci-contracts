@@ -31,7 +31,7 @@ var (
 
 // ICensusValidatorMetaData contains all meta data concerning the ICensusValidator contract.
 var ICensusValidatorMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint88\",\"name\":\"previousWeight\",\"type\":\"uint88\"},{\"indexed\":false,\"internalType\":\"uint88\",\"name\":\"newWeight\",\"type\":\"uint88\"}],\"name\":\"WeightChanged\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getCensusRoot\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"name\":\"getRootBlockNumber\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint88\",\"name\":\"previousWeight\",\"type\":\"uint88\"},{\"indexed\":false,\"internalType\":\"uint88\",\"name\":\"newWeight\",\"type\":\"uint88\"}],\"name\":\"WeightChanged\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getCensusRoot\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"name\":\"getRootBlockNumber\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"root\",\"type\":\"uint256\"}],\"name\":\"getTotalVotingPowerAtRoot\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"totalVotingPower\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // ICensusValidatorABI is the input ABI used to generate the binding from.
@@ -240,6 +240,37 @@ func (_ICensusValidator *ICensusValidatorSession) GetRootBlockNumber(root *big.I
 // Solidity: function getRootBlockNumber(uint256 root) view returns(uint256 blockNumber)
 func (_ICensusValidator *ICensusValidatorCallerSession) GetRootBlockNumber(root *big.Int) (*big.Int, error) {
 	return _ICensusValidator.Contract.GetRootBlockNumber(&_ICensusValidator.CallOpts, root)
+}
+
+// GetTotalVotingPowerAtRoot is a free data retrieval call binding the contract method 0x21541146.
+//
+// Solidity: function getTotalVotingPowerAtRoot(uint256 root) view returns(uint256 totalVotingPower)
+func (_ICensusValidator *ICensusValidatorCaller) GetTotalVotingPowerAtRoot(opts *bind.CallOpts, root *big.Int) (*big.Int, error) {
+	var out []interface{}
+	err := _ICensusValidator.contract.Call(opts, &out, "getTotalVotingPowerAtRoot", root)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetTotalVotingPowerAtRoot is a free data retrieval call binding the contract method 0x21541146.
+//
+// Solidity: function getTotalVotingPowerAtRoot(uint256 root) view returns(uint256 totalVotingPower)
+func (_ICensusValidator *ICensusValidatorSession) GetTotalVotingPowerAtRoot(root *big.Int) (*big.Int, error) {
+	return _ICensusValidator.Contract.GetTotalVotingPowerAtRoot(&_ICensusValidator.CallOpts, root)
+}
+
+// GetTotalVotingPowerAtRoot is a free data retrieval call binding the contract method 0x21541146.
+//
+// Solidity: function getTotalVotingPowerAtRoot(uint256 root) view returns(uint256 totalVotingPower)
+func (_ICensusValidator *ICensusValidatorCallerSession) GetTotalVotingPowerAtRoot(root *big.Int) (*big.Int, error) {
+	return _ICensusValidator.Contract.GetTotalVotingPowerAtRoot(&_ICensusValidator.CallOpts, root)
 }
 
 // ICensusValidatorWeightChangedIterator is returned from FilterWeightChanged and is used to iterate over the raw logs and unpacked data for WeightChanged events raised by the ICensusValidator contract.
