@@ -70,7 +70,6 @@ var AvailableNetworksByID = map[uint32]string{
 // Contract name constants
 const (
 	ProcessRegistryContract                = "processRegistry"
-	OrganizationRegistryContract           = "organizationRegistry"
 	StateTransitionVerifierGroth16Contract = "stateTransitionVerifierGroth16"
 	ResultsVerifierGroth16Contract         = "resultsVerifierGroth16"
 	SequencerRegistryContract              = "sequencerRegistry"
@@ -78,7 +77,6 @@ const (
 
 // Dummy consts until we deploy on Mainnet and develop SequencerRegistry
 const (
-	OrganizationRegistryMainnetAddress = "0x0"
 	ProcessRegistryMainnetAddress = "0x0"
 	ResultsVerifierGroth16MainnetAddress = "0x0"
 	SequencerRegistryBaseAddress = "0x0"
@@ -132,19 +130,6 @@ func GetContractAddress(contract, network string) string {
 		case CeloNetwork:
 			return ProcessRegistryCeloAddress
 		}
-	case OrganizationRegistryContract:
-		switch network {
-		case SepoliaNetwork:
-			return OrganizationRegistrySepoliaAddress
-		case UzhNetwork:
-			return OrganizationRegistryUzhAddress
-		case MainnetNetwork:
-			return OrganizationRegistryMainnetAddress
-		case BaseNetwork:
-			return OrganizationRegistryBaseAddress
-		case CeloNetwork:
-			return OrganizationRegistryCeloAddress
-		}
 	case StateTransitionVerifierGroth16Contract:
 		switch network {
 		case SepoliaNetwork:
@@ -194,7 +179,6 @@ func GetAllContractAddresses(network string) map[string]string {
 
 	contracts := []string{
 		ProcessRegistryContract,
-		OrganizationRegistryContract,
 		StateTransitionVerifierGroth16Contract,
 		ResultsVerifierGroth16Contract,
 		SequencerRegistryContract,

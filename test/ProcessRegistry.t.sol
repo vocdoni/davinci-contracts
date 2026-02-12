@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {TestHelpers} from "test/TestHelpers.t.sol";
 import {ProcessRegistry} from "../src/ProcessRegistry.sol";
-import {OrganizationRegistry} from "../src/OrganizationRegistry.sol";
 import {ProcessIdLib} from "../src/libraries/ProcessIdLib.sol";
 import {StateTransitionVerifierGroth16} from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import {ResultsVerifierGroth16} from "../src/verifiers/ResultsVerifierGroth16.sol";
@@ -42,7 +41,6 @@ contract ProcessRegistryMock is ProcessRegistry, TestHelpers {
 
 contract ProcessRegistryTest is Test, TestHelpers {
     ProcessRegistryMock public processRegistry;
-    OrganizationRegistry public organizationRegistry;
     StateTransitionVerifierGroth16 public stv;
     ResultsVerifierGroth16 public rv;
 
@@ -59,18 +57,10 @@ contract ProcessRegistryTest is Test, TestHelpers {
     });
 
     function setUp() public {
-        organizationRegistry = new OrganizationRegistry();
         stv = new StateTransitionVerifierGroth16();
         rv = new ResultsVerifierGroth16();
         processRegistry = new ProcessRegistryMock(11155111, address(stv), address(rv), true);
 
-        createTestOrganization();
-    }
-
-    function createTestOrganization() internal {
-        address[] memory admins = new address[](1);
-        admins[0] = ORGANIZATION_ADDRESS;
-        organizationRegistry.createOrganization("testOrganization", "https://example.com/metadata", admins);
     }
 
     function createTestProcess(
