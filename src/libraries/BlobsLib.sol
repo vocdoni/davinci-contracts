@@ -145,7 +145,7 @@ library BlobsLib {
 
     /// @notice Checks that blob data is available for the current transaction
     /// @dev Verifies that the blob (identified by versioned hash) exists in the current tx.
-    function verifyBlobDataIsAvailable(bytes32 versionedHash) internal view {
+    function verifyBlobDataIsAvailable(bytes32 versionedHash) external view {
         // Probe blobhash(i) until zero sentinel; protocol caps the count to a small number.
         for (uint256 i = 0;; ++i) {
             bytes32 h = blobHash(i);
@@ -186,7 +186,7 @@ library BlobsLib {
     ///                    returns 0x00…00 (same as the Go nil‑check).
     /// @return vh         32‑byte versioned blob hash whose first byte is 0x01
     ///                    and the remaining 31 bytes are SHA‑256(commitment).
-    function calcBlobHashV1(bytes memory commitment) internal pure returns (bytes32 vh) {
+    function calcBlobHashV1(bytes memory commitment) external pure returns (bytes32 vh) {
         if (commitment.length == 0) {
             return bytes32(0);
         }
