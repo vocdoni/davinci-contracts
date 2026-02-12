@@ -66,6 +66,25 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "root",
+        type: "uint256",
+      },
+    ],
+    name: "getTotalVotingPowerAtRoot",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "totalVotingPower",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const;
 
 export class ICensusValidator__factory {

@@ -26,4 +26,11 @@ interface ICensusValidator {
     /// @notice Current census Merkle root (Lean-IMT).
     /// @return root The latest census root
     function getCensusRoot() external view returns (uint256 root);
+
+    /// @notice Returns total voting power associated with a recorded census root.
+    /// @dev Returns 0 if the root has not been recorded, or if its total power is zero.
+    ///      Pair with getRootBlockNumber(root) to disambiguate unknown roots.
+    /// @param root The census root to query.
+    /// @return totalVotingPower Total voting power at that root snapshot.
+    function getTotalVotingPowerAtRoot(uint256 root) external view returns (uint256 totalVotingPower);
 }
