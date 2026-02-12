@@ -1,21 +1,21 @@
-name: Bump version & tag
+name: Generate contracts bindings
 
 on:
   push:
-    branches:
+    branches-ignore:
       - release
+    paths:
+      - "src/**/*.sol"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: release-tag-${{ github.ref }}
-  cancel-in-progress: false
+  group: bindings-sync-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  tag_release:
-    # Prevent recursion: when this workflow pushes the bump commit/tag, github.actor becomes github-actions[bot]
-    if: "${{ github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message || '', 'bump: v') }}"
+  sync_bindings:
     runs-on: ubuntu-latest
 
     steps:
@@ -52,31 +52,18 @@ jobs:
       - name: Build all artifacts and bindings
         run: ./build_all.sh
 
-      - name: Ensure generated artifacts are up to date
+      - name: Commit and push generated changes
         shell: bash
         run: |
-          if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then
-            echo "ERROR: Running ./build_all.sh produced uncommitted changes."
-            echo "Please commit generated artifacts before pushing to release."
-            git status --short
-            exit 1
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
           fi
 
-      - name: Build / Prepare
-        run: npm run prepare
-
-      - name: Configure git
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump version (patch) and create git tag
-        run: |
-          npm version patch -m "bump: v%s"
-
-      - name: Push commit and tags
-        run: |
-          TAG="$(git tag --points-at HEAD | head -n 1)"
-          echo "Pushing tag: $TAG"
-          git push origin "HEAD:${{ github.ref_name }}"
-          git push origin "$TAG"
+          git commit -m "[skip ci] chore(bindings): generate via build_all from ${GITHUB_SHA::7}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
