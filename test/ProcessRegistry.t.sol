@@ -34,7 +34,7 @@ contract ProcessRegistryMock is ProcessRegistry, TestHelpers {
         availableBlobs[versionedHash] = available;
     }
 
-    function setMockProcessLatestStateRoot(bytes32 processId, uint256 latestStateRoot) external {
+    function setMockProcessLatestStateRoot(bytes31 processId, uint256 latestStateRoot) external {
         processes[processId].latestStateRoot = latestStateRoot;
     }
 }
@@ -67,7 +67,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         DAVINCITypes.BallotMode memory ballotMode,
         uint256 expectedInitStateRoot,
         DAVINCITypes.CensusOrigin censusOrigin
-    ) internal returns (bytes32) {
+    ) internal returns (bytes31) {
         DAVINCITypes.Census memory cen = DAVINCITypes.Census({
             onchainAllowAnyValidRoot: false,
             censusOrigin: censusOrigin,
@@ -81,7 +81,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
         });
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             block.timestamp, // current time
             1000,
@@ -103,11 +103,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessStatus_NonExistentProcess() public {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.setProcessStatus(bytes32(0), DAVINCITypes.ProcessStatus.ENDED);
+        processRegistry.setProcessStatus(bytes31(0), DAVINCITypes.ProcessStatus.ENDED);
 
         bytes32 h = keccak256(abi.encodePacked(uint32(11155111), address(processRegistry)));
         uint32 prefix = uint32(uint256(h));
-        bytes32 invalidProcessId =
+        bytes31 invalidProcessId =
             ProcessIdLib.computeProcessId(prefix, address(0x1234567890123456789012345678901234567890), 1);
 
         vm.expectRevert(IProcessRegistry.ProcessNotFound.selector);
@@ -116,17 +116,17 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessStatus_UnknownProcessIdPrefix() public {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.setProcessStatus(bytes32(0), DAVINCITypes.ProcessStatus.ENDED);
+        processRegistry.setProcessStatus(bytes31(0), DAVINCITypes.ProcessStatus.ENDED);
 
         vm.expectRevert(IProcessRegistry.UnknownProcessIdPrefix.selector);
         processRegistry.setProcessStatus(
-            bytes32(0x1000000000000000000000000000000000000000000000000000000000000001),
+            bytes31(uint248((uint248(1) << 247) | 1)),
             DAVINCITypes.ProcessStatus.ENDED
         );
     }
 
     function test_SetProcessStatus_NotAdmin() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         vm.prank(address(0xdead));
@@ -136,7 +136,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_SameStatus() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -144,7 +144,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromReady() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         // READY -> PAUSED (valid)
@@ -178,7 +178,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromPaused() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -218,7 +218,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromEnded() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -255,7 +255,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromCanceled() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -277,7 +277,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_FromResults() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -299,7 +299,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessStatus_Events() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -336,7 +336,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         uint256 futureStartTime = block.timestamp + 1000; // Start in 1000 seconds
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             futureStartTime,
             2000, // Duration of 2000 seconds
@@ -380,7 +380,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         uint256 futureStartTime = block.timestamp + 500;
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.PAUSED, // Start in PAUSED state
             futureStartTime,
             1000,
@@ -421,7 +421,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         uint256 futureStartTime = block.timestamp + 1000;
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             futureStartTime,
             2000,
@@ -446,7 +446,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessStatus_EndedAfterStart_NormalDuration() public {
         // Create a process that starts immediately
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -477,7 +477,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
         });
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             block.timestamp, // Start now
             1000,
@@ -513,7 +513,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         uint256 futureStartTime = block.timestamp + 1000;
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             futureStartTime,
             2000,
@@ -547,7 +547,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             y: uint256(keccak256(abi.encodePacked(block.timestamp, "y1")))
         });
 
-        bytes32 processId1 = processRegistry.newProcess(
+        bytes31 processId1 = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             block.timestamp + 1000,
             2000,
@@ -566,7 +566,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             y: uint256(keccak256(abi.encodePacked(block.timestamp, "y2")))
         });
 
-        bytes32 processId2 = processRegistry.newProcess(
+        bytes31 processId2 = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             block.timestamp + 500,
             1000,
@@ -592,7 +592,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== Process Census Tests ==========
 
     function test_SetProcessCensus_Success() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
@@ -621,11 +621,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         });
 
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.setProcessCensus(bytes32(0), newCensus);
+        processRegistry.setProcessCensus(bytes31(0), newCensus);
     }
 
     function test_SetProcessCensus_NotAdmin() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -644,7 +644,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_NotUpdatableCensusOrigin() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -660,7 +660,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_InvalidCensus_EmptyURI() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
@@ -677,7 +677,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_InvalidCensus_ZeroCensusRoot() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
@@ -694,7 +694,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_InvalidStatus_Canceled() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
@@ -714,7 +714,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessCensus_ValidStatus_Paused() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1
         );
 
@@ -752,10 +752,10 @@ contract ProcessRegistryTest is Test, TestHelpers {
             maxValueSum: 100,
             minValueSum: 50
         });
-        bytes32 processId1 = createTestProcess(
+        bytes31 processId1 = createTestProcess(
             validBallotMode1, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
-        assertTrue(processId1 != bytes32(0));
+        assertTrue(processId1 != bytes31(0));
 
         // Test case 2: Valid ballot with costFromWeight true
         DAVINCITypes.BallotMode memory validBallotMode2 = DAVINCITypes.BallotMode({
@@ -769,10 +769,10 @@ contract ProcessRegistryTest is Test, TestHelpers {
             maxValueSum: 0, // This is valid when costFromWeight is true
             minValueSum: 0
         });
-        bytes32 processId2 = createTestProcess(
+        bytes31 processId2 = createTestProcess(
             validBallotMode2, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
-        assertTrue(processId2 != bytes32(0));
+        assertTrue(processId2 != bytes31(0));
 
         // Test case 3: Edge case - maxValue equals minValue
         DAVINCITypes.BallotMode memory validBallotMode3 = DAVINCITypes.BallotMode({
@@ -786,10 +786,10 @@ contract ProcessRegistryTest is Test, TestHelpers {
             maxValueSum: 50,
             minValueSum: 50
         });
-        bytes32 processId3 = createTestProcess(
+        bytes31 processId3 = createTestProcess(
             validBallotMode3, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
-        assertTrue(processId3 != bytes32(0));
+        assertTrue(processId3 != bytes31(0));
     }
 
     function test_ValidateBallotMode_InvalidMaxCount() public {
@@ -873,7 +873,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== Process Duration Tests ==========
 
     function test_SetProcessDuration_Success() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         uint256 newDuration = 2000000;
@@ -887,11 +887,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessDuration_NonExistentProcess() public {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.setProcessDuration(bytes32(0), 1000000);
+        processRegistry.setProcessDuration(bytes31(0), 1000000);
     }
 
     function test_SetProcessDuration_NotAdmin() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -902,7 +902,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_InvalidStatus_Canceled() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -914,7 +914,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_ValidStatus_Paused() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         uint256 newDuration = 2000000;
@@ -930,7 +930,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_InvalidDuration_Zero() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -939,7 +939,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_InvalidDuration_PastEndTime() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -951,7 +951,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessDuration_MaxDuration() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         uint256 maxDuration = type(uint256).max - block.timestamp;
@@ -966,7 +966,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== State Transition Tests ==========
 
     function test_SubmitStateTransition_Success() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         DAVINCITypes.Process memory process = processRegistry.getProcess(processId);
@@ -995,11 +995,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SubmitStateTransition_NonExistentProcess() public {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.submitStateTransition(bytes32(0), STATETRANSITION_ABI_PROOF, STATETRANSITION_ABI_INPUTS);
+        processRegistry.submitStateTransition(bytes31(0), STATETRANSITION_ABI_PROOF, STATETRANSITION_ABI_INPUTS);
     }
 
     function test_SubmitStateTransition_InvalidStatus_Paused() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1011,7 +1011,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Ended() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1023,7 +1023,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Canceled() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1035,7 +1035,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidStatus_Results() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1048,7 +1048,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_ProofInvalid() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1059,7 +1059,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SubmitStateTransition_InvalidTimeBounds() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1073,7 +1073,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     // ========== Process Results Tests ==========
 
     function test_SetProcessResults_Success() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1104,11 +1104,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessResults_NonExistentProcess() public {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
-        processRegistry.setProcessResults(bytes32(0), RESULTS_ABI_PROOF, RESULTS_ABI_INPUTS);
+        processRegistry.setProcessResults(bytes31(0), RESULTS_ABI_PROOF, RESULTS_ABI_INPUTS);
     }
 
     function test_SetProcessResults_NotEndedStatus() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1130,7 +1130,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ProcessNotEndedByTime() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1150,7 +1150,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_InvalidStateRoot() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         ); // Using different state root
 
@@ -1166,7 +1166,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_CannotSetTwice() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1185,7 +1185,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_InvalidProof() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1202,7 +1202,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_InvalidInput() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1219,7 +1219,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_EmptyResults() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1238,14 +1238,14 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessResults_UnknownProcessIdPrefix() public {
         // Create a process ID with invalid prefix
-        bytes32 invalidProcessId = bytes32(0x1000000000000000000000000000000000000000000000000000000000000001);
+        bytes31 invalidProcessId = bytes31(uint248((uint248(1) << 247) | 1));
 
         vm.expectRevert(IProcessRegistry.UnknownProcessIdPrefix.selector);
         processRegistry.setProcessResults(invalidProcessId, RESULTS_ABI_PROOF, RESULTS_ABI_INPUTS);
     }
 
     function test_SetProcessResults_TimeExpired_ReadyStatus() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1265,7 +1265,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeExpired_PausedStatus() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1285,7 +1285,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeNotExpired_ReadyStatus() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1296,7 +1296,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_TimeNotExpired_PausedStatus() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1310,7 +1310,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ExactlyAtExpiration() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1330,7 +1330,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OneSecondBeforeExpiration() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1347,7 +1347,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OneSecondAfterExpiration() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1367,7 +1367,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ByNonAdmin() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1386,7 +1386,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_EventsEmitted() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1412,7 +1412,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OldStatusCaptured_FromReady() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1429,7 +1429,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_OldStatusCaptured_FromPaused() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1463,7 +1463,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
         });
 
-        bytes32 processId = processRegistry.newProcess(
+        bytes31 processId = processRegistry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
             block.timestamp,
             1, // 1 second duration
@@ -1489,7 +1489,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessResults_SingleResultValue() public {
         // The rei constant already has valid proof for 8 results, but we're testing decode behavior
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1506,7 +1506,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_VerifyStateRootMatch() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1526,7 +1526,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ResultsArrayLengthCorrect() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1543,13 +1543,13 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_SetProcessResults_MultipleProcessesSameOrganization() public {
         // Create first process
-        bytes32 processId1 = createTestProcess(
+        bytes31 processId1 = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         processRegistry.setProcessStatus(processId1, DAVINCITypes.ProcessStatus.ENDED);
 
         // Create second process with different state root
-        bytes32 processId2 = createTestProcess(
+        bytes31 processId2 = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
         processRegistry.setProcessStatus(processId2, DAVINCITypes.ProcessStatus.ENDED);
@@ -1567,7 +1567,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ProcessCountersUnaffected() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1591,7 +1591,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     }
 
     function test_SetProcessResults_ResultsMatchInput() public {
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_AFTER, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
@@ -1616,7 +1616,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         uint64 currentNonce = processRegistry.processNonce(ORGANIZATION_ADDRESS);
         assertEq(currentNonce, uint64(0));
         // Create a new process
-        bytes32 processId = createTestProcess(
+        bytes31 processId = createTestProcess(
             defaultBallotMode, ROOT_HASH_BEFORE, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 

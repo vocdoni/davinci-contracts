@@ -14,7 +14,7 @@ import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
 contract ProcessRegistry is IProcessRegistry {
-    using ProcessIdLib for bytes32;
+    using ProcessIdLib for bytes31;
     using BlobsLib for bytes;
 
     /**
@@ -32,7 +32,7 @@ contract ProcessRegistry is IProcessRegistry {
     /**
      * @notice The process mapping is a mapping of process IDs to processes.
      */
-    mapping(bytes32 => DAVINCITypes.Process) public processes;
+    mapping(bytes31 => DAVINCITypes.Process) public processes;
     /**
      * @notice The process nonce mapping is a mapping of addresses to process nonces.
      */
@@ -91,12 +91,12 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function getProcess(bytes32 processId) external view override returns (DAVINCITypes.Process memory) {
+    function getProcess(bytes31 processId) external view override returns (DAVINCITypes.Process memory) {
         return processes[processId];
     }
 
     /// @inheritdoc IProcessRegistry
-    function getProcessEndTime(bytes32 processId) external view returns (uint256) {
+    function getProcessEndTime(bytes31 processId) external view returns (uint256) {
         DAVINCITypes.Process memory p = processes[processId];
         return p.startTime + p.duration;
     }
@@ -112,7 +112,7 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function getNextProcessId(address organizationId) external view override returns (bytes32) {
+    function getNextProcessId(address organizationId) external view override returns (bytes31) {
         return ProcessIdLib.computeProcessId(pidPrefix, organizationId, processNonce[organizationId]);
     }
 
@@ -126,9 +126,9 @@ contract ProcessRegistry is IProcessRegistry {
         DAVINCITypes.Census calldata census,
         string calldata metadata,
         DAVINCITypes.EncryptionKey calldata encryptionKey
-    ) external override returns (bytes32) {
+    ) external override returns (bytes31) {
         address sender = msg.sender;
-        bytes32 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
+        bytes31 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
         _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
@@ -163,8 +163,8 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessStatus(bytes32 processId, DAVINCITypes.ProcessStatus newStatus) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
+    function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external override {
+        if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
 
@@ -193,8 +193,8 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessCensus(bytes32 processId, DAVINCITypes.Census calldata census) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
+    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external override {
+        if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
@@ -226,8 +226,8 @@ contract ProcessRegistry is IProcessRegistry {
 
     /// @inheritdoc IProcessRegistry
     /// @dev Note that the end time of the process is startTime + duration.
-    function setProcessDuration(bytes32 processId, uint256 _duration) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
+    function setProcessDuration(bytes31 processId, uint256 _duration) external override {
+        if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
@@ -253,8 +253,8 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessMaxVoters(bytes32 processId, uint256 _maxVoters) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
+    function setProcessMaxVoters(bytes31 processId, uint256 _maxVoters) external override {
+        if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
@@ -275,8 +275,8 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
+    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input) external override {
+        if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
@@ -322,8 +322,8 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external override {
-        if (processId == bytes32(0)) revert InvalidProcessId();
+    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input) external override {
+        if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
@@ -365,7 +365,7 @@ contract ProcessRegistry is IProcessRegistry {
      * @dev Validates inputs for a new process
      */
     function _validateNewProcess(
-        bytes32 processId,
+        bytes31 processId,
         address sender,
         DAVINCITypes.ProcessStatus status,
         uint256 maxVoters,

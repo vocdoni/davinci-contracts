@@ -7,20 +7,22 @@ library ProcessIdLib {
      * Layout (big-endian where applicable):
      * - [0..19]  : creatorAddr (20 bytes)
      * - [20..23] : hashed prefix (uint32, big endian)
-     * - [24..31] : nonce (uint64, big endian)
+     * - [24..30] : nonce (uint56, big endian)
      *
-     * @dev nonce is limited to uint64 (truncates high bits of uint256 if any).
+     * @dev nonce is passed as uint64 and truncated to uint56.
      */
-    function computeProcessId(uint32 prefix, address creatorAddr, uint64 nonce)
-        external
-        pure
-        returns (bytes32 processId)
-    {
-        // Build the 32-byte value:
-        // - creatorAddr in the top 20 bytes (<< 96)
-        // - prefix in bytes 20-23 (<< 64)
-        // - nonce in the last 8 bytes (no shift; goes to least significant 64 bits)
-        processId = bytes32((uint256(uint160(creatorAddr)) << 96) | (uint256(prefix) << 64) | uint256(nonce));
+    function computeProcessId(
+        uint32 prefix,
+        address creatorAddr,
+        uint64 nonce
+    ) external pure returns (bytes31 processId) {
+        // Build the 31-byte value:
+        // - creatorAddr in the top 20 bytes (<< 88)
+        // - prefix in bytes 20-23 (<< 56)
+        // - nonce in the last 7 bytes (least significant 56 bits)
+        processId = bytes31(
+            uint248((uint248(uint160(creatorAddr)) << 88) | (uint248(prefix) << 56) | uint248(uint56(nonce)))
+        );
     }
 
     /**
@@ -36,7 +38,7 @@ library ProcessIdLib {
     /**
      * @notice Checks if the given processId has the expected prefix.
      */
-    function hasPrefix(bytes32 processId, uint32 expectedPrefix) external pure returns (bool) {
-        return uint32(uint256(processId >> 64)) == expectedPrefix;
+    function hasPrefix(bytes31 processId, uint32 expectedPrefix) external pure returns (bool) {
+        return uint32(uint248(processId >> 56)) == expectedPrefix;
     }
 }
