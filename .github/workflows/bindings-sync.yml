@@ -65,5 +65,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git commit -m "[skip ci] chore(bindings): generate via build_all from ${GITHUB_SHA::7}"
+          git commit -m "chore(bindings): generate via build_all from ${GITHUB_SHA::7} [skip ci] "
           git push origin "HEAD:${GITHUB_REF_NAME}"
