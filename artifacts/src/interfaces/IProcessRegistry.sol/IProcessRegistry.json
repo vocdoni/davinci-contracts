@@ -174,9 +174,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": false,
@@ -199,9 +199,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": true,
@@ -218,9 +218,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": false,
@@ -237,9 +237,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": false,
@@ -256,9 +256,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": true,
@@ -281,9 +281,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": true,
@@ -324,9 +324,9 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "indexed": false,
@@ -355,9 +355,9 @@
       "name": "getNextProcessId",
       "outputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "",
-          "type": "bytes32"
+          "type": "bytes31"
         }
       ],
       "stateMutability": "view",
@@ -366,9 +366,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         }
       ],
       "name": "getProcess",
@@ -548,9 +548,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         }
       ],
       "name": "getProcessEndTime",
@@ -722,9 +722,9 @@
       "name": "newProcess",
       "outputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "",
-          "type": "bytes32"
+          "type": "bytes31"
         }
       ],
       "stateMutability": "nonpayable",
@@ -733,9 +733,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "components": [
@@ -778,9 +778,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "internalType": "uint256",
@@ -796,9 +796,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "internalType": "uint256",
@@ -814,9 +814,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "internalType": "bytes",
@@ -837,9 +837,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "internalType": "enum DAVINCITypes.ProcessStatus",
@@ -855,9 +855,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "bytes31",
           "name": "processId",
-          "type": "bytes32"
+          "type": "bytes31"
         },
         {
           "internalType": "bytes",
