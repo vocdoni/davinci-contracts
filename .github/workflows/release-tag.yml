@@ -70,13 +70,47 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Compute next available patch version
+        id: next_version
+        shell: bash
+        run: |
+          git fetch --tags --force
+
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          echo "Current package.json version: ${CURRENT_VERSION}"
+
+          if [[ ! "${CURRENT_VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "ERROR: package.json version '${CURRENT_VERSION}' is not numeric semver (x.y.z)."
+            exit 1
+          fi
+
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+          CANDIDATE_PATCH=$((PATCH + 1))
+
+          while git rev-parse -q --verify "refs/tags/v${MAJOR}.${MINOR}.${CANDIDATE_PATCH}" >/dev/null; do
+            echo "Tag v${MAJOR}.${MINOR}.${CANDIDATE_PATCH} already exists. Trying next patch."
+            CANDIDATE_PATCH=$((CANDIDATE_PATCH + 1))
+          done
+
+          NEXT_VERSION="${MAJOR}.${MINOR}.${CANDIDATE_PATCH}"
+          NEXT_TAG="v${NEXT_VERSION}"
+
+          echo "Selected next version: ${NEXT_VERSION}"
+          echo "Selected next tag: ${NEXT_TAG}"
+
+          echo "next_version=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "next_tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Bump version (patch) and create git tag
         run: |
-          npm version patch -m "bump: v%s"
+          npm version "${{ steps.next_version.outputs.next_version }}" -m "bump: v%s"
 
       - name: Push commit and tags
         run: |
-          TAG="$(git tag --points-at HEAD | head -n 1)"
-          echo "Pushing tag: $TAG"
+          TAG="${{ steps.next_version.outputs.next_tag }}"
+          echo "Pushing branch: ${{ github.ref_name }}"
+          echo "Pushing tag: ${TAG}"
           git push origin "HEAD:${{ github.ref_name }}"
           git push origin "$TAG"
