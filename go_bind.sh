@@ -51,10 +51,6 @@ abi "./artifacts/src/verifiers/ResultsVerifierGroth16.sol/ResultsVerifierGroth16
     "ResultsVerifierGroth16" \
     "./golang-types/verifiers/ResultsVerifierGroth16.go"
 
-abi "./artifacts/src/OrganizationRegistry.sol/OrganizationRegistry.json" \
-    "OrganizationRegistry" \
-    "./golang-types/OrganizationRegistry.go"
-
 abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"

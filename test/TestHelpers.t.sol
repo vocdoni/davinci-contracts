@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import { TestInputs } from "./TestInputs.t.sol";
+import {TestInputs} from "./TestInputs.t.sol";
 
 abstract contract TestHelpers is TestInputs {
     /// @dev KZG precompile address as per EIP-4844
@@ -20,19 +20,18 @@ abstract contract TestHelpers is TestInputs {
     }
 
     function stateTransitionInputs() internal pure returns (bytes memory) {
-        return
-            encodeStateTransitionInputs(
-                [
-                    ROOT_HASH_BEFORE,
-                    ROOT_HASH_AFTER,
-                    VOTERS_COUNT,
-                    OVERWRITTEN_VOTES_COUNT,
-                    CENSUS_ROOT,
-                    BLOBS_COMMITMENT_L1,
-                    BLOBS_COMMITMENT_L2,
-                    BLOBS_COMMITMENT_L3
-                ]
-            );
+        return encodeStateTransitionInputs(
+            [
+                ROOT_HASH_BEFORE,
+                ROOT_HASH_AFTER,
+                VOTERS_COUNT,
+                OVERWRITTEN_VOTES_COUNT,
+                CENSUS_ROOT,
+                BLOBS_COMMITMENT_L1,
+                BLOBS_COMMITMENT_L2,
+                BLOBS_COMMITMENT_L3
+            ]
+        );
     }
 
     function decodedResultsProof()
@@ -44,18 +43,17 @@ abstract contract TestHelpers is TestInputs {
     }
 
     function resultsInputs() internal view returns (bytes memory) {
-        return
-            abi.encode(
-                ROOT_HASH_AFTER, // After state root
-                FINAL_RESULTS[0],
-                FINAL_RESULTS[1],
-                FINAL_RESULTS[2],
-                FINAL_RESULTS[3],
-                FINAL_RESULTS[4],
-                FINAL_RESULTS[5],
-                FINAL_RESULTS[6],
-                FINAL_RESULTS[7]
-            );
+        return abi.encode(
+            ROOT_HASH_AFTER, // After state root
+            FINAL_RESULTS[0],
+            FINAL_RESULTS[1],
+            FINAL_RESULTS[2],
+            FINAL_RESULTS[3],
+            FINAL_RESULTS[4],
+            FINAL_RESULTS[5],
+            FINAL_RESULTS[6],
+            FINAL_RESULTS[7]
+        );
     }
 
     function decodedProof()

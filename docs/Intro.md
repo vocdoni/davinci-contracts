@@ -36,19 +36,7 @@ Using ElGamal encryption, the system can:
 
 The protocol consists of smart contracts that work together to orchestrate the entire voting lifecycle.
 
-### 1. **OrganizationRegistry**
-
-The Vocdoni's organization registry aims to provide an out of the box solution for creating an on-chain organization managed by different members.
-The contract manages:
-
-- Creation and management of organizations
-- Multi-administrator access control
-- Metadata storage for organizational information
-
-Note that the OrganizationRegistry is not tied to a ProcessRegistry contract and any address can interact with the protocol for creating and managing a voting process.
-It is up to the user to link a Safe or any other smart contract based account with permission management.
-
-### 2. **ProcessRegistry**
+### 1. **ProcessRegistry**
 
 The heart of the voting system that handles:
 
@@ -60,21 +48,14 @@ The heart of the voting system that handles:
 
 ## How the Contracts Interact
 
-### 1. **Organization Creation Flow**
+### 1. **Voting Process Creation Flow**
 
 - [User]
-    1. Create an organization via `OrganizationRegistry.createOrganization()`
-    2. Organization created with supplied information
-    3. Organization can now create voting processes
-
-### 2. **Voting Process Creation Flow**
-
-- [User] _i.e recently created organization_
     1. ProcessRegistry.newProcess()
     2. Provide process parameters (ballot mode, census, duration, etc.)
     3. Process is created with initial state root
 
-### 3. **Vote Processing Flow**
+### 2. **Vote Processing Flow**
 
 - [Voter]
 
@@ -96,7 +77,7 @@ The heart of the voting system that handles:
         2. ProcessRegistry.setProcessResults() verifies results
         3. Process status changes to RESULTS
 - Process ends manually
-    - [Organization]
+    - [Process creator]
         1. Set process status to ENDED
     - [Results Provider]
         1. Generates results proof
@@ -107,7 +88,6 @@ The heart of the voting system that handles:
 
 1. **Initialization**
 
-    - Organization creates process with parameters
     - Process initialized with encryption key and initial state root
     - Status set to READY or PAUSED
 
@@ -134,19 +114,15 @@ The heart of the voting system that handles:
 The ProcessRegistry provides several management capabilities:
 
 - **Status Management**: Processes can be READY, PAUSED, ENDED, CANCELED, or RESULTS
-- **Census Updates**: Organizations can update census data for ongoing processes
+- **Census Updates**: It is possible to update census data for ongoing processes
 - **Duration Extension**: Process duration can be extended before it ends
-- **Manual Termination**: Organizations can end processes manually
+- **Manual Termination**: Processes can be ended manually
 
 ## Integration Example
 
 ```solidity
-// 1. Create an organization
-string memory name = "Community DAO";
-address[] memory admins = [address(0x456...)];
-organizationRegistry.createOrganization(name, "ipfs://metadata", admins);
 
-// 2. Create a voting process
+// 1. Create a voting process
 ProcessRegistry.BallotMode memory ballotMode = ProcessRegistry.BallotMode({
     maxCount: 3,
     maxValue: 5,
@@ -176,14 +152,14 @@ bytes32 processId = processRegistry.newProcess(
     initialStateRoot
 );
 
-// 3. Process continues with off-chain voting and on-chain verification
+// 2. Process continues with off-chain voting and on-chain verification
 processRegistry.submitStateTransition(
     processId,
     proof,
     input
 );
 
-// 4. Process ends, submit results
+// 3. Process ends, submit results
 processRegistry.setProcessResults(
     processId,
     proof,
