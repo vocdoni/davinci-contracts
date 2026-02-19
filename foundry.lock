@@ -4,11 +4,5 @@
   },
   "lib/openzeppelin-contracts": {
     "rev": "e4f70216d759d8e6a64144a9e1f7bbeed78e7079"
-  },
-  "lib/poseidon-solidity": {
-    "tag": {
-      "name": "v0.0.5",
-      "rev": "8205c97ec4a35a9adb854b70b2c9ba92668d1304"
-    }
   }
 }

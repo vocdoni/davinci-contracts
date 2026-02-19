@@ -25,10 +25,7 @@ import type {
 
 export interface ICensusValidatorInterface extends Interface {
   getFunction(
-    nameOrSignature:
-      | "getCensusRoot"
-      | "getRootBlockNumber"
-      | "getTotalVotingPowerAtRoot"
+    nameOrSignature: "getCensusRoot" | "getRootBlockNumber"
   ): FunctionFragment;
 
   getEvent(nameOrSignatureOrTopic: "WeightChanged"): EventFragment;
@@ -41,10 +38,6 @@ export interface ICensusValidatorInterface extends Interface {
     functionFragment: "getRootBlockNumber",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "getTotalVotingPowerAtRoot",
-    values: [BigNumberish]
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "getCensusRoot",
@@ -52,10 +45,6 @@ export interface ICensusValidatorInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getRootBlockNumber",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTotalVotingPowerAtRoot",
     data: BytesLike
   ): Result;
 }
@@ -133,12 +122,6 @@ export interface ICensusValidator extends BaseContract {
     "view"
   >;
 
-  getTotalVotingPowerAtRoot: TypedContractMethod<
-    [root: BigNumberish],
-    [bigint],
-    "view"
-  >;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -148,9 +131,6 @@ export interface ICensusValidator extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getRootBlockNumber"
-  ): TypedContractMethod<[root: BigNumberish], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "getTotalVotingPowerAtRoot"
   ): TypedContractMethod<[root: BigNumberish], [bigint], "view">;
 
   getEvent(

@@ -2,5 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export { ICensusValidator__factory } from "./ICensusValidator__factory";
+export { IOrganizationRegistry__factory } from "./IOrganizationRegistry__factory";
 export { IProcessRegistry__factory } from "./IProcessRegistry__factory";
 export { IZKVerifier__factory } from "./IZKVerifier__factory";

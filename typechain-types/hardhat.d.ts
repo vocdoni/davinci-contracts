@@ -14,17 +14,17 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "PoseidonT3",
+      name: "Ownable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoseidonT3__factory>;
-    getContractFactory(
-      name: "PoseidonT4",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoseidonT4__factory>;
+    ): Promise<Contracts.Ownable__factory>;
     getContractFactory(
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICensusValidator__factory>;
+    getContractFactory(
+      name: "IOrganizationRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IOrganizationRegistry__factory>;
     getContractFactory(
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -38,13 +38,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BlobsLib__factory>;
     getContractFactory(
-      name: "ProcessIdLib",
+      name: "OrganizationRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ProcessIdLib__factory>;
-    getContractFactory(
-      name: "StateRootLib",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.StateRootLib__factory>;
+    ): Promise<Contracts.OrganizationRegistry__factory>;
     getContractFactory(
       name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -67,20 +63,20 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.StateTransitionVerifierGroth16__factory>;
 
     getContractAt(
-      name: "PoseidonT3",
+      name: "Ownable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoseidonT3>;
-    getContractAt(
-      name: "PoseidonT4",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoseidonT4>;
+    ): Promise<Contracts.Ownable>;
     getContractAt(
       name: "ICensusValidator",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ICensusValidator>;
+    getContractAt(
+      name: "IOrganizationRegistry",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IOrganizationRegistry>;
     getContractAt(
       name: "IProcessRegistry",
       address: string | ethers.Addressable,
@@ -97,15 +93,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.BlobsLib>;
     getContractAt(
-      name: "ProcessIdLib",
+      name: "OrganizationRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ProcessIdLib>;
-    getContractAt(
-      name: "StateRootLib",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.StateRootLib>;
+    ): Promise<Contracts.OrganizationRegistry>;
     getContractAt(
       name: "ProcessRegistry",
       address: string | ethers.Addressable,
@@ -133,17 +124,17 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
     deployContract(
-      name: "PoseidonT3",
+      name: "Ownable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT3>;
-    deployContract(
-      name: "PoseidonT4",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT4>;
+    ): Promise<Contracts.Ownable>;
     deployContract(
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ICensusValidator>;
+    deployContract(
+      name: "IOrganizationRegistry",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IOrganizationRegistry>;
     deployContract(
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -157,13 +148,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BlobsLib>;
     deployContract(
-      name: "ProcessIdLib",
+      name: "OrganizationRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ProcessIdLib>;
-    deployContract(
-      name: "StateRootLib",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateRootLib>;
+    ): Promise<Contracts.OrganizationRegistry>;
     deployContract(
       name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -186,20 +173,20 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
     deployContract(
-      name: "PoseidonT3",
+      name: "Ownable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT3>;
-    deployContract(
-      name: "PoseidonT4",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT4>;
+    ): Promise<Contracts.Ownable>;
     deployContract(
       name: "ICensusValidator",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ICensusValidator>;
+    deployContract(
+      name: "IOrganizationRegistry",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IOrganizationRegistry>;
     deployContract(
       name: "IProcessRegistry",
       args: any[],
@@ -216,15 +203,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BlobsLib>;
     deployContract(
-      name: "ProcessIdLib",
+      name: "OrganizationRegistry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ProcessIdLib>;
-    deployContract(
-      name: "StateRootLib",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateRootLib>;
+    ): Promise<Contracts.OrganizationRegistry>;
     deployContract(
       name: "ProcessRegistry",
       args: any[],

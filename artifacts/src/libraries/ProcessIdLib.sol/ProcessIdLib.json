@@ -2,87 +2,9 @@
   "_format": "hh-sol-artifact-1",
   "contractName": "ProcessIdLib",
   "sourceName": "src/libraries/ProcessIdLib.sol",
-  "abi": [
-    {
-      "inputs": [
-        {
-          "internalType": "uint32",
-          "name": "prefix",
-          "type": "uint32"
-        },
-        {
-          "internalType": "address",
-          "name": "creatorAddr",
-          "type": "address"
-        },
-        {
-          "internalType": "uint64",
-          "name": "nonce",
-          "type": "uint64"
-        }
-      ],
-      "name": "computeProcessId",
-      "outputs": [
-        {
-          "internalType": "bytes31",
-          "name": "processId",
-          "type": "bytes31"
-        }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint32",
-          "name": "chainId",
-          "type": "uint32"
-        },
-        {
-          "internalType": "address",
-          "name": "contractAddr",
-          "type": "address"
-        }
-      ],
-      "name": "getPrefix",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
-        }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes31",
-          "name": "processId",
-          "type": "bytes31"
-        },
-        {
-          "internalType": "uint32",
-          "name": "expectedPrefix",
-          "type": "uint32"
-        }
-      ],
-      "name": "hasPrefix",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    }
-  ],
-  "bytecode": "0x608080604052346019576101e2908161001e823930815050f35b5f80fdfe6080806040526004361015610012575f80fd5b5f3560e01c9081632145bb8f1461014657508063d08d66a2146100d25763d0b877c41461003d575f80fd5b60403660031901126100ce57610051610183565b610059610196565b60405190602082019263ffffffff60e01b9060e01b1683526bffffffffffffffffffffffff199060601b16602482015260188152604081019080821067ffffffffffffffff8311176100ba5760209263ffffffff9183604052519020168152f35b634e487b7160e01b5f52604160045260245ffd5b5f80fd5b60603660031901126100ce576100e6610183565b6100ee610196565b6044359167ffffffffffffffff831683036100ce5760405166ffffffffffffff90931660589290921b600160581b600160f81b031660389190911b6affffffff0000000000000016171760081b60ff19168152602090f35b60403660031901126100ce576004359060ff19821682036100ce5760243563ffffffff81168091036100ce5763ffffffff60209360401c16148152f35b6004359063ffffffff821682036100ce57565b602435906001600160a01b03821682036100ce5756fea2646970667358221220548a3ee866fa286abb0d07aa1d692afaf21c8def47cfea3cc2981cbba5d9754d64736f6c634300081c0033",
-  "deployedBytecode": "0x6080806040526004361015610012575f80fd5b5f3560e01c9081632145bb8f1461014657508063d08d66a2146100d25763d0b877c41461003d575f80fd5b60403660031901126100ce57610051610183565b610059610196565b60405190602082019263ffffffff60e01b9060e01b1683526bffffffffffffffffffffffff199060601b16602482015260188152604081019080821067ffffffffffffffff8311176100ba5760209263ffffffff9183604052519020168152f35b634e487b7160e01b5f52604160045260245ffd5b5f80fd5b60603660031901126100ce576100e6610183565b6100ee610196565b6044359167ffffffffffffffff831683036100ce5760405166ffffffffffffff90931660589290921b600160581b600160f81b031660389190911b6affffffff0000000000000016171760081b60ff19168152602090f35b60403660031901126100ce576004359060ff19821682036100ce5760243563ffffffff81168091036100ce5763ffffffff60209360401c16148152f35b6004359063ffffffff821682036100ce57565b602435906001600160a01b03821682036100ce5756fea2646970667358221220548a3ee866fa286abb0d07aa1d692afaf21c8def47cfea3cc2981cbba5d9754d64736f6c634300081c0033",
+  "abi": [],
+  "bytecode": "0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212201a8b27f84713de8bff53c97cfeda02d57560d6c885ebcdbccc4a7737971073f364736f6c634300081c0033",
+  "deployedBytecode": "0x5f80fdfea26469706673582212201a8b27f84713de8bff53c97cfeda02d57560d6c885ebcdbccc4a7737971073f364736f6c634300081c0033",
   "linkReferences": {},
   "deployedLinkReferences": {}
 }

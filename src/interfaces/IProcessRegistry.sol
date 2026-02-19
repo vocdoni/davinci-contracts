@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import {DAVINCITypes} from "../libraries/DAVINCITypes.sol";
-
 /**
  * @title IProcessRegistry
  * @author Vocdoni Association
@@ -10,25 +8,26 @@ import {DAVINCITypes} from "../libraries/DAVINCITypes.sol";
  */
 interface IProcessRegistry {
     /// EVENTS ///
+
     /*
      * @notice Emitted when a new process is created.
      * @param processId The ID of the process.
      * @param creator The address of the creator of the process.
      */
-    event ProcessCreated(bytes31 indexed processId, address indexed creator);
+    event ProcessCreated(bytes32 indexed processId, address indexed creator);
     /*
      * @notice Emitted when the census of a process is updated.
      * @param processId The ID of the process.
      * @param censusRoot The new root of the census.
      * @param censusURI The URI of the census.
      */
-    event CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI);
+    event CensusUpdated(bytes32 indexed processId, bytes32 censusRoot, string censusURI);
     /*
      * @notice Emitted when the duration of a process is modified.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
      */
-    event ProcessDurationChanged(bytes31 indexed processId, uint256 duration);
+    event ProcessDurationChanged(bytes32 indexed processId, uint256 duration);
     /*
      * @notice Emitted when the state root of a process is updated.
      * @param processId The ID of the process.
@@ -36,7 +35,7 @@ interface IProcessRegistry {
      * @param newStateRoot The new state root of the process.
      */
     event ProcessStateTransitioned(
-        bytes31 indexed processId,
+        bytes32 indexed processId,
         address indexed sender,
         uint256 oldStateRoot,
         uint256 newStateRoot,
@@ -50,22 +49,20 @@ interface IProcessRegistry {
      * @param sender The address of the sender.
      * @param result The result of the process.
      */
-    event ProcessResultsSet(bytes31 indexed processId, address indexed sender, uint256[] result);
+    event ProcessResultsSet(bytes32 indexed processId, address indexed sender, uint256[] result);
     /**
      * @notice Emitted when a process status is modified
      * @param processId The ID of the process
      * @param oldStatus The previous status of the process
      * @param newStatus The new status of the process
      */
-    event ProcessStatusChanged(
-        bytes31 indexed processId, DAVINCITypes.ProcessStatus oldStatus, DAVINCITypes.ProcessStatus newStatus
-    );
+    event ProcessStatusChanged(bytes32 indexed processId, ProcessStatus oldStatus, ProcessStatus newStatus);
     /**
      * @notice Emitted when the max voters of a process is modified
      * @param processId The ID of the process
      * @param maxVoters The new max voters of the process
      */
-    event ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters);
+    event ProcessMaxVotersChanged(bytes32 indexed processId, uint256 maxVoters);
 
     /// ERRORS ///
 
@@ -125,10 +122,6 @@ interface IProcessRegistry {
      * @notice InvalidUniqueValues error is emitted when the unique values are invalid.
      */
     error InvalidUniqueValues();
-    /**
-     * @notice InvalidGroupSize error is emitted when the grup size value is invalid.
-     */
-    error InvalidGroupSize();
     /**
      * @notice InvalidCensusRoot error is emitted when the census root is invalid.
      */
@@ -198,6 +191,128 @@ interface IProcessRegistry {
      */
     error Unauthorized();
 
+    /// ENUMS ///
+
+    /**
+     * @notice The process status defines the state of a process.
+     */
+    enum ProcessStatus {
+        READY,
+        ENDED,
+        CANCELED,
+        PAUSED,
+        RESULTS
+    }
+
+    /**
+     * @notice The census origin defines the origin of the census data. It affects the way the census is handled.
+     */
+    enum CensusOrigin {
+        CENSUS_UNKNOWN,
+        MERKLE_TREE_OFFCHAIN_STATIC_V1,
+        MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
+        MERKLE_TREE_ONCHAIN_DYNAMIC_V1,
+        CSP_EDDSA_BABYJUBJUB_V1
+    }
+
+    /// STRUCTS ///
+
+    /**
+     * @notice The ballot mode define the parameters of the vote.
+     * @param costFromWeight If weighted census, the ballot weight is used as maxValueSum.
+     * @param uniqueValues Choices cannot appear twice or more.
+     * @param numFields The maximum number of fields per ballot.
+     * @param costExponent The exponent that will be used to compute the "cost" of the field values.
+     * @param maxValue The maximum value for all fields.
+     * @param minValue The minimum value for all fields.
+     * @param maxValueSum Maximum limit on the total sum of all ballot fields' values. 0 => Not applicable.
+     * @param minValueSum Minimum limit on the total sum of all ballot fields' values. 0 => Not applicable.
+     */
+    struct BallotMode {
+        bool costFromWeight;
+        bool uniqueValues;
+        uint8 numFields;
+        uint8 costExponent;
+        uint256 maxValue;
+        uint256 minValue;
+        uint256 maxValueSum;
+        uint256 minValueSum;
+    }
+
+    /**
+     * @notice The census defines the parameters of the census.
+     * @param censusOrigin The origin of the census.
+     * @param censusRoot The root of the census. CSP -> A PublicKey, MerkleTree OffchainStatic, OffchainDynamic -> A Hash, MerkleTree Onchain -> A Contract address
+     * @param contractAddress An EVM contract address (optional). Ideally this contract returns census information and/or data.
+     * @param censusURI The URI of the census.
+     * @param onchainAllowAnyValidRoot Used for onchain censuses. If true allows to skip the census startBlock check in the state transition function.
+     */
+    struct Census {
+        CensusOrigin censusOrigin;
+        bytes32 censusRoot;
+        address contractAddress;
+        string censusURI;
+        bool onchainAllowAnyValidRoot;
+    }
+
+    /**
+     * @notice The process ID is a unique identifier for a process.
+     * @param organizationId The organizationId of the process.
+     * @param chainID The ID of the chain.
+     * @param nonce The nonce of the process.
+     */
+    struct ProcessId {
+        address organizationId;
+        uint32 chainID;
+        uint64 nonce;
+    }
+
+    /**
+     * @notice EcryptionKey of a process
+     * @param x value of the X coordinate on the curve
+     * @param y value of the Y coordinate on the curve
+     */
+    struct EncryptionKey {
+        uint256 x;
+        uint256 y;
+    }
+
+    /**
+     * @notice The process defines the parameters of the process.
+     * @param status The status of the process.
+     * @param organizationId The organizationId of the process.
+     * @param encryptionKey The encryption key of the process.
+     * @param latestStateRoot The latest state root of the process.
+     * @param result The result of the process.
+     * @param startTime The start time of the process.
+     * @param duration The duration of the process.
+     * @param maxVoters The maximum number of voters allowed.
+     * @param votersCount The total number of voters that participated.
+     * @param overwrittenVotesCount The number of times votes were overwritten in the state.
+     * @param creationBlock The block number when the process was created.
+     * @param batchNumber The batch number of the process that increments with each state transition.
+     * @param metadataURI The URI of the metadata.
+     * @param ballotMode The ballot mode.
+     * @param census The census of the process.
+     */
+    struct Process {
+        ProcessStatus status;
+        address organizationId;
+        EncryptionKey encryptionKey;
+        uint256 latestStateRoot;
+        uint256[] result;
+        uint256 startTime;
+        uint256 duration;
+        uint256 maxVoters;
+        uint256 votersCount;
+        uint256 overwrittenVotesCount;
+        uint256 creationBlock;
+        uint256 batchNumber;
+        string metadataURI;
+        BallotMode ballotMode;
+        Census census;
+    }
+
     /// GETTERS ///
 
     /**
@@ -205,14 +320,14 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @return process The process struct.
      */
-    function getProcess(bytes31 processId) external view returns (DAVINCITypes.Process memory process);
+    function getProcess(bytes32 processId) external view returns (Process memory process);
 
     /**
      * @notice Returns the next process ID.
      * @return The next process ID.
      * @param organizationId The ID of the organization.
      */
-    function getNextProcessId(address organizationId) external view returns (bytes31);
+    function getNextProcessId(address organizationId) external view returns (bytes32);
 
     /**
      * @notice Returns the hash of the state transition ZK verifier proving key.
@@ -231,7 +346,7 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @return The end time of the process.
      */
-    function getProcessEndTime(bytes31 processId) external view returns (uint256);
+    function getProcessEndTime(bytes32 processId) external view returns (uint256);
 
     /// SETTERS ///
 
@@ -245,45 +360,47 @@ interface IProcessRegistry {
      * @param census The census of the process.
      * @param metadata The URI of the metadata.
      * @param encryptionKey The public key used for vote encryption.
+     * @param initStateRoot The initial state root.
      */
     function newProcess(
-        DAVINCITypes.ProcessStatus status,
+        ProcessStatus status,
         uint256 startTime,
         uint256 duration,
         uint256 maxVoters,
-        DAVINCITypes.BallotMode calldata ballotMode,
-        DAVINCITypes.Census calldata census,
+        BallotMode calldata ballotMode,
+        Census calldata census,
         string calldata metadata,
-        DAVINCITypes.EncryptionKey calldata encryptionKey
-    ) external returns (bytes31);
+        EncryptionKey calldata encryptionKey,
+        uint256 initStateRoot
+    ) external returns (bytes32);
 
     /**
      * @notice Sets the status of a process.
      * @param processId The ID of the process.
      * @param newStatus The new status of the process.
      */
-    function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external;
+    function setProcessStatus(bytes32 processId, ProcessStatus newStatus) external;
 
     /**
      * @notice Sets the census of a process.
      * @param processId The ID of the process.
      * @param census The census of the process.
      */
-    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external;
+    function setProcessCensus(bytes32 processId, Census calldata census) external;
 
     /**
      * @notice Sets the duration of a process.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
      */
-    function setProcessDuration(bytes31 processId, uint256 duration) external;
+    function setProcessDuration(bytes32 processId, uint256 duration) external;
 
     /**
      * @notice Sets the maximum number of voters allowed in a process.
      * @param processId The ID of the process.
      * @param maxVoters The new maximum number of voters.
      */
-    function setProcessMaxVoters(bytes31 processId, uint256 maxVoters) external;
+    function setProcessMaxVoters(bytes32 processId, uint256 maxVoters) external;
 
     /**
      * @notice Sets the results of a process.
@@ -291,7 +408,7 @@ interface IProcessRegistry {
      * @param proof The proof for validating the process results.
      * @param input The public inputs data for the results.
      */
-    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input) external;
+    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external;
 
     /**
      * @notice Submits a process state transition.
@@ -299,5 +416,5 @@ interface IProcessRegistry {
      * @param proof The proof for validating the process state transition.
      * @param input The public inputs data for the state transition.
      */
-    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input) external;
+    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external;
 }

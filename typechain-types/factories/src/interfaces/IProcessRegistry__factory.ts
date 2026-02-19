@@ -67,11 +67,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InvalidGroupSize",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "InvalidMaxCount",
     type: "error",
   },
@@ -180,9 +175,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: false,
@@ -205,9 +200,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: true,
@@ -224,9 +219,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: false,
@@ -243,9 +238,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: false,
@@ -262,9 +257,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: true,
@@ -287,9 +282,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: true,
@@ -330,19 +325,19 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         indexed: false,
-        internalType: "enum DAVINCITypes.ProcessStatus",
+        internalType: "enum IProcessRegistry.ProcessStatus",
         name: "oldStatus",
         type: "uint8",
       },
       {
         indexed: false,
-        internalType: "enum DAVINCITypes.ProcessStatus",
+        internalType: "enum IProcessRegistry.ProcessStatus",
         name: "newStatus",
         type: "uint8",
       },
@@ -361,9 +356,9 @@ const _abi = [
     name: "getNextProcessId",
     outputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "",
-        type: "bytes31",
+        type: "bytes32",
       },
     ],
     stateMutability: "view",
@@ -372,9 +367,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
     ],
     name: "getProcess",
@@ -382,7 +377,7 @@ const _abi = [
       {
         components: [
           {
-            internalType: "enum DAVINCITypes.ProcessStatus",
+            internalType: "enum IProcessRegistry.ProcessStatus",
             name: "status",
             type: "uint8",
           },
@@ -404,7 +399,7 @@ const _abi = [
                 type: "uint256",
               },
             ],
-            internalType: "struct DAVINCITypes.EncryptionKey",
+            internalType: "struct IProcessRegistry.EncryptionKey",
             name: "encryptionKey",
             type: "tuple",
           },
@@ -477,11 +472,6 @@ const _abi = [
               },
               {
                 internalType: "uint8",
-                name: "groupSize",
-                type: "uint8",
-              },
-              {
-                internalType: "uint8",
                 name: "costExponent",
                 type: "uint8",
               },
@@ -506,14 +496,14 @@ const _abi = [
                 type: "uint256",
               },
             ],
-            internalType: "struct DAVINCITypes.BallotMode",
+            internalType: "struct IProcessRegistry.BallotMode",
             name: "ballotMode",
             type: "tuple",
           },
           {
             components: [
               {
-                internalType: "enum DAVINCITypes.CensusOrigin",
+                internalType: "enum IProcessRegistry.CensusOrigin",
                 name: "censusOrigin",
                 type: "uint8",
               },
@@ -538,12 +528,12 @@ const _abi = [
                 type: "bool",
               },
             ],
-            internalType: "struct DAVINCITypes.Census",
+            internalType: "struct IProcessRegistry.Census",
             name: "census",
             type: "tuple",
           },
         ],
-        internalType: "struct DAVINCITypes.Process",
+        internalType: "struct IProcessRegistry.Process",
         name: "process",
         type: "tuple",
       },
@@ -554,9 +544,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
     ],
     name: "getProcessEndTime",
@@ -599,7 +589,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "enum DAVINCITypes.ProcessStatus",
+        internalType: "enum IProcessRegistry.ProcessStatus",
         name: "status",
         type: "uint8",
       },
@@ -637,11 +627,6 @@ const _abi = [
           },
           {
             internalType: "uint8",
-            name: "groupSize",
-            type: "uint8",
-          },
-          {
-            internalType: "uint8",
             name: "costExponent",
             type: "uint8",
           },
@@ -666,14 +651,14 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct DAVINCITypes.BallotMode",
+        internalType: "struct IProcessRegistry.BallotMode",
         name: "ballotMode",
         type: "tuple",
       },
       {
         components: [
           {
-            internalType: "enum DAVINCITypes.CensusOrigin",
+            internalType: "enum IProcessRegistry.CensusOrigin",
             name: "censusOrigin",
             type: "uint8",
           },
@@ -698,7 +683,7 @@ const _abi = [
             type: "bool",
           },
         ],
-        internalType: "struct DAVINCITypes.Census",
+        internalType: "struct IProcessRegistry.Census",
         name: "census",
         type: "tuple",
       },
@@ -720,17 +705,22 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct DAVINCITypes.EncryptionKey",
+        internalType: "struct IProcessRegistry.EncryptionKey",
         name: "encryptionKey",
         type: "tuple",
+      },
+      {
+        internalType: "uint256",
+        name: "initStateRoot",
+        type: "uint256",
       },
     ],
     name: "newProcess",
     outputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "",
-        type: "bytes31",
+        type: "bytes32",
       },
     ],
     stateMutability: "nonpayable",
@@ -739,14 +729,14 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         components: [
           {
-            internalType: "enum DAVINCITypes.CensusOrigin",
+            internalType: "enum IProcessRegistry.CensusOrigin",
             name: "censusOrigin",
             type: "uint8",
           },
@@ -771,7 +761,7 @@ const _abi = [
             type: "bool",
           },
         ],
-        internalType: "struct DAVINCITypes.Census",
+        internalType: "struct IProcessRegistry.Census",
         name: "census",
         type: "tuple",
       },
@@ -784,9 +774,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         internalType: "uint256",
@@ -802,9 +792,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         internalType: "uint256",
@@ -820,9 +810,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         internalType: "bytes",
@@ -843,12 +833,12 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
-        internalType: "enum DAVINCITypes.ProcessStatus",
+        internalType: "enum IProcessRegistry.ProcessStatus",
         name: "newStatus",
         type: "uint8",
       },
@@ -861,9 +851,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes31",
+        internalType: "bytes32",
         name: "processId",
-        type: "bytes31",
+        type: "bytes32",
       },
       {
         internalType: "bytes",

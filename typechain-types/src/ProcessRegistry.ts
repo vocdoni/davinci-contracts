@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export declare namespace DAVINCITypes {
+export declare namespace IProcessRegistry {
   export type EncryptionKeyStruct = { x: BigNumberish; y: BigNumberish };
 
   export type EncryptionKeyStructOutput = [x: bigint, y: bigint] & {
@@ -35,7 +35,6 @@ export declare namespace DAVINCITypes {
     costFromWeight: boolean;
     uniqueValues: boolean;
     numFields: BigNumberish;
-    groupSize: BigNumberish;
     costExponent: BigNumberish;
     maxValue: BigNumberish;
     minValue: BigNumberish;
@@ -47,7 +46,6 @@ export declare namespace DAVINCITypes {
     costFromWeight: boolean,
     uniqueValues: boolean,
     numFields: bigint,
-    groupSize: bigint,
     costExponent: bigint,
     maxValue: bigint,
     minValue: bigint,
@@ -57,7 +55,6 @@ export declare namespace DAVINCITypes {
     costFromWeight: boolean;
     uniqueValues: boolean;
     numFields: bigint;
-    groupSize: bigint;
     costExponent: bigint;
     maxValue: bigint;
     minValue: bigint;
@@ -90,7 +87,7 @@ export declare namespace DAVINCITypes {
   export type ProcessStruct = {
     status: BigNumberish;
     organizationId: AddressLike;
-    encryptionKey: DAVINCITypes.EncryptionKeyStruct;
+    encryptionKey: IProcessRegistry.EncryptionKeyStruct;
     latestStateRoot: BigNumberish;
     result: BigNumberish[];
     startTime: BigNumberish;
@@ -101,14 +98,14 @@ export declare namespace DAVINCITypes {
     creationBlock: BigNumberish;
     batchNumber: BigNumberish;
     metadataURI: string;
-    ballotMode: DAVINCITypes.BallotModeStruct;
-    census: DAVINCITypes.CensusStruct;
+    ballotMode: IProcessRegistry.BallotModeStruct;
+    census: IProcessRegistry.CensusStruct;
   };
 
   export type ProcessStructOutput = [
     status: bigint,
     organizationId: string,
-    encryptionKey: DAVINCITypes.EncryptionKeyStructOutput,
+    encryptionKey: IProcessRegistry.EncryptionKeyStructOutput,
     latestStateRoot: bigint,
     result: bigint[],
     startTime: bigint,
@@ -119,12 +116,12 @@ export declare namespace DAVINCITypes {
     creationBlock: bigint,
     batchNumber: bigint,
     metadataURI: string,
-    ballotMode: DAVINCITypes.BallotModeStructOutput,
-    census: DAVINCITypes.CensusStructOutput
+    ballotMode: IProcessRegistry.BallotModeStructOutput,
+    census: IProcessRegistry.CensusStructOutput
   ] & {
     status: bigint;
     organizationId: string;
-    encryptionKey: DAVINCITypes.EncryptionKeyStructOutput;
+    encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
     latestStateRoot: bigint;
     result: bigint[];
     startTime: bigint;
@@ -135,8 +132,8 @@ export declare namespace DAVINCITypes {
     creationBlock: bigint;
     batchNumber: bigint;
     metadataURI: string;
-    ballotMode: DAVINCITypes.BallotModeStructOutput;
-    census: DAVINCITypes.CensusStructOutput;
+    ballotMode: IProcessRegistry.BallotModeStructOutput;
+    census: IProcessRegistry.CensusStructOutput;
   };
 }
 
@@ -220,10 +217,11 @@ export interface ProcessRegistryInterface extends Interface {
       BigNumberish,
       BigNumberish,
       BigNumberish,
-      DAVINCITypes.BallotModeStruct,
-      DAVINCITypes.CensusStruct,
+      IProcessRegistry.BallotModeStruct,
+      IProcessRegistry.CensusStruct,
       string,
-      DAVINCITypes.EncryptionKeyStruct
+      IProcessRegistry.EncryptionKeyStruct,
+      BigNumberish
     ]
   ): string;
   encodeFunctionData(functionFragment: "pidPrefix", values?: undefined): string;
@@ -242,7 +240,7 @@ export interface ProcessRegistryInterface extends Interface {
   encodeFunctionData(functionFragment: "rVerifier", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "setProcessCensus",
-    values: [BytesLike, DAVINCITypes.CensusStruct]
+    values: [BytesLike, IProcessRegistry.CensusStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessDuration",
@@ -530,7 +528,7 @@ export interface ProcessRegistry extends BaseContract {
 
   getProcess: TypedContractMethod<
     [processId: BytesLike],
-    [DAVINCITypes.ProcessStructOutput],
+    [IProcessRegistry.ProcessStructOutput],
     "view"
   >;
 
@@ -550,10 +548,11 @@ export interface ProcessRegistry extends BaseContract {
       startTime: BigNumberish,
       duration: BigNumberish,
       maxVoters: BigNumberish,
-      ballotMode: DAVINCITypes.BallotModeStruct,
-      census: DAVINCITypes.CensusStruct,
+      ballotMode: IProcessRegistry.BallotModeStruct,
+      census: IProcessRegistry.CensusStruct,
       metadata: string,
-      encryptionKey: DAVINCITypes.EncryptionKeyStruct
+      encryptionKey: IProcessRegistry.EncryptionKeyStruct,
+      initStateRoot: BigNumberish
     ],
     [string],
     "nonpayable"
@@ -571,7 +570,7 @@ export interface ProcessRegistry extends BaseContract {
       [
         bigint,
         string,
-        DAVINCITypes.EncryptionKeyStructOutput,
+        IProcessRegistry.EncryptionKeyStructOutput,
         bigint,
         bigint,
         bigint,
@@ -581,12 +580,12 @@ export interface ProcessRegistry extends BaseContract {
         bigint,
         bigint,
         string,
-        DAVINCITypes.BallotModeStructOutput,
-        DAVINCITypes.CensusStructOutput
+        IProcessRegistry.BallotModeStructOutput,
+        IProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
-        encryptionKey: DAVINCITypes.EncryptionKeyStructOutput;
+        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
         latestStateRoot: bigint;
         startTime: bigint;
         duration: bigint;
@@ -596,8 +595,8 @@ export interface ProcessRegistry extends BaseContract {
         creationBlock: bigint;
         batchNumber: bigint;
         metadataURI: string;
-        ballotMode: DAVINCITypes.BallotModeStructOutput;
-        census: DAVINCITypes.CensusStructOutput;
+        ballotMode: IProcessRegistry.BallotModeStructOutput;
+        census: IProcessRegistry.CensusStructOutput;
       }
     ],
     "view"
@@ -606,7 +605,7 @@ export interface ProcessRegistry extends BaseContract {
   rVerifier: TypedContractMethod<[], [string], "view">;
 
   setProcessCensus: TypedContractMethod<
-    [processId: BytesLike, census: DAVINCITypes.CensusStruct],
+    [processId: BytesLike, census: IProcessRegistry.CensusStruct],
     [void],
     "nonpayable"
   >;
@@ -669,7 +668,7 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "getProcess"
   ): TypedContractMethod<
     [processId: BytesLike],
-    [DAVINCITypes.ProcessStructOutput],
+    [IProcessRegistry.ProcessStructOutput],
     "view"
   >;
   getFunction(
@@ -689,10 +688,11 @@ export interface ProcessRegistry extends BaseContract {
       startTime: BigNumberish,
       duration: BigNumberish,
       maxVoters: BigNumberish,
-      ballotMode: DAVINCITypes.BallotModeStruct,
-      census: DAVINCITypes.CensusStruct,
+      ballotMode: IProcessRegistry.BallotModeStruct,
+      census: IProcessRegistry.CensusStruct,
       metadata: string,
-      encryptionKey: DAVINCITypes.EncryptionKeyStruct
+      encryptionKey: IProcessRegistry.EncryptionKeyStruct,
+      initStateRoot: BigNumberish
     ],
     [string],
     "nonpayable"
@@ -714,7 +714,7 @@ export interface ProcessRegistry extends BaseContract {
       [
         bigint,
         string,
-        DAVINCITypes.EncryptionKeyStructOutput,
+        IProcessRegistry.EncryptionKeyStructOutput,
         bigint,
         bigint,
         bigint,
@@ -724,12 +724,12 @@ export interface ProcessRegistry extends BaseContract {
         bigint,
         bigint,
         string,
-        DAVINCITypes.BallotModeStructOutput,
-        DAVINCITypes.CensusStructOutput
+        IProcessRegistry.BallotModeStructOutput,
+        IProcessRegistry.CensusStructOutput
       ] & {
         status: bigint;
         organizationId: string;
-        encryptionKey: DAVINCITypes.EncryptionKeyStructOutput;
+        encryptionKey: IProcessRegistry.EncryptionKeyStructOutput;
         latestStateRoot: bigint;
         startTime: bigint;
         duration: bigint;
@@ -739,8 +739,8 @@ export interface ProcessRegistry extends BaseContract {
         creationBlock: bigint;
         batchNumber: bigint;
         metadataURI: string;
-        ballotMode: DAVINCITypes.BallotModeStructOutput;
-        census: DAVINCITypes.CensusStructOutput;
+        ballotMode: IProcessRegistry.BallotModeStructOutput;
+        census: IProcessRegistry.CensusStructOutput;
       }
     ],
     "view"
@@ -751,7 +751,7 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "setProcessCensus"
   ): TypedContractMethod<
-    [processId: BytesLike, census: DAVINCITypes.CensusStruct],
+    [processId: BytesLike, census: IProcessRegistry.CensusStruct],
     [void],
     "nonpayable"
   >;
@@ -845,7 +845,7 @@ export interface ProcessRegistry extends BaseContract {
   >;
 
   filters: {
-    "CensusUpdated(bytes31,bytes32,string)": TypedContractEvent<
+    "CensusUpdated(bytes32,bytes32,string)": TypedContractEvent<
       CensusUpdatedEvent.InputTuple,
       CensusUpdatedEvent.OutputTuple,
       CensusUpdatedEvent.OutputObject
@@ -856,7 +856,7 @@ export interface ProcessRegistry extends BaseContract {
       CensusUpdatedEvent.OutputObject
     >;
 
-    "ProcessCreated(bytes31,address)": TypedContractEvent<
+    "ProcessCreated(bytes32,address)": TypedContractEvent<
       ProcessCreatedEvent.InputTuple,
       ProcessCreatedEvent.OutputTuple,
       ProcessCreatedEvent.OutputObject
@@ -867,7 +867,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessCreatedEvent.OutputObject
     >;
 
-    "ProcessDurationChanged(bytes31,uint256)": TypedContractEvent<
+    "ProcessDurationChanged(bytes32,uint256)": TypedContractEvent<
       ProcessDurationChangedEvent.InputTuple,
       ProcessDurationChangedEvent.OutputTuple,
       ProcessDurationChangedEvent.OutputObject
@@ -878,7 +878,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.OutputObject
     >;
 
-    "ProcessMaxVotersChanged(bytes31,uint256)": TypedContractEvent<
+    "ProcessMaxVotersChanged(bytes32,uint256)": TypedContractEvent<
       ProcessMaxVotersChangedEvent.InputTuple,
       ProcessMaxVotersChangedEvent.OutputTuple,
       ProcessMaxVotersChangedEvent.OutputObject
@@ -889,7 +889,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessMaxVotersChangedEvent.OutputObject
     >;
 
-    "ProcessResultsSet(bytes31,address,uint256[])": TypedContractEvent<
+    "ProcessResultsSet(bytes32,address,uint256[])": TypedContractEvent<
       ProcessResultsSetEvent.InputTuple,
       ProcessResultsSetEvent.OutputTuple,
       ProcessResultsSetEvent.OutputObject
@@ -900,7 +900,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessResultsSetEvent.OutputObject
     >;
 
-    "ProcessStateTransitioned(bytes31,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
+    "ProcessStateTransitioned(bytes32,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
       ProcessStateTransitionedEvent.InputTuple,
       ProcessStateTransitionedEvent.OutputTuple,
       ProcessStateTransitionedEvent.OutputObject
@@ -911,7 +911,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessStateTransitionedEvent.OutputObject
     >;
 
-    "ProcessStatusChanged(bytes31,uint8,uint8)": TypedContractEvent<
+    "ProcessStatusChanged(bytes32,uint8,uint8)": TypedContractEvent<
       ProcessStatusChangedEvent.InputTuple,
       ProcessStatusChangedEvent.OutputTuple,
       ProcessStatusChangedEvent.OutputObject

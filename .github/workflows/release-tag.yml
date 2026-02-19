@@ -23,8 +23,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
           token: ${{ secrets.DAVINCI_CONTRACTS_RELEASE_PAT }}
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,35 +32,8 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22.x"
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-
-      - name: Install dependencies and tools
-        shell: bash
-        run: |
-          npm ci
-          sudo apt-get update
-          sudo apt-get install -y jq
-          go install github.com/ethereum/go-ethereum/cmd/abigen@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-
-      - name: Build all artifacts and bindings
-        run: ./build_all.sh
-
-      - name: Ensure generated artifacts are up to date
-        shell: bash
-        run: |
-          if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then
-            echo "ERROR: Running ./build_all.sh produced uncommitted changes."
-            echo "Please commit generated artifacts before pushing to release."
-            git status --short
-            exit 1
-          fi
+      - name: Install Dependencies
+        run: npm ci
 
       - name: Build / Prepare
         run: npm run prepare
@@ -78,5 +51,5 @@ jobs:
         run: |
           TAG="$(git tag --points-at HEAD | head -n 1)"
           echo "Pushing tag: $TAG"
-          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin HEAD:${{ github.ref_name }}
           git push origin "$TAG"

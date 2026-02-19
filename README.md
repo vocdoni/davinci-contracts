@@ -32,15 +32,10 @@ The Vocdoni DAVINCI contracts work together with a set of sequencers that implem
 
 ### Core Components
 
-1. **ProcessRegistry**: Handles voting process lifecycle, state transitions, and results
-2. **ZK Verifiers**: On-chain verification of zkSNARK proofs for state transitions and results
-3. **Process ID Library**: Utilities for generating unique process identifiers
-
-### Deployed libraries
-
-- **Sepolia**
-    - PoseidonT3: `0x1464bD48D1635E9B9F65cFd629d8E9f507A952dD`
-    - PoseidonT4: `0xd747896B912C1585b04007c103D10A04e71bfb25`
+1. **OrganizationRegistry**: Manages creation and administration of voting organizations
+2. **ProcessRegistry**: Handles voting process lifecycle, state transitions, and results
+3. **ZK Verifiers**: On-chain verification of zkSNARK proofs for state transitions and results
+4. **Process ID Library**: Utilities for generating unique process identifiers
 
 ## 📦 Installation
 
@@ -163,44 +158,19 @@ forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
 ```bash
 PRIVATE_KEY=your_deployment_key
 RPC_URL=your_rpc_endpoint
-CHAIN_ID=your_chain_id
-ACTIVATE_BLOBS=True
-VERIFY_MODE=auto
-
-# Optional: reuse already deployed libraries.
-# If any of these are unset or point to an address without bytecode,
-# deploy_all.sh will deploy that library and print export lines you can reuse.
-POSEIDON_T3_ADDRESS=
-POSEIDON_T4_ADDRESS=
-STATE_ROOT_LIB_ADDRESS=
-PROCESS_ID_LIB_ADDRESS=
-BLOBS_LIB_ADDRESS=
 ```
 
 2. Deploy:
 
 ```bash
-./deploy_all.sh
+forge script script/DeployAll.s.sol --rpc-url $RPC_URL --broadcast --verify
 ```
-
-`deploy_all.sh` resolves libraries in this order:
-1. `PoseidonT3`
-2. `PoseidonT4`
-3. `StateRootLib` (linked against Poseidon)
-4. `ProcessIdLib`
-5. `BlobsLib`
-
-Then it deploys the main contracts with explicit linking for all of them.
-
-Verification behavior is controlled by `VERIFY_MODE`:
-- `auto`: disable verification on local chains (`31337`, `1337`), enable otherwise
-- `true`: always attempt verification
-- `false`: never verify
 
 ## 📚 Documentation
 
 - [Whitepaper](https://whitepaper.vocdoni.io)
 - [Introduction](docs/Intro.md)
+- [OrganizationRegistry Documentation](docs/OrganizationRegistry.md)
 - [ProcessRegistry Documentation](docs/ProcessRegistry.md)
 
 ## 🤝 Contributing

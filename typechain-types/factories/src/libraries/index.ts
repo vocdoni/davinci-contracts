@@ -2,5 +2,3 @@
 /* tslint:disable */
 /* eslint-disable */
 export { BlobsLib__factory } from "./BlobsLib__factory";
-export { ProcessIdLib__factory } from "./ProcessIdLib__factory";
-export { StateRootLib__factory } from "./StateRootLib__factory";

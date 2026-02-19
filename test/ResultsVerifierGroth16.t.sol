@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {TestHelpers} from "./TestHelpers.t.sol";
-import {ResultsVerifierGroth16} from "../src/verifiers/ResultsVerifierGroth16.sol";
+import { Test } from "forge-std/Test.sol";
+import { TestHelpers } from "./TestHelpers.t.sol";
+import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 
 contract ResultsVerifierGroth16Test is Test, TestHelpers {
     uint256[8] public proof;
@@ -37,8 +37,7 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_Fail() public {
-        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) =
-            decodeProof(RESULTS_ABI_PROOF);
+        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(RESULTS_ABI_PROOF);
         uint256[9] memory inputBad = [
             ROOT_HASH_AFTER,
             FINAL_RESULTS[0],
@@ -62,13 +61,20 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Decode_Proof() public view {
-        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) =
-            decodeProof(RESULTS_ABI_PROOF);
+        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) = decodeProof(RESULTS_ABI_PROOF);
         if (
-            _proof[0] != proof[0] || _proof[1] != proof[1] || _proof[2] != proof[2] || _proof[3] != proof[3]
-                || _proof[4] != proof[4] || _proof[5] != proof[5] || _proof[6] != proof[6] || _proof[7] != proof[7]
-                || _commitments[0] != proofCommitments[0] || _commitments[1] != proofCommitments[1]
-                || _commitmentPok[0] != proofCommitmentPok[0] || _commitmentPok[1] != proofCommitmentPok[1]
+            _proof[0] != proof[0] ||
+            _proof[1] != proof[1] ||
+            _proof[2] != proof[2] ||
+            _proof[3] != proof[3] ||
+            _proof[4] != proof[4] ||
+            _proof[5] != proof[5] ||
+            _proof[6] != proof[6] ||
+            _proof[7] != proof[7] ||
+            _commitments[0] != proofCommitments[0] ||
+            _commitments[1] != proofCommitments[1] ||
+            _commitmentPok[0] != proofCommitmentPok[0] ||
+            _commitmentPok[1] != proofCommitmentPok[1]
         ) {
             revert();
         }
@@ -76,17 +82,7 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
 
     function test_Encode_Inputs() public view {
         bytes memory _encodedInputs = encodeInputs(
-            [
-                ROOT_HASH_AFTER,
-                FINAL_RESULTS[0],
-                FINAL_RESULTS[1],
-                FINAL_RESULTS[2],
-                FINAL_RESULTS[3],
-                FINAL_RESULTS[4],
-                FINAL_RESULTS[5],
-                FINAL_RESULTS[6],
-                FINAL_RESULTS[7]
-            ]
+            [ROOT_HASH_AFTER, FINAL_RESULTS[0], FINAL_RESULTS[1], FINAL_RESULTS[2], FINAL_RESULTS[3], FINAL_RESULTS[4], FINAL_RESULTS[5], FINAL_RESULTS[6], FINAL_RESULTS[7]]
         );
         if (keccak256(_encodedInputs) != keccak256(RESULTS_ABI_INPUTS)) {
             revert();
@@ -96,27 +92,31 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
     function test_Decode_Inputs() public view {
         uint256[9] memory _inputs = decodeInputs(RESULTS_ABI_INPUTS);
         if (
-            _inputs[0] != ROOT_HASH_AFTER || _inputs[1] != FINAL_RESULTS[0] || _inputs[2] != FINAL_RESULTS[1]
-                || _inputs[3] != FINAL_RESULTS[2] || _inputs[4] != FINAL_RESULTS[3] || _inputs[5] != FINAL_RESULTS[4]
-                || _inputs[6] != FINAL_RESULTS[5] || _inputs[7] != FINAL_RESULTS[6] || _inputs[8] != FINAL_RESULTS[7]
+            _inputs[0] != ROOT_HASH_AFTER ||
+            _inputs[1] != FINAL_RESULTS[0] ||
+            _inputs[2] != FINAL_RESULTS[1] ||
+            _inputs[3] != FINAL_RESULTS[2] ||
+            _inputs[4] != FINAL_RESULTS[3] ||
+            _inputs[5] != FINAL_RESULTS[4] ||
+            _inputs[6] != FINAL_RESULTS[5] ||
+            _inputs[7] != FINAL_RESULTS[6] ||
+            _inputs[8] != FINAL_RESULTS[7]
         ) {
             revert();
         }
     }
 
-    function decodeProof(bytes memory encodedProof)
-        public
-        pure
-        returns (uint256[8] memory, uint256[2] memory, uint256[2] memory)
-    {
+    function decodeProof(
+        bytes memory encodedProof
+    ) public pure returns (uint256[8] memory, uint256[2] memory, uint256[2] memory) {
         return abi.decode(encodedProof, (uint256[8], uint256[2], uint256[2]));
     }
 
-    function encodeProof(uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentsPok)
-        public
-        pure
-        returns (bytes memory)
-    {
+    function encodeProof(
+        uint256[8] memory _proof,
+        uint256[2] memory _commitments,
+        uint256[2] memory _commitmentsPok
+    ) public pure returns (bytes memory) {
         return abi.encode(_proof, _commitments, _commitmentsPok);
     }
 

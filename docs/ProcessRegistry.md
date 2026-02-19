@@ -198,7 +198,7 @@ Updates the status of an existing process.
 - `processId`: Process identifier
 - `newStatus`: New status to set
 
-**Access Control:** Only process owner
+**Access Control:** Only process owner (organizationId)
 
 **Valid Transitions:**
 
@@ -227,7 +227,7 @@ Updates the census of an ongoing process.
 - `processId`: Process identifier
 - `census`: New census configuration
 
-**Access Control:** Only process owner
+**Access Control:** Only process owner (organizationId)
 
 **Validation:**
 
@@ -252,7 +252,7 @@ Extends the duration of an ongoing process.
 - `processId`: Process identifier
 - `_duration`: New duration in seconds
 
-**Access Control:** Only process owner
+**Access Control:** Only process owner (organizationId)
 
 **Validation:**
 
