@@ -180,9 +180,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: false,
@@ -205,9 +205,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: true,
@@ -224,9 +224,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: false,
@@ -243,9 +243,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: false,
@@ -262,9 +262,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: true,
@@ -287,9 +287,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: true,
@@ -330,9 +330,9 @@ const _abi = [
     inputs: [
       {
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         indexed: false,
@@ -361,9 +361,9 @@ const _abi = [
     name: "getNextProcessId",
     outputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "",
-        type: "bytes32",
+        type: "bytes31",
       },
     ],
     stateMutability: "view",
@@ -372,9 +372,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
     ],
     name: "getProcess",
@@ -554,9 +554,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
     ],
     name: "getProcessEndTime",
@@ -728,9 +728,9 @@ const _abi = [
     name: "newProcess",
     outputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "",
-        type: "bytes32",
+        type: "bytes31",
       },
     ],
     stateMutability: "nonpayable",
@@ -739,9 +739,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         components: [
@@ -784,9 +784,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         internalType: "uint256",
@@ -802,9 +802,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         internalType: "uint256",
@@ -820,9 +820,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         internalType: "bytes",
@@ -843,9 +843,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         internalType: "enum DAVINCITypes.ProcessStatus",
@@ -861,9 +861,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
+        internalType: "bytes31",
         name: "processId",
-        type: "bytes32",
+        type: "bytes31",
       },
       {
         internalType: "bytes",

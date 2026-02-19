@@ -845,7 +845,7 @@ export interface ProcessRegistry extends BaseContract {
   >;
 
   filters: {
-    "CensusUpdated(bytes32,bytes32,string)": TypedContractEvent<
+    "CensusUpdated(bytes31,bytes32,string)": TypedContractEvent<
       CensusUpdatedEvent.InputTuple,
       CensusUpdatedEvent.OutputTuple,
       CensusUpdatedEvent.OutputObject
@@ -856,7 +856,7 @@ export interface ProcessRegistry extends BaseContract {
       CensusUpdatedEvent.OutputObject
     >;
 
-    "ProcessCreated(bytes32,address)": TypedContractEvent<
+    "ProcessCreated(bytes31,address)": TypedContractEvent<
       ProcessCreatedEvent.InputTuple,
       ProcessCreatedEvent.OutputTuple,
       ProcessCreatedEvent.OutputObject
@@ -867,7 +867,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessCreatedEvent.OutputObject
     >;
 
-    "ProcessDurationChanged(bytes32,uint256)": TypedContractEvent<
+    "ProcessDurationChanged(bytes31,uint256)": TypedContractEvent<
       ProcessDurationChangedEvent.InputTuple,
       ProcessDurationChangedEvent.OutputTuple,
       ProcessDurationChangedEvent.OutputObject
@@ -878,7 +878,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.OutputObject
     >;
 
-    "ProcessMaxVotersChanged(bytes32,uint256)": TypedContractEvent<
+    "ProcessMaxVotersChanged(bytes31,uint256)": TypedContractEvent<
       ProcessMaxVotersChangedEvent.InputTuple,
       ProcessMaxVotersChangedEvent.OutputTuple,
       ProcessMaxVotersChangedEvent.OutputObject
@@ -889,7 +889,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessMaxVotersChangedEvent.OutputObject
     >;
 
-    "ProcessResultsSet(bytes32,address,uint256[])": TypedContractEvent<
+    "ProcessResultsSet(bytes31,address,uint256[])": TypedContractEvent<
       ProcessResultsSetEvent.InputTuple,
       ProcessResultsSetEvent.OutputTuple,
       ProcessResultsSetEvent.OutputObject
@@ -900,7 +900,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessResultsSetEvent.OutputObject
     >;
 
-    "ProcessStateTransitioned(bytes32,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
+    "ProcessStateTransitioned(bytes31,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
       ProcessStateTransitionedEvent.InputTuple,
       ProcessStateTransitionedEvent.OutputTuple,
       ProcessStateTransitionedEvent.OutputObject
@@ -911,7 +911,7 @@ export interface ProcessRegistry extends BaseContract {
       ProcessStateTransitionedEvent.OutputObject
     >;
 
-    "ProcessStatusChanged(bytes32,uint8,uint8)": TypedContractEvent<
+    "ProcessStatusChanged(bytes31,uint8,uint8)": TypedContractEvent<
       ProcessStatusChangedEvent.InputTuple,
       ProcessStatusChangedEvent.OutputTuple,
       ProcessStatusChangedEvent.OutputObject

@@ -15,20 +15,20 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @param creator The address of the creator of the process.
      */
-    event ProcessCreated(bytes32 indexed processId, address indexed creator);
+    event ProcessCreated(bytes31 indexed processId, address indexed creator);
     /*
      * @notice Emitted when the census of a process is updated.
      * @param processId The ID of the process.
      * @param censusRoot The new root of the census.
      * @param censusURI The URI of the census.
      */
-    event CensusUpdated(bytes32 indexed processId, bytes32 censusRoot, string censusURI);
+    event CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI);
     /*
      * @notice Emitted when the duration of a process is modified.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
      */
-    event ProcessDurationChanged(bytes32 indexed processId, uint256 duration);
+    event ProcessDurationChanged(bytes31 indexed processId, uint256 duration);
     /*
      * @notice Emitted when the state root of a process is updated.
      * @param processId The ID of the process.
@@ -36,7 +36,7 @@ interface IProcessRegistry {
      * @param newStateRoot The new state root of the process.
      */
     event ProcessStateTransitioned(
-        bytes32 indexed processId,
+        bytes31 indexed processId,
         address indexed sender,
         uint256 oldStateRoot,
         uint256 newStateRoot,
@@ -50,7 +50,7 @@ interface IProcessRegistry {
      * @param sender The address of the sender.
      * @param result The result of the process.
      */
-    event ProcessResultsSet(bytes32 indexed processId, address indexed sender, uint256[] result);
+    event ProcessResultsSet(bytes31 indexed processId, address indexed sender, uint256[] result);
     /**
      * @notice Emitted when a process status is modified
      * @param processId The ID of the process
@@ -58,14 +58,14 @@ interface IProcessRegistry {
      * @param newStatus The new status of the process
      */
     event ProcessStatusChanged(
-        bytes32 indexed processId, DAVINCITypes.ProcessStatus oldStatus, DAVINCITypes.ProcessStatus newStatus
+        bytes31 indexed processId, DAVINCITypes.ProcessStatus oldStatus, DAVINCITypes.ProcessStatus newStatus
     );
     /**
      * @notice Emitted when the max voters of a process is modified
      * @param processId The ID of the process
      * @param maxVoters The new max voters of the process
      */
-    event ProcessMaxVotersChanged(bytes32 indexed processId, uint256 maxVoters);
+    event ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters);
 
     /// ERRORS ///
 
@@ -205,14 +205,14 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @return process The process struct.
      */
-    function getProcess(bytes32 processId) external view returns (DAVINCITypes.Process memory process);
+    function getProcess(bytes31 processId) external view returns (DAVINCITypes.Process memory process);
 
     /**
      * @notice Returns the next process ID.
      * @return The next process ID.
      * @param organizationId The ID of the organization.
      */
-    function getNextProcessId(address organizationId) external view returns (bytes32);
+    function getNextProcessId(address organizationId) external view returns (bytes31);
 
     /**
      * @notice Returns the hash of the state transition ZK verifier proving key.
@@ -231,7 +231,7 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @return The end time of the process.
      */
-    function getProcessEndTime(bytes32 processId) external view returns (uint256);
+    function getProcessEndTime(bytes31 processId) external view returns (uint256);
 
     /// SETTERS ///
 
@@ -255,35 +255,35 @@ interface IProcessRegistry {
         DAVINCITypes.Census calldata census,
         string calldata metadata,
         DAVINCITypes.EncryptionKey calldata encryptionKey
-    ) external returns (bytes32);
+    ) external returns (bytes31);
 
     /**
      * @notice Sets the status of a process.
      * @param processId The ID of the process.
      * @param newStatus The new status of the process.
      */
-    function setProcessStatus(bytes32 processId, DAVINCITypes.ProcessStatus newStatus) external;
+    function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external;
 
     /**
      * @notice Sets the census of a process.
      * @param processId The ID of the process.
      * @param census The census of the process.
      */
-    function setProcessCensus(bytes32 processId, DAVINCITypes.Census calldata census) external;
+    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external;
 
     /**
      * @notice Sets the duration of a process.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
      */
-    function setProcessDuration(bytes32 processId, uint256 duration) external;
+    function setProcessDuration(bytes31 processId, uint256 duration) external;
 
     /**
      * @notice Sets the maximum number of voters allowed in a process.
      * @param processId The ID of the process.
      * @param maxVoters The new maximum number of voters.
      */
-    function setProcessMaxVoters(bytes32 processId, uint256 maxVoters) external;
+    function setProcessMaxVoters(bytes31 processId, uint256 maxVoters) external;
 
     /**
      * @notice Sets the results of a process.
@@ -291,7 +291,7 @@ interface IProcessRegistry {
      * @param proof The proof for validating the process results.
      * @param input The public inputs data for the results.
      */
-    function setProcessResults(bytes32 processId, bytes calldata proof, bytes calldata input) external;
+    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input) external;
 
     /**
      * @notice Submits a process state transition.
@@ -299,5 +299,5 @@ interface IProcessRegistry {
      * @param proof The proof for validating the process state transition.
      * @param input The public inputs data for the state transition.
      */
-    function submitStateTransition(bytes32 processId, bytes calldata proof, bytes calldata input) external;
+    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input) external;
 }

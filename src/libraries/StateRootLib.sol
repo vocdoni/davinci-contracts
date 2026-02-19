@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
-import {PoseidonT3} from "poseidon-solidity/PoseidonT3.sol";
-import {PoseidonT4} from "poseidon-solidity/PoseidonT4.sol";
-import {DAVINCITypes} from "./DAVINCITypes.sol";
+import { PoseidonT3 } from "poseidon-solidity/PoseidonT3.sol";
+import { PoseidonT4 } from "poseidon-solidity/PoseidonT4.sol";
+import { DAVINCITypes } from "./DAVINCITypes.sol";
 
 /**
  * @title StateRootLib
@@ -49,7 +49,7 @@ library StateRootLib {
      * @return stateRoot Root of the initial process state tree.
      */
     function computeStateRoot(
-        bytes32 processId,
+        bytes31 processId,
         DAVINCITypes.CensusOrigin censusOrigin,
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.EncryptionKey calldata encryptionKey
@@ -68,7 +68,7 @@ library StateRootLib {
      */
     function verifyStateRoot(
         uint256 expectedRoot,
-        bytes32 processId,
+        bytes31 processId,
         DAVINCITypes.CensusOrigin censusOrigin,
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.EncryptionKey calldata encryptionKey
@@ -80,7 +80,7 @@ library StateRootLib {
      * @dev Internal state-root computation shared by all public entrypoints.
      */
     function _computeStateRoot(
-        bytes32 processId,
+        bytes31 processId,
         DAVINCITypes.CensusOrigin censusOrigin,
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.EncryptionKey calldata encryptionKey
@@ -88,7 +88,7 @@ library StateRootLib {
         uint256 packedBallotMode = _packBallotMode(ballotMode);
         uint256 encKeyHash = PoseidonT3.hash([encryptionKey.x, encryptionKey.y]);
 
-        uint256 leafProcess = PoseidonT4.hash([KEY_PROCESS_ID, uint256(processId), LEAF_DOMAIN]);
+        uint256 leafProcess = PoseidonT4.hash([KEY_PROCESS_ID, uint256(uint248(processId)), LEAF_DOMAIN]);
         uint256 leafBallotMode = PoseidonT4.hash([KEY_BALLOT_MODE, packedBallotMode, LEAF_DOMAIN]);
         uint256 leafEncKey = PoseidonT4.hash([KEY_ENCRYPTION_KEY, encKeyHash, LEAF_DOMAIN]);
         uint256 leafResultsAdd = LEAF_RESULTS_ADD;
