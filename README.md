@@ -3,7 +3,7 @@
 **DISCLAIMER**: The **code** in this repository is a **work-in-progress** and it is not meant to be used in production environments.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version]([https://img.shields.io/badge/version-0.0.37-brightgreen.svg](https://img.shields.io/badge/version-0.0.37-brightgreen.svg))](https://github.com/vocdoni/davinci-contracts/releases)
+[![Version](https://img.shields.io/badge/version-0.0.37-brightgreen.svg)](https://github.com/vocdoni/davinci-contracts/releases)
 
 Smart contracts powering DAVINCI's (Decentralized Autonomous Vote Integrity Network with Cryptographic Inference) digital voting protocol - a cutting-edge voting system that leverages zero-knowledge proofs and blockchain technology to enable secure, verifiable, coercion-resistant, and anonymous digital voting.
 
