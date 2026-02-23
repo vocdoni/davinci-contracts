@@ -292,6 +292,8 @@ contract ProcessRegistry is IProcessRegistry {
             ) {
                 revert InvalidCensusRoot();
             }
+        } else {
+            if (st.censusRoot != uint256(p.census.censusRoot)) revert InvalidCensusRoot();
         }
 
         // Validate state root before matches latest state root
@@ -299,6 +301,7 @@ contract ProcessRegistry is IProcessRegistry {
 
         // Validate max votes not exceeded after including the new votes in the batch
         // but only if the batch contains new votes (votersCount - overwrittenVotesCount > 0)
+        // Subsequent calls to this function will fail if maxVoters is not updated after surpassing the threshold.
         uint256 newVoters = st.votersCount - st.overwrittenVotesCount;
         if (newVoters > 0 && p.votersCount >= p.maxVoters) revert MaxVotersReached();
 

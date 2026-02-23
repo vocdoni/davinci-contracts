@@ -1165,6 +1165,20 @@ contract ProcessRegistryTest is Test, TestHelpers {
         processRegistry.submitStateTransition(processId, STATETRANSITION_ABI_PROOF, STATETRANSITION_ABI_INPUTS);
     }
 
+    function test_SubmitStateTransition_InvalidCensusRoot_OffchainMismatch() public {
+        bytes31 processId = createTestProcess(
+            defaultBallotMode,
+            ROOT_HASH_BEFORE,
+            DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
+
+        uint256[8] memory inputs = decodeStateTransitionInputs(stateTransitionInputs());
+        inputs[4] = CENSUS_ROOT + 1; // mismatch with process.census.censusRoot
+
+        vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
+        processRegistry.submitStateTransition(processId, STATETRANSITION_ABI_PROOF, encodeStateTransitionInputs(inputs));
+    }
+
     // ========== Process Results Tests ==========
 
     function test_SetProcessResults_Success() public {
