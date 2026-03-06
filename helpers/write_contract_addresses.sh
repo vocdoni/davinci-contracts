@@ -106,6 +106,7 @@ for contract in $(jq -r 'keys[]' "$JSON_FILE"); do
         # Generate the constant
         echo "	${contract_const}${network_const}Address = \"$address\"" >> "$OUTPUT_FILE"
     done
+    echo >> "$OUTPUT_FILE"
 done
 
 # Close the constants block

@@ -14,6 +14,10 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "ReentrancyGuard",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ReentrancyGuard__factory>;
+    getContractFactory(
       name: "PoseidonT3",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoseidonT3__factory>;
@@ -67,6 +71,11 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.StateTransitionVerifierGroth16__factory>;
 
     getContractAt(
+      name: "ReentrancyGuard",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ReentrancyGuard>;
+    getContractAt(
       name: "PoseidonT3",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -133,6 +142,10 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
     deployContract(
+      name: "ReentrancyGuard",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ReentrancyGuard>;
+    deployContract(
       name: "PoseidonT3",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PoseidonT3>;
@@ -185,6 +198,11 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.StateTransitionVerifierGroth16>;
 
+    deployContract(
+      name: "ReentrancyGuard",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ReentrancyGuard>;
     deployContract(
       name: "PoseidonT3",
       args: any[],

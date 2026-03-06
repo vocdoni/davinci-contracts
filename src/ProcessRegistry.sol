@@ -8,12 +8,13 @@ import {ProcessIdLib} from "./libraries/ProcessIdLib.sol";
 import {BlobsLib} from "./libraries/BlobsLib.sol";
 import {StateRootLib} from "./libraries/StateRootLib.sol";
 import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title ProcessRegistry
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
-contract ProcessRegistry is IProcessRegistry {
+contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     using ProcessIdLib for bytes31;
     using BlobsLib for bytes;
 
@@ -275,7 +276,11 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input) external override {
+    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input)
+        external
+        override
+        nonReentrant
+    {
         if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
@@ -292,6 +297,8 @@ contract ProcessRegistry is IProcessRegistry {
             ) {
                 revert InvalidCensusRoot();
             }
+        } else {
+            if (st.censusRoot != uint256(p.census.censusRoot)) revert InvalidCensusRoot();
         }
 
         // Validate state root before matches latest state root
@@ -299,6 +306,7 @@ contract ProcessRegistry is IProcessRegistry {
 
         // Validate max votes not exceeded after including the new votes in the batch
         // but only if the batch contains new votes (votersCount - overwrittenVotesCount > 0)
+        // Subsequent calls to this function will fail if maxVoters is not updated after surpassing the threshold.
         uint256 newVoters = st.votersCount - st.overwrittenVotesCount;
         if (newVoters > 0 && p.votersCount >= p.maxVoters) revert MaxVotersReached();
 
@@ -322,7 +330,11 @@ contract ProcessRegistry is IProcessRegistry {
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input) external override {
+    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input)
+        external
+        override
+        nonReentrant
+    {
         if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
