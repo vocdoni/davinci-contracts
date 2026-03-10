@@ -287,6 +287,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != DAVINCITypes.ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+        if (block.timestamp < p.startTime) revert InvalidTimeBounds();
 
         StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
         if (p.census.censusOrigin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
@@ -402,7 +403,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
         if (
             census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1
-                && census.onchainAllowAnyValidRoot == true
+                && census.onchainAllowAnyValidRoot
         ) {
             revert InvalidCensusConfig();
         }
