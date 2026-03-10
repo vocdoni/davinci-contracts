@@ -45,7 +45,7 @@ library BlobsLib {
     address private constant KZG_PRECOMPILE = address(0x0A);
 
     /// @dev Expected input length for KZG proof verification (192 bytes)
-    /// 48 bytes (versioned_hash) + 48 bytes (z) + 48 bytes (y) + 48 bytes (commitment) + 48 bytes (proof)
+    /// 32 bytes (versioned_hash) + 32 bytes (z) + 32 bytes (y) + 48 bytes (commitment) + 48 bytes (proof)
     uint256 private constant KZG_INPUT_LENGTH = 192;
 
     /// @dev Expected output length for successful KZG verification (64 bytes)
@@ -100,10 +100,8 @@ library BlobsLib {
 
         uint256 baseFee = blobBaseFee();
         // Each blob costs baseFee * GAS_PER_BLOB (131072 gas per blob as per EIP-4844)
-        unchecked {
-            totalFee = baseFee * blobCount * 131072;
-        }
-    }
+        totalFee = baseFee * blobCount * 131072;
+    } 
 
     /*//////////////////////////////////////////////////////////////
                             KZG OPERATIONS

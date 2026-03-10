@@ -21,17 +21,15 @@ library DAVINCITypes {
      * @notice The census origin defines the origin of the census data. It affects the way the census is handled.
      */
     enum CensusOrigin {
-        CENSUS_UNKNOWN,
-        MERKLE_TREE_OFFCHAIN_STATIC_V1,
-        MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
-        MERKLE_TREE_ONCHAIN_DYNAMIC_V1,
+        MERKLE_TREE_OFFCHAIN,
+        MERKLE_TREE_ONCHAIN,
         CSP_EDDSA_BABYJUBJUB_V1
     }
 
     /**
      * @notice The ballot mode define the parameters of the vote.
-     * @param costFromWeight If weighted census, the ballot weight is used as maxValueSum.
      * @param uniqueValues Choices cannot appear twice or more.
+     * @param costFromWeight If weighted census, the ballot weight is used as maxValueSum.
      * @param numFields The maximum number of fields per ballot.
      * @param groupSize Used for multiquestion patterns.
      * @param costExponent The exponent that will be used to compute the "cost" of the field values.
@@ -41,8 +39,8 @@ library DAVINCITypes {
      * @param minValueSum Minimum limit on the total sum of all ballot fields' values. 0 => Not applicable.
      */
     struct BallotMode {
-        bool costFromWeight;
         bool uniqueValues;
+        bool costFromWeight;
         uint8 numFields;
         uint8 groupSize;
         uint8 costExponent;
@@ -55,8 +53,9 @@ library DAVINCITypes {
     /**
      * @notice The census defines the parameters of the census.
      * @param censusOrigin The origin of the census.
-     * @param censusRoot The root of the census. CSP -> A PublicKey, MerkleTree OffchainStatic, OffchainDynamic -> A Hash, MerkleTree Onchain -> A Contract address
-     * @param contractAddress An EVM contract address (optional). Ideally this contract returns census information and/or data.
+     * @param censusRoot The committed census value. CSP -> A public key, MerkleTree -> A hash.
+     * Dynamic onchain censuses validate roots through contractAddress on each state transition.
+     * @param contractAddress An EVM contract address (optional). Required for onchain censuses to validate accepted roots.
      * @param censusURI The URI of the census.
      * @param onchainAllowAnyValidRoot Used for onchain censuses. If true allows to skip the census startBlock check in the state transition function.
      */
@@ -81,13 +80,30 @@ library DAVINCITypes {
     }
 
     /**
-     * @notice EcryptionKey of a process
+     * @notice EncryptionKey of a process
      * @param x value of the X coordinate on the curve
      * @param y value of the Y coordinate on the curve
      */
     struct EncryptionKey {
         uint256 x;
         uint256 y;
+    }
+
+    /**
+     * @notice ParamsMod can be used to restrict or allow certain changes on process data.
+     * @dev The ballot mode cannot be modified.
+     * @param census If true, allows changes on the Census.
+     * @param status If true, allows non-contract automated changes.
+     * @param duration If true, allows changes on the duration.
+     * @param metadata If true, allows changes on the metadata.
+     * @param maxVoters If true, allows to change the maximum number of voters.
+     */
+    struct ParamsMod {
+        bool census;
+        bool status;
+        bool duration;
+        bool metadata;
+        bool maxVoters;
     }
 
     /**
@@ -107,6 +123,7 @@ library DAVINCITypes {
      * @param metadataURI The URI of the metadata.
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
+     * @param paramsMod The paramsMod of the process.
      */
     struct Process {
         ProcessStatus status;
@@ -124,5 +141,30 @@ library DAVINCITypes {
         string metadataURI;
         BallotMode ballotMode;
         Census census;
+        ParamsMod paramsMod;
+    }
+
+    /**
+     * @notice StateTransitionBatchProofInputs wraps all the inputs required for a state transition operation
+     * @param rootHashBefore The old root hash of the state.
+     * @param rootHashAfter The new root hash of the state.
+     * @param votersCount The number of voters included in the specific state transition.
+     * @param overwrittenVotesCount The number of vote overwrittes included in the specific state transition.
+     * @param censusRoot The census root used in the state transition.
+     * @param blobCommitmentLimb0 The first limb of the blob commitment.
+     * @param blobCommitmentLimb1 The second limb of the blob commitment.
+     * @param blobCommitmentLimb2 The third limb of the blob commitment
+     * @dev The total number of voters and overwrites are stored in the Process struct.
+     * @dev The blob commitment limbs are only used if the ProcessRegistry contract have the blobs feature activated.
+     */
+    struct StateTransitionBatchProofInputs {
+        uint256 rootHashBefore;
+        uint256 rootHashAfter;
+        uint256 votersCount;
+        uint256 overwrittenVotesCount;
+        uint256 censusRoot;
+        uint256 blobCommitmentLimb0;
+        uint256 blobCommitmentLimb1;
+        uint256 blobCommitmentLimb2;
     }
 }
