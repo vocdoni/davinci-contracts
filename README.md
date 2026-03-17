@@ -41,6 +41,12 @@ The Vocdoni DAVINCI contracts work together with a set of sequencers that implem
 - **Sepolia**
     - PoseidonT3: `0x1464bD48D1635E9B9F65cFd629d8E9f507A952dD`
     - PoseidonT4: `0xd747896B912C1585b04007c103D10A04e71bfb25`
+- **Arbitrum**
+    - PoseidonT3: `0xE17D701EA8f34022F97fC2Ec68c73D42bF99D0BD`
+    - PoseidonT4: `0x2DaF913D423128258b2F378E320F9D9D3Be5eCf5`
+    - BlobsLib: `0xca08064a83C7Bea0DB7514eE37F6f4a193b2B53c`
+    - ProcessIdLib: `0xDda6c75d32c375946C8ae9be41B2F3539dB1118A`
+    - StateRootLib: `0x808276962217AD1ED3af7D51bFc791903CAd9389`
 
 ## 📦 Installation
 

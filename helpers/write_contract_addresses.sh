@@ -39,22 +39,24 @@ package contracts
 
 // Network constants
 const (
-	SepoliaNetwork = "sepolia"
-	UzhNetwork     = "uzh"
-	MainnetNetwork = "mainnet"
-	BaseNetwork    = "base"
-	CeloNetwork    = "celo"
-	TestNetwork    = "test"
+	SepoliaNetwork  = "sepolia"
+	UzhNetwork      = "uzh"
+	MainnetNetwork  = "mainnet"
+	BaseNetwork     = "base"
+	CeloNetwork     = "celo"
+	TestNetwork     = "test"
+	ArbitrumNetwork = "arbitrum"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
 var AvailableNetworksByName = map[string]uint32{
-	SepoliaNetwork: 11155111,
-	UzhNetwork:     710,
-	CeloNetwork:    42220,
-	MainnetNetwork: 1,
-	BaseNetwork:    8453,
-	TestNetwork:    1337, // Local test network
+	SepoliaNetwork:  11155111,
+	UzhNetwork:      710,
+	CeloNetwork:     42220,
+	MainnetNetwork:  1,
+	BaseNetwork:     8453,
+	TestNetwork:     1337, // Local test network
+	ArbitrumNetwork: 42161,
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
@@ -65,6 +67,7 @@ var AvailableNetworksByID = map[uint32]string{
 	1:        MainnetNetwork,
 	8453:     BaseNetwork,
 	1337:     TestNetwork,
+	42161:	  ArbitrumNetwork,
 }
 
 // Contract name constants
@@ -85,6 +88,7 @@ const (
 	SequencerRegistrySepoliaAddress = "0x0"
 	SequencerRegistryUzhAddress = "0x0"
 	StateTransitionVerifierGroth16MainnetAddress = "0x0"
+	SequencerRegistryArbitrumAddress = "0x0"
 )
 
 // Contract addresses by network
@@ -130,6 +134,8 @@ func GetContractAddress(contract, network string) string {
 			return ProcessRegistryBaseAddress
 		case CeloNetwork:
 			return ProcessRegistryCeloAddress
+		case ArbitrumNetwork:
+			return ProcessRegistryArbitrumAddress
 		}
 	case StateTransitionVerifierGroth16Contract:
 		switch network {
@@ -143,6 +149,8 @@ func GetContractAddress(contract, network string) string {
 			return StateTransitionVerifierGroth16BaseAddress
 		case CeloNetwork:
 			return StateTransitionVerifierGroth16CeloAddress
+		case ArbitrumNetwork:
+			return StateTransitionVerifierGroth16ArbitrumAddress
 		}
 	case ResultsVerifierGroth16Contract:
 		switch network {
@@ -156,6 +164,8 @@ func GetContractAddress(contract, network string) string {
 			return ResultsVerifierGroth16BaseAddress
 		case CeloNetwork:
 			return ResultsVerifierGroth16CeloAddress
+		case ArbitrumNetwork:
+			return ResultsVerifierGroth16ArbitrumAddress
 		}
 	case SequencerRegistryContract:
 		switch network {
@@ -169,6 +179,8 @@ func GetContractAddress(contract, network string) string {
 			return SequencerRegistryBaseAddress
 		case CeloNetwork:
 			return SequencerRegistryCeloAddress
+		case ArbitrumNetwork:
+			return SequencerRegistryArbitrumAddress
 		}
 	}
 	return ""
