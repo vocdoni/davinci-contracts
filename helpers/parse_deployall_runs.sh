@@ -29,6 +29,7 @@ chain_to_network() {
     8453)     echo "base" ;;
     42220)    echo "celo" ;;
     710)      echo "uzh" ;;
+    42161)    echo "arbitrum" ;;
     *)        echo "" ;;
   esac
 }
