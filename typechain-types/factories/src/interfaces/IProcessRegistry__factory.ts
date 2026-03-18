@@ -67,6 +67,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidEncryptionKey",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidGroupSize",
     type: "error",
   },
@@ -138,6 +143,11 @@ const _abi = [
   {
     inputs: [],
     name: "InvalidValueSumBounds",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidVerifier",
     type: "error",
   },
   {
@@ -235,7 +245,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "ProcessDurationChanged",
+    name: "ProcessDurationUpdated",
     type: "event",
   },
   {
@@ -254,7 +264,26 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "ProcessMaxVotersChanged",
+    name: "ProcessMaxVotersUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "metadata",
+        type: "string",
+      },
+    ],
+    name: "ProcessMetadataUpdated",
     type: "event",
   },
   {
@@ -347,7 +376,7 @@ const _abi = [
         type: "uint8",
       },
     ],
-    name: "ProcessStatusChanged",
+    name: "ProcessStatusUpdated",
     type: "event",
   },
   {
@@ -462,12 +491,12 @@ const _abi = [
             components: [
               {
                 internalType: "bool",
-                name: "costFromWeight",
+                name: "uniqueValues",
                 type: "bool",
               },
               {
                 internalType: "bool",
-                name: "uniqueValues",
+                name: "costFromWeight",
                 type: "bool",
               },
               {
@@ -540,6 +569,38 @@ const _abi = [
             ],
             internalType: "struct DAVINCITypes.Census",
             name: "census",
+            type: "tuple",
+          },
+          {
+            components: [
+              {
+                internalType: "bool",
+                name: "census",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "status",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "duration",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "metadata",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "maxVoters",
+                type: "bool",
+              },
+            ],
+            internalType: "struct DAVINCITypes.ParamsMod",
+            name: "paramsMod",
             type: "tuple",
           },
         ],
@@ -622,12 +683,12 @@ const _abi = [
         components: [
           {
             internalType: "bool",
-            name: "costFromWeight",
+            name: "uniqueValues",
             type: "bool",
           },
           {
             internalType: "bool",
-            name: "uniqueValues",
+            name: "costFromWeight",
             type: "bool",
           },
           {
@@ -724,6 +785,38 @@ const _abi = [
         name: "encryptionKey",
         type: "tuple",
       },
+      {
+        components: [
+          {
+            internalType: "bool",
+            name: "census",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "status",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "duration",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "metadata",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "maxVoters",
+            type: "bool",
+          },
+        ],
+        internalType: "struct DAVINCITypes.ParamsMod",
+        name: "paramsMod",
+        type: "tuple",
+      },
     ],
     name: "newProcess",
     outputs: [
@@ -813,6 +906,24 @@ const _abi = [
       },
     ],
     name: "setProcessMaxVoters",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        internalType: "string",
+        name: "metadata",
+        type: "string",
+      },
+    ],
+    name: "setProcessMetadata",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
