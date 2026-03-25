@@ -232,12 +232,7 @@ interface IProcessRegistry {
      * @notice Thrown when the proof is invalid.
      */
     error ProofInvalid();
-   
-    /**
-     * @notice Thrown when the census is not updatable.
-     */
-    error CensusNotUpdatable();
-   
+
     /**
      * @notice Thrown when the sender is not authorized to perform the action.
      */

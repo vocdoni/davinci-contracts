@@ -230,17 +230,36 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
-        if (!p.paramsMod.census) revert Unauthorized();
-
-        // check census
-        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
-        _validateCensus(census, p.paramsMod.census);
 
         // check ongoing process
         if (p.status != DAVINCITypes.ProcessStatus.READY && p.status != DAVINCITypes.ProcessStatus.PAUSED) {
             revert InvalidStatus();
         }
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        DAVINCITypes.CensusParamsMod memory cpm = p.paramsMod.census;
+
+        // At least one census field must be modifiable
+        if (!cpm.censusRoot && !cpm.contractAddress && !cpm.censusURI && !cpm.onchainAllowAnyValidRoot) {
+            revert Unauthorized();
+        }
+
+        // censusOrigin can never change
+        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
+
+        // Enforce per-field permissions: if a flag is false, the value must be unchanged
+        if (!cpm.censusRoot && census.censusRoot != p.census.censusRoot) revert Unauthorized();
+        if (!cpm.contractAddress && census.contractAddress != p.census.contractAddress) revert Unauthorized();
+        if (!cpm.onchainAllowAnyValidRoot && census.onchainAllowAnyValidRoot != p.census.onchainAllowAnyValidRoot) {
+            revert Unauthorized();
+        }
+        if (
+            !cpm.censusURI
+                && keccak256(bytes(census.censusURI)) != keccak256(bytes(p.census.censusURI))
+        ) revert Unauthorized();
+
+        // Validate the new census values
+        _validateCensus(census, cpm);
 
         p.census = census;
 
@@ -321,11 +340,14 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
             uint256 rootBlockNumber = ICensusValidator(p.census.contractAddress).getRootBlockNumber(st.censusRoot);
             if (rootBlockNumber == 0 || rootBlockNumber > block.number) revert InvalidCensusRoot();
 
-            if (!p.paramsMod.census) {
+            if (!p.paramsMod.census.censusRoot) {
+                // Fixed onchain census: root must match stored value
                 if (st.censusRoot != uint256(p.census.censusRoot)) revert InvalidCensusRoot();
-            } else if (!p.census.onchainAllowAnyValidRoot && rootBlockNumber < p.creationBlock) {
-                revert InvalidCensusRoot();
+            } else if (!p.census.onchainAllowAnyValidRoot) {
+                // Dynamic onchain census, restricted: only accept roots from after process creation
+                if (rootBlockNumber < p.creationBlock) revert InvalidCensusRoot();
             }
+            // else: dynamic + allowAnyValidRoot → any valid root accepted
         } else {
             if (st.censusRoot != uint256(p.census.censusRoot)) revert InvalidCensusRoot();
         }
@@ -422,7 +444,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (ballotMode.groupSize == 0 || ballotMode.groupSize > ballotMode.numFields) revert InvalidGroupSize();
         if (ballotMode.maxValue > (1 << 48) - 1) revert InvalidMaxValue();
         if (ballotMode.minValue > (1 << 48) - 1) revert InvalidMinValue();
-        if (ballotMode.maxValueSum > 65535) revert InvalidMaxValueSum();
+        if (ballotMode.maxValueSum > (1 << 63) - 1) revert InvalidMaxValueSum();
         if (ballotMode.minValueSum > (1 << 63) - 1) revert InvalidValueSumBounds();
         if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
         if (ballotMode.minValueSum > ballotMode.maxValueSum) revert InvalidValueSumBounds();
@@ -481,13 +503,21 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         return false;
     }
 
-    function _validateCensus(DAVINCITypes.Census calldata census, bool censusMutable) private pure {
+    function _validateCensus(DAVINCITypes.Census calldata census, DAVINCITypes.CensusParamsMod memory censusParamsMod) private pure {
         if (census.censusOrigin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN) {
             if (census.contractAddress == address(0)) revert InvalidCensusAddress();
             // Fixed on-chain census commits a concrete root at creation. Dynamic on-chain census
             // validates roots through the external validator contract.
-            if (!censusMutable && census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+            if (!censusParamsMod.censusRoot && census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+            // onchainAllowAnyValidRoot flag only has effect when censusRoot flag is true (dynamic census).
+            // Reject it for fixed censuses to avoid dead configurations.
+            if (!censusParamsMod.censusRoot && censusParamsMod.onchainAllowAnyValidRoot) revert InvalidCensusConfig();
         } else {
+            // Non-onchain censuses cannot have onchain-specific flags or values
+            if (censusParamsMod.contractAddress) revert InvalidCensusConfig();
+            if (censusParamsMod.onchainAllowAnyValidRoot) revert InvalidCensusConfig();
+            if (census.contractAddress != address(0)) revert InvalidCensusConfig();
+
             if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
             if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
             if (census.onchainAllowAnyValidRoot) revert InvalidCensusConfig();

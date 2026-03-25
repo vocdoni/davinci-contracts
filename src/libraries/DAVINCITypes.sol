@@ -90,20 +90,53 @@ library DAVINCITypes {
     }
 
     /**
+     * @notice CensusParamsMod can be used to granularly restrict or allow changes on different census parameters.
+     * @dev It is expected to be used together with ParamsMod struct. The ballot mode cannot be modified.
+     *
+     * Not all flags are valid for every CensusOrigin. Invalid combinations revert with InvalidCensusConfig
+     * at process creation time. The following table summarizes valid (V) and invalid (X) flags per origin:
+     *
+     *  Flag                      | MERKLE_TREE_OFFCHAIN | MERKLE_TREE_ONCHAIN | CSP_EDDSA_BABYJUBJUB_V1
+     *  ------------------------- | -------------------- | ------------------- | -----------------------
+     *  censusRoot                |  X                   |  X                  |  X
+     *  contractAddress           |  -                   |  X                  |  -
+     *  censusURI                 |  X                   |  X                  |  X
+     *  onchainAllowAnyValidRoot  |  -                   |  X                  |  -
+     *
+     * For MERKLE_TREE_ONCHAIN censuses, the censusRoot flag also controls how state transitions validate
+     * the census root against the on-chain validator contract:
+     *   - censusRoot=false: the proof census root must match the stored censusRoot exactly (fixed census).
+     *   - censusRoot=true, onchainAllowAnyValidRoot=false: any root validated by the contract is accepted,
+     *     but only if it was registered after the process creation block.
+     *   - censusRoot=true, onchainAllowAnyValidRoot=true: any root validated by the contract is accepted
+     *     regardless of when it was registered.
+     *
+     * @param censusRoot If true, allows changes on the census root.
+     * @param contractAddress If true, allows changes on the contract address referencing the census.
+     * @param censusURI If true, allows changes on the census URI.
+     * @param onchainAllowAnyValidRoot If true, allows changes on the onchainAllowAnyValidRoot census parameter.
+     */
+    struct CensusParamsMod {
+        bool censusRoot;
+        bool contractAddress;
+        bool censusURI;
+        bool onchainAllowAnyValidRoot;
+    }
+
+    /**
      * @notice ParamsMod can be used to restrict or allow certain changes on process data.
-     * @dev The ballot mode cannot be modified.
-     * @param census If true, allows changes on the Census.
      * @param status If true, allows non-contract automated changes.
      * @param duration If true, allows changes on the duration.
      * @param metadata If true, allows changes on the metadata.
      * @param maxVoters If true, allows to change the maximum number of voters.
+     * @param census Allows or restricts changes on the Census. See CensusParamsMod.
      */
     struct ParamsMod {
-        bool census;
         bool status;
         bool duration;
         bool metadata;
         bool maxVoters;
+        CensusParamsMod census;
     }
 
     /**
