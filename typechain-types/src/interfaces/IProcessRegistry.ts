@@ -87,26 +87,45 @@ export declare namespace DAVINCITypes {
     onchainAllowAnyValidRoot: boolean;
   };
 
+  export type CensusParamsModStruct = {
+    censusRoot: boolean;
+    contractAddress: boolean;
+    censusURI: boolean;
+    onchainAllowAnyValidRoot: boolean;
+  };
+
+  export type CensusParamsModStructOutput = [
+    censusRoot: boolean,
+    contractAddress: boolean,
+    censusURI: boolean,
+    onchainAllowAnyValidRoot: boolean
+  ] & {
+    censusRoot: boolean;
+    contractAddress: boolean;
+    censusURI: boolean;
+    onchainAllowAnyValidRoot: boolean;
+  };
+
   export type ParamsModStruct = {
-    census: boolean;
     status: boolean;
     duration: boolean;
     metadata: boolean;
     maxVoters: boolean;
+    census: DAVINCITypes.CensusParamsModStruct;
   };
 
   export type ParamsModStructOutput = [
-    census: boolean,
     status: boolean,
     duration: boolean,
     metadata: boolean,
-    maxVoters: boolean
+    maxVoters: boolean,
+    census: DAVINCITypes.CensusParamsModStructOutput
   ] & {
-    census: boolean;
     status: boolean;
     duration: boolean;
     metadata: boolean;
     maxVoters: boolean;
+    census: DAVINCITypes.CensusParamsModStructOutput;
   };
 
   export type ProcessStruct = {

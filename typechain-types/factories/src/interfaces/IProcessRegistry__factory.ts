@@ -15,11 +15,6 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [],
-    name: "CensusNotUpdatable",
-    type: "error",
-  },
-  {
     inputs: [
       {
         internalType: "uint8",
@@ -575,11 +570,6 @@ const _abi = [
             components: [
               {
                 internalType: "bool",
-                name: "census",
-                type: "bool",
-              },
-              {
-                internalType: "bool",
                 name: "status",
                 type: "bool",
               },
@@ -597,6 +587,33 @@ const _abi = [
                 internalType: "bool",
                 name: "maxVoters",
                 type: "bool",
+              },
+              {
+                components: [
+                  {
+                    internalType: "bool",
+                    name: "censusRoot",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "contractAddress",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "censusURI",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "onchainAllowAnyValidRoot",
+                    type: "bool",
+                  },
+                ],
+                internalType: "struct DAVINCITypes.CensusParamsMod",
+                name: "census",
+                type: "tuple",
               },
             ],
             internalType: "struct DAVINCITypes.ParamsMod",
@@ -789,11 +806,6 @@ const _abi = [
         components: [
           {
             internalType: "bool",
-            name: "census",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
             name: "status",
             type: "bool",
           },
@@ -811,6 +823,33 @@ const _abi = [
             internalType: "bool",
             name: "maxVoters",
             type: "bool",
+          },
+          {
+            components: [
+              {
+                internalType: "bool",
+                name: "censusRoot",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "contractAddress",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "censusURI",
+                type: "bool",
+              },
+              {
+                internalType: "bool",
+                name: "onchainAllowAnyValidRoot",
+                type: "bool",
+              },
+            ],
+            internalType: "struct DAVINCITypes.CensusParamsMod",
+            name: "census",
+            type: "tuple",
           },
         ],
         internalType: "struct DAVINCITypes.ParamsMod",
