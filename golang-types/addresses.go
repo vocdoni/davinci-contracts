@@ -61,22 +61,22 @@ const (
 const (
 	OrganizationRegistryUzhAddress = "0xf7bce4546805547be526ca864d6722ed193e51aa"
 
-	ProcessRegistryArbitrumAddress = "0xcd3a20f2c6e3795f53d01878ff021a45b869465b"
-	ProcessRegistryBaseAddress = "0x7fc95feffd076c4c558002b9506560a0c4eb9d31"
-	ProcessRegistryCeloAddress = "0x55ff8d2dc0a77a78c245114a601314de3d06e37a"
-	ProcessRegistrySepoliaAddress = "0x391e551f806b50c108a0d8b64cb251c17450cc81"
+	ProcessRegistryArbitrumAddress = "0x07be3d1bd5b6f843d550e02fd6e8c10764900b12"
+	ProcessRegistryBaseAddress = "0x3d8619755f17a70c9b025e395c34c937e7c0b5ed"
+	ProcessRegistryCeloAddress = "0x22e862f46a82dc425271a5f92806e2e3ebb333ea"
+	ProcessRegistrySepoliaAddress = "0x60402ff7094cb402468d4d48b7c62ad6a4f8c2d9"
 	ProcessRegistryUzhAddress = "0x69b16f67bd2fb18bd720379e9c1ef5ead3872d67"
 
-	ResultsVerifierGroth16ArbitrumAddress = "0x82e4d421452c697babd0d1817047c1f4ec2001ff"
-	ResultsVerifierGroth16BaseAddress = "0x9037569672e9687f86b5e952e90a772d14866abe"
-	ResultsVerifierGroth16CeloAddress = "0xff1609fd4d8c76cb5d69f9cc03fd85359a6a06ad"
-	ResultsVerifierGroth16SepoliaAddress = "0x78b2429c383e8041fde27c3b1ffbeea6967bd738"
+	ResultsVerifierGroth16ArbitrumAddress = "0xa55286cc915ab2b5d457c365871aeb56e4a24fc7"
+	ResultsVerifierGroth16BaseAddress = "0xd2f76c02f50b49fc561c55e618499e24c25b5abd"
+	ResultsVerifierGroth16CeloAddress = "0x8f76ac1eb5ea4097d4fdbce67b5aad6963a43f90"
+	ResultsVerifierGroth16SepoliaAddress = "0x442ca2cc07a861bf0bbdde509cfdfee2caf7de14"
 	ResultsVerifierGroth16UzhAddress = "0x00c7f87731346f592197e49a90ad6ec236ad9985"
 
-	StateTransitionVerifierGroth16ArbitrumAddress = "0x7a5c7796a1c4e8442a0ae57c512e2dcc2f87fba8"
-	StateTransitionVerifierGroth16BaseAddress = "0x0d7638cb675fb79324543d55452503e6c531d28c"
-	StateTransitionVerifierGroth16CeloAddress = "0xb635d96a2321684a025f0813cc6f5596f69324ce"
-	StateTransitionVerifierGroth16SepoliaAddress = "0x3823cf9ad08ca4067d387b4911e448ce72e47611"
+	StateTransitionVerifierGroth16ArbitrumAddress = "0x984997ccd23be8a009e93b19ee29b850a993951d"
+	StateTransitionVerifierGroth16BaseAddress = "0xadac63730781fae76fc81a383d467655bae2c9fa"
+	StateTransitionVerifierGroth16CeloAddress = "0x72ead3241f8ece448bfc146743d934c798289c30"
+	StateTransitionVerifierGroth16SepoliaAddress = "0x036a8b38c03d065e05b3aa03c1612749ba0cf18d"
 	StateTransitionVerifierGroth16UzhAddress = "0x5e4673cd378f05cc3ae25804539c91e711548741"
 
 )
