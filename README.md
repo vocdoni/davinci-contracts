@@ -164,14 +164,23 @@ forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
 
 ### Testnet/Mainnet Deployment
 
-1. Configure network in `.env`:
+1. Configure shared values in `.env` and chain-specific values in `.env.<chain>`.
+
+Shared `.env`:
 
 ```bash
 PRIVATE_KEY=your_deployment_key
+ETHERSCAN_API_KEY=your_explorer_key
+VERIFY_MODE=auto
+DEPLOY_CHAINS=base,sepolia
+```
+
+Chain file, for example `.env.base`:
+
+```bash
 RPC_URL=your_rpc_endpoint
 CHAIN_ID=your_chain_id
 ACTIVATE_BLOBS=True
-VERIFY_MODE=auto
 
 # Optional: reuse already deployed libraries.
 # If any of these are unset or point to an address without bytecode,
@@ -188,6 +197,55 @@ BLOBS_LIB_ADDRESS=
 ```bash
 ./deploy_all.sh
 ```
+
+`deploy_all.sh` loads `.env` first and then uses the currently exported
+single-chain variables. For direct single-chain use, source one chain file into
+your shell first or export the variables manually.
+
+### Multi-Chain Deployment
+
+Use a shared `.env` plus one per-chain file for each target network.
+
+Shared `.env`:
+
+```bash
+PRIVATE_KEY=your_deployment_key
+LOCALHOST_RPC_URL=http://127.0.0.1:8545
+ETHERSCAN_API_KEY=your_explorer_key
+VERIFY_MODE=auto
+DEPLOY_CHAINS=base,sepolia,arbitrum
+```
+
+Per-chain `.env.<chain>` files, for example `.env.base`:
+
+```bash
+CHAIN_ID=8453
+RPC_URL=https://your-base-rpc
+ACTIVATE_BLOBS=False
+
+# Optional per-chain overrides
+ETHERSCAN_API_URL=
+POSEIDON_T3_ADDRESS=
+POSEIDON_T4_ADDRESS=
+STATE_ROOT_LIB_ADDRESS=
+PROCESS_ID_LIB_ADDRESS=
+BLOBS_LIB_ADDRESS=
+```
+
+Then run:
+
+```bash
+./deploy_all_contracts_to_all_chains.sh
+```
+
+The wrapper:
+1. Loads shared values from `.env`
+2. Clears chain-scoped deployment variables
+3. Loads `.env.<chain>` for each chain listed in `DEPLOY_CHAINS`
+4. Falls back to `.env-<chain>` if the dotted filename does not exist
+5. Calls `./deploy_all.sh` once per chain
+
+This means old single-chain values left in `.env` will not bleed into multi-chain runs.
 
 `deploy_all.sh` resolves libraries in this order:
 1. `PoseidonT3`
