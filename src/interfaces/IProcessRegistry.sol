@@ -106,10 +106,6 @@ interface IProcessRegistry {
      */
     error InvalidMinValue();
     /**
-     * @notice InvalidMaxValueSum error is emitted when the maximum value sum of the ballot mode is invalid.
-     */
-    error InvalidMaxValueSum();
-    /**
      * @notice InvalidMinTotalCost error is emitted when the minimum total cost of the ballot mode is invalid.
      */
     error InvalidMinTotalCost();

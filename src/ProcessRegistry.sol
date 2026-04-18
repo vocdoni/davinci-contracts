@@ -392,7 +392,6 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         // validate ballot mode
         if (ballotMode.numFields == 0 || ballotMode.numFields > 8) revert InvalidMaxCount();
         if (ballotMode.groupSize > ballotMode.numFields) revert InvalidGroupSize();
-        if (ballotMode.maxValueSum > 65535) revert InvalidMaxValueSum();
         if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
         if (ballotMode.minValueSum > ballotMode.maxValueSum) revert InvalidValueSumBounds();
 
