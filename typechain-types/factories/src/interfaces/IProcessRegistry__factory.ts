@@ -87,11 +87,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InvalidMaxValueSum",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "InvalidMaxVoters",
     type: "error",
   },
