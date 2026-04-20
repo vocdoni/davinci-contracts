@@ -20,19 +20,15 @@ library StateRootLib {
     uint8 private constant KEY_BALLOT_MODE = 2;
     /// @dev Field key for the encryption key hash leaf.
     uint8 private constant KEY_ENCRYPTION_KEY = 3;
-    /// @dev Field key for the results-add accumulator leaf.
-    uint8 private constant KEY_RESULTS_ADD = 4;
-    /// @dev Field key for the results-sub accumulator leaf.
-    uint8 private constant KEY_RESULTS_SUB = 5;
+    /// @dev Field key for the results accumulator leaf.
+    uint8 private constant KEY_RESULTS = 4;
     /// @dev Field key for the census origin leaf.
     uint8 private constant KEY_CENSUS_ORIGIN = 6;
     /// @dev Domain separator used for all leaf hashes in this tree.
     uint8 private constant LEAF_DOMAIN = 1;
 
-    /// @dev Precomputed leaf hash for the results-add accumulator branch.
-    uint256 private constant LEAF_RESULTS_ADD = 0x1f72c52b6e5dedca4f99ecfa24f2776732431e8d544e14c6f78f5042727c4657;
-    /// @dev Precomputed leaf hash for the results-sub accumulator branch.
-    uint256 private constant LEAF_RESULTS_SUB = 0x2b853c511fba705a6030f80ce83d6ee8cbf4a1273724368728c11682eae4c51a;
+    /// @dev Precomputed leaf hash for the results accumulator branch.
+    uint256 private constant LEAF_RESULTS = 0x1f72c52b6e5dedca4f99ecfa24f2776732431e8d544e14c6f78f5042727c4657;
 
     error BallotModeGroupSizeExceedsNumFields();
     error BallotModeMaxValueTooLarge();
@@ -91,16 +87,14 @@ library StateRootLib {
         uint256 leafProcess = PoseidonT4.hash([KEY_PROCESS_ID, uint256(uint248(processId)), LEAF_DOMAIN]);
         uint256 leafBallotMode = PoseidonT4.hash([KEY_BALLOT_MODE, packedBallotMode, LEAF_DOMAIN]);
         uint256 leafEncKey = PoseidonT4.hash([KEY_ENCRYPTION_KEY, encKeyHash, LEAF_DOMAIN]);
-        uint256 leafResultsAdd = LEAF_RESULTS_ADD;
-        uint256 leafResultsSub = LEAF_RESULTS_SUB;
+        uint256 leafResults = LEAF_RESULTS;
         uint256 leafCensus = PoseidonT4.hash([KEY_CENSUS_ORIGIN, uint256(censusOrigin), LEAF_DOMAIN]);
 
-        uint256 nodeA0 = PoseidonT3.hash([leafProcess, leafResultsAdd]);
+        uint256 nodeA0 = PoseidonT3.hash([leafProcess, leafResults]);
         uint256 nodeA1 = PoseidonT3.hash([leafBallotMode, leafCensus]);
         uint256 nodeA = PoseidonT3.hash([nodeA0, nodeA1]);
-        uint256 nodeB = PoseidonT3.hash([leafResultsSub, leafEncKey]);
 
-        return PoseidonT3.hash([nodeA, nodeB]);
+        return PoseidonT3.hash([nodeA, leafEncKey]);
     }
 
     /**
