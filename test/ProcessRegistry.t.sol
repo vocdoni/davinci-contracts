@@ -931,6 +931,56 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
     }
 
+    function test_NewProcess_RevertsWhenMaxPossibleResultExceedsCap() public {
+        DAVINCITypes.BallotMode memory oversizedBallotMode = DAVINCITypes.BallotMode({
+            costFromWeight: false,
+            uniqueValues: false,
+            numFields: 1,
+            groupSize: 0,
+            costExponent: 1,
+            maxValue: 16,
+            minValue: 0,
+            maxValueSum: 16,
+            minValueSum: 0
+        });
+
+        DAVINCITypes.Census memory cen = DAVINCITypes.Census({
+            onchainAllowAnyValidRoot: false,
+            censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
+        });
+
+        DAVINCITypes.EncryptionKey memory key = DAVINCITypes.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        vm.expectRevert(IProcessRegistry.MaxPossibleResultCapExceeded.selector);
+        processRegistry.newProcess(
+            DAVINCITypes.ProcessStatus.READY,
+            block.timestamp,
+            1000000,
+            62_500_000_001,
+            oversizedBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key
+        );
+    }
+
+    function test_SetProcessMaxVoters_RevertsWhenMaxPossibleResultExceedsCap() public {
+        bytes31 processId = createTestProcess(
+            defaultBallotMode,
+            ROOT_HASH_BEFORE,
+            DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
+
+        vm.expectRevert(IProcessRegistry.MaxPossibleResultCapExceeded.selector);
+        processRegistry.setProcessMaxVoters(processId, 62_500_000_001);
+    }
+
     // ========== Process Duration Tests ==========
 
     function test_SetProcessDuration_Success() public {
