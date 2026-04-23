@@ -90,6 +90,10 @@ interface IProcessRegistry {
      */
     error InvalidMaxVoters();
     /**
+     * @notice MaxPossibleResultCapExceeded error is emitted when the process can exceed the decryption cap.
+     */
+    error MaxPossibleResultCapExceeded();
+    /**
      * @notice MaxVotersReached error is emitted when the maximum number of voters has been reached.
      */
     error MaxVotersReached();
