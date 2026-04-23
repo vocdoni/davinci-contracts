@@ -131,6 +131,11 @@
     },
     {
       "inputs": [],
+      "name": "MaxPossibleResultCapExceeded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "MaxVotersReached",
       "type": "error"
     },

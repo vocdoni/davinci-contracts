@@ -18,6 +18,9 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     using ProcessIdLib for bytes31;
     using BlobsLib for bytes;
 
+    /// @dev Upper bound for the maximum possible decrypted result.
+    uint256 private constant MAX_POSSIBLE_RESULT_CAP = 1_000_000_000_000;
+
     /**
      * @notice The maximum value of the census origin.
      */
@@ -269,6 +272,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         // check valid maxVoters
         if (_maxVoters == 0 || _maxVoters < p.votersCount) revert InvalidMaxVoters();
+        _validateMaxPossibleResultCap(_maxVoters, p.ballotMode.maxValue);
 
         p.maxVoters = _maxVoters;
 
@@ -397,6 +401,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         // validate max voters
         if (maxVoters == 0) revert InvalidMaxVoters();
+        _validateMaxPossibleResultCap(maxVoters, ballotMode.maxValue);
 
         // validate census
         if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
@@ -429,6 +434,16 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
                 || (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED)
         ) {
             revert InvalidStatus();
+        }
+    }
+
+    /**
+     * @dev Rejects processes whose worst-case result could exceed the sequencer's
+     *      bounded decryption search window.
+     */
+    function _validateMaxPossibleResultCap(uint256 maxVoters, uint256 maxValue) private pure {
+        if (maxValue > MAX_POSSIBLE_RESULT_CAP / maxVoters) {
+            revert MaxPossibleResultCapExceeded();
         }
     }
 
