@@ -137,6 +137,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "MaxPossibleResultCapExceeded",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "MaxVotersReached",
     type: "error",
   },
