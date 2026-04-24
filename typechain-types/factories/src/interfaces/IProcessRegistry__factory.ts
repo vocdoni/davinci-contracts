@@ -137,6 +137,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "MaxPossibleResultCapExceeded",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "MaxVotersReached",
     type: "error",
   },
@@ -457,11 +462,6 @@ const _abi = [
             components: [
               {
                 internalType: "bool",
-                name: "costFromWeight",
-                type: "bool",
-              },
-              {
-                internalType: "bool",
                 name: "uniqueValues",
                 type: "bool",
               },
@@ -615,11 +615,6 @@ const _abi = [
       },
       {
         components: [
-          {
-            internalType: "bool",
-            name: "costFromWeight",
-            type: "bool",
-          },
           {
             internalType: "bool",
             name: "uniqueValues",
