@@ -106,8 +106,7 @@ library StateRootLib {
         packed = uint256(ballotMode.numFields);
         packed |= uint256(ballotMode.groupSize) << 8;
         packed |= uint256(ballotMode.uniqueValues ? 1 : 0) << 16;
-        packed |= uint256(ballotMode.costFromWeight ? 1 : 0) << 17;
-        packed |= uint256(ballotMode.costExponent) << 18;
+        packed |= uint256(ballotMode.costExponent) << 17;
 
         // check potential bit bleeding
         if (ballotMode.maxValue > _MAX_48) revert BallotModeMaxValueTooLarge();
@@ -115,9 +114,9 @@ library StateRootLib {
         if (ballotMode.maxValueSum > _MAX_63) revert BallotModeMaxValueSumTooLarge();
         if (ballotMode.minValueSum > _MAX_63) revert BallotModeMinValueSumTooLarge();
 
-        packed |= ballotMode.maxValue << 26;
-        packed |= ballotMode.minValue << 74;
-        packed |= ballotMode.maxValueSum << 122;
-        packed |= ballotMode.minValueSum << 185;
+        packed |= ballotMode.maxValue << 25;
+        packed |= ballotMode.minValue << 73;
+        packed |= ballotMode.maxValueSum << 121;
+        packed |= ballotMode.minValueSum << 184;
     }
 }

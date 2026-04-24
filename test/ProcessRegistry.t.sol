@@ -49,7 +49,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     DAVINCITypes.BallotMode public defaultBallotMode =
         DAVINCITypes.BallotMode({
-            costFromWeight: false,
             uniqueValues: false,
             numFields: 5,
             groupSize: 0,
@@ -797,7 +796,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function test_ValidateBallotMode_ValidCases() public {
         // Test case 1: Basic valid ballot mode
         DAVINCITypes.BallotMode memory validBallotMode1 = DAVINCITypes.BallotMode({
-            costFromWeight: false,
             uniqueValues: false,
             numFields: 1,
             groupSize: 0,
@@ -814,16 +812,15 @@ contract ProcessRegistryTest is Test, TestHelpers {
         );
         assertTrue(processId1 != bytes31(0));
 
-        // Test case 2: Valid ballot with costFromWeight true
+        // Test case 2: Valid ballot with zero maxValueSum
         DAVINCITypes.BallotMode memory validBallotMode2 = DAVINCITypes.BallotMode({
-            costFromWeight: true,
             uniqueValues: true,
             numFields: 5,
             groupSize: 0,
             costExponent: 2,
             maxValue: 100,
             minValue: 1,
-            maxValueSum: 0, // This is valid when costFromWeight is true
+            maxValueSum: 0,
             minValueSum: 0
         });
         bytes31 processId2 = createTestProcess(
@@ -835,7 +832,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
         // Test case 3: Edge case - maxValue equals minValue
         DAVINCITypes.BallotMode memory validBallotMode3 = DAVINCITypes.BallotMode({
-            costFromWeight: false,
             uniqueValues: false,
             numFields: 8,
             groupSize: 0,
@@ -855,7 +851,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_ValidateBallotMode_InvalidMaxCount() public {
         DAVINCITypes.BallotMode memory invalidBallotMode = DAVINCITypes.BallotMode({
-            costFromWeight: false,
             uniqueValues: false,
             numFields: 0, // Invalid: must be >= 1
             groupSize: 0,
@@ -894,7 +889,6 @@ contract ProcessRegistryTest is Test, TestHelpers {
 
     function test_ValidateBallotMode_InvalidValueRange() public {
         DAVINCITypes.BallotMode memory invalidBallotMode = DAVINCITypes.BallotMode({
-            costFromWeight: false,
             uniqueValues: false,
             numFields: 1,
             groupSize: 0,
@@ -1176,7 +1170,11 @@ contract ProcessRegistryTest is Test, TestHelpers {
         inputs[4] = CENSUS_ROOT + 1; // mismatch with process.census.censusRoot
 
         vm.expectRevert(IProcessRegistry.InvalidCensusRoot.selector);
-        processRegistry.submitStateTransition(processId, STATETRANSITION_ABI_PROOF, encodeStateTransitionInputs(inputs));
+        processRegistry.submitStateTransition(
+            processId,
+            STATETRANSITION_ABI_PROOF,
+            encodeStateTransitionInputs(inputs)
+        );
     }
 
     // ========== Process Results Tests ==========
