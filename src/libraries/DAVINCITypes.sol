@@ -30,7 +30,6 @@ library DAVINCITypes {
 
     /**
      * @notice The ballot mode define the parameters of the vote.
-     * @param costFromWeight If weighted census, the ballot weight is used as maxValueSum.
      * @param uniqueValues Choices cannot appear twice or more.
      * @param numFields The maximum number of fields per ballot.
      * @param groupSize Used for multiquestion patterns.
@@ -41,7 +40,6 @@ library DAVINCITypes {
      * @param minValueSum Minimum limit on the total sum of all ballot fields' values. 0 => Not applicable.
      */
     struct BallotMode {
-        bool costFromWeight;
         bool uniqueValues;
         uint8 numFields;
         uint8 groupSize;

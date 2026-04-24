@@ -104,14 +104,14 @@ Defines how votes are cast and counted, see [blog post](https://blog.vocdoni.io/
 
 ```solidity
 struct BallotMode {
-    bool costFromWeight; // Use voter weight as maxTotalCost
-    bool forceUniqueness; // Require unique choices
-    uint8 maxCount; // Max choices per ballot
+    bool uniqueValues; // Require unique choices
+    uint8 numFields; // Max fields per ballot
+    uint8 groupSize; // Group size for multi-question ballots
     uint8 costExponent; // Exponent for cost calculation
     uint256 maxValue; // Maximum value per choice
     uint256 minValue; // Minimum value per choice
-    uint256 maxTotalCost; // Max sum of all choices
-    uint256 minTotalCost; // Min sum of all choices
+    uint256 maxValueSum; // Max sum of all choices
+    uint256 minValueSum; // Min sum of all choices
 }
 ```
 
