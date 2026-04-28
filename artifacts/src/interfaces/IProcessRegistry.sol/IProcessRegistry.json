@@ -451,11 +451,6 @@
               "components": [
                 {
                   "internalType": "bool",
-                  "name": "costFromWeight",
-                  "type": "bool"
-                },
-                {
-                  "internalType": "bool",
                   "name": "uniqueValues",
                   "type": "bool"
                 },
@@ -609,11 +604,6 @@
         },
         {
           "components": [
-            {
-              "internalType": "bool",
-              "name": "costFromWeight",
-              "type": "bool"
-            },
             {
               "internalType": "bool",
               "name": "uniqueValues",

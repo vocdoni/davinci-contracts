@@ -457,11 +457,6 @@ const _abi = [
             components: [
               {
                 internalType: "bool",
-                name: "costFromWeight",
-                type: "bool",
-              },
-              {
-                internalType: "bool",
                 name: "uniqueValues",
                 type: "bool",
               },
@@ -615,11 +610,6 @@ const _abi = [
       },
       {
         components: [
-          {
-            internalType: "bool",
-            name: "costFromWeight",
-            type: "bool",
-          },
           {
             internalType: "bool",
             name: "uniqueValues",

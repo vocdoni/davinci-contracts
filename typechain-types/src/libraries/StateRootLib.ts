@@ -22,7 +22,6 @@ import type {
 
 export declare namespace DAVINCITypes {
   export type BallotModeStruct = {
-    costFromWeight: boolean;
     uniqueValues: boolean;
     numFields: BigNumberish;
     groupSize: BigNumberish;
@@ -34,7 +33,6 @@ export declare namespace DAVINCITypes {
   };
 
   export type BallotModeStructOutput = [
-    costFromWeight: boolean,
     uniqueValues: boolean,
     numFields: bigint,
     groupSize: bigint,
@@ -44,7 +42,6 @@ export declare namespace DAVINCITypes {
     maxValueSum: bigint,
     minValueSum: bigint
   ] & {
-    costFromWeight: boolean;
     uniqueValues: boolean;
     numFields: bigint;
     groupSize: bigint;
