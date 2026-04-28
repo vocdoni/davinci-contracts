@@ -14,8 +14,9 @@ interface IProcessRegistry {
      * @notice Emitted when a new process is created.
      * @param processId The ID of the process.
      * @param creator The address of the creator of the process.
+     * @param stateRoot The initial state root assigned at creation time.
      */
-    event ProcessCreated(bytes31 indexed processId, address indexed creator);
+    event ProcessCreated(bytes31 indexed processId, address indexed creator, uint256 stateRoot);
     /*
      * @notice Emitted when the census of a process is updated.
      * @param processId The ID of the process.

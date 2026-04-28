@@ -159,7 +159,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         processCount++;
         processNonce[sender]++;
 
-        emit ProcessCreated(processId, sender);
+        emit ProcessCreated(processId, sender, p.latestStateRoot);
         return processId;
     }
 

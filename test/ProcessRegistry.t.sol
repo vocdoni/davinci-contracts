@@ -5,6 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { TestHelpers } from "test/TestHelpers.t.sol";
 import { ProcessRegistry } from "../src/ProcessRegistry.sol";
 import { ProcessIdLib } from "../src/libraries/ProcessIdLib.sol";
+import { StateRootLib } from "../src/libraries/StateRootLib.sol";
 import { StateTransitionVerifierGroth16 } from "../src/verifiers/StateTransitionVerifierGroth16.sol";
 import { ResultsVerifierGroth16 } from "../src/verifiers/ResultsVerifierGroth16.sol";
 import { IProcessRegistry } from "../src/interfaces/IProcessRegistry.sol";
@@ -99,6 +100,42 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(processRegistry.getProcess(processId).latestStateRoot, expectedInitStateRoot);
 
         return processId;
+    }
+
+    function test_NewProcess_EmitsInitialStateRoot() public {
+        DAVINCITypes.Census memory cen = DAVINCITypes.Census({
+            onchainAllowAnyValidRoot: false,
+            censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
+            censusRoot: bytes32(CENSUS_ROOT),
+            censusURI: "https://example.com/census",
+            contractAddress: address(0)
+        });
+        DAVINCITypes.EncryptionKey memory key = DAVINCITypes.EncryptionKey({
+            x: uint256(keccak256(abi.encodePacked(block.timestamp, "x"))),
+            y: uint256(keccak256(abi.encodePacked(block.timestamp, "y")))
+        });
+
+        bytes31 processId = ProcessIdLib.computeProcessId(processRegistry.pidPrefix(), address(this), 0);
+        uint256 expectedInitStateRoot = StateRootLib.computeStateRoot(
+            processId,
+            cen.censusOrigin,
+            defaultBallotMode,
+            key
+        );
+
+        vm.expectEmit(true, true, false, true);
+        emit IProcessRegistry.ProcessCreated(processId, address(this), expectedInitStateRoot);
+
+        processRegistry.newProcess(
+            DAVINCITypes.ProcessStatus.READY,
+            block.timestamp,
+            1000,
+            10000,
+            defaultBallotMode,
+            cen,
+            "https://example.com/metadata/",
+            key
+        );
     }
 
     // ========== Process Status Tests ==========
