@@ -210,6 +210,12 @@ const _abi = [
         name: "creator",
         type: "address",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "stateRoot",
+        type: "uint256",
+      },
     ],
     name: "ProcessCreated",
     type: "event",

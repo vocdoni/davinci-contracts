@@ -290,11 +290,20 @@ export namespace CensusUpdatedEvent {
 }
 
 export namespace ProcessCreatedEvent {
-  export type InputTuple = [processId: BytesLike, creator: AddressLike];
-  export type OutputTuple = [processId: string, creator: string];
+  export type InputTuple = [
+    processId: BytesLike,
+    creator: AddressLike,
+    stateRoot: BigNumberish
+  ];
+  export type OutputTuple = [
+    processId: string,
+    creator: string,
+    stateRoot: bigint
+  ];
   export interface OutputObject {
     processId: string;
     creator: string;
+    stateRoot: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -663,7 +672,7 @@ export interface IProcessRegistry extends BaseContract {
       CensusUpdatedEvent.OutputObject
     >;
 
-    "ProcessCreated(bytes31,address)": TypedContractEvent<
+    "ProcessCreated(bytes31,address,uint256)": TypedContractEvent<
       ProcessCreatedEvent.InputTuple,
       ProcessCreatedEvent.OutputTuple,
       ProcessCreatedEvent.OutputObject
