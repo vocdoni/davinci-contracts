@@ -7,4 +7,4 @@
 
 [submodule "lib/poseidon-solidity"]
 	path = lib/poseidon-solidity
-	url = https://github.com/chancehudson/poseidon-solidity
+	url = https://github.com/vocdoni/poseidon-solidity
