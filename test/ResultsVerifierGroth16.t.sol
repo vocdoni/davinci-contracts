@@ -29,7 +29,7 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_OK() public view {
-        rv.verifyProof(proof, proofCommitments, proofCommitmentPok, inputs);
+        rv.verifyProof(RESULTS_ABI_PROOF, RESULTS_ABI_INPUTS);
     }
 
     function test_Verify_OK_ABIEncoded() public view {
@@ -37,8 +37,6 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_Fail() public {
-        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) =
-            decodeProof(RESULTS_ABI_PROOF);
         uint256[9] memory inputBad = [
             ROOT_HASH_AFTER,
             FINAL_RESULTS[0],
@@ -51,7 +49,7 @@ contract ResultsVerifierGroth16Test is Test, TestHelpers {
             999 // Bad input
         ];
         vm.expectRevert();
-        rv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
+        rv.verifyProof(RESULTS_ABI_PROOF, encodeInputs(inputBad));
     }
 
     function test_Encode_Proof() public view {

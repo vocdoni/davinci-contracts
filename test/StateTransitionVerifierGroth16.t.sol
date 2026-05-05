@@ -18,17 +18,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_OK() public view {
-        uint256[8] memory input = [
-            ROOT_HASH_BEFORE,
-            ROOT_HASH_AFTER,
-            VOTERS_COUNT,
-            OVERWRITTEN_VOTES_COUNT,
-            CENSUS_ROOT,
-            BLOBS_COMMITMENT_L1,
-            BLOBS_COMMITMENT_L2,
-            BLOBS_COMMITMENT_L3
-        ];
-        stv.verifyProof(proof, proofCommitments, proofCommitmentPok, input);
+        stv.verifyProof(STATETRANSITION_ABI_PROOF, stateTransitionInputs());
     }
 
     function test_Verify_OK_ABIEncoded() public view {
@@ -36,8 +26,6 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
     }
 
     function test_Verify_Fail() public {
-        (uint256[8] memory _proof, uint256[2] memory _commitments, uint256[2] memory _commitmentPok) =
-            decodeProof(STATETRANSITION_ABI_PROOF);
         uint256[8] memory inputBad = [
             ROOT_HASH_BEFORE,
             ROOT_HASH_AFTER_BAD,
@@ -49,7 +37,7 @@ contract StateTransitionVerifierGroth16Test is Test, TestHelpers {
             BLOBS_COMMITMENT_L3
         ];
         vm.expectRevert();
-        stv.verifyProof(_proof, _commitments, _commitmentPok, inputBad);
+        stv.verifyProof(STATETRANSITION_ABI_PROOF, encodeStateTransitionInputs(inputBad));
     }
 
     function test_Encode_Proof() public view {
