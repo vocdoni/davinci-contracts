@@ -71,16 +71,19 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
     /**
      * @notice Initializes the contract.
-     * @param _chainID The ID of the chain.
      * @param _stVerifier The address of the state transition ZK verifier contract.
      * @param _rVerifier The address of the results ZK verifier contract.
      */
-    constructor(uint32 _chainID, address _stVerifier, address _rVerifier, bool _blobsDA) {
+    constructor(address _stVerifier, address _rVerifier) {
+        uint256 chainId = block.chainid;
+        require(chainId <= type(uint32).max, "CHAIN_ID exceeds uint32");
+
         stVerifier = _stVerifier;
         rVerifier = _rVerifier;
-        chainID = _chainID;
-        blobsDA = _blobsDA;
-        pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
+        // forge-lint: disable-next-line(unsafe-typecast)
+        chainID = uint32(chainId);
+        blobsDA = _supportsBlobData(chainId);
+        pidPrefix = ProcessIdLib.getPrefix(chainID, address(this));
     }
 
     struct StateTransitionBatchProofInputs {
@@ -489,6 +492,12 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @param versionedHash The blob versioned hash
     function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view virtual {
         BlobsLib.verifyBlobDataIsAvailable(versionedHash);
+    }
+
+    /// @notice Returns whether this chain should enforce blob DA checks.
+    /// @dev Keep this as an explicit allowlist so support changes are intentional.
+    function _supportsBlobData(uint256 chainId) internal pure virtual returns (bool) {
+        return chainId == 1 || chainId == 11155111;
     }
 
     /// @notice Decodes state transition batch proof inputs

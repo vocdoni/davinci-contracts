@@ -21,16 +21,15 @@ contract ProcessRegistryMock is ProcessRegistry, TestHelpers {
 
     error BlobNotFoundInTx(bytes32 versionedHash);
 
-    constructor(
-        uint32 _chainID,
-        address _stVerifier,
-        address _rVerifier,
-        bool _blobsDA
-    ) ProcessRegistry(_chainID, _stVerifier, _rVerifier, _blobsDA) {}
+    constructor(address _stVerifier, address _rVerifier) ProcessRegistry(_stVerifier, _rVerifier) {}
 
     // there's no way to verify blob data availability in tests
     function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view override {
         if (!availableBlobs[versionedHash]) revert BlobNotFoundInTx(versionedHash);
+    }
+
+    function setMockBlobsDA(bool enabled) external {
+        blobsDA = enabled;
     }
 
     function setMockBlobDataAvailable(bytes32 versionedHash, bool available) external {
@@ -62,7 +61,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
     function setUp() public {
         stv = new StateTransitionVerifierGroth16();
         rv = new ResultsVerifierGroth16();
-        processRegistry = new ProcessRegistryMock(11155111, address(stv), address(rv), true);
+        processRegistry = new ProcessRegistryMock(address(stv), address(rv));
     }
 
     function createTestProcess(
@@ -107,7 +106,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         vm.expectRevert(IProcessRegistry.InvalidProcessId.selector);
         processRegistry.setProcessStatus(bytes31(0), DAVINCITypes.ProcessStatus.ENDED);
 
-        bytes32 h = keccak256(abi.encodePacked(uint32(11155111), address(processRegistry)));
+        bytes32 h = keccak256(abi.encodePacked(uint32(block.chainid), address(processRegistry)));
         uint32 prefix = uint32(uint256(h));
         bytes31 invalidProcessId = ProcessIdLib.computeProcessId(
             prefix,
@@ -1096,6 +1095,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
         assertEq(process.votersCount, 0);
         assertEq(process.overwrittenVotesCount, 0);
 
+        processRegistry.setMockBlobsDA(true);
         processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
 
         vm.mockCall(KZG_PRECOMPILE, "", abi.encode(FIELD_ELEMENTS_PER_BLOB, BLS_MODULUS));
@@ -1188,6 +1188,7 @@ contract ProcessRegistryTest is Test, TestHelpers {
             DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
         );
 
+        processRegistry.setMockBlobsDA(true);
         processRegistry.setMockBlobDataAvailable(BLOB_VERSIONEDHASH, true);
 
         vm.expectRevert(bytes4(keccak256("CommitmentInvalid()")));

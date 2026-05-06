@@ -7,25 +7,27 @@ import {StateTransitionVerifierGroth16} from "../src/verifiers/StateTransitionVe
 import {ResultsVerifierGroth16} from "../src/verifiers/ResultsVerifierGroth16.sol";
 
 contract DeployAllScript is Script {
+    bytes32 private constant STATE_TRANSITION_VERIFIER_SALT =
+        keccak256("davinci-contracts.state-transition-verifier-groth16");
+    bytes32 private constant RESULTS_VERIFIER_SALT =
+        keccak256("davinci-contracts.results-verifier-groth16");
+    bytes32 private constant PROCESS_REGISTRY_SALT = keccak256("davinci-contracts.process-registry");
+
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployerAddress = vm.addr(deployerPrivateKey);
         console.log("Deployer address:", deployerAddress);
         vm.startBroadcast(deployerPrivateKey);
 
-
-        StateTransitionVerifierGroth16 stv = new StateTransitionVerifierGroth16();
+        StateTransitionVerifierGroth16 stv =
+            new StateTransitionVerifierGroth16{salt: STATE_TRANSITION_VERIFIER_SALT}();
         console.log("StateTransitionVerifierGroth16 deployed at:", address(stv));
 
-        ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
+        ResultsVerifierGroth16 rv = new ResultsVerifierGroth16{salt: RESULTS_VERIFIER_SALT}();
         console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
-        uint256 chainId = vm.envUint("CHAIN_ID");
-        require(chainId <= type(uint32).max, "CHAIN_ID exceeds uint32");
-        // forge-lint: disable-next-line(unsafe-typecast)
-        uint32 chainId32 = uint32(chainId);
-        bool blobs = vm.envBool("ACTIVATE_BLOBS");
-        ProcessRegistry processRegistry = new ProcessRegistry(chainId32, address(stv), address(rv), blobs);
+        ProcessRegistry processRegistry =
+            new ProcessRegistry{salt: PROCESS_REGISTRY_SALT}(address(stv), address(rv));
         console.log("ProcessRegistry deployed at:", address(processRegistry));
 
         vm.stopBroadcast();
