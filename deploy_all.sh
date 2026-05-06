@@ -25,7 +25,7 @@ require_cmd() {
 }
 
 require_cmd forge
-require_cmd cast
+require_cmd node
 
 : "${CHAIN_ID:?CHAIN_ID is not set (env or .env)}"
 : "${RPC_URL:?RPC_URL is not set (env or .env)}"
@@ -71,113 +71,72 @@ if [ "${DEBUG_DEPLOY:-false}" = "true" ]; then
     set -x
 fi
 
-if ! command -v sed >/dev/null 2>&1; then
-    log_error "sed is required but not installed."
-    exit 1
-fi
-
-deploy_library() {
-    local lib_path_name="$1"
-    shift
-    local extra_args=("$@")
+deploy_poseidon_library() {
+    local deploy_module="$1"
+    local target_address=""
     local output=""
-    local address=""
 
-    output=$(FOUNDRY_VIA_IR=false forge create "$lib_path_name" \
-        --chain "$CHAIN_ID" \
-        --rpc-url "$RPC_URL" \
-        --private-key "$PRIVATE_KEY" \
-        --broadcast \
-        "${VERIFY_ARGS[@]}" \
-        "${extra_args[@]}" \
-        --optimize \
-        --optimizer-runs 200 \
-        -vvvv 2>&1)
+    output=$(DEPLOY_MODULE="$deploy_module" RPC_URL="$RPC_URL" PRIVATE_KEY="$PRIVATE_KEY" node <<'NODE'
+const { ethers } = require('ethers');
 
-    echo "$output" >&2
+async function main() {
+  const deployInfo = require(process.env.DEPLOY_MODULE);
+  const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-    address=$(echo "$output" | sed -n 's/.*Deployed to: \(0x[a-fA-F0-9]\{40\}\).*/\1/p' | tail -n1)
-    if [ -z "$address" ]; then
-        log_error "could not parse deployed address for $lib_path_name"
+  if ((await provider.getCode(deployInfo.proxyAddress)) === '0x') {
+    const fundTx = await signer.sendTransaction({
+      to: deployInfo.from,
+      value: ethers.BigNumber.from(deployInfo.gas),
+    });
+    await fundTx.wait();
+
+    const proxyTx = await provider.sendTransaction(deployInfo.tx);
+    await proxyTx.wait();
+  }
+
+  if ((await provider.getCode(deployInfo.address)) === '0x') {
+    const deployTx = await signer.sendTransaction({
+      to: deployInfo.proxyAddress,
+      data: deployInfo.data,
+    });
+    await deployTx.wait();
+  }
+
+  process.stdout.write(`${deployInfo.address}\n`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+NODE
+)
+
+    target_address=$(echo "$output" | tail -n1 | tr -d '\r')
+    if [ -z "$target_address" ]; then
+        log_error "could not deploy $deploy_module"
         exit 1
     fi
 
-    echo "$address"
+    echo "$output" >&2
+    echo "$target_address"
 }
 
-is_deployed_contract() {
-    local address="${1:-}"
-    local code=""
-
-    if [[ ! "$address" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        return 1
-    fi
-
-    if ! code=$(cast code --rpc-url "$RPC_URL" "$address" 2>/dev/null); then
-        return 1
-    fi
-
-    code="${code//[$'\t\r\n ']}"
-    case "$code" in
-        0x|0x0|0x00|"")
-            return 1
-            ;;
-    esac
-
-    return 0
-}
-
-resolve_or_deploy_library() {
-    local var_name="$1"
-    local library_name="$2"
-    local lib_path_name="$3"
-    shift 3
-    local extra_args=("$@")
-    local configured_address="${!var_name:-}"
-    local resolved_address=""
-
-    if [ -n "$configured_address" ]; then
-        if is_deployed_contract "$configured_address"; then
-            resolved_address="$configured_address"
-            log_info "Reusing $library_name from $var_name: $resolved_address"
-        else
-            log_warn "$var_name is set to $configured_address but no bytecode was found. Deploying a new $library_name."
-        fi
-    else
-        log_info "$var_name not set. Deploying $library_name."
-    fi
-
-    if [ -z "$resolved_address" ]; then
-        resolved_address=$(deploy_library "$lib_path_name" "${extra_args[@]}")
-        log_info "$library_name deployed at: $resolved_address"
-    fi
-
-    printf -v "$var_name" "%s" "$resolved_address"
-    export "$var_name"
-
-    log_info "Resolved $library_name address: $resolved_address"
-    echo "export $var_name=$resolved_address"
-}
-
+POSEIDON_T3_MODULE="./lib/poseidon-solidity/deploy/PoseidonT3.js"
+POSEIDON_T4_MODULE="./lib/poseidon-solidity/deploy/PoseidonT4.js"
 POSEIDON_T3_FQ="lib/poseidon-solidity/contracts/PoseidonT3.sol:PoseidonT3"
 POSEIDON_T4_FQ="lib/poseidon-solidity/contracts/PoseidonT4.sol:PoseidonT4"
-STATE_ROOT_LIB_FQ="src/libraries/StateRootLib.sol:StateRootLib"
-PROCESS_ID_LIB_FQ="src/libraries/ProcessIdLib.sol:ProcessIdLib"
-BLOBS_LIB_FQ="src/libraries/BlobsLib.sol:BlobsLib"
 
 log_info "Resolving deployable library addresses..."
 
-resolve_or_deploy_library "POSEIDON_T3_ADDRESS" "PoseidonT3" "$POSEIDON_T3_FQ"
-resolve_or_deploy_library "POSEIDON_T4_ADDRESS" "PoseidonT4" "$POSEIDON_T4_FQ"
+POSEIDON_T3_ADDRESS=$(deploy_poseidon_library "$POSEIDON_T3_MODULE")
+export POSEIDON_T3_ADDRESS
+log_info "PoseidonT3 deployed at: $POSEIDON_T3_ADDRESS"
 
-state_root_create_args=(
-    --libraries "$POSEIDON_T3_FQ:$POSEIDON_T3_ADDRESS"
-    --libraries "$POSEIDON_T4_FQ:$POSEIDON_T4_ADDRESS"
-)
-resolve_or_deploy_library "STATE_ROOT_LIB_ADDRESS" "StateRootLib" "$STATE_ROOT_LIB_FQ" "${state_root_create_args[@]}"
-
-resolve_or_deploy_library "PROCESS_ID_LIB_ADDRESS" "ProcessIdLib" "$PROCESS_ID_LIB_FQ"
-resolve_or_deploy_library "BLOBS_LIB_ADDRESS" "BlobsLib" "$BLOBS_LIB_FQ"
+POSEIDON_T4_ADDRESS=$(deploy_poseidon_library "$POSEIDON_T4_MODULE")
+export POSEIDON_T4_ADDRESS
+log_info "PoseidonT4 deployed at: $POSEIDON_T4_ADDRESS"
 
 log_info "Deploying main contracts with linked libraries..."
 
@@ -188,9 +147,6 @@ forge script script/DeployAll.s.sol:DeployAllScript \
     --slow \
     --libraries "$POSEIDON_T3_FQ:$POSEIDON_T3_ADDRESS" \
     --libraries "$POSEIDON_T4_FQ:$POSEIDON_T4_ADDRESS" \
-    --libraries "$STATE_ROOT_LIB_FQ:$STATE_ROOT_LIB_ADDRESS" \
-    --libraries "$PROCESS_ID_LIB_FQ:$PROCESS_ID_LIB_ADDRESS" \
-    --libraries "$BLOBS_LIB_FQ:$BLOBS_LIB_ADDRESS" \
     --optimize \
     --optimizer-runs 200 \
     "${VERIFY_ARGS[@]}" \

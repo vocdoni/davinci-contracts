@@ -57,9 +57,6 @@ unset_chain_specific_vars() {
     unset ETHERSCAN_API_URL || true
     unset POSEIDON_T3_ADDRESS || true
     unset POSEIDON_T4_ADDRESS || true
-    unset STATE_ROOT_LIB_ADDRESS || true
-    unset PROCESS_ID_LIB_ADDRESS || true
-    unset BLOBS_LIB_ADDRESS || true
 }
 
 source_env_file() {

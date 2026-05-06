@@ -116,6 +116,10 @@ library BlobsLib {
     /// @dev There is no return value. If the function does not revert, the proof was successfully verified.
     /// @param input  Exactly 192 bytes, formatted as above.
     function verifyKZG(bytes memory input) internal view {
+        verifyKZGInternal(input);
+    }
+
+    function verifyKZGInternal(bytes memory input) internal view {
         if (input.length != KZG_INPUT_LENGTH) {
             revert BlobVerificationInvalidInputLength(input.length, KZG_INPUT_LENGTH);
         }
@@ -146,6 +150,10 @@ library BlobsLib {
     /// @notice Checks that blob data is available for the current transaction
     /// @dev Verifies that the blob (identified by versioned hash) exists in the current tx.
     function verifyBlobDataIsAvailable(bytes32 versionedHash) external view {
+        verifyBlobDataIsAvailableInternal(versionedHash);
+    }
+
+    function verifyBlobDataIsAvailableInternal(bytes32 versionedHash) internal view {
         // Probe blobhash(i) until zero sentinel; protocol caps the count to a small number.
         for (uint256 i = 0;; ++i) {
             bytes32 h = blobHash(i);
@@ -187,6 +195,10 @@ library BlobsLib {
     /// @return vh         32‑byte versioned blob hash whose first byte is 0x01
     ///                    and the remaining 31 bytes are SHA‑256(commitment).
     function calcBlobHashV1(bytes memory commitment) external pure returns (bytes32 vh) {
+        return calcBlobHashV1Internal(commitment);
+    }
+
+    function calcBlobHashV1Internal(bytes memory commitment) internal pure returns (bytes32 vh) {
         if (commitment.length == 0) {
             return bytes32(0);
         }

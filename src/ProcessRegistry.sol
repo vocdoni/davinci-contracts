@@ -15,9 +15,6 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
  * @notice This contract is responsible for storing processes data and managing their lifecycle.
  */
 contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
-    using ProcessIdLib for bytes31;
-    using BlobsLib for bytes;
-
     /// @dev Upper bound for the maximum possible decrypted result.
     uint256 private constant MAX_POSSIBLE_RESULT_CAP = 1_000_000_000_000;
 
@@ -83,7 +80,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         // forge-lint: disable-next-line(unsafe-typecast)
         chainID = uint32(chainId);
         blobsDA = _supportsBlobData(chainId);
-        pidPrefix = ProcessIdLib.getPrefix(chainID, address(this));
+        pidPrefix = ProcessIdLib.getPrefixInternal(chainID, address(this));
     }
 
     struct StateTransitionBatchProofInputs {
@@ -120,7 +117,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
     /// @inheritdoc IProcessRegistry
     function getNextProcessId(address organizationId) external view override returns (bytes31) {
-        return ProcessIdLib.computeProcessId(pidPrefix, organizationId, processNonce[organizationId]);
+        return ProcessIdLib.computeProcessIdInternal(pidPrefix, organizationId, processNonce[organizationId]);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -135,7 +132,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.EncryptionKey calldata encryptionKey
     ) external override returns (bytes31) {
         address sender = msg.sender;
-        bytes31 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
+        bytes31 processId = ProcessIdLib.computeProcessIdInternal(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
         _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
@@ -156,7 +153,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.maxVoters = maxVoters;
         p.organizationId = sender;
         p.encryptionKey = encryptionKey;
-        p.latestStateRoot = StateRootLib.computeStateRoot(processId, census.censusOrigin, ballotMode, encryptionKey);
+        p.latestStateRoot = StateRootLib.computeStateRootInternal(processId, census.censusOrigin, ballotMode, encryptionKey);
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
@@ -172,7 +169,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @inheritdoc IProcessRegistry
     function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        if (!ProcessIdLib.hasPrefixInternal(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         if (uint8(newStatus) > MAX_STATUS) revert InvalidStatus();
 
         DAVINCITypes.Process storage p = processes[processId];
@@ -202,7 +199,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @inheritdoc IProcessRegistry
     function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        if (!ProcessIdLib.hasPrefixInternal(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -235,7 +232,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @dev Note that the end time of the process is startTime + duration.
     function setProcessDuration(bytes31 processId, uint256 _duration) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        if (!ProcessIdLib.hasPrefixInternal(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -262,7 +259,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @inheritdoc IProcessRegistry
     function setProcessMaxVoters(bytes31 processId, uint256 _maxVoters) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        if (!ProcessIdLib.hasPrefixInternal(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.organizationId != msg.sender) revert Unauthorized();
@@ -289,7 +286,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         nonReentrant
     {
         if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        if (!ProcessIdLib.hasPrefixInternal(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
         if (p.status != DAVINCITypes.ProcessStatus.READY) revert InvalidStatus();
@@ -321,7 +318,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (blobsDA) {
             bytes memory blobCommitment =
                 _blobCommitmentFromLimbs(st.blobCommitmentLimb0, st.blobCommitmentLimb1, st.blobCommitmentLimb2);
-            bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
+            bytes32 versionedHash = BlobsLib.calcBlobHashV1Internal(blobCommitment);
             _verifyBlobDataIsAvailable(versionedHash);
         }
 
@@ -344,7 +341,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         nonReentrant
     {
         if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        if (!ProcessIdLib.hasPrefixInternal(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         DAVINCITypes.Process storage p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
 
@@ -491,7 +488,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @dev Wrapper for BlobsLib.verifyBlobDataIsAvailable, that can be overridden in tests
     /// @param versionedHash The blob versioned hash
     function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view virtual {
-        BlobsLib.verifyBlobDataIsAvailable(versionedHash);
+        BlobsLib.verifyBlobDataIsAvailableInternal(versionedHash);
     }
 
     /// @notice Returns whether this chain should enforce blob DA checks.

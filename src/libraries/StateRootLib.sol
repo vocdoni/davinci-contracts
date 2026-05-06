@@ -50,6 +50,15 @@ library StateRootLib {
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.EncryptionKey calldata encryptionKey
     ) external pure returns (uint256) {
+        return computeStateRootInternal(processId, censusOrigin, ballotMode, encryptionKey);
+    }
+
+    function computeStateRootInternal(
+        bytes31 processId,
+        DAVINCITypes.CensusOrigin censusOrigin,
+        DAVINCITypes.BallotMode calldata ballotMode,
+        DAVINCITypes.EncryptionKey calldata encryptionKey
+    ) internal pure returns (uint256) {
         return _computeStateRoot(processId, censusOrigin, ballotMode, encryptionKey);
     }
 
@@ -69,6 +78,16 @@ library StateRootLib {
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.EncryptionKey calldata encryptionKey
     ) external pure returns (bool) {
+        return verifyStateRootInternal(expectedRoot, processId, censusOrigin, ballotMode, encryptionKey);
+    }
+
+    function verifyStateRootInternal(
+        uint256 expectedRoot,
+        bytes31 processId,
+        DAVINCITypes.CensusOrigin censusOrigin,
+        DAVINCITypes.BallotMode calldata ballotMode,
+        DAVINCITypes.EncryptionKey calldata encryptionKey
+    ) internal pure returns (bool) {
         return expectedRoot == _computeStateRoot(processId, censusOrigin, ballotMode, encryptionKey);
     }
 
