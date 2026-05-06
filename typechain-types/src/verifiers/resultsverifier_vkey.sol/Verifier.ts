@@ -27,11 +27,7 @@ export interface VerifierInterface extends Interface {
 
   encodeFunctionData(
     functionFragment: "compressProof",
-    values: [
-      BigNumberish[],
-      [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish]
-    ]
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyCompressedProof",
@@ -44,12 +40,7 @@ export interface VerifierInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "verifyProof",
-    values: [
-      BigNumberish[],
-      [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish],
-      BigNumberish[]
-    ]
+    values: [BytesLike, BigNumberish[]]
   ): string;
 
   decodeFunctionResult(
@@ -110,11 +101,7 @@ export interface Verifier extends BaseContract {
   ): Promise<this>;
 
   compressProof: TypedContractMethod<
-    [
-      proof: BigNumberish[],
-      commitments: [BigNumberish, BigNumberish],
-      commitmentPok: [BigNumberish, BigNumberish]
-    ],
+    [proof: BytesLike],
     [
       [[bigint, bigint, bigint, bigint], [bigint], bigint] & {
         compressed: [bigint, bigint, bigint, bigint];
@@ -137,12 +124,7 @@ export interface Verifier extends BaseContract {
   >;
 
   verifyProof: TypedContractMethod<
-    [
-      proof: BigNumberish[],
-      commitments: [BigNumberish, BigNumberish],
-      commitmentPok: [BigNumberish, BigNumberish],
-      input: BigNumberish[]
-    ],
+    [proof: BytesLike, input: BigNumberish[]],
     [void],
     "view"
   >;
@@ -154,11 +136,7 @@ export interface Verifier extends BaseContract {
   getFunction(
     nameOrSignature: "compressProof"
   ): TypedContractMethod<
-    [
-      proof: BigNumberish[],
-      commitments: [BigNumberish, BigNumberish],
-      commitmentPok: [BigNumberish, BigNumberish]
-    ],
+    [proof: BytesLike],
     [
       [[bigint, bigint, bigint, bigint], [bigint], bigint] & {
         compressed: [bigint, bigint, bigint, bigint];
@@ -183,12 +161,7 @@ export interface Verifier extends BaseContract {
   getFunction(
     nameOrSignature: "verifyProof"
   ): TypedContractMethod<
-    [
-      proof: BigNumberish[],
-      commitments: [BigNumberish, BigNumberish],
-      commitmentPok: [BigNumberish, BigNumberish],
-      input: BigNumberish[]
-    ],
+    [proof: BytesLike, input: BigNumberish[]],
     [void],
     "view"
   >;
