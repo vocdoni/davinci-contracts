@@ -6,7 +6,6 @@ package contracts
 // Network constants
 const (
 	SepoliaNetwork  = "sepolia"
-	UzhNetwork      = "uzh"
 	MainnetNetwork  = "mainnet"
 	BaseNetwork     = "base"
 	CeloNetwork     = "celo"
@@ -18,7 +17,6 @@ const (
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
 var AvailableNetworksByName = map[string]uint32{
 	SepoliaNetwork:  11155111,
-	UzhNetwork:      710,
 	CeloNetwork:     42220,
 	MainnetNetwork:  1,
 	BaseNetwork:     8453,
@@ -30,7 +28,6 @@ var AvailableNetworksByName = map[string]uint32{
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
 var AvailableNetworksByID = map[uint32]string{
 	11155111: SepoliaNetwork,
-	710:      UzhNetwork,
 	42220:    CeloNetwork,
 	1:        MainnetNetwork,
 	8453:     BaseNetwork,
@@ -55,50 +52,40 @@ const (
 	SequencerRegistryCeloAddress = "0x0"
 	SequencerRegistryMainnetAddress = "0x0"
 	SequencerRegistrySepoliaAddress = "0x0"
-	SequencerRegistryUzhAddress = "0x0"
 	StateTransitionVerifierGroth16MainnetAddress = "0x0"
 	SequencerRegistryArbitrumAddress = "0x0"
 )
 
 // Contract addresses by network
 const (
-	OrganizationRegistryUzhAddress = "0xf7bce4546805547be526ca864d6722ed193e51aa"
-
 	ProcessRegistryArbSepoliaAddress = "0x00521105ad9666110513c96da26addd40ed8ad41"
 	ProcessRegistryArbitrumAddress = "0xbad2241adcc43a99c20ab8889d0ffff38676e037"
 	ProcessRegistryBaseAddress = "0xbbd53ef3a6452164127383f04bb9453dba6fc318"
 	ProcessRegistryCeloAddress = "0xacdef8016647661a0b577f872f631f42530e992b"
 	ProcessRegistrySepoliaAddress = "0x86850ff64f30476ac73e32f62b7a9018030f92bd"
-	ProcessRegistryUzhAddress = "0x69b16f67bd2fb18bd720379e9c1ef5ead3872d67"
 
 	ResultsVerifierGroth16ArbSepoliaAddress = "0x3d5d26f4874c1f1861dbdea9c229de66a11b6384"
 	ResultsVerifierGroth16ArbitrumAddress = "0x1e1029c0fa56f669bf9d3c60f56a123b237d2da8"
 	ResultsVerifierGroth16BaseAddress = "0x8591ddc629e1b922d07f45d09093ac7b95e9b75b"
 	ResultsVerifierGroth16CeloAddress = "0x71fde508e647d9e8001b631ee13ea305e1e1c284"
 	ResultsVerifierGroth16SepoliaAddress = "0x91b05c6dfc6cb1982436bde9d15cfa42fdb5a05e"
-	ResultsVerifierGroth16UzhAddress = "0x00c7f87731346f592197e49a90ad6ec236ad9985"
 
 	StateTransitionVerifierGroth16ArbSepoliaAddress = "0xe7022d16e28afef952a04cd6bbeadebd7e568a7f"
 	StateTransitionVerifierGroth16ArbitrumAddress = "0x2944fcc09f9ca8eb04934cffa047cf72b61d8f32"
 	StateTransitionVerifierGroth16BaseAddress = "0x054b5c4db2d711d6144db2b6e17ba652447d6bc7"
 	StateTransitionVerifierGroth16CeloAddress = "0xc515537c742fb8a66fc0782ad9d2808eb20a8a37"
 	StateTransitionVerifierGroth16SepoliaAddress = "0xe907249a3a18fd9b29d60914afca6f85eeb2b864"
-	StateTransitionVerifierGroth16UzhAddress = "0x5e4673cd378f05cc3ae25804539c91e711548741"
 
 )
 
 // Contract addresses by network
 var contractAddressesByNetwork = map[string]map[string]string{
-	OrganizationRegistryContract: {
-		UzhNetwork: OrganizationRegistryUzhAddress,
-	},
 	ProcessRegistryContract: {
 		ArbSepoliaNetwork: ProcessRegistryArbSepoliaAddress,
 		ArbitrumNetwork: ProcessRegistryArbitrumAddress,
 		BaseNetwork: ProcessRegistryBaseAddress,
 		CeloNetwork: ProcessRegistryCeloAddress,
 		SepoliaNetwork: ProcessRegistrySepoliaAddress,
-		UzhNetwork: ProcessRegistryUzhAddress,
 	},
 	ResultsVerifierGroth16Contract: {
 		ArbSepoliaNetwork: ResultsVerifierGroth16ArbSepoliaAddress,
@@ -106,7 +93,6 @@ var contractAddressesByNetwork = map[string]map[string]string{
 		BaseNetwork: ResultsVerifierGroth16BaseAddress,
 		CeloNetwork: ResultsVerifierGroth16CeloAddress,
 		SepoliaNetwork: ResultsVerifierGroth16SepoliaAddress,
-		UzhNetwork: ResultsVerifierGroth16UzhAddress,
 	},
 	StateTransitionVerifierGroth16Contract: {
 		ArbSepoliaNetwork: StateTransitionVerifierGroth16ArbSepoliaAddress,
@@ -114,7 +100,6 @@ var contractAddressesByNetwork = map[string]map[string]string{
 		BaseNetwork: StateTransitionVerifierGroth16BaseAddress,
 		CeloNetwork: StateTransitionVerifierGroth16CeloAddress,
 		SepoliaNetwork: StateTransitionVerifierGroth16SepoliaAddress,
-		UzhNetwork: StateTransitionVerifierGroth16UzhAddress,
 	},
 }
 
@@ -151,11 +136,6 @@ func GetAllContractAddresses(network string) map[string]string {
 // GetSepoliaAddresses returns all contract addresses for Sepolia network
 func GetSepoliaAddresses() map[string]string {
 	return GetAllContractAddresses(SepoliaNetwork)
-}
-
-// GetUzhAddresses returns all contract addresses for UZH network
-func GetUzhAddresses() map[string]string {
-	return GetAllContractAddresses(UzhNetwork)
 }
 
 // GetMainnetAddresses returns all contract addresses for Mainnet network

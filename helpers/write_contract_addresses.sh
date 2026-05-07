@@ -40,7 +40,6 @@ package contracts
 // Network constants
 const (
 	SepoliaNetwork  = "sepolia"
-	UzhNetwork      = "uzh"
 	MainnetNetwork  = "mainnet"
 	BaseNetwork     = "base"
 	CeloNetwork     = "celo"
@@ -52,7 +51,6 @@ const (
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
 var AvailableNetworksByName = map[string]uint32{
 	SepoliaNetwork:  11155111,
-	UzhNetwork:      710,
 	CeloNetwork:     42220,
 	MainnetNetwork:  1,
 	BaseNetwork:     8453,
@@ -64,7 +62,6 @@ var AvailableNetworksByName = map[string]uint32{
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
 var AvailableNetworksByID = map[uint32]string{
 	11155111: SepoliaNetwork,
-	710:      UzhNetwork,
 	42220:    CeloNetwork,
 	1:        MainnetNetwork,
 	8453:     BaseNetwork,
@@ -89,7 +86,6 @@ const (
 	SequencerRegistryCeloAddress = "0x0"
 	SequencerRegistryMainnetAddress = "0x0"
 	SequencerRegistrySepoliaAddress = "0x0"
-	SequencerRegistryUzhAddress = "0x0"
 	StateTransitionVerifierGroth16MainnetAddress = "0x0"
 	SequencerRegistryArbitrumAddress = "0x0"
 )
@@ -170,11 +166,6 @@ func GetAllContractAddresses(network string) map[string]string {
 // GetSepoliaAddresses returns all contract addresses for Sepolia network
 func GetSepoliaAddresses() map[string]string {
 	return GetAllContractAddresses(SepoliaNetwork)
-}
-
-// GetUzhAddresses returns all contract addresses for UZH network
-func GetUzhAddresses() map[string]string {
-	return GetAllContractAddresses(UzhNetwork)
 }
 
 // GetMainnetAddresses returns all contract addresses for Mainnet network
