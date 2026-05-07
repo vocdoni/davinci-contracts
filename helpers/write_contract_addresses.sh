@@ -40,34 +40,34 @@ package contracts
 // Network constants
 const (
 	SepoliaNetwork  = "sepolia"
-	UzhNetwork      = "uzh"
 	MainnetNetwork  = "mainnet"
 	BaseNetwork     = "base"
 	CeloNetwork     = "celo"
 	TestNetwork     = "test"
 	ArbitrumNetwork = "arbitrum"
+	ArbSepoliaNetwork = "arb-sepolia"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
 var AvailableNetworksByName = map[string]uint32{
 	SepoliaNetwork:  11155111,
-	UzhNetwork:      710,
 	CeloNetwork:     42220,
 	MainnetNetwork:  1,
 	BaseNetwork:     8453,
 	TestNetwork:     1337, // Local test network
 	ArbitrumNetwork: 42161,
+	ArbSepoliaNetwork: 421614,
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
 var AvailableNetworksByID = map[uint32]string{
 	11155111: SepoliaNetwork,
-	710:      UzhNetwork,
 	42220:    CeloNetwork,
 	1:        MainnetNetwork,
 	8453:     BaseNetwork,
 	1337:     TestNetwork,
 	42161:	  ArbitrumNetwork,
+	421614:   ArbSepoliaNetwork,
 }
 
 // Contract name constants
@@ -86,7 +86,6 @@ const (
 	SequencerRegistryCeloAddress = "0x0"
 	SequencerRegistryMainnetAddress = "0x0"
 	SequencerRegistrySepoliaAddress = "0x0"
-	SequencerRegistryUzhAddress = "0x0"
 	StateTransitionVerifierGroth16MainnetAddress = "0x0"
 	SequencerRegistryArbitrumAddress = "0x0"
 )
@@ -96,16 +95,16 @@ const (
 EOF
 
 # Generate address constants for each contract and network combination
-for contract in $(jq -r 'keys[]' "$JSON_FILE"); do
+	for contract in $(jq -r 'keys[]' "$JSON_FILE"); do
     # Convert contract name to Go constant format (camelCase to PascalCase)
     contract_const=$(echo "$contract" | sed -r 's/(^|_)([a-z])/\U\2/g')
 
-    for network in $(jq -r ".$contract | keys[]" "$JSON_FILE"); do
+    for network in $(jq -r --arg contract "$contract" '.[$contract] | keys[]' "$JSON_FILE"); do
         # Convert network name to Go constant format
-        network_const=$(echo "$network" | sed 's/^./\U&/')
+        network_const=$(echo "$network" | sed -r 's/(^|[-_])([a-z0-9])/\U\2/g')
 
         # Get the address
-        address=$(jq -r ".$contract.$network" "$JSON_FILE")
+        address=$(jq -r --arg contract "$contract" --arg network "$network" '.[$contract][$network]' "$JSON_FILE")
 
         # Generate the constant
         echo "	${contract_const}${network_const}Address = \"$address\"" >> "$OUTPUT_FILE"
@@ -117,71 +116,27 @@ done
 echo ")" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
+# Generate contract address lookup map
+echo "// Contract addresses by network" >> "$OUTPUT_FILE"
+echo "var contractAddressesByNetwork = map[string]map[string]string{" >> "$OUTPUT_FILE"
+for contract in $(jq -r 'keys[]' "$JSON_FILE"); do
+    contract_const=$(echo "$contract" | sed -r 's/(^|_)([a-z])/\U\2/g')
+    echo "	${contract_const}Contract: {" >> "$OUTPUT_FILE"
+    for network in $(jq -r --arg contract "$contract" '.[$contract] | keys[]' "$JSON_FILE"); do
+        network_const=$(echo "$network" | sed -r 's/(^|[-_])([a-z0-9])/\U\2/g')
+        echo "		${network_const}Network: ${contract_const}${network_const}Address," >> "$OUTPUT_FILE"
+    done
+    echo "	}," >> "$OUTPUT_FILE"
+done
+echo "}" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
 # Generate helper functions
 cat >> "$OUTPUT_FILE" << 'EOF'
 // GetContractAddress returns the address for a given contract and network
 func GetContractAddress(contract, network string) string {
-	switch contract {
-	case ProcessRegistryContract:
-		switch network {
-		case SepoliaNetwork:
-			return ProcessRegistrySepoliaAddress
-		case UzhNetwork:
-			return ProcessRegistryUzhAddress
-		case MainnetNetwork:
-			return ProcessRegistryMainnetAddress
-		case BaseNetwork:
-			return ProcessRegistryBaseAddress
-		case CeloNetwork:
-			return ProcessRegistryCeloAddress
-		case ArbitrumNetwork:
-			return ProcessRegistryArbitrumAddress
-		}
-	case StateTransitionVerifierGroth16Contract:
-		switch network {
-		case SepoliaNetwork:
-			return StateTransitionVerifierGroth16SepoliaAddress
-		case UzhNetwork:
-			return StateTransitionVerifierGroth16UzhAddress
-		case MainnetNetwork:
-			return StateTransitionVerifierGroth16MainnetAddress
-		case BaseNetwork:
-			return StateTransitionVerifierGroth16BaseAddress
-		case CeloNetwork:
-			return StateTransitionVerifierGroth16CeloAddress
-		case ArbitrumNetwork:
-			return StateTransitionVerifierGroth16ArbitrumAddress
-		}
-	case ResultsVerifierGroth16Contract:
-		switch network {
-		case SepoliaNetwork:
-			return ResultsVerifierGroth16SepoliaAddress
-		case UzhNetwork:
-			return ResultsVerifierGroth16UzhAddress
-		case MainnetNetwork:
-			return ResultsVerifierGroth16MainnetAddress
-		case BaseNetwork:
-			return ResultsVerifierGroth16BaseAddress
-		case CeloNetwork:
-			return ResultsVerifierGroth16CeloAddress
-		case ArbitrumNetwork:
-			return ResultsVerifierGroth16ArbitrumAddress
-		}
-	case SequencerRegistryContract:
-		switch network {
-		case SepoliaNetwork:
-			return SequencerRegistrySepoliaAddress
-		case UzhNetwork:
-			return SequencerRegistryUzhAddress
-		case MainnetNetwork:
-			return SequencerRegistryMainnetAddress
-		case BaseNetwork:
-			return SequencerRegistryBaseAddress
-		case CeloNetwork:
-			return SequencerRegistryCeloAddress
-		case ArbitrumNetwork:
-			return SequencerRegistryArbitrumAddress
-		}
+	if networks, ok := contractAddressesByNetwork[contract]; ok {
+		return networks[network]
 	}
 	return ""
 }
@@ -198,8 +153,10 @@ func GetAllContractAddresses(network string) map[string]string {
 	}
 
 	for _, contract := range contracts {
-		if addr := GetContractAddress(contract, network); addr != "" && addr != "0x0" {
-			addresses[contract] = addr
+		if networks, ok := contractAddressesByNetwork[contract]; ok {
+			if addr, ok := networks[network]; ok && addr != "" && addr != "0x0" {
+				addresses[contract] = addr
+			}
 		}
 	}
 
@@ -209,11 +166,6 @@ func GetAllContractAddresses(network string) map[string]string {
 // GetSepoliaAddresses returns all contract addresses for Sepolia network
 func GetSepoliaAddresses() map[string]string {
 	return GetAllContractAddresses(SepoliaNetwork)
-}
-
-// GetUzhAddresses returns all contract addresses for UZH network
-func GetUzhAddresses() map[string]string {
-	return GetAllContractAddresses(UzhNetwork)
 }
 
 // GetMainnetAddresses returns all contract addresses for Mainnet network
@@ -229,6 +181,11 @@ func GetBaseAddresses() map[string]string {
 // GetCeloAddresses returns all contract addresses for Celo network
 func GetCeloAddresses() map[string]string {
 	return GetAllContractAddresses(CeloNetwork)
+}
+
+// GetArbSepoliaAddresses returns all contract addresses for Arbitrum Sepolia network
+func GetArbSepoliaAddresses() map[string]string {
+	return GetAllContractAddresses(ArbSepoliaNetwork)
 }
 EOF
 
