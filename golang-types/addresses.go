@@ -12,6 +12,7 @@ const (
 	CeloNetwork     = "celo"
 	TestNetwork     = "test"
 	ArbitrumNetwork = "arbitrum"
+	ArbSepoliaNetwork = "arb-sepolia"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
@@ -23,6 +24,7 @@ var AvailableNetworksByName = map[string]uint32{
 	BaseNetwork:     8453,
 	TestNetwork:     1337, // Local test network
 	ArbitrumNetwork: 42161,
+	ArbSepoliaNetwork: 421614,
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
@@ -34,6 +36,7 @@ var AvailableNetworksByID = map[uint32]string{
 	8453:     BaseNetwork,
 	1337:     TestNetwork,
 	42161:	  ArbitrumNetwork,
+	421614:   ArbSepoliaNetwork,
 }
 
 // Contract name constants
@@ -61,18 +64,21 @@ const (
 const (
 	OrganizationRegistryUzhAddress = "0xf7bce4546805547be526ca864d6722ed193e51aa"
 
+	ProcessRegistryArbSepoliaAddress = "0x00521105ad9666110513c96da26addd40ed8ad41"
 	ProcessRegistryArbitrumAddress = "0xbad2241adcc43a99c20ab8889d0ffff38676e037"
 	ProcessRegistryBaseAddress = "0xbbd53ef3a6452164127383f04bb9453dba6fc318"
 	ProcessRegistryCeloAddress = "0xacdef8016647661a0b577f872f631f42530e992b"
 	ProcessRegistrySepoliaAddress = "0x86850ff64f30476ac73e32f62b7a9018030f92bd"
 	ProcessRegistryUzhAddress = "0x69b16f67bd2fb18bd720379e9c1ef5ead3872d67"
 
+	ResultsVerifierGroth16ArbSepoliaAddress = "0x3d5d26f4874c1f1861dbdea9c229de66a11b6384"
 	ResultsVerifierGroth16ArbitrumAddress = "0x1e1029c0fa56f669bf9d3c60f56a123b237d2da8"
 	ResultsVerifierGroth16BaseAddress = "0x8591ddc629e1b922d07f45d09093ac7b95e9b75b"
 	ResultsVerifierGroth16CeloAddress = "0x71fde508e647d9e8001b631ee13ea305e1e1c284"
 	ResultsVerifierGroth16SepoliaAddress = "0x91b05c6dfc6cb1982436bde9d15cfa42fdb5a05e"
 	ResultsVerifierGroth16UzhAddress = "0x00c7f87731346f592197e49a90ad6ec236ad9985"
 
+	StateTransitionVerifierGroth16ArbSepoliaAddress = "0xe7022d16e28afef952a04cd6bbeadebd7e568a7f"
 	StateTransitionVerifierGroth16ArbitrumAddress = "0x2944fcc09f9ca8eb04934cffa047cf72b61d8f32"
 	StateTransitionVerifierGroth16BaseAddress = "0x054b5c4db2d711d6144db2b6e17ba652447d6bc7"
 	StateTransitionVerifierGroth16CeloAddress = "0xc515537c742fb8a66fc0782ad9d2808eb20a8a37"
@@ -81,69 +87,41 @@ const (
 
 )
 
+// Contract addresses by network
+var contractAddressesByNetwork = map[string]map[string]string{
+	OrganizationRegistryContract: {
+		UzhNetwork: OrganizationRegistryUzhAddress,
+	},
+	ProcessRegistryContract: {
+		ArbSepoliaNetwork: ProcessRegistryArbSepoliaAddress,
+		ArbitrumNetwork: ProcessRegistryArbitrumAddress,
+		BaseNetwork: ProcessRegistryBaseAddress,
+		CeloNetwork: ProcessRegistryCeloAddress,
+		SepoliaNetwork: ProcessRegistrySepoliaAddress,
+		UzhNetwork: ProcessRegistryUzhAddress,
+	},
+	ResultsVerifierGroth16Contract: {
+		ArbSepoliaNetwork: ResultsVerifierGroth16ArbSepoliaAddress,
+		ArbitrumNetwork: ResultsVerifierGroth16ArbitrumAddress,
+		BaseNetwork: ResultsVerifierGroth16BaseAddress,
+		CeloNetwork: ResultsVerifierGroth16CeloAddress,
+		SepoliaNetwork: ResultsVerifierGroth16SepoliaAddress,
+		UzhNetwork: ResultsVerifierGroth16UzhAddress,
+	},
+	StateTransitionVerifierGroth16Contract: {
+		ArbSepoliaNetwork: StateTransitionVerifierGroth16ArbSepoliaAddress,
+		ArbitrumNetwork: StateTransitionVerifierGroth16ArbitrumAddress,
+		BaseNetwork: StateTransitionVerifierGroth16BaseAddress,
+		CeloNetwork: StateTransitionVerifierGroth16CeloAddress,
+		SepoliaNetwork: StateTransitionVerifierGroth16SepoliaAddress,
+		UzhNetwork: StateTransitionVerifierGroth16UzhAddress,
+	},
+}
+
 // GetContractAddress returns the address for a given contract and network
 func GetContractAddress(contract, network string) string {
-	switch contract {
-	case ProcessRegistryContract:
-		switch network {
-		case SepoliaNetwork:
-			return ProcessRegistrySepoliaAddress
-		case UzhNetwork:
-			return ProcessRegistryUzhAddress
-		case MainnetNetwork:
-			return ProcessRegistryMainnetAddress
-		case BaseNetwork:
-			return ProcessRegistryBaseAddress
-		case CeloNetwork:
-			return ProcessRegistryCeloAddress
-		case ArbitrumNetwork:
-			return ProcessRegistryArbitrumAddress
-		}
-	case StateTransitionVerifierGroth16Contract:
-		switch network {
-		case SepoliaNetwork:
-			return StateTransitionVerifierGroth16SepoliaAddress
-		case UzhNetwork:
-			return StateTransitionVerifierGroth16UzhAddress
-		case MainnetNetwork:
-			return StateTransitionVerifierGroth16MainnetAddress
-		case BaseNetwork:
-			return StateTransitionVerifierGroth16BaseAddress
-		case CeloNetwork:
-			return StateTransitionVerifierGroth16CeloAddress
-		case ArbitrumNetwork:
-			return StateTransitionVerifierGroth16ArbitrumAddress
-		}
-	case ResultsVerifierGroth16Contract:
-		switch network {
-		case SepoliaNetwork:
-			return ResultsVerifierGroth16SepoliaAddress
-		case UzhNetwork:
-			return ResultsVerifierGroth16UzhAddress
-		case MainnetNetwork:
-			return ResultsVerifierGroth16MainnetAddress
-		case BaseNetwork:
-			return ResultsVerifierGroth16BaseAddress
-		case CeloNetwork:
-			return ResultsVerifierGroth16CeloAddress
-		case ArbitrumNetwork:
-			return ResultsVerifierGroth16ArbitrumAddress
-		}
-	case SequencerRegistryContract:
-		switch network {
-		case SepoliaNetwork:
-			return SequencerRegistrySepoliaAddress
-		case UzhNetwork:
-			return SequencerRegistryUzhAddress
-		case MainnetNetwork:
-			return SequencerRegistryMainnetAddress
-		case BaseNetwork:
-			return SequencerRegistryBaseAddress
-		case CeloNetwork:
-			return SequencerRegistryCeloAddress
-		case ArbitrumNetwork:
-			return SequencerRegistryArbitrumAddress
-		}
+	if networks, ok := contractAddressesByNetwork[contract]; ok {
+		return networks[network]
 	}
 	return ""
 }
@@ -160,8 +138,10 @@ func GetAllContractAddresses(network string) map[string]string {
 	}
 
 	for _, contract := range contracts {
-		if addr := GetContractAddress(contract, network); addr != "" && addr != "0x0" {
-			addresses[contract] = addr
+		if networks, ok := contractAddressesByNetwork[contract]; ok {
+			if addr, ok := networks[network]; ok && addr != "" && addr != "0x0" {
+				addresses[contract] = addr
+			}
 		}
 	}
 
@@ -191,4 +171,9 @@ func GetBaseAddresses() map[string]string {
 // GetCeloAddresses returns all contract addresses for Celo network
 func GetCeloAddresses() map[string]string {
 	return GetAllContractAddresses(CeloNetwork)
+}
+
+// GetArbSepoliaAddresses returns all contract addresses for Arbitrum Sepolia network
+func GetArbSepoliaAddresses() map[string]string {
+	return GetAllContractAddresses(ArbSepoliaNetwork)
 }
