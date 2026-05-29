@@ -7,19 +7,50 @@ import {
 } from "zk-kit.solidity/packages/lean-imt/contracts/InternalLeanIMT.sol";
 
 import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
+import {IProofVerifier} from "./verifiers/IProofVerifier.sol";
 
 /// @notice Census contract for Vocdoni zkPassport voting.
-/// @dev The trusted backend (passport-prover server) is the sole caller of register().
-///      It verifies the zkPassport outer proof off-chain and pays gas on behalf of voters.
-///      Enforces one-passport-per-registration via nullifier uniqueness.
-///      Implements ICensusValidator so davinci-node can validate census roots.
-contract TrustedCensus is ICensusValidator {
+///
+/// @dev The backend (passport-prover server) aggregates a zkPassport outer proof
+///      and calls register() here. The contract verifies the UltraHonk proof using
+///      an on-chain Barretenberg verifier (e.g. OuterCount4) rather than trusting
+///      the backend to produce valid data.
+///
+///      Outer proof public inputs layout (8 elements for the minimal-default circuit):
+///        [0] certificate_registry_root
+///        [1] circuit_registry_root
+///        [2] current_date
+///        [3] service_scope     — hash of the service scope string
+///        [4] service_subscope  — hash of the service subscope string
+///        [5] param_commitments[0] — commitment to query params + disclosure outputs
+///        [6] nullifier_type
+///        [7] scoped_nullifier  ← nullifier used for double-registration prevention
+///
+///      Residual trust: `account` is passed by the backend and extracted from the
+///      inner bind_evm disclosure proof (not directly verifiable from the outer public
+///      inputs). V3 improvement: encode address(this) as service_subscope so
+///      publicInputs[4] can be verified on-chain against the caller's address.
+///
+///      The TRUSTED_BACKEND restriction is kept to prevent address front-running:
+///      only the known backend relayer may provide the account parameter.
+contract ZKPassportCensus is ICensusValidator {
     using InternalLeanIMT for LeanIMTData;
+
+    // ====================================================
+    // Constants
+    // ====================================================
+
+    /// @dev Index of scoped_nullifier in the outer proof public inputs.
+    uint256 private constant NULLIFIER_INPUT_INDEX = 7;
+
+    /// @dev Expected number of public inputs for the minimal-default-0.16.0 circuit.
+    uint256 private constant EXPECTED_PUBLIC_INPUTS = 8;
 
     // ====================================================
     // State
     // ====================================================
 
+    IProofVerifier public immutable VERIFIER;
     address public immutable TRUSTED_BACKEND;
 
     LeanIMTData private _tree;
@@ -27,7 +58,6 @@ contract TrustedCensus is ICensusValidator {
     mapping(address => uint88) public weightOf;
     mapping(uint256 => bool) public nullifierUsed;
 
-    // Root history: circular buffer of the last ROOT_HISTORY_SIZE replaced roots.
     uint256 private constant ROOT_HISTORY_SIZE = 100;
     uint256 private _currentRoot;
     uint256[ROOT_HISTORY_SIZE] private _historyRoots;
@@ -46,6 +76,8 @@ contract TrustedCensus is ICensusValidator {
     );
 
     error NotTrustedBackend();
+    error InvalidProof();
+    error InvalidPublicInputCount();
     error NullifierAlreadyUsed();
     error AlreadyRegistered();
 
@@ -53,8 +85,12 @@ contract TrustedCensus is ICensusValidator {
     // Constructor
     // ====================================================
 
-    constructor(address _TRUSTED_BACKEND) {
-        TRUSTED_BACKEND = _TRUSTED_BACKEND;
+    /// @param verifier  On-chain UltraHonk verifier for the outer zkPassport circuit
+    ///                  (e.g. the OuterCount4 contract).
+    /// @param backend   Address of the trusted backend relayer that calls register().
+    constructor(IProofVerifier verifier, address backend) {
+        VERIFIER = verifier;
+        TRUSTED_BACKEND = backend;
         _currentRoot = _tree._root();
     }
 
@@ -62,18 +98,26 @@ contract TrustedCensus is ICensusValidator {
     // Registration
     // ====================================================
 
-    /// @notice Register a voter who has proven their zkPassport to the backend.
-    /// @param account  Voter's Ethereum address (bound via the bind_evm circuit).
-    /// @param nullifier Scoped nullifier from the zkPassport disclosure proof.
-    function register(address account, uint256 nullifier) external {
+    /// @notice Register a voter whose zkPassport outer proof has been verified.
+    /// @param account       Voter's Ethereum address (from the bind_evm inner proof).
+    /// @param proof         Outer UltraHonk proof bytes from the prover-cli.
+    /// @param publicInputs  8 public inputs of the outer proof (see layout above).
+    function register(
+        address account,
+        bytes calldata proof,
+        bytes32[] calldata publicInputs
+    ) external {
         if (msg.sender != TRUSTED_BACKEND) revert NotTrustedBackend();
+        if (publicInputs.length != EXPECTED_PUBLIC_INPUTS) revert InvalidPublicInputCount();
+        if (!VERIFIER.verify(proof, publicInputs)) revert InvalidProof();
+
+        uint256 nullifier = uint256(publicInputs[NULLIFIER_INPUT_INDEX]);
         if (nullifierUsed[nullifier]) revert NullifierAlreadyUsed();
         if (weightOf[account] != 0) revert AlreadyRegistered();
 
         nullifierUsed[nullifier] = true;
         weightOf[account] = 1;
 
-        // Leaf is the voter's address cast to uint256 (weight always 1).
         uint256 leaf = uint256(uint160(account));
         uint256 newRoot = _insertAndRotateRoot(leaf);
 
@@ -124,7 +168,6 @@ contract TrustedCensus is ICensusValidator {
 
         uint256 oldRoot = _currentRoot;
         if (oldRoot != 0 && oldRoot != newRoot) {
-            // Evict oldest entry from circular buffer before overwriting.
             uint256 evicted = _historyRoots[_historyIndex];
             if (evicted != 0) {
                 delete _rootLastValidBlock[evicted];
