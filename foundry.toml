@@ -13,6 +13,9 @@ optimizer_runs = 200
 via_ir = true
 extra_output = ["storageLayout"]
 cache_path = "cache_forge"
+# OuterCount4 uses assembly incompatible with via_ir=true; exclude from default build.
+# Deploy it separately using the solidity-check project in vocdoni-passport-prover.
+exclude = ["src/verifiers/OuterCount4.sol"]
 
 [fuzz]
 runs = 5000
@@ -25,5 +28,25 @@ uzh = "${UZH_RPC_URL}"
 
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
+
+# deploy profile: disables via_ir to work around stack-too-deep in the
+# Barretenberg UltraHonk verifier (OuterCount4). The verifier uses a large
+# inline Yul assembly block without memoryguard; the Yul optimizer's stack
+# scheduler cannot handle it when via_ir=true.
+[profile.deploy]
+solc_version = "0.8.28"
+evm_version = "cancun"
+src = "src"
+out = "out"
+test = "test"
+libs = ["lib"]
+ffi = true
+ast = true
+build_info = true
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+extra_output = ["storageLayout"]
+cache_path = "cache_forge"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
