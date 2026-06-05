@@ -16,15 +16,17 @@ import {IProofVerifier} from "./verifiers/IProofVerifier.sol";
 ///      an on-chain Barretenberg verifier (e.g. OuterCount4) rather than trusting
 ///      the backend to produce valid data.
 ///
-///      Outer proof public inputs layout (8 elements for the minimal-default circuit):
+///      Outer proof public inputs layout (9 elements for minimal-default-0.18.0
+///      outer_evm_count_4 — DSC + IDData + Integrity + bind_evm, 1 disclosure):
 ///        [0] certificate_registry_root
 ///        [1] circuit_registry_root
 ///        [2] current_date
 ///        [3] service_scope     — hash of the service scope string
 ///        [4] service_subscope  — hash of the service subscope string
-///        [5] param_commitments[0] — commitment to query params + disclosure outputs
+///        [5] param_commitments[0] — commitment to bind_evm disclosure outputs
 ///        [6] nullifier_type
 ///        [7] scoped_nullifier  ← nullifier used for double-registration prevention
+///        [8] oprf_pk_hash
 ///
 ///      Residual trust: `account` is passed by the backend and extracted from the
 ///      inner bind_evm disclosure proof (not directly verifiable from the outer public
@@ -43,8 +45,8 @@ contract ZKPassportCensus is ICensusValidator {
     /// @dev Index of scoped_nullifier in the outer proof public inputs.
     uint256 private constant NULLIFIER_INPUT_INDEX = 7;
 
-    /// @dev Expected number of public inputs for the minimal-default-0.16.0 circuit.
-    uint256 private constant EXPECTED_PUBLIC_INPUTS = 8;
+    /// @dev Expected number of public inputs for minimal-default-0.18.0 outer_evm_count_4.
+    uint256 private constant EXPECTED_PUBLIC_INPUTS = 9;
 
     // ====================================================
     // State
