@@ -4,3 +4,4 @@ forge-std/=lib/forge-std/src/
 halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
 poseidon-solidity/=lib/poseidon-solidity/contracts/
+zk-kit.solidity/=lib/zk-kit.solidity/
