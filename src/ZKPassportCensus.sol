@@ -16,15 +16,19 @@ import {IProofVerifier} from "./verifiers/IProofVerifier.sol";
 ///      an on-chain Barretenberg verifier (e.g. OuterCount4) rather than trusting
 ///      the backend to produce valid data.
 ///
-///      Outer proof public inputs layout (8 elements for the minimal-default circuit):
+///      Outer proof public inputs layout (outer_evm_count_N, N = number of inner circuits):
 ///        [0] certificate_registry_root
 ///        [1] circuit_registry_root
 ///        [2] current_date
 ///        [3] service_scope     — hash of the service scope string
 ///        [4] service_subscope  — hash of the service subscope string
-///        [5] param_commitments[0] — commitment to query params + disclosure outputs
-///        [6] nullifier_type
-///        [7] scoped_nullifier  ← nullifier used for double-registration prevention
+///        [5..len-4] param_commitments — one per disclosure circuit
+///        [len-3] nullifier_type
+///        [len-2] scoped_nullifier  ← nullifier used for double-registration prevention
+///        [len-1] oprf_pk_hash
+///
+///      For outer_evm_count_4 (9 inputs): NULLIFIER_INPUT_INDEX = 7
+///      For outer_evm_count_5 (10 inputs): NULLIFIER_INPUT_INDEX = 8
 ///
 ///      Residual trust: `account` is passed by the backend and extracted from the
 ///      inner bind_evm disclosure proof (not directly verifiable from the outer public
@@ -40,11 +44,11 @@ contract ZKPassportCensus is ICensusValidator {
     // Constants
     // ====================================================
 
-    /// @dev Index of scoped_nullifier in the outer proof public inputs.
-    uint256 private constant NULLIFIER_INPUT_INDEX = 7;
+    /// @dev Index of scoped_nullifier in the outer proof public inputs (constructor-set).
+    uint256 public immutable NULLIFIER_INPUT_INDEX;
 
-    /// @dev Expected number of public inputs for the minimal-default-0.16.0 circuit.
-    uint256 private constant EXPECTED_PUBLIC_INPUTS = 8;
+    /// @dev Expected number of public inputs (constructor-set for the deployed OuterCount variant).
+    uint256 public immutable EXPECTED_PUBLIC_INPUTS;
 
     // ====================================================
     // State
@@ -85,12 +89,22 @@ contract ZKPassportCensus is ICensusValidator {
     // Constructor
     // ====================================================
 
-    /// @param verifier  On-chain UltraHonk verifier for the outer zkPassport circuit
-    ///                  (e.g. the OuterCount4 contract).
-    /// @param backend   Address of the trusted backend relayer that calls register().
-    constructor(IProofVerifier verifier, address backend) {
+    /// @param verifier              On-chain UltraHonk verifier for the outer zkPassport circuit.
+    /// @param backend               Address of the trusted backend relayer that calls register().
+    /// @param expectedPublicInputs  Total public input count for the deployed OuterCount variant
+    ///                              (9 for outer_evm_count_4, 10 for outer_evm_count_5, etc.).
+    /// @param nullifierInputIndex   Index of scoped_nullifier in the public inputs array
+    ///                              (always expectedPublicInputs - 2).
+    constructor(
+        IProofVerifier verifier,
+        address backend,
+        uint256 expectedPublicInputs,
+        uint256 nullifierInputIndex
+    ) {
         VERIFIER = verifier;
         TRUSTED_BACKEND = backend;
+        EXPECTED_PUBLIC_INPUTS = expectedPublicInputs;
+        NULLIFIER_INPUT_INDEX = nullifierInputIndex;
         _currentRoot = _tree._root();
     }
 
