@@ -24,13 +24,6 @@ import type {
 } from "../../common";
 
 export declare namespace DAVINCITypes {
-  export type EncryptionKeyStruct = { x: BigNumberish; y: BigNumberish };
-
-  export type EncryptionKeyStructOutput = [x: bigint, y: bigint] & {
-    x: bigint;
-    y: bigint;
-  };
-
   export type BallotModeStruct = {
     uniqueValues: boolean;
     numFields: BigNumberish;
@@ -62,6 +55,13 @@ export declare namespace DAVINCITypes {
     minValueSum: bigint;
   };
 
+  export type EncryptionKeyStruct = { x: BigNumberish; y: BigNumberish };
+
+  export type EncryptionKeyStructOutput = [x: bigint, y: bigint] & {
+    x: bigint;
+    y: bigint;
+  };
+
   export type CensusStruct = {
     censusOrigin: BigNumberish;
     censusRoot: BytesLike;
@@ -88,7 +88,7 @@ export declare namespace DAVINCITypes {
     status: BigNumberish;
     organizationId: AddressLike;
     encryptionKey: DAVINCITypes.EncryptionKeyStruct;
-    latestStateRoot: BigNumberish;
+    latestStateRoot: BytesLike;
     result: BigNumberish[];
     startTime: BigNumberish;
     duration: BigNumberish;
@@ -106,7 +106,7 @@ export declare namespace DAVINCITypes {
     status: bigint,
     organizationId: string,
     encryptionKey: DAVINCITypes.EncryptionKeyStructOutput,
-    latestStateRoot: bigint,
+    latestStateRoot: string,
     result: bigint[],
     startTime: bigint,
     duration: bigint,
@@ -122,7 +122,7 @@ export declare namespace DAVINCITypes {
     status: bigint;
     organizationId: string;
     encryptionKey: DAVINCITypes.EncryptionKeyStructOutput;
-    latestStateRoot: bigint;
+    latestStateRoot: string;
     result: bigint[];
     startTime: bigint;
     duration: bigint;
@@ -140,6 +140,7 @@ export declare namespace DAVINCITypes {
 export interface IProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "genesisRoot"
       | "getNextProcessId"
       | "getProcess"
       | "getProcessEndTime"
@@ -165,6 +166,15 @@ export interface IProcessRegistryInterface extends Interface {
       | "ProcessStatusChanged"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "genesisRoot",
+    values: [
+      BytesLike,
+      DAVINCITypes.BallotModeStruct,
+      DAVINCITypes.EncryptionKeyStruct,
+      BigNumberish
+    ]
+  ): string;
   encodeFunctionData(
     functionFragment: "getNextProcessId",
     values: [AddressLike]
@@ -220,9 +230,20 @@ export interface IProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "submitStateTransition",
-    values: [BytesLike, BytesLike, BytesLike]
+    values: [
+      BytesLike,
+      BytesLike,
+      BytesLike,
+      BytesLike[],
+      BytesLike[],
+      BytesLike[]
+    ]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "genesisRoot",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getNextProcessId",
     data: BytesLike
@@ -354,26 +375,29 @@ export namespace ProcessStateTransitionedEvent {
   export type InputTuple = [
     processId: BytesLike,
     sender: AddressLike,
-    oldStateRoot: BigNumberish,
-    newStateRoot: BigNumberish,
+    oldStateRoot: BytesLike,
+    newStateRoot: BytesLike,
     newVotersCount: BigNumberish,
-    newOverwrittenVotesCount: BigNumberish
+    newOverwrittenVotesCount: BigNumberish,
+    nBlobs: BigNumberish
   ];
   export type OutputTuple = [
     processId: string,
     sender: string,
-    oldStateRoot: bigint,
-    newStateRoot: bigint,
+    oldStateRoot: string,
+    newStateRoot: string,
     newVotersCount: bigint,
-    newOverwrittenVotesCount: bigint
+    newOverwrittenVotesCount: bigint,
+    nBlobs: bigint
   ];
   export interface OutputObject {
     processId: string;
     sender: string;
-    oldStateRoot: bigint;
-    newStateRoot: bigint;
+    oldStateRoot: string;
+    newStateRoot: string;
     newVotersCount: bigint;
     newOverwrittenVotesCount: bigint;
+    nBlobs: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -446,6 +470,17 @@ export interface IProcessRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  genesisRoot: TypedContractMethod<
+    [
+      processId: BytesLike,
+      ballotMode: DAVINCITypes.BallotModeStruct,
+      encryptionKey: DAVINCITypes.EncryptionKeyStruct,
+      censusOrigin: BigNumberish
+    ],
+    [string],
+    "view"
+  >;
+
   getNextProcessId: TypedContractMethod<
     [organizationId: AddressLike],
     [string],
@@ -502,7 +537,7 @@ export interface IProcessRegistry extends BaseContract {
   >;
 
   setProcessResults: TypedContractMethod<
-    [processId: BytesLike, proof: BytesLike, input: BytesLike],
+    [processId: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -514,7 +549,14 @@ export interface IProcessRegistry extends BaseContract {
   >;
 
   submitStateTransition: TypedContractMethod<
-    [processId: BytesLike, proof: BytesLike, input: BytesLike],
+    [
+      processId: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      commitments: BytesLike[],
+      ys: BytesLike[],
+      kzgProofs: BytesLike[]
+    ],
     [void],
     "nonpayable"
   >;
@@ -523,6 +565,18 @@ export interface IProcessRegistry extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "genesisRoot"
+  ): TypedContractMethod<
+    [
+      processId: BytesLike,
+      ballotMode: DAVINCITypes.BallotModeStruct,
+      encryptionKey: DAVINCITypes.EncryptionKeyStruct,
+      censusOrigin: BigNumberish
+    ],
+    [string],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getNextProcessId"
   ): TypedContractMethod<[organizationId: AddressLike], [string], "view">;
@@ -582,7 +636,7 @@ export interface IProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "setProcessResults"
   ): TypedContractMethod<
-    [processId: BytesLike, proof: BytesLike, input: BytesLike],
+    [processId: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -596,7 +650,14 @@ export interface IProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "submitStateTransition"
   ): TypedContractMethod<
-    [processId: BytesLike, proof: BytesLike, input: BytesLike],
+    [
+      processId: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      commitments: BytesLike[],
+      ys: BytesLike[],
+      kzgProofs: BytesLike[]
+    ],
     [void],
     "nonpayable"
   >;
@@ -707,7 +768,7 @@ export interface IProcessRegistry extends BaseContract {
       ProcessResultsSetEvent.OutputObject
     >;
 
-    "ProcessStateTransitioned(bytes31,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
+    "ProcessStateTransitioned(bytes31,address,bytes32,bytes32,uint256,uint256,uint256)": TypedContractEvent<
       ProcessStateTransitionedEvent.InputTuple,
       ProcessStateTransitionedEvent.OutputTuple,
       ProcessStateTransitionedEvent.OutputObject

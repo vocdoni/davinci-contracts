@@ -3,4 +3,4 @@
 /* eslint-disable */
 export { ICensusValidator__factory } from "./ICensusValidator__factory";
 export { IProcessRegistry__factory } from "./IProcessRegistry__factory";
-export { IZKVerifier__factory } from "./IZKVerifier__factory";
+export { IZiskVerifier__factory } from "./IZiskVerifier__factory";

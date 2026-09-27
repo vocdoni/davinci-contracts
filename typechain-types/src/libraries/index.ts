@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { BlobsLib } from "./BlobsLib";
-export type { ProcessIdLib } from "./ProcessIdLib";
-export type { StateRootLib } from "./StateRootLib";
+export type { Sha256SmtLib } from "./Sha256SmtLib";

@@ -11,6 +11,31 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "BallotModeMaxValueSumTooLarge",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BallotModeMaxValueTooLarge",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BallotModeMinValueSumTooLarge",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BallotModeMinValueTooLarge",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BlobCountMismatch",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "CannotAcceptResult",
     type: "error",
   },
@@ -20,14 +45,29 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "CircuitFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidBlobCommitmentLength",
+    type: "error",
+  },
+  {
     inputs: [
       {
-        internalType: "uint8",
-        name: "limbIndex",
-        type: "uint8",
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
       },
     ],
-    name: "InvalidBlobCommitmentLimb",
+    name: "InvalidBlobOpening",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidBlobsDigest",
     type: "error",
   },
   {
@@ -67,7 +107,17 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidEncryptionKey",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidGroupSize",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidKZGProofLength",
     type: "error",
   },
   {
@@ -102,7 +152,17 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidOccupiedBefore",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidProcessId",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidPublicValues",
     type: "error",
   },
   {
@@ -137,12 +197,33 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidVerifierConfig",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "MaxPossibleResultCapExceeded",
     type: "error",
   },
   {
     inputs: [],
     name: "MaxVotersReached",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "MissingBlob",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NoBlobs",
     type: "error",
   },
   {
@@ -299,15 +380,15 @@ const _abi = [
       },
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "bytes32",
         name: "oldStateRoot",
-        type: "uint256",
+        type: "bytes32",
       },
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "bytes32",
         name: "newStateRoot",
-        type: "uint256",
+        type: "bytes32",
       },
       {
         indexed: false,
@@ -319,6 +400,12 @@ const _abi = [
         indexed: false,
         internalType: "uint256",
         name: "newOverwrittenVotesCount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "nBlobs",
         type: "uint256",
       },
     ],
@@ -349,6 +436,94 @@ const _abi = [
     ],
     name: "ProcessStatusChanged",
     type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        components: [
+          {
+            internalType: "bool",
+            name: "uniqueValues",
+            type: "bool",
+          },
+          {
+            internalType: "uint8",
+            name: "numFields",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "groupSize",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "costExponent",
+            type: "uint8",
+          },
+          {
+            internalType: "uint256",
+            name: "maxValue",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "minValue",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "maxValueSum",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "minValueSum",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct DAVINCITypes.BallotMode",
+        name: "ballotMode",
+        type: "tuple",
+      },
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "x",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "y",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct DAVINCITypes.EncryptionKey",
+        name: "encryptionKey",
+        type: "tuple",
+      },
+      {
+        internalType: "enum DAVINCITypes.CensusOrigin",
+        name: "censusOrigin",
+        type: "uint8",
+      },
+    ],
+    name: "genesisRoot",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [
@@ -409,9 +584,9 @@ const _abi = [
             type: "tuple",
           },
           {
-            internalType: "uint256",
+            internalType: "bytes32",
             name: "latestStateRoot",
-            type: "uint256",
+            type: "bytes32",
           },
           {
             internalType: "uint256[]",
@@ -816,12 +991,12 @@ const _abi = [
       },
       {
         internalType: "bytes",
-        name: "proof",
+        name: "publicValues",
         type: "bytes",
       },
       {
         internalType: "bytes",
-        name: "input",
+        name: "proofBytes",
         type: "bytes",
       },
     ],
@@ -857,13 +1032,28 @@ const _abi = [
       },
       {
         internalType: "bytes",
-        name: "proof",
+        name: "publicValues",
         type: "bytes",
       },
       {
         internalType: "bytes",
-        name: "input",
+        name: "proofBytes",
         type: "bytes",
+      },
+      {
+        internalType: "bytes[]",
+        name: "commitments",
+        type: "bytes[]",
+      },
+      {
+        internalType: "bytes32[]",
+        name: "ys",
+        type: "bytes32[]",
+      },
+      {
+        internalType: "bytes[]",
+        name: "kzgProofs",
+        type: "bytes[]",
       },
     ],
     name: "submitStateTransition",

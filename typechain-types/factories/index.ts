@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as openzeppelin from "./@openzeppelin";
-export * as poseidonSolidity from "./poseidon-solidity";
 export * as src from "./src";

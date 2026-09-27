@@ -4,9 +4,11 @@
 package contracts
 
 import (
+	"context"
 	"errors"
 	"math/big"
 	"strings"
+	"time"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -27,6 +29,8 @@ var (
 	_ = types.BloomLookup
 	_ = event.NewSubscription
 	_ = abi.ConvertType
+	_ = time.Tick
+	_ = context.Background
 )
 
 // ICensusValidatorMetaData contains all meta data concerning the ICensusValidator contract.
@@ -387,6 +391,10 @@ func (_ICensusValidator *ICensusValidatorFilterer) WatchWeightChanged(opts *bind
 				// New log arrived, parse the event and forward to the user
 				event := new(ICensusValidatorWeightChanged)
 				if err := _ICensusValidator.contract.UnpackLog(event, "WeightChanged", log); err != nil {
+					// If the signature doesn't match, skip this log.
+					if errors.Is(err, bind.ErrEventSignatureMismatch) {
+						continue
+					}
 					return err
 				}
 				event.Raw = log

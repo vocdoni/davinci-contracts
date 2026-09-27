@@ -18,14 +18,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ReentrancyGuard__factory>;
     getContractFactory(
-      name: "PoseidonT3",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoseidonT3__factory>;
-    getContractFactory(
-      name: "PoseidonT4",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoseidonT4__factory>;
-    getContractFactory(
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICensusValidator__factory>;
@@ -34,57 +26,35 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IProcessRegistry__factory>;
     getContractFactory(
-      name: "IZKVerifier",
+      name: "IZiskVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IZKVerifier__factory>;
+    ): Promise<Contracts.IZiskVerifier__factory>;
     getContractFactory(
       name: "BlobsLib",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BlobsLib__factory>;
     getContractFactory(
-      name: "ProcessIdLib",
+      name: "Sha256SmtLib",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ProcessIdLib__factory>;
-    getContractFactory(
-      name: "StateRootLib",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.StateRootLib__factory>;
+    ): Promise<Contracts.Sha256SmtLib__factory>;
     getContractFactory(
       name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ProcessRegistry__factory>;
     getContractFactory(
-      name: "Verifier",
+      name: "PlonkVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Verifier__factory>;
+    ): Promise<Contracts.PlonkVerifier__factory>;
     getContractFactory(
-      name: "ResultsVerifierGroth16",
+      name: "ZiskVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ResultsVerifierGroth16__factory>;
-    getContractFactory(
-      name: "Verifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Verifier__factory>;
-    getContractFactory(
-      name: "StateTransitionVerifierGroth16",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.StateTransitionVerifierGroth16__factory>;
+    ): Promise<Contracts.ZiskVerifier__factory>;
 
     getContractAt(
       name: "ReentrancyGuard",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ReentrancyGuard>;
-    getContractAt(
-      name: "PoseidonT3",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoseidonT3>;
-    getContractAt(
-      name: "PoseidonT4",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoseidonT4>;
     getContractAt(
       name: "ICensusValidator",
       address: string | ethers.Addressable,
@@ -96,63 +66,40 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IProcessRegistry>;
     getContractAt(
-      name: "IZKVerifier",
+      name: "IZiskVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IZKVerifier>;
+    ): Promise<Contracts.IZiskVerifier>;
     getContractAt(
       name: "BlobsLib",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.BlobsLib>;
     getContractAt(
-      name: "ProcessIdLib",
+      name: "Sha256SmtLib",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ProcessIdLib>;
-    getContractAt(
-      name: "StateRootLib",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.StateRootLib>;
+    ): Promise<Contracts.Sha256SmtLib>;
     getContractAt(
       name: "ProcessRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ProcessRegistry>;
     getContractAt(
-      name: "Verifier",
+      name: "PlonkVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Verifier>;
+    ): Promise<Contracts.PlonkVerifier>;
     getContractAt(
-      name: "ResultsVerifierGroth16",
+      name: "ZiskVerifier",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ResultsVerifierGroth16>;
-    getContractAt(
-      name: "Verifier",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Verifier>;
-    getContractAt(
-      name: "StateTransitionVerifierGroth16",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.StateTransitionVerifierGroth16>;
+    ): Promise<Contracts.ZiskVerifier>;
 
     deployContract(
       name: "ReentrancyGuard",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
-    deployContract(
-      name: "PoseidonT3",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT3>;
-    deployContract(
-      name: "PoseidonT4",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT4>;
     deployContract(
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -162,57 +109,35 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
     deployContract(
-      name: "IZKVerifier",
+      name: "IZiskVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IZKVerifier>;
+    ): Promise<Contracts.IZiskVerifier>;
     deployContract(
       name: "BlobsLib",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BlobsLib>;
     deployContract(
-      name: "ProcessIdLib",
+      name: "Sha256SmtLib",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ProcessIdLib>;
-    deployContract(
-      name: "StateRootLib",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateRootLib>;
+    ): Promise<Contracts.Sha256SmtLib>;
     deployContract(
       name: "ProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ProcessRegistry>;
     deployContract(
-      name: "Verifier",
+      name: "PlonkVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Verifier>;
+    ): Promise<Contracts.PlonkVerifier>;
     deployContract(
-      name: "ResultsVerifierGroth16",
+      name: "ZiskVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ResultsVerifierGroth16>;
-    deployContract(
-      name: "Verifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Verifier>;
-    deployContract(
-      name: "StateTransitionVerifierGroth16",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateTransitionVerifierGroth16>;
+    ): Promise<Contracts.ZiskVerifier>;
 
     deployContract(
       name: "ReentrancyGuard",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
-    deployContract(
-      name: "PoseidonT3",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT3>;
-    deployContract(
-      name: "PoseidonT4",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PoseidonT4>;
     deployContract(
       name: "ICensusValidator",
       args: any[],
@@ -224,50 +149,35 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
     deployContract(
-      name: "IZKVerifier",
+      name: "IZiskVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IZKVerifier>;
+    ): Promise<Contracts.IZiskVerifier>;
     deployContract(
       name: "BlobsLib",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BlobsLib>;
     deployContract(
-      name: "ProcessIdLib",
+      name: "Sha256SmtLib",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ProcessIdLib>;
-    deployContract(
-      name: "StateRootLib",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateRootLib>;
+    ): Promise<Contracts.Sha256SmtLib>;
     deployContract(
       name: "ProcessRegistry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ProcessRegistry>;
     deployContract(
-      name: "Verifier",
+      name: "PlonkVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Verifier>;
+    ): Promise<Contracts.PlonkVerifier>;
     deployContract(
-      name: "ResultsVerifierGroth16",
+      name: "ZiskVerifier",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ResultsVerifierGroth16>;
-    deployContract(
-      name: "Verifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Verifier>;
-    deployContract(
-      name: "StateTransitionVerifierGroth16",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StateTransitionVerifierGroth16>;
+    ): Promise<Contracts.ZiskVerifier>;
 
     // default types
     getContractFactory(

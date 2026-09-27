@@ -1,0 +1,21 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Sha256SmtLib",
+  "sourceName": "src/libraries/Sha256SmtLib.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "SmtLengthMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SmtMaxLevelsReached",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220ddfe4ebf669c8b5456d49183727e00a708c3832e12c36c8fc6c91fce1cbd22a564736f6c634300081c0033",
+  "deployedBytecode": "0x5f80fdfea2646970667358221220ddfe4ebf669c8b5456d49183727e00a708c3832e12c36c8fc6c91fce1cbd22a564736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
