@@ -17,31 +17,29 @@ interface IProcessRegistry {
      */
     event ProcessCreated(bytes31 indexed processId, address indexed creator);
     /*
-     * @notice Emitted when the census of a process is updated.
-     * @param processId The ID of the process.
-     * @param censusRoot The new root of the census.
-     * @param censusURI The URI of the census.
-     */
-    event CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI);
-    /*
      * @notice Emitted when the duration of a process is modified.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
      */
     event ProcessDurationChanged(bytes31 indexed processId, uint256 duration);
     /*
-     * @notice Emitted when the state root of a process is updated.
+     * @notice Emitted when a state transition is settled.
      * @param processId The ID of the process.
      * @param sender The address of the sender.
-     * @param newStateRoot The new state root of the process.
+     * @param oldStateRoot The state root before the transition (raw digest).
+     * @param newStateRoot The state root after the transition (raw digest).
+     * @param newVotersCount The process votersCount after the transition.
+     * @param newOverwrittenVotesCount The process overwrittenVotesCount after the transition.
+     * @param nBlobs The number of blobs the transition was published in.
      */
     event ProcessStateTransitioned(
         bytes31 indexed processId,
         address indexed sender,
-        uint256 oldStateRoot,
-        uint256 newStateRoot,
+        bytes32 oldStateRoot,
+        bytes32 newStateRoot,
         uint256 newVotersCount,
-        uint256 newOverwrittenVotesCount
+        uint256 newOverwrittenVotesCount,
+        uint256 nBlobs
     );
 
     /*
@@ -146,13 +144,17 @@ interface IProcessRegistry {
      */
     error InvalidCensusConfig();
     /**
-     * @notice InvalidCensusAddress error is emitted when the census address is invalid.
+     * @notice InvalidEncryptionKey error is emitted when the key is not a canonical BabyJubJub point
+     *         (circomlib twisted Edwards) with x != 0.
      */
-    error InvalidCensusAddress();
+    error InvalidEncryptionKey();
     /**
-     * @notice InvalidBlobCommitmentLimb error is emitted when a blob commitment limb exceeds 16 bytes.
+     * @notice Ballot mode fields that do not fit their packed bit width.
      */
-    error InvalidBlobCommitmentLimb(uint8 limbIndex);
+    error BallotModeMaxValueTooLarge();
+    error BallotModeMinValueTooLarge();
+    error BallotModeMaxValueSumTooLarge();
+    error BallotModeMinValueSumTooLarge();
     /**
      * @notice InvalidStateRoot error is emitted when a state root is invalid.
      */
@@ -190,9 +192,49 @@ interface IProcessRegistry {
      */
     error ProofInvalid();
     /**
-     * @notice Thrown when the census is not updatable.
+     * @notice Thrown when a constructor address or key is zero.
      */
-    error CensusNotUpdatable();
+    error InvalidVerifierConfig();
+    /**
+     * @notice Thrown when publicValues is not 512 bytes.
+     */
+    error InvalidPublicValues();
+    /**
+     * @notice Thrown when the guest reports a failed check (ok != 1 or fail_mask != 0).
+     */
+    error CircuitFailed();
+    /**
+     * @notice Thrown when the proof's occupied_before differs from the process votersCount.
+     */
+    error InvalidOccupiedBefore();
+    /**
+     * @notice Thrown when the proof publishes no blobs.
+     */
+    error NoBlobs();
+    /**
+     * @notice Thrown when the blob arrays do not all have n_blobs entries.
+     */
+    error BlobCountMismatch();
+    /**
+     * @notice Thrown when a blob commitment is not 48 bytes.
+     */
+    error InvalidBlobCommitmentLength();
+    /**
+     * @notice Thrown when a KZG opening proof is not 48 bytes.
+     */
+    error InvalidKZGProofLength();
+    /**
+     * @notice Thrown when sha256(commitment_0 ‖ y_0 ‖ ...) differs from the digest the guest published.
+     */
+    error InvalidBlobsDigest();
+    /**
+     * @notice Thrown when the transaction carries no blob at the given index.
+     */
+    error MissingBlob(uint256 index);
+    /**
+     * @notice Thrown when the point-evaluation precompile rejects the opening of blob index.
+     */
+    error InvalidBlobOpening(uint256 index);
     /**
      * @notice Thrown when the sender is not authorized to perform the action.
      */
@@ -215,16 +257,29 @@ interface IProcessRegistry {
     function getNextProcessId(address organizationId) external view returns (bytes31);
 
     /**
-     * @notice Returns the hash of the state transition ZK verifier proving key.
-     * @return The hash of the state transition ZK verifier proving key.
+     * @notice Returns the program vk of the vote-batch guest that state transitions are proven with.
      */
     function getSTVerifierVKeyHash() external view returns (bytes32);
 
     /**
-     * @notice Returns the hash of the results ZK verifier proving key.
-     * @return The hash of the results ZK verifier proving key.
+     * @notice Returns the program vk of the results guest that results are proven with.
      */
     function getRVerifierVKeyHash() external view returns (bytes32);
+
+    /**
+     * @notice Returns the genesis state root a process with this configuration starts from.
+     * @param processId The ID of the process.
+     * @param ballotMode The ballot mode of the process.
+     * @param encryptionKey The encryption key (twisted Edwards coordinates).
+     * @param censusOrigin The census origin.
+     * @return The raw SHA-256 digest of the arbo root.
+     */
+    function genesisRoot(
+        bytes31 processId,
+        DAVINCITypes.BallotMode calldata ballotMode,
+        DAVINCITypes.EncryptionKey calldata encryptionKey,
+        DAVINCITypes.CensusOrigin censusOrigin
+    ) external view returns (bytes32);
 
     /**
      * @notice Returns the end time of a process.
@@ -265,13 +320,6 @@ interface IProcessRegistry {
     function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external;
 
     /**
-     * @notice Sets the census of a process.
-     * @param processId The ID of the process.
-     * @param census The census of the process.
-     */
-    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external;
-
-    /**
      * @notice Sets the duration of a process.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
@@ -286,18 +334,29 @@ interface IProcessRegistry {
     function setProcessMaxVoters(bytes31 processId, uint256 maxVoters) external;
 
     /**
-     * @notice Sets the results of a process.
+     * @notice Sets the results of a process from a results-guest proof over its final state root.
      * @param processId The ID of the process.
-     * @param proof The proof for validating the process results.
-     * @param input The public inputs data for the results.
+     * @param publicValues The 512-byte ZisK public values.
+     * @param proofBytes The PLONK proof, abi-encoded uint256[24].
      */
-    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input) external;
+    function setProcessResults(bytes31 processId, bytes calldata publicValues, bytes calldata proofBytes) external;
 
     /**
-     * @notice Submits a process state transition.
+     * @notice Settles a state transition proven by the vote-batch guest. Must be sent as a blob
+     *         transaction carrying the transition's blobs in order.
      * @param processId The ID of the process.
-     * @param proof The proof for validating the process state transition.
-     * @param input The public inputs data for the state transition.
+     * @param publicValues The 512-byte ZisK public values.
+     * @param proofBytes The PLONK proof, abi-encoded uint256[24].
+     * @param commitments The 48-byte KZG commitment of each blob.
+     * @param ys The big-endian evaluation of each blob at its bound point.
+     * @param kzgProofs The 48-byte opening proof of each blob at its bound point.
      */
-    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input) external;
+    function submitStateTransition(
+        bytes31 processId,
+        bytes calldata publicValues,
+        bytes calldata proofBytes,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs
+    ) external;
 }

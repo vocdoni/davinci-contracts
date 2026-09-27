@@ -43,14 +43,6 @@ abi() {
     sed_in_place "s/^package $pkg_name/package contracts/" "$output_file"
 }
 
-abi "./artifacts/src/verifiers/StateTransitionVerifierGroth16.sol/StateTransitionVerifierGroth16.json" \
-    "StateTransitionVerifierGroth16" \
-    "./golang-types/verifiers/StateTransitionVerifierGroth16.go"
-
-abi "./artifacts/src/verifiers/ResultsVerifierGroth16.sol/ResultsVerifierGroth16.json" \
-    "ResultsVerifierGroth16" \
-    "./golang-types/verifiers/ResultsVerifierGroth16.go"
-
 abi "./artifacts/src/ProcessRegistry.sol/ProcessRegistry.json" \
     "ProcessRegistry" \
     "./golang-types/ProcessRegistry.go"

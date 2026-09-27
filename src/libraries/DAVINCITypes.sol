@@ -19,6 +19,9 @@ library DAVINCITypes {
 
     /**
      * @notice The census origin defines the origin of the census data. It affects the way the census is handled.
+     * @dev The zkVM ProcessRegistry accepts MERKLE_TREE_OFFCHAIN_STATIC_V1 (a lean-IMT root) and
+     *      CSP_EDDSA_BABYJUBJUB_V1, which the davinci-zkvm guest verifies as an ECDSA/secp256k1 CSP
+     *      (the value 4 is kept; the name is historical).
      */
     enum CensusOrigin {
         CENSUS_UNKNOWN,
@@ -31,7 +34,7 @@ library DAVINCITypes {
     /**
      * @notice The ballot mode define the parameters of the vote.
      * @param uniqueValues Choices cannot appear twice or more.
-     * @param numFields The maximum number of fields per ballot.
+     * @param numFields The maximum number of fields per ballot (1..16).
      * @param groupSize Used for multiquestion patterns.
      * @param costExponent The exponent that will be used to compute the "cost" of the field values.
      * @param maxValue The maximum value for all fields.
@@ -53,7 +56,8 @@ library DAVINCITypes {
     /**
      * @notice The census defines the parameters of the census.
      * @param censusOrigin The origin of the census.
-     * @param censusRoot The root of the census. CSP -> A PublicKey, MerkleTree OffchainStatic, OffchainDynamic -> A Hash, MerkleTree Onchain -> A Contract address
+     * @param censusRoot The root of the census as a big-endian integer: the lean-IMT root for a Merkle census,
+     *        bytes32(uint256(uint160(cspAddress))) for a CSP census.
      * @param contractAddress An EVM contract address (optional). Ideally this contract returns census information and/or data.
      * @param censusURI The URI of the census.
      * @param onchainAllowAnyValidRoot Used for onchain censuses. If true allows to skip the census startBlock check in the state transition function.
@@ -93,12 +97,12 @@ library DAVINCITypes {
      * @param status The status of the process.
      * @param organizationId The organizationId of the process.
      * @param encryptionKey The encryption key of the process.
-     * @param latestStateRoot The latest state root of the process.
+     * @param latestStateRoot The latest state root of the process: the raw SHA-256 digest of the arbo root.
      * @param result The result of the process.
      * @param startTime The start time of the process.
      * @param duration The duration of the process.
      * @param maxVoters The maximum number of voters allowed.
-     * @param votersCount The total number of voters that participated.
+     * @param votersCount The number of distinct ballot slots written (votes minus overwrites).
      * @param overwrittenVotesCount The number of times votes were overwritten in the state.
      * @param creationBlock The block number when the process was created.
      * @param batchNumber The batch number of the process that increments with each state transition.
@@ -110,7 +114,7 @@ library DAVINCITypes {
         ProcessStatus status;
         address organizationId;
         EncryptionKey encryptionKey;
-        uint256 latestStateRoot;
+        bytes32 latestStateRoot;
         uint256[] result;
         uint256 startTime;
         uint256 duration;

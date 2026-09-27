@@ -2,37 +2,54 @@
 pragma solidity ^0.8.28;
 
 import {IProcessRegistry} from "./interfaces/IProcessRegistry.sol";
-import {IZKVerifier} from "./interfaces/IZKVerifier.sol";
+import {IZiskVerifier} from "./interfaces/IZiskVerifier.sol";
 import {DAVINCITypes} from "./libraries/DAVINCITypes.sol";
 import {ProcessIdLib} from "./libraries/ProcessIdLib.sol";
 import {BlobsLib} from "./libraries/BlobsLib.sol";
-import {StateRootLib} from "./libraries/StateRootLib.sol";
-import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
+import {GenesisLib} from "./libraries/GenesisLib.sol";
+import {PublicsLib} from "./libraries/PublicsLib.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title ProcessRegistry
- * @notice This contract is responsible for storing processes data and managing their lifecycle.
+ * @notice Stores DAVINCI processes, manages their lifecycle and settles davinci-zkvm proofs:
+ *         one ZisK PLONK per state transition, bound to its EIP-4844 blobs, and one for the
+ *         results.
+ * @dev Root encodings: state roots are the raw SHA-256 digest of the arbo root (reg32 of the
+ *      publics); census roots are big-endian integers (the byte reverse of reg32).
  */
 contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     using ProcessIdLib for bytes31;
-    using BlobsLib for bytes;
 
     /// @dev Upper bound for the maximum possible decrypted result.
     uint256 private constant MAX_POSSIBLE_RESULT_CAP = 1_000_000_000_000;
+    /// @dev Ballot capacity of the zkVM guest (NUM_FIELDS).
+    uint8 private constant MAX_NUM_FIELDS = 16;
+    /// @dev EIP-4844 point-evaluation precompile and the output it returns on success.
+    address private constant POINT_EVALUATION = address(0x0A);
+    uint256 private constant FIELD_ELEMENTS_PER_BLOB = 4096;
+    uint256 private constant BLS_MODULUS =
+        52435875175126190479447740508185965837690552500527637822603658699938581184513;
 
-    /**
-     * @notice The maximum value of the census origin.
-     */
-    uint8 public constant MAX_CENSUS_ORIGIN = 5;
+    // Batch guest output registers (circuit/CIRCUIT.md §3).
+    uint256 private constant REG_OK = 0;
+    uint256 private constant REG_FAIL_MASK = 1;
+    uint256 private constant REG_ROOT_BEFORE = 2;
+    uint256 private constant REG_ROOT_AFTER = 10;
+    uint256 private constant REG_VOTERS = 18;
+    uint256 private constant REG_OVERWRITES = 19;
+    uint256 private constant REG_CENSUS_ROOT = 20;
+    uint256 private constant REG_BLOBS_DIGEST = 28;
+    uint256 private constant REG_N_BLOBS = 36;
+    uint256 private constant REG_OCCUPIED_BEFORE = 42;
+    // Results guest output registers: the state root, then results[i] as (lo, hi) words.
+    uint256 private constant REG_RESULTS_STATE_ROOT = 2;
+    uint256 private constant REG_RESULTS = 10;
+
     /**
      * @notice The maximum value of the process status.
      */
     uint8 public constant MAX_STATUS = 4;
-    /**
-     * @notice The index of the blob in the blob transaction.
-     */
-    uint8 public constant BLOB_INDEX = 0;
     /**
      * @notice The process mapping is a mapping of process IDs to processes.
      */
@@ -50,48 +67,59 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      */
     uint32 public chainID;
     /**
-     * @notice The stVerifier is the address of the state transition ZK verifier contract.
-     */
-    address public stVerifier;
-    /**
-     * @notice The rVerifier is the address of the results ZK verifier contract.
-     */
-    address public rVerifier;
-    /**
      * @notice The pidPrefix is the 4-byte prefix used in process IDs.
      * This is computed as the last 4 bytes of keccak256(abi.encodePacked(chainID, address(this))).
      */
     uint32 public pidPrefix;
     /**
-     * @notice blobsDA is a boolean indicating if the contract uses EIP4844 blobs.
-     * If true, the contract expects blob-related data in proofs and verifies them.
-     * @dev This is required to ensure compatibility with networks that uses other DA mechanisms.
+     * @notice The ZisK PLONK verifier.
      */
-    bool public blobsDA;
+    IZiskVerifier public immutable ziskVerifier;
+    /**
+     * @notice Program vk of the vote-batch guest.
+     */
+    bytes32 public immutable batchProgramVK;
+    /**
+     * @notice Program vk of the results guest.
+     */
+    bytes32 public immutable resultsProgramVK;
+    /**
+     * @notice Root of the ZisK vadcop-final setup both proofs are wrapped under.
+     */
+    bytes32 public immutable rootCVadcopFinal;
+    /**
+     * @notice sha256 of the ballot Groth16 VK wire bytes (state leaf 0x07), as the digest.
+     */
+    bytes32 public immutable ballotVKHash;
 
     /**
      * @notice Initializes the contract.
      * @param _chainID The ID of the chain.
-     * @param _stVerifier The address of the state transition ZK verifier contract.
-     * @param _rVerifier The address of the results ZK verifier contract.
+     * @param _ziskVerifier The ZisK PLONK verifier.
+     * @param _batchProgramVK Program vk of the vote-batch guest.
+     * @param _resultsProgramVK Program vk of the results guest.
+     * @param _rootCVadcopFinal Root of the ZisK vadcop-final setup.
+     * @param _ballotVKHash sha256 digest of the ballot proof VK (davinci.BallotVKLeaf).
      */
-    constructor(uint32 _chainID, address _stVerifier, address _rVerifier, bool _blobsDA) {
-        stVerifier = _stVerifier;
-        rVerifier = _rVerifier;
+    constructor(
+        uint32 _chainID,
+        address _ziskVerifier,
+        bytes32 _batchProgramVK,
+        bytes32 _resultsProgramVK,
+        bytes32 _rootCVadcopFinal,
+        bytes32 _ballotVKHash
+    ) {
+        if (
+            _ziskVerifier == address(0) || _batchProgramVK == bytes32(0) || _resultsProgramVK == bytes32(0)
+                || _rootCVadcopFinal == bytes32(0) || _ballotVKHash == bytes32(0)
+        ) revert InvalidVerifierConfig();
+        ziskVerifier = IZiskVerifier(_ziskVerifier);
+        batchProgramVK = _batchProgramVK;
+        resultsProgramVK = _resultsProgramVK;
+        rootCVadcopFinal = _rootCVadcopFinal;
+        ballotVKHash = _ballotVKHash;
         chainID = _chainID;
-        blobsDA = _blobsDA;
         pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
-    }
-
-    struct StateTransitionBatchProofInputs {
-        uint256 rootHashBefore;
-        uint256 rootHashAfter;
-        uint256 votersCount;
-        uint256 overwrittenVotesCount;
-        uint256 censusRoot;
-        uint256 blobCommitmentLimb0;
-        uint256 blobCommitmentLimb1;
-        uint256 blobCommitmentLimb2;
     }
 
     /// @inheritdoc IProcessRegistry
@@ -107,17 +135,27 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
     /// @inheritdoc IProcessRegistry
     function getSTVerifierVKeyHash() external view override returns (bytes32) {
-        return IZKVerifier(stVerifier).provingKeyHash();
+        return batchProgramVK;
     }
 
     /// @inheritdoc IProcessRegistry
     function getRVerifierVKeyHash() external view override returns (bytes32) {
-        return IZKVerifier(rVerifier).provingKeyHash();
+        return resultsProgramVK;
     }
 
     /// @inheritdoc IProcessRegistry
     function getNextProcessId(address organizationId) external view override returns (bytes31) {
         return ProcessIdLib.computeProcessId(pidPrefix, organizationId, processNonce[organizationId]);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function genesisRoot(
+        bytes31 processId,
+        DAVINCITypes.BallotMode calldata ballotMode,
+        DAVINCITypes.EncryptionKey calldata encryptionKey,
+        DAVINCITypes.CensusOrigin censusOrigin
+    ) external view override returns (bytes32) {
+        return GenesisLib.root(processId, ballotMode, encryptionKey, censusOrigin, ballotVKHash);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -135,7 +173,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes31 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
-        _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
+        _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census, encryptionKey);
 
         // validate start time, block and duration
         uint256 currentTimestamp = block.timestamp;
@@ -153,7 +191,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.maxVoters = maxVoters;
         p.organizationId = sender;
         p.encryptionKey = encryptionKey;
-        p.latestStateRoot = StateRootLib.computeStateRoot(processId, census.censusOrigin, ballotMode, encryptionKey);
+        p.latestStateRoot = GenesisLib.root(processId, ballotMode, encryptionKey, census.censusOrigin, ballotVKHash);
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
@@ -194,38 +232,6 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         }
 
         emit ProcessStatusChanged(processId, oldStatus, newStatus);
-    }
-
-    /// @inheritdoc IProcessRegistry
-    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external override {
-        if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        DAVINCITypes.Process storage p = processes[processId];
-        if (p.organizationId == address(0)) revert ProcessNotFound();
-        if (p.organizationId != msg.sender) revert Unauthorized();
-        if (p.census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1) {
-            revert CensusNotUpdatable();
-        }
-
-        // check census
-        if (p.census.censusOrigin != census.censusOrigin) revert InvalidCensusOrigin();
-        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
-        if (
-            p.census.censusOrigin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1
-                && census.contractAddress == address(0)
-        ) revert InvalidCensusAddress();
-
-        // check ongoing process
-        if (p.status != DAVINCITypes.ProcessStatus.READY && p.status != DAVINCITypes.ProcessStatus.PAUSED) {
-            revert InvalidStatus();
-        }
-        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
-
-        p.census.censusRoot = census.censusRoot;
-        p.census.censusURI = census.censusURI;
-
-        emit CensusUpdated(processId, census.censusRoot, census.censusURI);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -280,95 +286,82 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
-    function submitStateTransition(bytes31 processId, bytes calldata proof, bytes calldata input)
-        external
-        override
-        nonReentrant
-    {
-        if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        DAVINCITypes.Process storage p = processes[processId];
-        if (p.organizationId == address(0)) revert ProcessNotFound();
+    /// @dev Permissionless: the proof, the blob openings and root continuity authenticate it.
+    function submitStateTransition(
+        bytes31 processId,
+        bytes calldata publicValues,
+        bytes calldata proofBytes,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs
+    ) external override nonReentrant {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
         if (p.status != DAVINCITypes.ProcessStatus.READY) revert InvalidStatus();
         if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
         if (block.timestamp < p.startTime) revert InvalidTimeBounds();
 
-        StateTransitionBatchProofInputs memory st = _decodeStateTransitionBatchProofInputs(input);
-        if (p.census.censusOrigin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
-            uint256 rootBlockNumber = ICensusValidator(p.census.contractAddress).getRootBlockNumber(st.censusRoot);
-            if (
-                (!p.census.onchainAllowAnyValidRoot && rootBlockNumber < p.creationBlock)
-                    || rootBlockNumber > block.number
-            ) {
-                revert InvalidCensusRoot();
-            }
-        } else {
-            if (st.censusRoot != uint256(p.census.censusRoot)) revert InvalidCensusRoot();
+        _checkGuestOk(publicValues);
+        bytes32 rootBefore = PublicsLib.reg32(publicValues, REG_ROOT_BEFORE);
+        if (rootBefore != p.latestStateRoot) revert InvalidStateRoot();
+        if (PublicsLib.reverse32(PublicsLib.reg32(publicValues, REG_CENSUS_ROOT)) != p.census.censusRoot) {
+            revert InvalidCensusRoot();
         }
+        // occupied_before counts the distinct slots written so far, which is votersCount.
+        uint256 votersCount = p.votersCount;
+        if (PublicsLib.word(publicValues, REG_OCCUPIED_BEFORE) != votersCount) revert InvalidOccupiedBefore();
 
-        // Validate state root before matches latest state root
-        if (st.rootHashBefore != p.latestStateRoot) revert InvalidStateRoot();
+        uint256 overwrites = PublicsLib.word(publicValues, REG_OVERWRITES);
+        uint256 newVoters = PublicsLib.word(publicValues, REG_VOTERS) - overwrites;
+        if (votersCount + newVoters > p.maxVoters) revert MaxVotersReached();
 
-        // Validate max votes not exceeded after including the new votes in the batch
-        // but only if the batch contains new votes (votersCount - overwrittenVotesCount > 0)
-        // Subsequent calls to this function will fail if maxVoters is not updated after surpassing the threshold.
-        uint256 newVoters = st.votersCount - st.overwrittenVotesCount;
-        if (newVoters > 0 && p.votersCount >= p.maxVoters) revert MaxVotersReached();
+        uint256 nBlobs = _checkBlobsDigest(publicValues, commitments, ys, kzgProofs);
 
-        if (blobsDA) {
-            bytes memory blobCommitment =
-                _blobCommitmentFromLimbs(st.blobCommitmentLimb0, st.blobCommitmentLimb1, st.blobCommitmentLimb2);
-            bytes32 versionedHash = BlobsLib.calcBlobHashV1(blobCommitment);
-            _verifyBlobDataIsAvailable(versionedHash);
-        }
+        ziskVerifier.verifySnarkProof(batchProgramVK, rootCVadcopFinal, publicValues, proofBytes);
 
-        IZKVerifier(stVerifier).verifyProof(proof, input);
+        _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs);
 
-        p.latestStateRoot = st.rootHashAfter;
-        p.votersCount += newVoters;
-        p.overwrittenVotesCount += st.overwrittenVotesCount;
+        bytes32 rootAfter = PublicsLib.reg32(publicValues, REG_ROOT_AFTER);
+        p.latestStateRoot = rootAfter;
+        p.votersCount = votersCount + newVoters;
+        p.overwrittenVotesCount += overwrites;
         ++p.batchNumber;
 
         emit ProcessStateTransitioned(
-            processId, msg.sender, st.rootHashBefore, st.rootHashAfter, p.votersCount, p.overwrittenVotesCount
+            processId, msg.sender, rootBefore, rootAfter, p.votersCount, p.overwrittenVotesCount, nBlobs
         );
     }
 
     /// @inheritdoc IProcessRegistry
-    function setProcessResults(bytes31 processId, bytes calldata proof, bytes calldata input)
+    /// @dev Permissionless: the results guest proves the tally against the final state root.
+    function setProcessResults(bytes31 processId, bytes calldata publicValues, bytes calldata proofBytes)
         external
         override
         nonReentrant
     {
-        if (processId == bytes31(0)) revert InvalidProcessId();
-        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
-        DAVINCITypes.Process storage p = processes[processId];
-        if (p.organizationId == address(0)) revert ProcessNotFound();
+        DAVINCITypes.Process storage p = _existingProcess(processId);
 
         // Cannot set results on CANCELLED or RESULTS processes
-        if (p.status == DAVINCITypes.ProcessStatus.CANCELED || p.status == DAVINCITypes.ProcessStatus.RESULTS) {
+        DAVINCITypes.ProcessStatus oldStatus = p.status;
+        if (oldStatus == DAVINCITypes.ProcessStatus.CANCELED || oldStatus == DAVINCITypes.ProcessStatus.RESULTS) {
             revert InvalidStatus();
         }
 
         // Require that the process has ended, either by status or by time
-        if (p.status != DAVINCITypes.ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
+        if (oldStatus != DAVINCITypes.ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
 
-        // Store the old status for the event
-        DAVINCITypes.ProcessStatus oldStatus = p.status;
+        _checkGuestOk(publicValues);
+        if (PublicsLib.reg32(publicValues, REG_RESULTS_STATE_ROOT) != p.latestStateRoot) revert InvalidStateRoot();
 
-        IZKVerifier(rVerifier).verifyProof(proof, input);
+        ziskVerifier.verifySnarkProof(resultsProgramVK, rootCVadcopFinal, publicValues, proofBytes);
 
-        uint256[9] memory decompressedInput = abi.decode(input, (uint256[9]));
-
-        if (decompressedInput[0] != p.latestStateRoot) {
-            revert InvalidStateRoot();
-        }
-
-        uint256[] memory result = new uint256[](decompressedInput.length - 1);
-        for (uint256 i = 1; i < decompressedInput.length; i++) {
-            result[i - 1] = decompressedInput[i];
+        uint256 numFields = p.ballotMode.numFields;
+        uint256[] memory result = new uint256[](numFields);
+        for (uint256 i = 0; i < numFields; ++i) {
+            uint256 lo = PublicsLib.word(publicValues, REG_RESULTS + 2 * i);
+            uint256 hi = PublicsLib.word(publicValues, REG_RESULTS + 2 * i + 1);
+            result[i] = lo | (hi << 32);
         }
 
         p.status = DAVINCITypes.ProcessStatus.RESULTS;
@@ -387,14 +380,15 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.ProcessStatus status,
         uint256 maxVoters,
         DAVINCITypes.BallotMode calldata ballotMode,
-        DAVINCITypes.Census calldata census
+        DAVINCITypes.Census calldata census,
+        DAVINCITypes.EncryptionKey calldata encryptionKey
     ) private view {
         if (processes[processId].organizationId == sender) {
             revert ProcessAlreadyExists();
         }
 
         // validate ballot mode
-        if (ballotMode.numFields == 0 || ballotMode.numFields > 8) revert InvalidMaxCount();
+        if (ballotMode.numFields == 0 || ballotMode.numFields > MAX_NUM_FIELDS) revert InvalidMaxCount();
         if (ballotMode.groupSize > ballotMode.numFields) revert InvalidGroupSize();
         if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
         if (ballotMode.minValueSum > ballotMode.maxValueSum) revert InvalidValueSumBounds();
@@ -403,29 +397,20 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (maxVoters == 0) revert InvalidMaxVoters();
         _validateMaxPossibleResultCap(maxVoters, ballotMode.maxValue);
 
-        // validate census
-        if (uint8(census.censusOrigin) > MAX_CENSUS_ORIGIN) revert InvalidCensusOrigin();
+        // validate census. The zkVM guest supports two origins:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> lean-IMT root (fixed: slots derive from the census path)
+        //  - CSP_EDDSA_BABYJUBJUB_V1 -> the CSP signer address as uint160 (ECDSA/secp256k1 in the guest)
+        DAVINCITypes.CensusOrigin origin = census.censusOrigin;
         if (
-            census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1
-                && census.onchainAllowAnyValidRoot
-        ) {
-            revert InvalidCensusConfig();
+            origin != DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+                && origin != DAVINCITypes.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1
+        ) revert InvalidCensusOrigin();
+        if (census.onchainAllowAnyValidRoot) revert InvalidCensusConfig();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (origin == DAVINCITypes.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1 && uint256(census.censusRoot) >> 160 != 0) {
+            revert InvalidCensusRoot();
         }
-        // CensusRoot based on census origin:
-        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> Merkle Root (fixed)
-        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> Merkle Root (could change via tx)
-        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> Address of census manager contract (queried on each transition)
-        //  - CSP_EDDSA_BABYJUBJUB_V1 -> CSP PubKey (fixed)
-        if (census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
-            if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        } else {
-            if (census.contractAddress == address(0)) revert InvalidCensusAddress();
-        }
-        // CensusURI based on census origin:
-        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 ──┬> URL where the sequencer can download the census snapshot used to compute the Merkle Proofs
-        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 ─┤
-        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 ──┘
-        //  - CSP_EDDSA_BABYJUBJUB_V1 > URL where the voters can generate their signatures
+        // CensusURI: where the sequencer downloads the census (Merkle) or voters get signatures (CSP)
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
 
         // validate status
@@ -435,6 +420,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         ) {
             revert InvalidStatus();
         }
+
+        if (!GenesisLib.isValidEncryptionKey(encryptionKey)) revert InvalidEncryptionKey();
     }
 
     /**
@@ -484,52 +471,69 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         return false;
     }
 
-    /// @notice Checks that blob data is available for the current transaction
-    /// @dev Wrapper for BlobsLib.verifyBlobDataIsAvailable, that can be overridden in tests
-    /// @param versionedHash The blob versioned hash
-    function _verifyBlobDataIsAvailable(bytes32 versionedHash) internal view virtual {
-        BlobsLib.verifyBlobDataIsAvailable(versionedHash);
+    /// @dev Loads a process, checking the id is well formed and the process exists.
+    function _existingProcess(bytes31 processId) private view returns (DAVINCITypes.Process storage p) {
+        if (processId == bytes31(0)) revert InvalidProcessId();
+        if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
+        p = processes[processId];
+        if (p.organizationId == address(0)) revert ProcessNotFound();
     }
 
-    /// @notice Decodes state transition batch proof inputs
-    /// @dev Wrapper around abi.decode for (uint256[8]) produced by the sequencer.
-    ///      Returns a named struct for readability and to avoid magic indices.
-    /// @param input ABI-encoded batch inputs: (uint256[8])
-    /// @return st The decoded inputs as StateTransitionBatchProofInputs
-    function _decodeStateTransitionBatchProofInputs(bytes calldata input)
-        internal
-        pure
-        returns (StateTransitionBatchProofInputs memory st)
-    {
-        uint256[8] memory d = abi.decode(input, (uint256[8]));
-
-        st = StateTransitionBatchProofInputs({
-            rootHashBefore: d[0],
-            rootHashAfter: d[1],
-            votersCount: d[2],
-            overwrittenVotesCount: d[3],
-            censusRoot: d[4],
-            blobCommitmentLimb0: d[5],
-            blobCommitmentLimb1: d[6],
-            blobCommitmentLimb2: d[7]
-        });
+    /// @dev The publics must be the 512-byte layout and report every guest check passed.
+    function _checkGuestOk(bytes calldata publicValues) private pure {
+        if (publicValues.length != PublicsLib.LENGTH) revert InvalidPublicValues();
+        if (PublicsLib.word(publicValues, REG_OK) != 1 || PublicsLib.word(publicValues, REG_FAIL_MASK) != 0) {
+            revert CircuitFailed();
+        }
     }
 
-    function _blobCommitmentFromLimbs(uint256 limb0, uint256 limb1, uint256 limb2)
-        internal
-        pure
-        returns (bytes memory commitment)
-    {
-        commitment = new bytes(48);
-        _writeCommitmentLimb(commitment, 0, limb0, 0);
-        _writeCommitmentLimb(commitment, 16, limb1, 1);
-        _writeCommitmentLimb(commitment, 32, limb2, 2);
+    /// @dev Checks the blob arrays against n_blobs and the pair digest the guest published.
+    function _checkBlobsDigest(
+        bytes calldata publicValues,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs
+    ) private pure returns (uint256 n) {
+        n = PublicsLib.word(publicValues, REG_N_BLOBS);
+        if (n == 0) revert NoBlobs();
+        if (commitments.length != n || ys.length != n || kzgProofs.length != n) revert BlobCountMismatch();
+
+        bytes memory pairs = new bytes(n * 80);
+        for (uint256 i = 0; i < n; ++i) {
+            bytes calldata c = commitments[i];
+            if (c.length != 48) revert InvalidBlobCommitmentLength();
+            if (kzgProofs[i].length != 48) revert InvalidKZGProofLength();
+            bytes32 y = ys[i];
+            assembly ("memory-safe") {
+                let dst := add(add(pairs, 32), mul(i, 80))
+                calldatacopy(dst, c.offset, 48)
+                mstore(add(dst, 48), y)
+            }
+        }
+        if (sha256(pairs) != PublicsLib.reg32(publicValues, REG_BLOBS_DIGEST)) revert InvalidBlobsDigest();
     }
 
-    function _writeCommitmentLimb(bytes memory commitment, uint256 offset, uint256 limb, uint8 idx) private pure {
-        if (limb >> 128 != 0) revert InvalidBlobCommitmentLimb(idx);
-        assembly ("memory-safe") {
-            mstore(add(add(commitment, 32), offset), shl(128, limb))
+    /// @dev Opens blob i of this transaction at z_i = sha256(BE32(pid) ‖ BE32(root) ‖ commitment_i)
+    ///      mod r_bls, the point the guest evaluated it at, and checks y_i.
+    function _verifyOpenings(
+        bytes31 processId,
+        bytes32 rootBefore,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs
+    ) private view {
+        bytes32 pidBE = bytes32(uint256(uint248(processId)));
+        bytes32 rootBE = PublicsLib.reverse32(rootBefore);
+        for (uint256 i = 0; i < commitments.length; ++i) {
+            bytes32 versionedHash = BlobsLib.blobHash(i);
+            if (versionedHash == bytes32(0)) revert MissingBlob(i);
+            bytes32 z = bytes32(uint256(sha256(abi.encodePacked(pidBE, rootBE, commitments[i]))) % BLS_MODULUS);
+            (bool ok, bytes memory out) =
+                POINT_EVALUATION.staticcall(abi.encodePacked(versionedHash, z, ys[i], commitments[i], kzgProofs[i]));
+            // Also rejects a chain where 0x0A is not the precompile (empty return data).
+            if (!ok || out.length != 64) revert InvalidBlobOpening(i);
+            (uint256 fieldElements, uint256 modulus) = abi.decode(out, (uint256, uint256));
+            if (fieldElements != FIELD_ELEMENTS_PER_BLOB || modulus != BLS_MODULUS) revert InvalidBlobOpening(i);
         }
     }
 }

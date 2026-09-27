@@ -3,29 +3,36 @@ pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ProcessRegistry} from "../src/ProcessRegistry.sol";
-import {StateTransitionVerifierGroth16} from "../src/verifiers/StateTransitionVerifierGroth16.sol";
-import {ResultsVerifierGroth16} from "../src/verifiers/ResultsVerifierGroth16.sol";
+import {ZiskVerifier} from "../src/verifiers/ZiskVerifier.sol";
 
+/// @notice Deploys the ZisK PLONK verifier (ZiskVerifier extends PlonkVerifier) and the
+///         ProcessRegistry pinned to the davinci-zkvm program vks.
+/// @dev Env: PRIVATE_KEY, CHAIN_ID, BATCH_PROGRAM_VK, RESULTS_PROGRAM_VK, ROOT_C_VADCOP_FINAL,
+///      BALLOT_VK_HASH (bytes32 hex). ROOT_C_VADCOP_FINAL must match the vendored verifier setup.
 contract DeployAllScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployerAddress = vm.addr(deployerPrivateKey);
         console.log("Deployer address:", deployerAddress);
-        vm.startBroadcast(deployerPrivateKey);
-
-
-        StateTransitionVerifierGroth16 stv = new StateTransitionVerifierGroth16();
-        console.log("StateTransitionVerifierGroth16 deployed at:", address(stv));
-
-        ResultsVerifierGroth16 rv = new ResultsVerifierGroth16();
-        console.log("ResultsVerifierGroth16 deployed at:", address(rv));
 
         uint256 chainId = vm.envUint("CHAIN_ID");
         require(chainId <= type(uint32).max, "CHAIN_ID exceeds uint32");
         // forge-lint: disable-next-line(unsafe-typecast)
         uint32 chainId32 = uint32(chainId);
-        bool blobs = vm.envBool("ACTIVATE_BLOBS");
-        ProcessRegistry processRegistry = new ProcessRegistry(chainId32, address(stv), address(rv), blobs);
+        bytes32 batchProgramVK = vm.envBytes32("BATCH_PROGRAM_VK");
+        bytes32 resultsProgramVK = vm.envBytes32("RESULTS_PROGRAM_VK");
+        bytes32 rootCVadcopFinal = vm.envBytes32("ROOT_C_VADCOP_FINAL");
+        bytes32 ballotVKHash = vm.envBytes32("BALLOT_VK_HASH");
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        ZiskVerifier zisk = new ZiskVerifier();
+        console.log("ZiskVerifier deployed at:", address(zisk));
+        require(zisk.getRootCVadcopFinal() == rootCVadcopFinal, "ROOT_C_VADCOP_FINAL differs from the verifier setup");
+
+        ProcessRegistry processRegistry = new ProcessRegistry(
+            chainId32, address(zisk), batchProgramVK, resultsProgramVK, rootCVadcopFinal, ballotVKHash
+        );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
 
         vm.stopBroadcast();

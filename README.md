@@ -162,6 +162,17 @@ anvil
 forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
 ```
 
+`DeployAll.s.sol` deploys `ZiskVerifier` (the vendored ZisK PLONK verifier) and the
+`ProcessRegistry` pinned to the davinci-zkvm program keys. It reads `PRIVATE_KEY`,
+`CHAIN_ID` and four bytes32 values:
+
+```bash
+BATCH_PROGRAM_VK=0x...     # vote-batch guest program vk (cargo-zisk setup "Root hash")
+RESULTS_PROGRAM_VK=0x...   # results guest program vk
+ROOT_C_VADCOP_FINAL=0x...  # must equal ZiskVerifier.getRootCVadcopFinal()
+BALLOT_VK_HASH=0x...       # sha256 of the ballot proof VK wire bytes (davinci.BallotVKLeaf)
+```
+
 ### Testnet/Mainnet Deployment
 
 1. Configure shared values in `.env` and chain-specific values in `.env.<chain>`.
@@ -173,6 +184,10 @@ PRIVATE_KEY=your_deployment_key
 ETHERSCAN_API_KEY=your_explorer_key
 VERIFY_MODE=auto
 DEPLOY_CHAINS=base,sepolia
+BATCH_PROGRAM_VK=0x...
+RESULTS_PROGRAM_VK=0x...
+ROOT_C_VADCOP_FINAL=0x...
+BALLOT_VK_HASH=0x...
 ```
 
 Chain file, for example `.env.base`:
@@ -180,16 +195,6 @@ Chain file, for example `.env.base`:
 ```bash
 RPC_URL=your_rpc_endpoint
 CHAIN_ID=your_chain_id
-ACTIVATE_BLOBS=True
-
-# Optional: reuse already deployed libraries.
-# If any of these are unset or point to an address without bytecode,
-# deploy_all.sh will deploy that library and print export lines you can reuse.
-POSEIDON_T3_ADDRESS=
-POSEIDON_T4_ADDRESS=
-STATE_ROOT_LIB_ADDRESS=
-PROCESS_ID_LIB_ADDRESS=
-BLOBS_LIB_ADDRESS=
 ```
 
 2. Deploy:
@@ -221,15 +226,9 @@ Per-chain `.env.<chain>` files, for example `.env.base`:
 ```bash
 CHAIN_ID=8453
 RPC_URL=https://your-base-rpc
-ACTIVATE_BLOBS=False
 
 # Optional per-chain overrides
 ETHERSCAN_API_URL=
-POSEIDON_T3_ADDRESS=
-POSEIDON_T4_ADDRESS=
-STATE_ROOT_LIB_ADDRESS=
-PROCESS_ID_LIB_ADDRESS=
-BLOBS_LIB_ADDRESS=
 ```
 
 Then run:
@@ -247,14 +246,9 @@ The wrapper:
 
 This means old single-chain values left in `.env` will not bleed into multi-chain runs.
 
-`deploy_all.sh` resolves libraries in this order:
-1. `PoseidonT3`
-2. `PoseidonT4`
-3. `StateRootLib` (linked against Poseidon)
-4. `ProcessIdLib`
-5. `BlobsLib`
-
-Then it deploys the main contracts with explicit linking for all of them.
+`ProcessRegistry` links no external libraries, so `deploy_all.sh` runs
+`DeployAll.s.sol` directly. Settlement needs EIP-4844 (blob transactions and the
+point-evaluation precompile) on the target chain.
 
 Verification behavior is controlled by `VERIFY_MODE`:
 - `auto`: disable verification on local chains (`31337`, `1337`), enable otherwise

@@ -13,6 +13,8 @@ optimizer_runs = 200
 via_ir = true
 extra_output = ["storageLayout"]
 cache_path = "cache_forge"
+# Tests read the Go-generated fixtures in test/vectors.
+fs_permissions = [{ access = "read", path = "./test/vectors" }]
 
 [fuzz]
 runs = 5000
