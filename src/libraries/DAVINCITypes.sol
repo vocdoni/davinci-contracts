@@ -19,9 +19,10 @@ library DAVINCITypes {
 
     /**
      * @notice The census origin defines the origin of the census data. It affects the way the census is handled.
-     * @dev The zkVM ProcessRegistry accepts MERKLE_TREE_OFFCHAIN_STATIC_V1 (a lean-IMT root) and
-     *      CSP_EDDSA_BABYJUBJUB_V1, which the davinci-zkvm guest verifies as an ECDSA/secp256k1 CSP
-     *      (the value 4 is kept; the name is historical).
+     * @dev The zkVM ProcessRegistry accepts origins 1-4. Origins 1-3 are lean-IMT censuses: a fixed
+     *      root, a root the organizer replaces with setProcessCensus, and the root history of an
+     *      ICensusValidator contract. CSP_EDDSA_BABYJUBJUB_V1 is verified by the davinci-zkvm guest
+     *      as an ECDSA/secp256k1 CSP (the value 4 is kept; the name is historical).
      */
     enum CensusOrigin {
         CENSUS_UNKNOWN,
@@ -57,10 +58,13 @@ library DAVINCITypes {
      * @notice The census defines the parameters of the census.
      * @param censusOrigin The origin of the census.
      * @param censusRoot The root of the census as a big-endian integer: the lean-IMT root for a Merkle census,
-     *        bytes32(uint256(uint160(cspAddress))) for a CSP census.
-     * @param contractAddress An EVM contract address (optional). Ideally this contract returns census information and/or data.
+     *        bytes32(uint256(uint160(cspAddress))) for a CSP census. For MERKLE_TREE_ONCHAIN_DYNAMIC_V1 the
+     *        registry stores the contract's root at creation, for information only.
+     * @param contractAddress The ICensusValidator census contract for MERKLE_TREE_ONCHAIN_DYNAMIC_V1, which must
+     *        have code and answer getCensusRoot(). Must be address(0) for every other origin.
      * @param censusURI The URI of the census.
-     * @param onchainAllowAnyValidRoot Used for onchain censuses. If true allows to skip the census startBlock check in the state transition function.
+     * @param onchainAllowAnyValidRoot Must be false: the zkVM registry only settles on-chain census roots held at or
+     *        after process creation.
      */
     struct Census {
         CensusOrigin censusOrigin;

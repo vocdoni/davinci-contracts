@@ -6,6 +6,7 @@ import {RegistryTestBase} from "./RegistryTestBase.sol";
 import {ProcessRegistry} from "../src/ProcessRegistry.sol";
 import {IProcessRegistry} from "../src/interfaces/IProcessRegistry.sol";
 import {DAVINCITypes} from "../src/libraries/DAVINCITypes.sol";
+import {MockCensusValidator} from "./mocks/MockCensusValidator.sol";
 
 contract NewProcessTest is RegistryTestBase {
     using stdJson for string;
@@ -52,18 +53,11 @@ contract NewProcessTest is RegistryTestBase {
         assertEq(registry.getProcess(pid).ballotMode.numFields, 16);
     }
 
-    function test_NewProcess_RejectsUnsupportedCensusOrigins() public {
+    function test_NewProcess_RejectsUnknownCensusOrigin() public {
         DAVINCITypes.Census memory c = _census();
-        DAVINCITypes.CensusOrigin[3] memory bad = [
-            DAVINCITypes.CensusOrigin.CENSUS_UNKNOWN,
-            DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1,
-            DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1
-        ];
-        for (uint256 i = 0; i < bad.length; i++) {
-            c.censusOrigin = bad[i];
-            vm.expectRevert(IProcessRegistry.InvalidCensusOrigin.selector);
-            _newProcess(block.timestamp, DURATION, MAX_VOTERS, _ballotMode(), c);
-        }
+        c.censusOrigin = DAVINCITypes.CensusOrigin.CENSUS_UNKNOWN;
+        vm.expectRevert(IProcessRegistry.InvalidCensusOrigin.selector);
+        _newProcess(block.timestamp, DURATION, MAX_VOTERS, _ballotMode(), c);
     }
 
     /// @dev Census with the origin as a raw uint8, to encode values outside the enum.
@@ -76,8 +70,12 @@ contract NewProcessTest is RegistryTestBase {
     }
 
     function _rawNewProcess(uint8 origin) internal returns (bool ok) {
+        return _rawNewProcess(origin, address(0));
+    }
+
+    function _rawNewProcess(uint8 origin, address censusContract) internal returns (bool ok) {
         bytes32 root = origin == 4 ? bytes32(uint256(uint160(address(0xC5C5)))) : _census().censusRoot;
-        RawCensus memory c = RawCensus(origin, root, address(0), "https://example.com/census", false);
+        RawCensus memory c = RawCensus(origin, root, censusContract, "https://example.com/census", false);
         bytes memory data = abi.encodeWithSelector(
             registry.newProcess.selector,
             DAVINCITypes.ProcessStatus.READY,
@@ -96,9 +94,12 @@ contract NewProcessTest is RegistryTestBase {
     function test_NewProcess_RejectsCensusOriginFive() public {
         // 5 is outside the enum: the ABI decoder rejects the call before any check runs.
         assertFalse(_rawNewProcess(5));
-        assertFalse(_rawNewProcess(2));
-        assertFalse(_rawNewProcess(3));
+        assertFalse(_rawNewProcess(0));
         assertTrue(_rawNewProcess(1));
+        assertTrue(_rawNewProcess(2));
+        // Origin 3 needs a census contract.
+        assertFalse(_rawNewProcess(3));
+        assertTrue(_rawNewProcess(3, address(new MockCensusValidator())));
         assertTrue(_rawNewProcess(4));
     }
 

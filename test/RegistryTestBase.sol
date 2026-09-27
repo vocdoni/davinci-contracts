@@ -102,7 +102,11 @@ abstract contract RegistryTestBase is Test {
     }
 
     function _transition(uint256 i) internal view returns (Transition memory t) {
-        string memory p = string.concat(".transitions[", vm.toString(i), "]");
+        return _transitionAt(string.concat(".transitions[", vm.toString(i), "]"));
+    }
+
+    /// @dev The transition at JSON path p of the fixture.
+    function _transitionAt(string memory p) internal view returns (Transition memory t) {
         t.publicValues = fixture.readBytes(string.concat(p, ".public_values"));
         t.proofBytes = fixture.readBytes(string.concat(p, ".proof_bytes"));
         t.rootBefore = fixture.readBytes32(string.concat(p, ".root_before"));

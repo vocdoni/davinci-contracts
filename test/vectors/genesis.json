@@ -362,6 +362,186 @@
         "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
       },
       "root": "0x95134a1bb3e0eb6f4ea159718242621e37db766951676c8306f04dc347c4013c"
+    },
+    {
+      "source": "registry",
+      "process_id": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266c4fc1a83000000000000c8",
+      "ballot_mode": {
+        "num_fields": 2,
+        "group_size": 1,
+        "unique_values": false,
+        "cost_exponent": 1,
+        "max_value": 1,
+        "min_value": 0,
+        "max_value_sum": 2,
+        "min_value_sum": 0,
+        "packed": "5316911983139663491615228241155064066"
+      },
+      "enc_key": {
+        "x": "10430249720429208098135806330747753398588947212735763971086530954260470067611",
+        "y": "15494902866271347409322766671180470588918944773461514761530842065129272512227"
+      },
+      "census_origin": 2,
+      "ballot_vk_hash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e",
+      "leaves": {
+        "0x00": "0xc8000000000000831afcc46622b9ffcf797282b86acef4f688ad1ae5d69ff300",
+        "0x02": "0x0201020200000000000000000000000400000000000000000000000000000000",
+        "0x03": "0x0b509691fd61646a1054f24829d8de2ef0d953baef052b52016b6d05751881e6",
+        "0x04": "0x78e2cafa365f3ab895cc2deea15e59e2ed4939bd603b668f72aa4489d600f41d",
+        "0x06": "0x0200000000000000000000000000000000000000000000000000000000000000",
+        "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
+      },
+      "root": "0x7ed23e6f4dd46e859a2f4ea0659466241f98a0162bbe85eb2ceef8fde04fbb4c"
+    },
+    {
+      "source": "registry",
+      "process_id": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266c4fc1a83000000000000c9",
+      "ballot_mode": {
+        "num_fields": 2,
+        "group_size": 1,
+        "unique_values": false,
+        "cost_exponent": 1,
+        "max_value": 1,
+        "min_value": 0,
+        "max_value_sum": 2,
+        "min_value_sum": 0,
+        "packed": "5316911983139663491615228241155064066"
+      },
+      "enc_key": {
+        "x": "20371752701887981663126928758862179057662294010710131018449394731680714486514",
+        "y": "1562061979581957848439302367674980089752403802824565354722736740317184051171"
+      },
+      "census_origin": 3,
+      "ballot_vk_hash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e",
+      "leaves": {
+        "0x00": "0xc9000000000000831afcc46622b9ffcf797282b86acef4f688ad1ae5d69ff300",
+        "0x02": "0x0201020200000000000000000000000400000000000000000000000000000000",
+        "0x03": "0xfa4af6f1c389c8a1a9db4fa3ce89f2a1b82e1f68444eae4a7c7be12a8dab9fff",
+        "0x04": "0x78e2cafa365f3ab895cc2deea15e59e2ed4939bd603b668f72aa4489d600f41d",
+        "0x06": "0x0300000000000000000000000000000000000000000000000000000000000000",
+        "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
+      },
+      "root": "0x505797d8ff985a7516a91c1b6d834b93fecdde762728feae024f7ebf87b6c20f"
+    },
+    {
+      "source": "registry",
+      "process_id": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266c4fc1a83000000000000ca",
+      "ballot_mode": {
+        "num_fields": 6,
+        "group_size": 0,
+        "unique_values": false,
+        "cost_exponent": 2,
+        "max_value": 16,
+        "min_value": 0,
+        "max_value_sum": 1280,
+        "min_value_sum": 5,
+        "packed": "122599643269271112071491431381409369323245204092907421702"
+      },
+      "enc_key": {
+        "x": "21838820817590595487076407968001034739730030816999749512596516140089196246390",
+        "y": "16231932740010081548701208185942576914870615820821672517946596512781196802026"
+      },
+      "census_origin": 2,
+      "ballot_vk_hash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e",
+      "leaves": {
+        "0x00": "0xca000000000000831afcc46622b9ffcf797282b86acef4f688ad1ae5d69ff300",
+        "0x02": "0x060004200000000000000000000000000a000000000000050000000000000000",
+        "0x03": "0x3db330d06cb1789e1891952d4fe52eae6299c379f974d86934848b7e2433bb2a",
+        "0x04": "0x78e2cafa365f3ab895cc2deea15e59e2ed4939bd603b668f72aa4489d600f41d",
+        "0x06": "0x0200000000000000000000000000000000000000000000000000000000000000",
+        "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
+      },
+      "root": "0xcfe71bfc6be2ec6b4d41b8ced121c6a4bce6e862e379955509445a5c114129bc"
+    },
+    {
+      "source": "registry",
+      "process_id": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266c4fc1a83000000000000cb",
+      "ballot_mode": {
+        "num_fields": 6,
+        "group_size": 0,
+        "unique_values": false,
+        "cost_exponent": 2,
+        "max_value": 16,
+        "min_value": 0,
+        "max_value_sum": 1280,
+        "min_value_sum": 5,
+        "packed": "122599643269271112071491431381409369323245204092907421702"
+      },
+      "enc_key": {
+        "x": "18790957046404642850657047356150510507909169758832902584115207082681951435065",
+        "y": "15859853338819345064367434323482100888196006517357589543881661571626782275871"
+      },
+      "census_origin": 3,
+      "ballot_vk_hash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e",
+      "leaves": {
+        "0x00": "0xcb000000000000831afcc46622b9ffcf797282b86acef4f688ad1ae5d69ff300",
+        "0x02": "0x060004200000000000000000000000000a000000000000050000000000000000",
+        "0x03": "0xec7d98643ccce31070f45a2329ffb3ae1398734f138c519ff1f83be263193c58",
+        "0x04": "0x78e2cafa365f3ab895cc2deea15e59e2ed4939bd603b668f72aa4489d600f41d",
+        "0x06": "0x0300000000000000000000000000000000000000000000000000000000000000",
+        "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
+      },
+      "root": "0x96d393c24bb3004a97317837203c7a535cb1f47af82a3ba0f5983430f1b9032a"
+    },
+    {
+      "source": "registry",
+      "process_id": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266c4fc1a83000000000000cc",
+      "ballot_mode": {
+        "num_fields": 16,
+        "group_size": 16,
+        "unique_values": true,
+        "cost_exponent": 255,
+        "max_value": 281474976710655,
+        "min_value": 7,
+        "max_value_sum": 9223372036854775807,
+        "min_value_sum": 1,
+        "packed": "49039857307708443464808648877240137687855763703637938192"
+      },
+      "enc_key": {
+        "x": "16183574169375693862188864529018839900657086412392826399493732315407480159030",
+        "y": "19355651771959902154220773193925413415016196728963593443897072589363885151847"
+      },
+      "census_origin": 2,
+      "ballot_vk_hash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e",
+      "leaves": {
+        "0x00": "0xcc000000000000831afcc46622b9ffcf797282b86acef4f688ad1ae5d69ff300",
+        "0x02": "0x1010ffffffffffffff0f0000000000feffffffffffffff010000000000000000",
+        "0x03": "0x9b5d53a7e5f4f8eef5183a2b780a3d55f2803529b2abf263a773b2e94a75aaaf",
+        "0x04": "0x78e2cafa365f3ab895cc2deea15e59e2ed4939bd603b668f72aa4489d600f41d",
+        "0x06": "0x0200000000000000000000000000000000000000000000000000000000000000",
+        "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
+      },
+      "root": "0xf8d35a9b0c7811eb4d356aabb25e9f77062c1d015b5a6981111fc3a39d3846a0"
+    },
+    {
+      "source": "registry",
+      "process_id": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266c4fc1a83000000000000cd",
+      "ballot_mode": {
+        "num_fields": 16,
+        "group_size": 16,
+        "unique_values": true,
+        "cost_exponent": 255,
+        "max_value": 281474976710655,
+        "min_value": 7,
+        "max_value_sum": 9223372036854775807,
+        "min_value_sum": 1,
+        "packed": "49039857307708443464808648877240137687855763703637938192"
+      },
+      "enc_key": {
+        "x": "9634493104439153959095767527820493803112380683829297982458589334239089740912",
+        "y": "20639639475058382429578401554050614009328474713119058667967778585789857127594"
+      },
+      "census_origin": 3,
+      "ballot_vk_hash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e",
+      "leaves": {
+        "0x00": "0xcd000000000000831afcc46622b9ffcf797282b86acef4f688ad1ae5d69ff300",
+        "0x02": "0x1010ffffffffffffff0f0000000000feffffffffffffff010000000000000000",
+        "0x03": "0xfc788fd6b5b989f7a5221198ef6f8a103a0a484b9a39267c97397fd85c4510bf",
+        "0x04": "0x78e2cafa365f3ab895cc2deea15e59e2ed4939bd603b668f72aa4489d600f41d",
+        "0x06": "0x0300000000000000000000000000000000000000000000000000000000000000",
+        "0x07": "0x0ebb76c78fd6b69d017468719085a72227fac6d1d7c401d683a81bbb90651ebf"
+      },
+      "root": "0xd76ab0d823b030b44483322065f73f188e2207965ac2ede5aede8694a4f44a45"
     }
   ]
 }

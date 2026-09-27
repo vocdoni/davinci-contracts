@@ -2,25 +2,34 @@
 pragma solidity ^0.8.28;
 
 /// @title ICensusValidator
-/// @notice Interface for validating census Merkle roots
-/// @dev Implement this interface to enable external contracts to verify census roots
-///      Useful for voting systems, governance contracts, and other on-chain mechanisms
-///      that need to validate voting power at specific block numbers
+/// @notice Root history of an on-chain lean-IMT census, used by MERKLE_TREE_ONCHAIN_DYNAMIC_V1
+///         processes.
+/// @dev The ProcessRegistry settles a batch proven against census root R only if
+///      getRootBlockNumber(R) is non-zero, at most block.number and at least the process
+///      creation block. It calls the getters with 100k gas and needs one 32-byte word back;
+///      anything else rejects the batch. That only works with these semantics:
+///      - getRootBlockNumber returns block.number for the current root, the block a replaced
+///        root was replaced in (its last valid block), and 0 for a root it never held.
+///      - Roots are never evicted. An evicted root answers 0, so a batch proven against it
+///        stops settling and has to be proven again on a newer root.
+///      - The census is append-only and a member's weight never changes, so every later root
+///        holds every earlier member with the same weight. The ballot proof binds the weight
+///        and the ballot slot derives from the address.
+///      A contract that answers the block a root was set in (DavinciDao style) does not fit:
+///      the root current at process creation would be rejected.
 interface ICensusValidator {
     /// @notice Emitted when an account's weight changes in the census
+    /// @dev A census used by the registry emits it only for new members (previousWeight == 0).
     /// @param account The address of the account whose weight changed
     /// @param previousWeight The previous weight of the account
     /// @param newWeight The new weight of the account
     event WeightChanged(address indexed account, uint88 previousWeight, uint88 newWeight);
 
-    /// @notice Validates a census root and returns the last block where it is/was valid
-    /// @dev Returns the last block where the root is/was valid.
-    ///      For the current root, returns block.number (still valid).
-    ///      For historical roots, returns the block number when it was replaced (last valid block).
-    ///      Returns 0 if the root has never been set or has been evicted from history.
-    ///      The root history is maintained in a circular buffer (last 100 roots)
+    /// @notice The last block where a census root is or was valid.
+    /// @dev block.number for the current root, the block it was replaced in for an older one,
+    ///      0 for a root the census never held (or evicted, which the registry cannot tell apart).
     /// @param root The census Merkle root to validate
-    /// @return blockNumber The last block where this root is/was valid (0 if invalid/evicted)
+    /// @return blockNumber The last block where this root is/was valid (0 if unknown)
     function getRootBlockNumber(uint256 root) external view returns (uint256 blockNumber);
 
     /// @notice Current census Merkle root (Lean-IMT).

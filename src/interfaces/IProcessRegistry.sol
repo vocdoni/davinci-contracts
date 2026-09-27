@@ -17,6 +17,13 @@ interface IProcessRegistry {
      */
     event ProcessCreated(bytes31 indexed processId, address indexed creator);
     /*
+     * @notice Emitted when the organizer replaces the census of an origin-2 process.
+     * @param processId The ID of the process.
+     * @param censusRoot The new census root (big-endian integer).
+     * @param censusURI The URI of the new census.
+     */
+    event CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI);
+    /*
      * @notice Emitted when the duration of a process is modified.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
@@ -144,6 +151,16 @@ interface IProcessRegistry {
      */
     error InvalidCensusConfig();
     /**
+     * @notice InvalidCensusAddress error is emitted when an on-chain census address has no code
+     *         or does not answer getCensusRoot(), or when another census origin sets an address.
+     */
+    error InvalidCensusAddress();
+    /**
+     * @notice CensusNotUpdatable error is emitted when setProcessCensus targets a process whose
+     *         census origin is not MERKLE_TREE_OFFCHAIN_DYNAMIC_V1.
+     */
+    error CensusNotUpdatable();
+    /**
      * @notice InvalidEncryptionKey error is emitted when the key is not a canonical BabyJubJub point
      *         (circomlib twisted Edwards) with x != 0.
      */
@@ -212,7 +229,8 @@ interface IProcessRegistry {
      */
     error NoBlobs();
     /**
-     * @notice Thrown when the blob arrays do not all have n_blobs entries.
+     * @notice Thrown when the blob arrays do not all have n_blobs entries, or the transaction
+     *         carries a blob beyond the first n_blobs.
      */
     error BlobCountMismatch();
     /**
@@ -320,7 +338,18 @@ interface IProcessRegistry {
     function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external;
 
     /**
-     * @notice Sets the duration of a process.
+     * @notice Replaces the census root and URI of a MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 process.
+     *         Only the organizer, while READY or PAUSED and before the end time. Batches
+     *         proven against the previous root no longer settle.
+     * @param processId The ID of the process.
+     * @param census The new census: the process's origin, a non-zero root, a non-empty URI and
+     *        no contract address.
+     */
+    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external;
+
+    /**
+     * @notice Sets the duration of a process. Only before its current end: past it the tally
+     *         may already be public, so the election cannot be reopened.
      * @param processId The ID of the process.
      * @param duration The new duration of the process.
      */

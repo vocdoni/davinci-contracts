@@ -28,8 +28,9 @@ contract GenesisHarness {
 }
 
 /// @dev genesisRoot against test/vectors/genesis.json: go-sdk chain.NewState roots for
-///      registry-style pids (three ballot modes, both census origins) plus the rust-sdk
-///      vector, which the generator recomputes and checks before including it.
+///      registry-style pids (three ballot modes, origins 1 and 4) plus the rust-sdk
+///      vector, which the generator recomputes and checks before including it, and
+///      the dynamic origins 2 and 3 last.
 contract GenesisTest is Test {
     using stdJson for string;
 
@@ -96,8 +97,8 @@ contract GenesisTest is Test {
             origins |= 1 << uint8(origin);
             n++;
         }
-        assertEq(n, 12, "case count");
-        assertEq(origins, (1 << 1) | (1 << 4), "both origins covered");
+        assertEq(n, 18, "case count");
+        assertEq(origins, (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4), "every origin covered");
     }
 
     function test_GenesisLeaves_MatchGoVectors() public view {

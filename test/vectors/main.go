@@ -67,6 +67,7 @@ func main() {
 	vkSum := sha256.Sum256(vkJSON)
 
 	genesis := genesisVectors(prefix, creator, vkLeaf, *sdkGenesis)
+	genesis.Cases = append(genesis.Cases, dynamicGenesisCases(prefix, creator, vkLeaf)...)
 	genesis.BallotVKFileSHA256 = hex.EncodeToString(vkSum[:])
 	writeJSON(*out, "genesis.json", genesis)
 	writeJSON(*out, "smt.json", map[string][]smtCase{"cases": smtVectors()})
@@ -207,6 +208,22 @@ func genesisVectors(prefix uint32, creator common.Address, vkLeaf *big.Int, sdkP
 	}
 	log.Printf("rust-sdk genesis vector: %d cases agree with go-sdk chain.NewState", len(sdk))
 	return f
+}
+
+// dynamicGenesisCases covers the dynamic Merkle origins (2 off-chain, 3 on-chain). They go
+// after the rust-sdk cases so the indices of the earlier cases do not move.
+func dynamicGenesisCases(prefix uint32, creator common.Address, vkLeaf *big.Int) []genesisCase {
+	var out []genesisCase
+	n := uint64(0)
+	for _, mode := range fixtureModes {
+		for _, origin := range []uint64{2, 3} {
+			pid := processID(prefix, creator, 200+n)
+			key := testKey(int64(2000 + 7919*n))
+			out = append(out, genesisCaseFor("registry", pid, mode, key, origin, vkLeaf))
+			n++
+		}
+	}
+	return out
 }
 
 func genesisCaseFor(source string, pid *big.Int, mode ballotModeJSON, key *bjjgnark.BJJ, origin uint64, vkLeaf *big.Int) genesisCase {
@@ -382,6 +399,16 @@ type fixtureFile struct {
 	GenesisRoot  string           `json:"genesis_root"`
 	Transitions  []transitionJSON `json:"transitions"`
 	Results      resultsJSON      `json:"results"`
+	Dynamic      []dynamicJSON    `json:"dynamic"`
+}
+
+// dynamicJSON is the first transition of the same process created with a dynamic
+// census origin: only the origin leaf of the genesis differs, which moves every root
+// and the blob evaluation points.
+type dynamicJSON struct {
+	CensusOrigin uint64         `json:"census_origin"`
+	GenesisRoot  string         `json:"genesis_root"`
+	Transition   transitionJSON `json:"transition"`
 }
 
 // transitionFixture builds two transitions for the organizer's first process:
@@ -422,8 +449,7 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 		}
 	}
 
-	root := genesis
-	for t, b := range []batch{b1, b2} {
+	build := func(pt *pointGen, root []byte, b batch, t int) (transitionJSON, [][]byte, []byte) {
 		updates := make([]davinci.SlotUpdate, len(b.slots))
 		for i, s := range b.slots {
 			updates[i] = davinci.SlotUpdate{Key: s, Ballot: pt.ballot(nf)}
@@ -466,9 +492,22 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 			tj.VersionedHashes = append(tj.VersionedHashes, hex0x(tb.VersionedHashes[i][:]))
 			blobs = append(blobs, tb.Blobs[i][:])
 		}
+		return tj, blobs, after[:]
+	}
+
+	root := genesis
+	for t, b := range []batch{b1, b2} {
+		tj, blobs, after := build(&pt, root, b, t)
 		fx.Transitions = append(fx.Transitions, tj)
 		allBlobs = append(allBlobs, blobs)
-		root = after[:]
+		root = after
+	}
+
+	// The first batch again, for the same process created with origin 2 and with origin 3.
+	for _, origin := range []uint64{2, 3} {
+		dg := genesisCaseFor("fixture", pid, mode, key, origin, vkLeaf)
+		tj, _, _ := build(&pointGen{}, mustBytes(dg.Root), b1, 0)
+		fx.Dynamic = append(fx.Dynamic, dynamicJSON{CensusOrigin: origin, GenesisRoot: dg.Root, Transition: tj})
 	}
 
 	// Results over the final root: field 1 needs the high register.

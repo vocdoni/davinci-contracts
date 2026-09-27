@@ -225,6 +225,55 @@ contract TransitionTest is RegistryTestBase {
         _submit(pid, t);
     }
 
+    /// @dev A copy of an honest settlement with one more blob appended must not settle:
+    ///      nodes decoding every blob of the transaction would stall on the extra one.
+    function test_RevertWhen_ExtraBlob() public {
+        bytes31 pid = _fixtureProcess();
+        Transition memory t = _transition(0);
+        bytes32[] memory exact = t.versionedHashes;
+        t.versionedHashes = _withExtraBlob(exact);
+        vm.expectRevert(IProcessRegistry.BlobCountMismatch.selector);
+        _submit(pid, t);
+
+        t.versionedHashes = exact;
+        _submit(pid, t);
+        assertEq(registry.getProcess(pid).batchNumber, 1);
+    }
+
+    function test_RevertWhen_ExtraBlobAfterTwo() public {
+        bytes31 pid = _fixtureProcess();
+        _submit(pid, _transition(0));
+        Transition memory t = _transition(1);
+        bytes32[] memory exact = t.versionedHashes;
+        t.versionedHashes = _withExtraBlob(exact);
+        vm.expectRevert(IProcessRegistry.BlobCountMismatch.selector);
+        _submit(pid, t);
+
+        t.versionedHashes = exact;
+        _submit(pid, t);
+        assertEq(registry.getProcess(pid).batchNumber, 2);
+    }
+
+    function _withExtraBlob(bytes32[] memory hashes) internal pure returns (bytes32[] memory out) {
+        out = new bytes32[](hashes.length + 1);
+        for (uint256 i = 0; i < hashes.length; i++) {
+            out[i] = hashes[i];
+        }
+        out[hashes.length] = bytes32(uint256(0x01) << 248 | uint256(keccak256("junk blob")) >> 8);
+    }
+
+    /// @dev Status changes cannot reopen voting past the end: only the time bound gates it.
+    function test_RevertWhen_ResumedAfterEnd() public {
+        bytes31 pid = _fixtureProcess();
+        vm.prank(ORGANIZER);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        vm.warp(block.timestamp + DURATION);
+        vm.prank(ORGANIZER);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.READY);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        _submit(pid, _transition(0));
+    }
+
     function test_RevertWhen_NoBlobs() public {
         bytes31 pid = _fixtureProcess();
         Transition memory t = _transition(0);

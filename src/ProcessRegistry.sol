@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IProcessRegistry} from "./interfaces/IProcessRegistry.sol";
 import {IZiskVerifier} from "./interfaces/IZiskVerifier.sol";
+import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
 import {DAVINCITypes} from "./libraries/DAVINCITypes.sol";
 import {ProcessIdLib} from "./libraries/ProcessIdLib.sol";
 import {BlobsLib} from "./libraries/BlobsLib.sol";
@@ -30,6 +31,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     uint256 private constant FIELD_ELEMENTS_PER_BLOB = 4096;
     uint256 private constant BLS_MODULUS =
         52435875175126190479447740508185965837690552500527637822603658699938581184513;
+    /// @dev Gas for each call into an origin-3 census contract (OnchainCensus needs < 5k).
+    uint256 private constant CENSUS_CALL_GAS = 100_000;
 
     // Batch guest output registers (circuit/CIRCUIT.md §3).
     uint256 private constant REG_OK = 0;
@@ -173,7 +176,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes31 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
-        _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census, encryptionKey);
+        bytes32 censusRoot =
+            _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census, encryptionKey);
 
         // validate start time, block and duration
         uint256 currentTimestamp = block.timestamp;
@@ -195,6 +199,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
+        p.census.censusRoot = censusRoot;
         p.creationBlock = block.number;
 
         processCount++;
@@ -235,6 +240,32 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
+    function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external override {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (p.organizationId != msg.sender) revert Unauthorized();
+        if (p.census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1) {
+            revert CensusNotUpdatable();
+        }
+        if (census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_DYNAMIC_V1) {
+            revert InvalidCensusOrigin();
+        }
+        if (census.contractAddress != address(0)) revert InvalidCensusAddress();
+        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
+        if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
+
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
+            revert InvalidStatus();
+        }
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        p.census.censusRoot = census.censusRoot;
+        p.census.censusURI = census.censusURI;
+
+        emit CensusUpdated(processId, census.censusRoot, census.censusURI);
+    }
+
+    /// @inheritdoc IProcessRegistry
     /// @dev Note that the end time of the process is startTime + duration.
     function setProcessDuration(bytes31 processId, uint256 _duration) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
@@ -252,6 +283,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         // check valid duration
         uint256 startTime = p.startTime;
         uint256 oldDuration = p.duration;
+        // Past the end the tally may already be public (results tx in the mempool): no reopening.
+        if (startTime + oldDuration <= block.timestamp) revert InvalidTimeBounds();
         if (
             _duration == 0 || startTime + _duration <= block.timestamp
                 || startTime + _duration <= startTime + oldDuration
@@ -303,9 +336,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         _checkGuestOk(publicValues);
         bytes32 rootBefore = PublicsLib.reg32(publicValues, REG_ROOT_BEFORE);
         if (rootBefore != p.latestStateRoot) revert InvalidStateRoot();
-        if (PublicsLib.reverse32(PublicsLib.reg32(publicValues, REG_CENSUS_ROOT)) != p.census.censusRoot) {
-            revert InvalidCensusRoot();
-        }
+        _checkCensusRoot(p, PublicsLib.reverse32(PublicsLib.reg32(publicValues, REG_CENSUS_ROOT)));
         // occupied_before counts the distinct slots written so far, which is votersCount.
         uint256 votersCount = p.votersCount;
         if (PublicsLib.word(publicValues, REG_OCCUPIED_BEFORE) != votersCount) revert InvalidOccupiedBefore();
@@ -372,7 +403,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /**
-     * @dev Validates inputs for a new process
+     * @dev Validates inputs for a new process and returns the census root to store.
      */
     function _validateNewProcess(
         bytes31 processId,
@@ -382,7 +413,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.Census calldata census,
         DAVINCITypes.EncryptionKey calldata encryptionKey
-    ) private view {
+    ) private view returns (bytes32 censusRoot) {
         if (processes[processId].organizationId == sender) {
             revert ProcessAlreadyExists();
         }
@@ -397,18 +428,28 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (maxVoters == 0) revert InvalidMaxVoters();
         _validateMaxPossibleResultCap(maxVoters, ballotMode.maxValue);
 
-        // validate census. The zkVM guest supports two origins:
-        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> lean-IMT root (fixed: slots derive from the census path)
+        // validate census:
+        //  - MERKLE_TREE_OFFCHAIN_STATIC_V1 -> lean-IMT root (fixed)
+        //  - MERKLE_TREE_OFFCHAIN_DYNAMIC_V1 -> lean-IMT root, replaced by setProcessCensus
+        //  - MERKLE_TREE_ONCHAIN_DYNAMIC_V1 -> census contract, asked about each batch root; the
+        //    root stored here is its current one, for information only
         //  - CSP_EDDSA_BABYJUBJUB_V1 -> the CSP signer address as uint160 (ECDSA/secp256k1 in the guest)
         DAVINCITypes.CensusOrigin origin = census.censusOrigin;
-        if (
-            origin != DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
-                && origin != DAVINCITypes.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1
-        ) revert InvalidCensusOrigin();
+        if (origin == DAVINCITypes.CensusOrigin.CENSUS_UNKNOWN) revert InvalidCensusOrigin();
         if (census.onchainAllowAnyValidRoot) revert InvalidCensusConfig();
-        if (census.censusRoot == bytes32(0)) revert InvalidCensusRoot();
-        if (origin == DAVINCITypes.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1 && uint256(census.censusRoot) >> 160 != 0) {
-            revert InvalidCensusRoot();
+        censusRoot = census.censusRoot;
+        if (origin == DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+            address censusContract = census.contractAddress;
+            if (censusContract.code.length == 0) revert InvalidCensusAddress();
+            (bool ok, uint256 current) = _censusCall(censusContract, abi.encodeCall(ICensusValidator.getCensusRoot, ()));
+            if (!ok) revert InvalidCensusAddress();
+            censusRoot = bytes32(current);
+        } else {
+            if (census.contractAddress != address(0)) revert InvalidCensusAddress();
+            if (censusRoot == bytes32(0)) revert InvalidCensusRoot();
+            if (origin == DAVINCITypes.CensusOrigin.CSP_EDDSA_BABYJUBJUB_V1 && uint256(censusRoot) >> 160 != 0) {
+                revert InvalidCensusRoot();
+            }
         }
         // CensusURI: where the sequencer downloads the census (Merkle) or voters get signatures (CSP)
         if (bytes(census.censusURI).length == 0) revert InvalidCensusURI();
@@ -479,6 +520,33 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (p.organizationId == address(0)) revert ProcessNotFound();
     }
 
+    /// @dev Checks the census root a batch was proven against (BE integer). Origins 1, 2 and 4
+    ///      must match the stored root. Origin 3 must be a root the census contract held at some
+    ///      block in [creationBlock, block.number]: getRootBlockNumber returns the last block a
+    ///      root was current, and 0 for a root it never held (rejected, unlike v0.0.49). A failed
+    ///      or short answer is rejected too.
+    function _checkCensusRoot(DAVINCITypes.Process storage p, bytes32 censusRoot) private view {
+        if (p.census.censusOrigin != DAVINCITypes.CensusOrigin.MERKLE_TREE_ONCHAIN_DYNAMIC_V1) {
+            if (censusRoot != p.census.censusRoot) revert InvalidCensusRoot();
+            return;
+        }
+        (bool ok, uint256 rbn) = _censusCall(
+            p.census.contractAddress, abi.encodeCall(ICensusValidator.getRootBlockNumber, (uint256(censusRoot)))
+        );
+        if (!ok || rbn == 0 || rbn > block.number || rbn < p.creationBlock) revert InvalidCensusRoot();
+    }
+
+    /// @dev STATICCALLs an origin-3 census contract with CENSUS_CALL_GAS and reads one word.
+    ///      ok is false if the call fails or returns fewer than 32 bytes; nothing past the
+    ///      first word is copied.
+    function _censusCall(address census, bytes memory data) private view returns (bool ok, uint256 value) {
+        assembly ("memory-safe") {
+            ok := staticcall(CENSUS_CALL_GAS, census, add(data, 0x20), mload(data), 0x00, 0x20)
+            ok := and(ok, gt(returndatasize(), 0x1f))
+            value := mload(0x00)
+        }
+    }
+
     /// @dev The publics must be the 512-byte layout and report every guest check passed.
     function _checkGuestOk(bytes calldata publicValues) private pure {
         if (publicValues.length != PublicsLib.LENGTH) revert InvalidPublicValues();
@@ -487,16 +555,19 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         }
     }
 
-    /// @dev Checks the blob arrays against n_blobs and the pair digest the guest published.
+    /// @dev Checks the blob arrays and the transaction's blobs against n_blobs, and the pair
+    ///      digest the guest published.
     function _checkBlobsDigest(
         bytes calldata publicValues,
         bytes[] calldata commitments,
         bytes32[] calldata ys,
         bytes[] calldata kzgProofs
-    ) private pure returns (uint256 n) {
+    ) private view returns (uint256 n) {
         n = PublicsLib.word(publicValues, REG_N_BLOBS);
         if (n == 0) revert NoBlobs();
         if (commitments.length != n || ys.length != n || kzgProofs.length != n) revert BlobCountMismatch();
+        // No blob may follow the n the guest committed to: nodes decode every blob of the tx.
+        if (BlobsLib.blobHash(n) != bytes32(0)) revert BlobCountMismatch();
 
         bytes memory pairs = new bytes(n * 80);
         for (uint256 i = 0; i < n; ++i) {

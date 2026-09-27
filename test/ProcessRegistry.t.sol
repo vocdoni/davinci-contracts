@@ -806,6 +806,39 @@ contract ProcessRegistryTest is RegistryTestBase {
         processRegistry.setProcessDuration(processId, invalidDuration);
     }
 
+    /// @dev Once the end has passed the tally may already be public (results tx in the
+    ///      mempool), so the election cannot be extended and reopened.
+    function test_SetProcessDuration_RevertWhen_AfterEnd() public {
+        bytes31 processId = createTestProcess(
+            defaultBallotMode,
+            DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
+        uint256 end = block.timestamp + 1000;
+
+        vm.warp(end);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessDuration(processId, 2000);
+
+        vm.warp(end + 500);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessDuration(processId, 2000);
+
+        processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.PAUSED);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessDuration(processId, 2000);
+        assertEq(processRegistry.getProcess(processId).duration, 1000);
+    }
+
+    function test_SetProcessDuration_ExtendJustBeforeEnd() public {
+        bytes31 processId = createTestProcess(
+            defaultBallotMode,
+            DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1
+        );
+        vm.warp(block.timestamp + 999);
+        processRegistry.setProcessDuration(processId, 2000);
+        assertEq(processRegistry.getProcess(processId).duration, 2000);
+    }
+
     function test_SetProcessDuration_MaxDuration() public {
         bytes31 processId = createTestProcess(
             defaultBallotMode,
