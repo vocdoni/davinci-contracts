@@ -1,0 +1,78 @@
+# Docker Compose profiles:
+# - test:   forge build --sizes and forge test, as CI runs them.
+# - deploy: deploy_all.sh (script/DeployAll.s.sol) against RPC_URL. Reads .env
+#           (see .env.example), so PRIVATE_KEY never enters the image.
+# - local:  an anvil chain on ANVIL_PORT with ZiskVerifier and ProcessRegistry
+#           deployed, pinned to the davinci-zkvm release.
+#
+# The forge services build the image from this checkout (submodules included)
+# every time, so they always run the current sources. anvil runs the stock
+# Foundry image of the same version.
+
+x-contracts: &contracts
+  build:
+    context: .
+    args:
+      FOUNDRY_VERSION: ${FOUNDRY_VERSION:-v1.8.3}
+  image: vocdoni/davinci-contracts:local
+  pull_policy: build
+
+services:
+  test:
+    profiles: ["test"]
+    <<: *contracts
+    command:
+      - |
+        set -e
+        forge build --sizes
+        forge test -vvv
+
+  # Keeps the forge broadcast record in the container; copy it out with
+  # docker compose cp (see the README).
+  deploy:
+    profiles: ["deploy"]
+    <<: *contracts
+    env_file: .env
+    command: ["./deploy_all.sh"]
+
+  anvil:
+    profiles: ["local"]
+    image: ghcr.io/foundry-rs/foundry:${FOUNDRY_VERSION:-v1.8.3}
+    command: ["exec anvil --host 0.0.0.0 --chain-id 31337 --hardfork osaka --block-time ${ANVIL_BLOCK_TIME:-1}"]
+    ports:
+      - "${ANVIL_PORT:-8545}:8545"
+    healthcheck:
+      test: ["CMD", "cast", "block-number", "--rpc-url", "http://localhost:8545"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # Deploys once per chain from anvil's dev account 0 (standard test mnemonic),
+  # so the addresses are always the same. The pins are the davinci-zkvm release
+  # (rust-sdk/src/release.rs) and the ballot VK hash of its embedded VK: a
+  # sequencer refuses a registry pinned to anything else.
+  deploy-local:
+    profiles: ["local"]
+    <<: *contracts
+    depends_on:
+      anvil:
+        condition: service_healthy
+    environment:
+      RPC_URL: http://anvil:8545
+      CHAIN_ID: "31337"
+      BATCH_PROGRAM_VK: "0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10"
+      RESULTS_PROGRAM_VK: "0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794"
+      ROOT_C_VADCOP_FINAL: "0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80"
+      BALLOT_VK_HASH: "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e"
+    command:
+      - |
+        set -e
+        export PRIVATE_KEY=$$(cast wallet private-key "test test test test test test test test test test test junk")
+        deployer=$$(cast wallet address "$$PRIVATE_KEY")
+        if [ "$$(cast nonce "$$deployer" --rpc-url "$$RPC_URL")" = 0 ]; then
+          forge script script/DeployAll.s.sol:DeployAllScript --rpc-url "$$RPC_URL" --broadcast
+        else
+          echo "Already deployed."
+        fi
+        echo "ZiskVerifier:    $$(cast compute-address "$$deployer" --nonce 0 | awk '{print $$NF}')"
+        echo "ProcessRegistry: $$(cast compute-address "$$deployer" --nonce 1 | awk '{print $$NF}')"

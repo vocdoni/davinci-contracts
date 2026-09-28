@@ -1,0 +1,16 @@
+# Only what forge and deploy_all.sh need; nothing untracked or local (.env,
+# build output, broadcast logs) reaches the image.
+*
+!foundry.toml
+!foundry.lock
+!remappings.txt
+!src
+!script
+!test
+!lib
+!helpers
+!deploy_all.sh
+!LICENSE.md
+
+**/.git
+**/node_modules

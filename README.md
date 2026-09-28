@@ -635,6 +635,37 @@ npm run slither
 npm run mythril
 ```
 
+### Docker
+
+`docker-compose.yml` runs Foundry (`FOUNDRY_VERSION`, default v1.8.3) in an image built
+from this checkout, submodules included, so check them out first.
+
+```bash
+docker compose --profile test run --rm test   # forge build --sizes, forge test
+docker compose --profile local up -d          # anvil with the contracts deployed
+docker compose --profile local down           # the chain is gone after this
+```
+
+`local` starts anvil on port `ANVIL_PORT` (default 8545): chain id 31337, Osaka, blocks every
+`ANVIL_BLOCK_TIME` seconds (default 1). It deploys from anvil's account 0, pinned to the
+davinci-zkvm release and without DKG, so the addresses are always `ZiskVerifier`
+`0x5FbDB2315678afecb367f032d93F642f64180aa3` and `ProcessRegistry`
+`0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`. A davinci-sequencer runs against it with
+`--blob-source anvil`.
+
+`deploy` runs `deploy_all.sh` with the variables of [Deploying](#deploying) from `.env`; the key
+never enters the image. The broadcast record stays in the container, so copy it out before
+removing it:
+
+```bash
+docker compose --profile deploy up deploy
+docker compose --profile deploy cp deploy:/app/broadcast/DeployAll.s.sol/. broadcast/DeployAll.s.sol/
+docker compose --profile deploy rm -f deploy
+```
+
+The `golang-types/addresses.go` it regenerates stays in the container too; run
+`helpers/write_contract_addresses.sh` on the host after copying the record.
+
 ## License
 
 GNU Affero General Public License v3.0, see [LICENSE.md](LICENSE.md). Source files carry their
