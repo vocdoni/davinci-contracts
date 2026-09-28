@@ -1,8 +1,24 @@
 name: test
-on: [push]
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - release**
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || format('{0}-push-{1}-{2}', github.workflow, github.ref, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  check:
-    name: test
+  forge:
+    name: forge
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,5 +28,48 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Run tests
+      - name: Build (check contract sizes)
+        run: forge build --sizes
+
+      - name: Test
         run: forge test -vvv
+
+  vectors:
+    name: vectors
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout davinci-contracts
+        uses: actions/checkout@v4
+        with:
+          path: davinci-contracts
+          submodules: recursive
+
+      - name: Checkout davinci-zkvm
+        uses: actions/checkout@v4
+        with:
+          repository: vocdoni/davinci-zkvm
+          ref: main
+          path: davinci-zkvm
+
+      - name: Checkout davinci-circom (artifacts only)
+        uses: actions/checkout@v4
+        with:
+          repository: vocdoni/davinci-circom
+          # Same pin as davinci-sequencer's CI: the ballot VK the vectors hash.
+          ref: a39a9f9867bb70726ad2137ed536d75670e042b9
+          path: davinci-circom
+          sparse-checkout: |
+            artifacts
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: davinci-contracts/test/vectors/go.mod
+
+      - name: Regenerate vectors
+        working-directory: davinci-contracts/test/vectors
+        run: go run .
+
+      - name: Check for drift
+        working-directory: davinci-contracts
+        run: git diff --exit-code -- test/vectors
