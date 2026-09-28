@@ -100,6 +100,13 @@ export declare namespace DAVINCITypes {
     metadataURI: string;
     ballotMode: DAVINCITypes.BallotModeStruct;
     census: DAVINCITypes.CensusStruct;
+    keyMode: BigNumberish;
+    dkgEpochId: BytesLike;
+    dkgFirstIndex: BigNumberish;
+    dkgCount: BigNumberish;
+    dkgZeroSkipped: BigNumberish;
+    dkgResultsRequested: boolean;
+    dkgAid: BytesLike;
   };
 
   export type ProcessStructOutput = [
@@ -117,7 +124,14 @@ export declare namespace DAVINCITypes {
     batchNumber: bigint,
     metadataURI: string,
     ballotMode: DAVINCITypes.BallotModeStructOutput,
-    census: DAVINCITypes.CensusStructOutput
+    census: DAVINCITypes.CensusStructOutput,
+    keyMode: bigint,
+    dkgEpochId: string,
+    dkgFirstIndex: bigint,
+    dkgCount: bigint,
+    dkgZeroSkipped: bigint,
+    dkgResultsRequested: boolean,
+    dkgAid: string
   ] & {
     status: bigint;
     organizationId: string;
@@ -134,12 +148,50 @@ export declare namespace DAVINCITypes {
     metadataURI: string;
     ballotMode: DAVINCITypes.BallotModeStructOutput;
     census: DAVINCITypes.CensusStructOutput;
+    keyMode: bigint;
+    dkgEpochId: string;
+    dkgFirstIndex: bigint;
+    dkgCount: bigint;
+    dkgZeroSkipped: bigint;
+    dkgResultsRequested: boolean;
+    dkgAid: string;
+  };
+
+  export type DKGParamsStruct = {
+    mode: BigNumberish;
+    epochId: BytesLike;
+    orgPKx: BigNumberish;
+    orgPKy: BigNumberish;
+    popAx: BigNumberish;
+    popAy: BigNumberish;
+    popZ: BigNumberish;
+  };
+
+  export type DKGParamsStructOutput = [
+    mode: bigint,
+    epochId: string,
+    orgPKx: bigint,
+    orgPKy: bigint,
+    popAx: bigint,
+    popAy: bigint,
+    popZ: bigint
+  ] & {
+    mode: bigint;
+    epochId: string;
+    orgPKx: bigint;
+    orgPKy: bigint;
+    popAx: bigint;
+    popAy: bigint;
+    popZ: bigint;
   };
 }
 
 export interface IProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "aidFor"
+      | "dkgAdapter"
+      | "finalizeResultsFromDKG"
       | "genesisRoot"
       | "getNextProcessId"
       | "getProcess"
@@ -147,6 +199,8 @@ export interface IProcessRegistryInterface extends Interface {
       | "getRVerifierVKeyHash"
       | "getSTVerifierVKeyHash"
       | "newProcess"
+      | "requestResultsDecryption"
+      | "revealProcessKey"
       | "setProcessCensus"
       | "setProcessDuration"
       | "setProcessMaxVoters"
@@ -164,8 +218,18 @@ export interface IProcessRegistryInterface extends Interface {
       | "ProcessResultsSet"
       | "ProcessStateTransitioned"
       | "ProcessStatusChanged"
+      | "ResultsDecryptionRequested"
   ): EventFragment;
 
+  encodeFunctionData(functionFragment: "aidFor", values: [BytesLike]): string;
+  encodeFunctionData(
+    functionFragment: "dkgAdapter",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "finalizeResultsFromDKG",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "genesisRoot",
     values: [
@@ -205,8 +269,17 @@ export interface IProcessRegistryInterface extends Interface {
       DAVINCITypes.BallotModeStruct,
       DAVINCITypes.CensusStruct,
       string,
-      DAVINCITypes.EncryptionKeyStruct
+      DAVINCITypes.EncryptionKeyStruct,
+      DAVINCITypes.DKGParamsStruct
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "requestResultsDecryption",
+    values: [BytesLike, BigNumberish[], BytesLike[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "revealProcessKey",
+    values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessCensus",
@@ -240,6 +313,12 @@ export interface IProcessRegistryInterface extends Interface {
     ]
   ): string;
 
+  decodeFunctionResult(functionFragment: "aidFor", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "dkgAdapter", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "finalizeResultsFromDKG",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "genesisRoot",
     data: BytesLike
@@ -262,6 +341,14 @@ export interface IProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "requestResultsDecryption",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "revealProcessKey",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setProcessCensus",
     data: BytesLike
@@ -427,6 +514,34 @@ export namespace ProcessStatusChangedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace ResultsDecryptionRequestedEvent {
+  export type InputTuple = [
+    processId: BytesLike,
+    epochId: BytesLike,
+    aid: BytesLike,
+    firstIndex: BigNumberish,
+    count: BigNumberish
+  ];
+  export type OutputTuple = [
+    processId: string,
+    epochId: string,
+    aid: string,
+    firstIndex: bigint,
+    count: bigint
+  ];
+  export interface OutputObject {
+    processId: string;
+    epochId: string;
+    aid: string;
+    firstIndex: bigint;
+    count: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export interface IProcessRegistry extends BaseContract {
   connect(runner?: ContractRunner | null): IProcessRegistry;
   waitForDeployment(): Promise<this>;
@@ -470,6 +585,16 @@ export interface IProcessRegistry extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  aidFor: TypedContractMethod<[processId: BytesLike], [string], "view">;
+
+  dkgAdapter: TypedContractMethod<[], [string], "view">;
+
+  finalizeResultsFromDKG: TypedContractMethod<
+    [processId: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
   genesisRoot: TypedContractMethod<
     [
       processId: BytesLike,
@@ -512,9 +637,22 @@ export interface IProcessRegistry extends BaseContract {
       ballotMode: DAVINCITypes.BallotModeStruct,
       census: DAVINCITypes.CensusStruct,
       metadata: string,
-      encryptionKey: DAVINCITypes.EncryptionKeyStruct
+      encryptionKey: DAVINCITypes.EncryptionKeyStruct,
+      dkg: DAVINCITypes.DKGParamsStruct
     ],
     [string],
+    "nonpayable"
+  >;
+
+  requestResultsDecryption: TypedContractMethod<
+    [processId: BytesLike, accumulator: BigNumberish[], siblings: BytesLike[]],
+    [void],
+    "nonpayable"
+  >;
+
+  revealProcessKey: TypedContractMethod<
+    [processId: BytesLike, sk: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
@@ -566,6 +704,15 @@ export interface IProcessRegistry extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "aidFor"
+  ): TypedContractMethod<[processId: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "dkgAdapter"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "finalizeResultsFromDKG"
+  ): TypedContractMethod<[processId: BytesLike], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "genesisRoot"
   ): TypedContractMethod<
     [
@@ -607,9 +754,24 @@ export interface IProcessRegistry extends BaseContract {
       ballotMode: DAVINCITypes.BallotModeStruct,
       census: DAVINCITypes.CensusStruct,
       metadata: string,
-      encryptionKey: DAVINCITypes.EncryptionKeyStruct
+      encryptionKey: DAVINCITypes.EncryptionKeyStruct,
+      dkg: DAVINCITypes.DKGParamsStruct
     ],
     [string],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "requestResultsDecryption"
+  ): TypedContractMethod<
+    [processId: BytesLike, accumulator: BigNumberish[], siblings: BytesLike[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "revealProcessKey"
+  ): TypedContractMethod<
+    [processId: BytesLike, sk: BigNumberish],
+    [void],
     "nonpayable"
   >;
   getFunction(
@@ -711,6 +873,13 @@ export interface IProcessRegistry extends BaseContract {
     ProcessStatusChangedEvent.OutputTuple,
     ProcessStatusChangedEvent.OutputObject
   >;
+  getEvent(
+    key: "ResultsDecryptionRequested"
+  ): TypedContractEvent<
+    ResultsDecryptionRequestedEvent.InputTuple,
+    ResultsDecryptionRequestedEvent.OutputTuple,
+    ResultsDecryptionRequestedEvent.OutputObject
+  >;
 
   filters: {
     "CensusUpdated(bytes31,bytes32,string)": TypedContractEvent<
@@ -788,6 +957,17 @@ export interface IProcessRegistry extends BaseContract {
       ProcessStatusChangedEvent.InputTuple,
       ProcessStatusChangedEvent.OutputTuple,
       ProcessStatusChangedEvent.OutputObject
+    >;
+
+    "ResultsDecryptionRequested(bytes31,bytes12,bytes32,uint16,uint8)": TypedContractEvent<
+      ResultsDecryptionRequestedEvent.InputTuple,
+      ResultsDecryptionRequestedEvent.OutputTuple,
+      ResultsDecryptionRequestedEvent.OutputObject
+    >;
+    ResultsDecryptionRequested: TypedContractEvent<
+      ResultsDecryptionRequestedEvent.InputTuple,
+      ResultsDecryptionRequestedEvent.OutputTuple,
+      ResultsDecryptionRequestedEvent.OutputObject
     >;
   };
 }

@@ -62,6 +62,7 @@ const (
 	ProcessRegistryArbitrumAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	ProcessRegistryBaseAddress = "0xf294d1b02374bc37c2a7980dd62d4bf64d503d52"
 	ProcessRegistryCeloAddress = "0xc2aba38998dfd4cb01edcb327cdc987775e473ef"
+	ProcessRegistryGnosisAddress = "0x3cde68c39e26ecf94bd029b6ed3b9f945441daf3"
 	ProcessRegistrySepoliaAddress = "0xc3c87053f2a87a16397dd5c3eb730458bcd1420f"
 
 	ResultsVerifierGroth16ArbSepoliaAddress = "0x26559bd3d8b140461057b1187718f10a175f6e01"
@@ -76,6 +77,8 @@ const (
 	StateTransitionVerifierGroth16CeloAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	StateTransitionVerifierGroth16SepoliaAddress = "0xc3706532f90ef50f3700eead39478b9a38e22ef3"
 
+	ZiskVerifierGnosisAddress = "0xae7b632a72cf474039e4128354576770bea33f34"
+
 )
 
 // Contract addresses by network
@@ -85,6 +88,7 @@ var contractAddressesByNetwork = map[string]map[string]string{
 		ArbitrumNetwork: ProcessRegistryArbitrumAddress,
 		BaseNetwork: ProcessRegistryBaseAddress,
 		CeloNetwork: ProcessRegistryCeloAddress,
+		GnosisNetwork: ProcessRegistryGnosisAddress,
 		SepoliaNetwork: ProcessRegistrySepoliaAddress,
 	},
 	ResultsVerifierGroth16Contract: {
@@ -100,6 +104,9 @@ var contractAddressesByNetwork = map[string]map[string]string{
 		BaseNetwork: StateTransitionVerifierGroth16BaseAddress,
 		CeloNetwork: StateTransitionVerifierGroth16CeloAddress,
 		SepoliaNetwork: StateTransitionVerifierGroth16SepoliaAddress,
+	},
+	ZiskVerifierContract: {
+		GnosisNetwork: ZiskVerifierGnosisAddress,
 	},
 }
 

@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BjjFormLib",
+  "sourceName": "src/libraries/BjjFormLib.sol",
+  "abi": [],
+  "bytecode": "0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea264697066735822122066c3c725d265c8bb6f6838332cf0c1ab3388467b6a45c2b6e5c800ec4e58daa664736f6c634300081c0033",
+  "deployedBytecode": "0x5f80fdfea264697066735822122066c3c725d265c8bb6f6838332cf0c1ab3388467b6a45c2b6e5c800ec4e58daa664736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

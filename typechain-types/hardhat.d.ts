@@ -18,6 +18,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ReentrancyGuard__factory>;
     getContractFactory(
+      name: "DavinciDKGAdapter",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.DavinciDKGAdapter__factory>;
+    getContractFactory(
+      name: "IDKGAppManager",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IDKGAppManager__factory>;
+    getContractFactory(
+      name: "IDKGManager",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IDKGManager__factory>;
+    getContractFactory(
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICensusValidator__factory>;
@@ -56,6 +68,21 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ReentrancyGuard>;
     getContractAt(
+      name: "DavinciDKGAdapter",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.DavinciDKGAdapter>;
+    getContractAt(
+      name: "IDKGAppManager",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IDKGAppManager>;
+    getContractAt(
+      name: "IDKGManager",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IDKGManager>;
+    getContractAt(
       name: "ICensusValidator",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -100,6 +127,18 @@ declare module "hardhat/types/runtime" {
       name: "ReentrancyGuard",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
+    deployContract(
+      name: "DavinciDKGAdapter",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.DavinciDKGAdapter>;
+    deployContract(
+      name: "IDKGAppManager",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDKGAppManager>;
+    deployContract(
+      name: "IDKGManager",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDKGManager>;
     deployContract(
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -138,6 +177,21 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
+    deployContract(
+      name: "DavinciDKGAdapter",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.DavinciDKGAdapter>;
+    deployContract(
+      name: "IDKGAppManager",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDKGAppManager>;
+    deployContract(
+      name: "IDKGManager",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDKGManager>;
     deployContract(
       name: "ICensusValidator",
       args: any[],

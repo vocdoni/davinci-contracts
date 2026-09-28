@@ -7,4 +7,5 @@ import type * as libraries from "./libraries";
 export type { libraries };
 import type * as verifiers from "./verifiers";
 export type { verifiers };
+export type { DavinciDKGAdapter } from "./DavinciDKGAdapter";
 export type { ProcessRegistry } from "./ProcessRegistry";

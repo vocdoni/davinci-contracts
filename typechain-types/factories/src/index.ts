@@ -4,4 +4,5 @@
 export * as interfaces from "./interfaces";
 export * as libraries from "./libraries";
 export * as verifiers from "./verifiers";
+export { DavinciDKGAdapter__factory } from "./DavinciDKGAdapter__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";

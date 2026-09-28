@@ -51,6 +51,16 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "DKGDisabled",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAccumulator",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidBlobCommitmentLength",
     type: "error",
   },
@@ -102,6 +112,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidDKGParams",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidDuration",
     type: "error",
   },
@@ -117,7 +132,17 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidInclusionProof",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidKZGProofLength",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidKeyMode",
     type: "error",
   },
   {
@@ -244,6 +269,16 @@ const _abi = [
   {
     inputs: [],
     name: "ProofInvalid",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ResultsAlreadyRequested",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ResultsNotReady",
     type: "error",
   },
   {
@@ -436,6 +471,88 @@ const _abi = [
     ],
     name: "ProcessStatusChanged",
     type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        indexed: false,
+        internalType: "bytes12",
+        name: "epochId",
+        type: "bytes12",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "aid",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint16",
+        name: "firstIndex",
+        type: "uint16",
+      },
+      {
+        indexed: false,
+        internalType: "uint8",
+        name: "count",
+        type: "uint8",
+      },
+    ],
+    name: "ResultsDecryptionRequested",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+    ],
+    name: "aidFor",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "dkgAdapter",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+    ],
+    name: "finalizeResultsFromDKG",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
     inputs: [
@@ -712,6 +829,41 @@ const _abi = [
             name: "census",
             type: "tuple",
           },
+          {
+            internalType: "enum DAVINCITypes.KeyMode",
+            name: "keyMode",
+            type: "uint8",
+          },
+          {
+            internalType: "bytes12",
+            name: "dkgEpochId",
+            type: "bytes12",
+          },
+          {
+            internalType: "uint16",
+            name: "dkgFirstIndex",
+            type: "uint16",
+          },
+          {
+            internalType: "uint8",
+            name: "dkgCount",
+            type: "uint8",
+          },
+          {
+            internalType: "uint16",
+            name: "dkgZeroSkipped",
+            type: "uint16",
+          },
+          {
+            internalType: "bool",
+            name: "dkgResultsRequested",
+            type: "bool",
+          },
+          {
+            internalType: "bytes32",
+            name: "dkgAid",
+            type: "bytes32",
+          },
         ],
         internalType: "struct DAVINCITypes.Process",
         name: "process",
@@ -889,6 +1041,48 @@ const _abi = [
         name: "encryptionKey",
         type: "tuple",
       },
+      {
+        components: [
+          {
+            internalType: "enum DAVINCITypes.KeyMode",
+            name: "mode",
+            type: "uint8",
+          },
+          {
+            internalType: "bytes12",
+            name: "epochId",
+            type: "bytes12",
+          },
+          {
+            internalType: "uint256",
+            name: "orgPKx",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "orgPKy",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "popAx",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "popAy",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "popZ",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct DAVINCITypes.DKGParams",
+        name: "dkg",
+        type: "tuple",
+      },
     ],
     name: "newProcess",
     outputs: [
@@ -898,6 +1092,47 @@ const _abi = [
         type: "bytes31",
       },
     ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        internalType: "uint256[64]",
+        name: "accumulator",
+        type: "uint256[64]",
+      },
+      {
+        internalType: "bytes32[]",
+        name: "siblings",
+        type: "bytes32[]",
+      },
+    ],
+    name: "requestResultsDecryption",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        internalType: "uint256",
+        name: "sk",
+        type: "uint256",
+      },
+    ],
+    name: "revealProcessKey",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
