@@ -62,7 +62,7 @@ const (
 	ProcessRegistryArbitrumAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	ProcessRegistryBaseAddress = "0xf294d1b02374bc37c2a7980dd62d4bf64d503d52"
 	ProcessRegistryCeloAddress = "0xc2aba38998dfd4cb01edcb327cdc987775e473ef"
-	ProcessRegistryGnosisAddress = "0x48a5091b64434a6690aea32455712bd2b7ee3e77"
+	ProcessRegistryGnosisAddress = "0x7e79660de04b8fc1ffafb9d09f3b0770bdb0d831"
 	ProcessRegistrySepoliaAddress = "0xc3c87053f2a87a16397dd5c3eb730458bcd1420f"
 
 	ResultsVerifierGroth16ArbSepoliaAddress = "0x26559bd3d8b140461057b1187718f10a175f6e01"

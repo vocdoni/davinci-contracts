@@ -52,9 +52,9 @@ Gnosis Chain (chain id 100):
 
 | Contract | Address |
 |---|---|
-| `ZiskVerifier` | `0x0DBeF559Cccb2A085D9D9Ac3a13b67148bdB9936` |
-| `ProcessRegistry` | `0x48a5091B64434a6690AeA32455712Bd2b7EE3E77` |
-| `DavinciDKGAdapter` | `0xd79B9B55830Bf6C277850c56B29Fe9b75cF2543b` |
+| `ZiskVerifier` | `0x6D804CC99BfdA4E3F6413C3310803D2D2e0A3E3A` |
+| `ProcessRegistry` | `0x7e79660dE04b8fC1FFAfB9d09f3B0770Bdb0D831` |
+| `DavinciDKGAdapter` | `0xfcB637FbC34Db90Da9B151dCCfF27838d45114D6` |
 | davinci-dkg `DKGManager` | `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B` |
 
 The registry is pinned to:
@@ -562,7 +562,7 @@ chain, set it (to zero if needed) in every chain file.
 ```bash
 forge build
 python3 script/verify_deployment.py --rpc "$GNOSIS_RPC_URL" --chain-id 100 \
-    --registry 0x48a5091B64434a6690AeA32455712Bd2b7EE3E77 \
+    --registry 0x7e79660dE04b8fC1FFAfB9d09f3B0770Bdb0D831 \
     --batch-vk 0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10 \
     --results-vk 0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794 \
     --root-c 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
