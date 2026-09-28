@@ -96,9 +96,7 @@ export interface IDKGAppManagerInterface extends Interface {
       | "getApplicationKey"
       | "getOrganizerPK"
       | "registerApplication"
-      | "registrar"
       | "revealOrganizerSecret"
-      | "setRegistrar"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -126,14 +124,9 @@ export interface IDKGAppManagerInterface extends Interface {
       BigNumberish
     ]
   ): string;
-  encodeFunctionData(functionFragment: "registrar", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "revealOrganizerSecret",
     values: [BytesLike, BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setRegistrar",
-    values: [AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -152,13 +145,8 @@ export interface IDKGAppManagerInterface extends Interface {
     functionFragment: "registerApplication",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "registrar", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "revealOrganizerSecret",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setRegistrar",
     data: BytesLike
   ): Result;
 }
@@ -239,15 +227,11 @@ export interface IDKGAppManager extends BaseContract {
     "nonpayable"
   >;
 
-  registrar: TypedContractMethod<[], [string], "view">;
-
   revealOrganizerSecret: TypedContractMethod<
     [epochId: BytesLike, aid: BytesLike, organizerSecret: BigNumberish],
     [void],
     "nonpayable"
   >;
-
-  setRegistrar: TypedContractMethod<[r: AddressLike], [void], "nonpayable">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -291,18 +275,12 @@ export interface IDKGAppManager extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "registrar"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
     nameOrSignature: "revealOrganizerSecret"
   ): TypedContractMethod<
     [epochId: BytesLike, aid: BytesLike, organizerSecret: BigNumberish],
     [void],
     "nonpayable"
   >;
-  getFunction(
-    nameOrSignature: "setRegistrar"
-  ): TypedContractMethod<[r: AddressLike], [void], "nonpayable">;
 
   filters: {};
 }

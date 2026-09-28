@@ -51,11 +51,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "NotRegistrar",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "PointNotInSubgroup",
     type: "error",
   },
@@ -328,19 +323,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "registrar",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "bytes12",
@@ -359,19 +341,6 @@ const _abi = [
       },
     ],
     name: "revealOrganizerSecret",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "r",
-        type: "address",
-      },
-    ],
-    name: "setRegistrar",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
