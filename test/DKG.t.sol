@@ -8,7 +8,6 @@ import {DAVINCITypes} from "../src/libraries/DAVINCITypes.sol";
 import {BjjFormLib} from "../src/libraries/BjjFormLib.sol";
 import {Sha256SmtLib} from "../src/libraries/Sha256SmtLib.sol";
 import {DavinciDKGAdapter} from "../src/DavinciDKGAdapter.sol";
-import {DKGTypes} from "../src/interfaces/dkg/DKGTypes.sol";
 import {MockDKG, MockBjj} from "./mocks/MockDKG.sol";
 
 /// @dev External wrapper so tests can call the internal library with calldata arrays.
@@ -304,18 +303,6 @@ contract DKGTest is RegistryTestBase {
         adapter.submit(eid1, bytes32(uint256(1)), new uint256[4][](0));
         vm.expectRevert(DavinciDKGAdapter.NotRegistry.selector);
         adapter.reveal(eid1, bytes32(uint256(1)), 1);
-    }
-
-    function test_Registrar_GateAcceptsAdapter() public {
-        mock.setRegistrar(address(adapter));
-        bytes31 pid = _automaticProcess(); // adapter is the registrar: still works
-        assertEq(uint8(registry.getProcess(pid).keyMode), uint8(DAVINCITypes.KeyMode.DKG_AUTOMATIC));
-
-        // Direct registration by anyone else is refused.
-        DKGTypes.AppPolicy memory policy;
-        policy.submitters = new address[](0);
-        vm.expectRevert(MockDKG.NotRegistrar.selector);
-        mock.registerApplication(eid1, bytes32(uint256(0xA1D)), policy, 0, 0, 0, 0, 0);
     }
 
     function test_RegistrationEpoch_ScansBackAndExhausts() public {

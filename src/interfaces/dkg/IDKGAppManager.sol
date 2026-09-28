@@ -5,9 +5,7 @@ import {DKGTypes} from "./DKGTypes.sol";
 
 /**
  * @title IDKGAppManager
- * @notice Vendored subset of davinci-dkg `src/interfaces/IDKGAppManager.sol` (commit 2338d8a
- *         plus the registrar / `getApplicationKey` additions of the DAVINCI integration
- *         branch). ABI-identical to upstream.
+ * @notice Vendored subset of davinci-dkg `src/interfaces/IDKGAppManager.sol`. ABI-identical to upstream.
  */
 interface IDKGAppManager {
     error InvalidApplication();
@@ -20,14 +18,6 @@ interface IDKGAppManager {
     error InvalidPolicy();
     error AlreadyRevealed();
     error PoolExhausted();
-    error NotRegistrar();
-
-    /// @notice The only address allowed to `registerApplication`, or zero when
-    ///         registration is permissionless (the default).
-    function registrar() external view returns (address);
-
-    /// @notice Restrict `registerApplication` to `r`. Admin only, at most once.
-    function setRegistrar(address r) external;
 
     /// @notice Register an application against a Live epoch and claim the epoch's
     ///         next pool key. In `OrganizerLocked` mode the Schnorr PoP proves

@@ -64,7 +64,6 @@ contract MockDKG {
     error ApplicationAlreadyExists();
     error InvalidOrganizerSecret();
     error AlreadyRevealed();
-    error NotRegistrar();
 
     uint32 public constant EPOCH_PREFIX = 0x00444b47;
 
@@ -87,7 +86,6 @@ contract MockDKG {
     }
 
     uint64 public epochNonce;
-    address public registrar;
     uint16 public skipAtCall; // test hook: burn one index at the n-th submit (1-based)
     uint16 internal submitCalls;
     mapping(bytes12 => Epoch) internal epochs;
@@ -161,10 +159,6 @@ contract MockDKG {
 
     // --- IDKGAppManager -----------------------------------------------------------
 
-    function setRegistrar(address r) external {
-        registrar = r;
-    }
-
     function registerApplication(
         bytes12 eid,
         bytes32 aid,
@@ -175,7 +169,6 @@ contract MockDKG {
         uint256, // schnorrAy
         uint256 // schnorrZ
     ) external {
-        if (registrar != address(0) && msg.sender != registrar) revert NotRegistrar();
         Epoch storage e = epochs[eid];
         if (!e.live) revert InvalidPhase();
         App storage a = apps[eid][aid];

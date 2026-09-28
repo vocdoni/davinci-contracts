@@ -459,9 +459,8 @@ Errors of `IProcessRegistry` unless noted.
 | `InvalidVerifierConfig` | constructor | zero verifier address or pin |
 
 Errors from davinci-dkg pass through unchanged. On `newProcess` these include `InvalidEpoch`
-or `InvalidPhase` for an unknown or not yet Live `DKG_LOCKED` epoch, `InvalidSchnorrProof`,
-and `NotRegistrar` when the DKG's registrar is not this adapter; on `revealProcessKey`,
-`InvalidOrganizerSecret` and `AlreadyRevealed`. `IProcessRegistry` also
+or `InvalidPhase` for an unknown or not yet Live `DKG_LOCKED` epoch, and `InvalidSchnorrProof`;
+on `revealProcessKey`, `InvalidOrganizerSecret` and `AlreadyRevealed`. `IProcessRegistry` also
 declares `InvalidBlockNumber`, `InvalidMaxValue`, `InvalidMinValue`, `InvalidMinTotalCost`,
 `InvalidUniqueValues`, `CannotAcceptResult`, `ProcessNotEnded` and `ProofInvalid`, which this
 registry never raises.
@@ -533,9 +532,6 @@ chain, set it (to zero if needed) in every chain file.
 2. Deploy with `DKG_MANAGER` set. The registry constructor creates the `DavinciDKGAdapter`,
    which reads `appManager()` from the manager; the script logs its address and
    `dkgAdapter()` returns it.
-3. From the `DKGAppManager` admin, call `setRegistrar(adapter)`. Until then anyone can register
-   applications on that DKG, which lets them take an application id ahead of a process or drain
-   the pool keys, so do it before the first epoch goes Live.
 
 ## Checking a deployment
 
@@ -559,8 +555,8 @@ It checks that:
 - the registry's `batchProgramVK`, `resultsProgramVK`, `rootCVadcopFinal` and `ballotVKHash`
   equal the given pins, and so does the verifier's `getRootCVadcopFinal()`;
 - the registry's `chainID` equals the RPC's chain id (and `--chain-id`, when given);
-- when `dkgAdapter()` is set, the adapter's code matches the local build, `adapter.registry()`
-  is the registry and `DKGAppManager.registrar()` is the adapter. An unset registrar fails.
+- when `dkgAdapter()` is set, the adapter's code matches the local build and `adapter.registry()`
+  is the registry.
 
 Each check prints `OK` or `FAIL`; the exit status is 1 if any fails. Use `--cast` when `cast`
 is not at `~/.foundry/bin/cast`.
