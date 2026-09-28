@@ -85,7 +85,8 @@ contract NewProcessTest is RegistryTestBase {
             _ballotMode(),
             c,
             "",
-            _encKey()
+            _encKey(),
+            _noDkg()
         );
         vm.prank(ORGANIZER);
         (ok,) = address(registry).call(data);
@@ -145,7 +146,7 @@ contract NewProcessTest is RegistryTestBase {
         DAVINCITypes.Census memory c = _census();
         vm.expectRevert(IProcessRegistry.InvalidEncryptionKey.selector);
         vm.prank(ORGANIZER);
-        registry.newProcess(DAVINCITypes.ProcessStatus.READY, 0, DURATION, MAX_VOTERS, m, c, "", k);
+        registry.newProcess(DAVINCITypes.ProcessStatus.READY, 0, DURATION, MAX_VOTERS, m, c, "", k, _noDkg());
     }
 
     // x + p and y + p encode the same on-curve point; only the canonical range check rejects them.
@@ -210,15 +211,15 @@ contract NewProcessTest is RegistryTestBase {
     function test_Constructor_RejectsZeroConfig() public {
         bytes32 vkHash = bytes32(uint256(1));
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(0), BATCH_VK, RESULTS_VK, ROOT_C, vkHash);
+        new ProcessRegistry(CHAIN_ID, address(0), BATCH_VK, RESULTS_VK, ROOT_C, vkHash, address(0));
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), bytes32(0), RESULTS_VK, ROOT_C, vkHash);
+        new ProcessRegistry(CHAIN_ID, address(1), bytes32(0), RESULTS_VK, ROOT_C, vkHash, address(0));
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, bytes32(0), ROOT_C, vkHash);
+        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, bytes32(0), ROOT_C, vkHash, address(0));
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, bytes32(0), vkHash);
+        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, bytes32(0), vkHash, address(0));
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, ROOT_C, bytes32(0));
+        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, ROOT_C, bytes32(0), address(0));
     }
 
     function test_Constructor_ExposesConfig() public view {

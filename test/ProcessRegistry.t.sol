@@ -52,7 +52,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             ballotMode,
             cen,
             "https://example.com/metadata/",
-            _encKey()
+            _encKey(),
+            _noDkg()
         );
     }
 
@@ -320,7 +321,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
 
         // Verify initial state
@@ -361,7 +363,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
 
         // Verify initial state
@@ -399,7 +402,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
 
         // Expect both status change and duration change events
@@ -455,7 +459,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
 
         // End process at exact start time (same block)
@@ -488,7 +493,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
 
         // End process before start time
@@ -519,7 +525,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key1
+            key1,
+            _noDkg()
         );
 
         processRegistry.setProcessStatus(processId1, DAVINCITypes.ProcessStatus.ENDED);
@@ -535,7 +542,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             defaultBallotMode,
             cen,
             "https://example.com/metadata/",
-            key2
+            key2,
+            _noDkg()
         );
 
         processRegistry.setProcessStatus(processId2, DAVINCITypes.ProcessStatus.ENDED);
@@ -636,7 +644,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             invalidBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
     }
 
@@ -671,7 +680,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             invalidBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
     }
 
@@ -706,7 +716,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             oversizedBallotMode,
             cen,
             "https://example.com/metadata/",
-            key
+            key,
+            _noDkg()
         );
     }
 
@@ -967,7 +978,8 @@ contract ProcessRegistryTest is RegistryTestBase {
                 defaultBallotMode,
                 cen,
                 "https://example.com/metadata/",
-                key
+                key,
+                _noDkg()
             );
         }
     }

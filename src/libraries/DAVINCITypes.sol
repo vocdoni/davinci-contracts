@@ -97,6 +97,36 @@ library DAVINCITypes {
     }
 
     /**
+     * @notice Where a process's encryption key comes from.
+     *         SEQUENCER: the organizer/sequencer supplies it (results via the zkVM results
+     *         guest). DKG_AUTOMATIC: a davinci-dkg committee pool key; the committee alone
+     *         decrypts the final accumulator. DKG_LOCKED: pool key plus an organizer key;
+     *         results wait for revealProcessKey.
+     */
+    enum KeyMode {
+        SEQUENCER,
+        DKG_AUTOMATIC,
+        DKG_LOCKED
+    }
+
+    /**
+     * @notice DKG arguments of newProcess. All fields must be zero in SEQUENCER mode.
+     *         For DKG_LOCKED, epochId picks the epoch (the PoP binds it) and the organizer
+     *         key plus Schnorr PoP are in the DKG's reduced (a = -1) form, exactly as
+     *         DKGAppManager.registerApplication takes them. For DKG_AUTOMATIC only mode
+     *         is read; the adapter picks the epoch.
+     */
+    struct DKGParams {
+        KeyMode mode;
+        bytes12 epochId;
+        uint256 orgPKx;
+        uint256 orgPKy;
+        uint256 popAx;
+        uint256 popAy;
+        uint256 popZ;
+    }
+
+    /**
      * @notice The process defines the parameters of the process.
      * @param status The status of the process.
      * @param organizationId The organizationId of the process.
@@ -113,6 +143,15 @@ library DAVINCITypes {
      * @param metadataURI The URI of the metadata.
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
+     * @param keyMode Where the encryption key comes from.
+     * @param dkgEpochId The DKG epoch the process registered against (DKG modes).
+     * @param dkgFirstIndex Index of the first ciphertext submitted by requestResultsDecryption.
+     * @param dkgCount Number of ciphertexts submitted; > 0 also means results were requested.
+     * @param dkgZeroSkipped Bitmask of fields recorded as 0 without a DKG submission
+     *        (identity ciphertexts), bit i = field i.
+     * @param dkgResultsRequested Whether requestResultsDecryption ran (covers the all-identity
+     *        case where dkgCount stays 0).
+     * @param dkgAid The DKG application id (keccak(chainid, registry, pid) mod Q).
      */
     struct Process {
         ProcessStatus status;
@@ -130,5 +169,12 @@ library DAVINCITypes {
         string metadataURI;
         BallotMode ballotMode;
         Census census;
+        KeyMode keyMode;
+        bytes12 dkgEpochId;
+        uint16 dkgFirstIndex;
+        uint8 dkgCount;
+        uint16 dkgZeroSkipped;
+        bool dkgResultsRequested;
+        bytes32 dkgAid;
     }
 }

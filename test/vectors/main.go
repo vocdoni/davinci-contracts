@@ -3,6 +3,7 @@
 //	genesis.json     genesis roots from go-sdk chain.NewState, registry-style pids
 //	smt.json         roots of arbitrary arbo SHA-256 trees (64 levels, 8-byte keys)
 //	transition.json  two settlement fixtures with real KZG openings, plus a results fixture
+//	dkg.json         DKG key-mode fixture: pool and organizer keys, accumulator inclusion proofs
 //	publics.json     the decoded registers of recorded_batch_snark.json
 //
 // Run it from this directory with `go run .`. The defaults match the forge tests
@@ -74,6 +75,7 @@ func main() {
 
 	fx, blobs := transitionFixture(uint32(*chainID), registry, creator, prefix, vkLeaf)
 	writeJSON(*out, "transition.json", fx)
+	writeJSON(*out, "dkg.json", dkgVectors(prefix, creator, vkLeaf))
 	if *writeBlobs {
 		for t, bs := range blobs {
 			for b, blob := range bs {
@@ -290,6 +292,189 @@ func testKey(s int64) *bjjgnark.BJJ {
 func teKey(p *bjjgnark.BJJ) (*big.Int, *big.Int) {
 	rx, ry := p.Point()
 	return format.FromRTEtoTE(rx, ry)
+}
+
+// --- DKG fixture -------------------------------------------------------------
+
+type dkgPointJSON struct {
+	RteX string `json:"rte_x"` // reduced (gnark, a = -1) coordinates, decimal
+	RteY string `json:"rte_y"`
+	TeX  string `json:"te_x"` // circomlib coordinates, decimal
+	TeY  string `json:"te_y"`
+}
+
+// dkgInclusionJSON is one accumulator inclusion case: the 64 BE32 coordinate
+// words of the 0x04 leaf, the tree root, and the siblings root->leaf with one
+// trailing zero entry (verifyInclusion derives the leaf depth from it).
+type dkgInclusionJSON struct {
+	Root        string   `json:"root"`
+	Accumulator []string `json:"accumulator"`
+	Siblings    []string `json:"siblings"`
+}
+
+type dkgFile struct {
+	PoolKeys        []dkgPointJSON   `json:"pool_keys"` // 1000003·G, 1000004·G
+	OrgSK           string           `json:"org_sk"`    // 12345 (the davinci-dkg test vector)
+	OrgPK           dkgPointJSON     `json:"org_pk"`
+	LockedKey       dkgPointJSON     `json:"locked_key"`        // pool_keys[1] + org_pk
+	ProcessID       string           `json:"process_id"`        // organizer nonce 0 (the DKG_AUTOMATIC process)
+	ProcessIDLocked string           `json:"process_id_locked"` // nonce 1
+	BallotMode      ballotModeJSON   `json:"ballot_mode"`
+	CensusRoot      string           `json:"census_root"`
+	Genesis         dkgInclusionJSON `json:"genesis"`     // identity accumulator under the genesis root
+	Settled         dkgInclusionJSON `json:"settled"`     // fields 0 and 2 active, 1 and 3 identity
+	BadC1Zero       dkgInclusionJSON `json:"bad_c1_zero"` // field 1: C1 identity, C2 not — must be rejected
+	BadC2Zero       dkgInclusionJSON `json:"bad_c2_zero"` // field 1: C1 not, C2 identity — must be rejected
+}
+
+// dkgVectors builds the fixture for test/DKG.t.sol: the mock pool and organizer
+// keys in both BabyJubJub forms, and accumulator inclusion proofs for key 0x04
+// (genesis identity, a settled tree, and a malformed identity-C1 case).
+func dkgVectors(prefix uint32, creator common.Address, vkLeaf *big.Int) dkgFile {
+	mode := ballotModeJSON{NumFields: 4, CostExponent: 1, MaxValue: 100, MaxValueSum: 400}
+	pool0, pool1 := testKey(1000003), testKey(1000004)
+	orgPK := bjjgnark.New().(*bjjgnark.BJJ)
+	orgPK.ScalarBaseMult(big.NewInt(12345))
+	lockedKey := bjjgnark.New().(*bjjgnark.BJJ)
+	lockedKey.Add(pool1, orgPK)
+
+	pt := func(p *bjjgnark.BJJ) dkgPointJSON {
+		rx, ry := p.Point()
+		tx, ty := format.FromRTEtoTE(rx, ry)
+		return dkgPointJSON{RteX: rx.String(), RteY: ry.String(), TeX: tx.String(), TeY: ty.String()}
+	}
+
+	// The DKG_AUTOMATIC process is the organizer's first, keyed with pool key 0.
+	pidAuto := processID(prefix, creator, 0)
+	gc := genesisCaseFor("dkg", pidAuto, mode, pool0, 1, vkLeaf)
+
+	// Rebuild the genesis as an arbo tree (chain.NewState does not expose proofs),
+	// replacing the 0x04 leaf with accLeaf and adding extra leaves.
+	buildTree := func(accLeaf *big.Int, extra map[uint64]*big.Int) *arbo.Tree {
+		t, err := arbo.NewTree(arbo.Config{
+			Database: memdb.New(), MaxLevels: 64, HashFunction: arbo.HashFunctionSha256,
+		})
+		check(err, "arbo.NewTree")
+		add := func(k uint64, v []byte) {
+			check(t.Add(arbo.BigIntToBytes(8, new(big.Int).SetUint64(k)), v), "arbo add")
+		}
+		for kstr, vstr := range gc.Leaves {
+			k := mustBig(kstr, 16).Uint64()
+			v := mustBytes(vstr)
+			if k == 4 {
+				v = arbo.BigIntToBytes(32, accLeaf)
+			}
+			add(k, v)
+		}
+		for k, v := range extra {
+			add(k, arbo.BigIntToBytes(32, v))
+		}
+		return t
+	}
+
+	accLeaf := func(acc [64]*big.Int) *big.Int {
+		h := sha256.New()
+		for _, c := range acc {
+			h.Write(be32(c))
+		}
+		return new(big.Int).SetBytes(h.Sum(nil))
+	}
+
+	prove := func(t *arbo.Tree, acc [64]*big.Int) dkgInclusionJSON {
+		root, err := t.Root()
+		check(err, "arbo root")
+		key := arbo.BigIntToBytes(8, big.NewInt(4))
+		value := arbo.BigIntToBytes(32, accLeaf(acc))
+		_, _, packed, exists, err := t.GenProof(key)
+		check(err, "arbo GenProof")
+		if !exists {
+			log.Fatal("dkg fixture: leaf 0x04 missing")
+		}
+		ok, err := arbo.CheckProof(arbo.HashFunctionSha256, key, value, root, packed)
+		check(err, "arbo CheckProof")
+		if !ok {
+			log.Fatal("dkg fixture: inclusion proof does not verify")
+		}
+		sibs, err := arbo.UnpackSiblings(arbo.HashFunctionSha256, packed)
+		check(err, "arbo UnpackSiblings")
+		out := dkgInclusionJSON{Root: hex0x(pad32(root))}
+		for _, c := range acc {
+			out.Accumulator = append(out.Accumulator, hex0x(be32(c)))
+		}
+		for _, s := range sibs {
+			out.Siblings = append(out.Siblings, hex0x(pad32(s)))
+		}
+		// One trailing zero: the contract requires depth < len(siblings).
+		out.Siblings = append(out.Siblings, hex0x(make([]byte, 32)))
+		return out
+	}
+
+	identityAcc := func() (acc [64]*big.Int) {
+		for i := range acc {
+			acc[i] = big.NewInt(int64(i % 2))
+		}
+		return
+	}
+	setPoint := func(acc *[64]*big.Int, i int, s int64) {
+		acc[i], acc[i+1] = teKey(testKey(s))
+	}
+
+	identity := identityAcc()
+	if accLeaf(identity).Cmp(identityAccLeaf()) != 0 {
+		log.Fatal("dkg fixture: identity accumulator leaf mismatch")
+	}
+
+	// Settled accumulator: fields 0 and 2 carry real ciphertexts, 1 and 3 (and every
+	// field past numFields = 4) stay identity. The tree also carries ballot-namespace
+	// and vote-id leaves, like a settled state.
+	settled := identityAcc()
+	setPoint(&settled, 0, 9001)  // field 0 C1
+	setPoint(&settled, 2, 9002)  // field 0 C2
+	setPoint(&settled, 8, 9003)  // field 2 C1
+	setPoint(&settled, 10, 9004) // field 2 C2
+	label := func(s string) *big.Int {
+		h := sha256.Sum256([]byte("davinci-contracts dkg " + s))
+		return new(big.Int).SetBytes(h[:])
+	}
+	extra := map[uint64]*big.Int{
+		0x18:         label("ballot leaf 0x18"),
+		0x19:         label("ballot leaf 0x19"),
+		1<<63 | 7:    big.NewInt(0), // vote-id leaves carry value 0
+		1<<63 | 1011: big.NewInt(0),
+	}
+
+	// Malformed: field 1 has an identity C1 with a non-identity C2, which no honest
+	// transition produces; the registry must reject it even under a matching root.
+	bad := identityAcc()
+	setPoint(&bad, 0, 9001)
+	setPoint(&bad, 2, 9002)
+	setPoint(&bad, 6, 9005) // field 1 C2; C1 stays (0, 1)
+
+	// The symmetric malformation: field 1 has a real C1 with an identity C2.
+	badC2 := identityAcc()
+	setPoint(&badC2, 0, 9001)
+	setPoint(&badC2, 2, 9002)
+	setPoint(&badC2, 4, 9006) // field 1 C1; C2 stays (0, 1)
+
+	f := dkgFile{
+		PoolKeys:        []dkgPointJSON{pt(pool0), pt(pool1)},
+		OrgSK:           "12345",
+		OrgPK:           pt(orgPK),
+		LockedKey:       pt(lockedKey),
+		ProcessID:       gc.ProcessID,
+		ProcessIDLocked: hex0x(processID(prefix, creator, 1).FillBytes(make([]byte, 31))),
+		BallotMode:      gc.BallotMode,
+		CensusRoot:      hex0x(be32(fixtureCensusRoot)),
+		Genesis:         prove(buildTree(identityAccLeaf(), nil), identity),
+		Settled:         prove(buildTree(accLeaf(settled), extra), settled),
+		BadC1Zero:       prove(buildTree(accLeaf(bad), nil), bad),
+		BadC2Zero:       prove(buildTree(accLeaf(badC2), nil), badC2),
+	}
+	// The rebuilt genesis tree must agree with chain.NewState.
+	if f.Genesis.Root != gc.Root {
+		log.Fatalf("dkg fixture: rebuilt genesis root %s != chain.NewState %s", f.Genesis.Root, gc.Root)
+	}
+	return f
 }
 
 // --- generic SMT -------------------------------------------------------------

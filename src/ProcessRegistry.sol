@@ -9,6 +9,9 @@ import {ProcessIdLib} from "./libraries/ProcessIdLib.sol";
 import {BlobsLib} from "./libraries/BlobsLib.sol";
 import {GenesisLib} from "./libraries/GenesisLib.sol";
 import {PublicsLib} from "./libraries/PublicsLib.sol";
+import {Sha256SmtLib} from "./libraries/Sha256SmtLib.sol";
+import {BjjFormLib} from "./libraries/BjjFormLib.sol";
+import {DavinciDKGAdapter} from "./DavinciDKGAdapter.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
@@ -94,6 +97,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      * @notice sha256 of the ballot Groth16 VK wire bytes (state leaf 0x07), as the digest.
      */
     bytes32 public immutable ballotVKHash;
+    /**
+     * @notice The DavinciDKGAdapter this registry created at deploy, or address(0) when
+     *         the DKG key modes are disabled.
+     */
+    address public immutable dkgAdapter;
 
     /**
      * @notice Initializes the contract.
@@ -103,6 +111,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      * @param _resultsProgramVK Program vk of the results guest.
      * @param _rootCVadcopFinal Root of the ZisK vadcop-final setup.
      * @param _ballotVKHash sha256 digest of the ballot proof VK (davinci.BallotVKLeaf).
+     * @param _dkgManager The davinci-dkg DKGManager, or address(0) to disable DKG modes.
+     *        When set, the constructor creates the DavinciDKGAdapter.
      */
     constructor(
         uint32 _chainID,
@@ -110,7 +120,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes32 _batchProgramVK,
         bytes32 _resultsProgramVK,
         bytes32 _rootCVadcopFinal,
-        bytes32 _ballotVKHash
+        bytes32 _ballotVKHash,
+        address _dkgManager
     ) {
         if (
             _ziskVerifier == address(0) || _batchProgramVK == bytes32(0) || _resultsProgramVK == bytes32(0)
@@ -123,6 +134,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         ballotVKHash = _ballotVKHash;
         chainID = _chainID;
         pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
+        dkgAdapter = _dkgManager == address(0) ? address(0) : address(new DavinciDKGAdapter(_dkgManager));
     }
 
     /// @inheritdoc IProcessRegistry
@@ -170,14 +182,14 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.Census calldata census,
         string calldata metadata,
-        DAVINCITypes.EncryptionKey calldata encryptionKey
-    ) external override returns (bytes31) {
+        DAVINCITypes.EncryptionKey calldata encryptionKey,
+        DAVINCITypes.DKGParams calldata dkg
+    ) external override nonReentrant returns (bytes31) {
         address sender = msg.sender;
         bytes31 processId = ProcessIdLib.computeProcessId(pidPrefix, sender, processNonce[sender]);
 
         // Validate process doesn't exist and validate inputs
-        bytes32 censusRoot =
-            _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census, encryptionKey);
+        bytes32 censusRoot = _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
 
         // validate start time, block and duration
         uint256 currentTimestamp = block.timestamp;
@@ -189,13 +201,33 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         DAVINCITypes.Process storage p = processes[processId];
 
+        // Resolve the encryption key: the caller's in SEQUENCER mode, the DKG committee's
+        // (converted to circomlib form) in the DKG modes.
+        DAVINCITypes.EncryptionKey memory key = encryptionKey;
+        if (dkg.mode == DAVINCITypes.KeyMode.SEQUENCER) {
+            if (
+                dkg.epochId != bytes12(0) || dkg.orgPKx != 0 || dkg.orgPKy != 0 || dkg.popAx != 0 || dkg.popAy != 0
+                    || dkg.popZ != 0
+            ) revert InvalidDKGParams();
+        } else {
+            if (encryptionKey.x != 0 || encryptionKey.y != 0) revert InvalidEncryptionKey();
+            if (dkgAdapter == address(0)) revert DKGDisabled();
+            (bytes12 eid, bytes32 aid, uint256 teX, uint256 teY) =
+                DavinciDKGAdapter(dkgAdapter).register(processId, dkg);
+            key = DAVINCITypes.EncryptionKey(teX, teY);
+            p.keyMode = dkg.mode;
+            p.dkgEpochId = eid;
+            p.dkgAid = aid;
+        }
+        if (!GenesisLib.isValidEncryptionKey(key)) revert InvalidEncryptionKey();
+
         p.status = status;
         p.startTime = startTime;
         p.duration = duration;
         p.maxVoters = maxVoters;
         p.organizationId = sender;
-        p.encryptionKey = encryptionKey;
-        p.latestStateRoot = GenesisLib.root(processId, ballotMode, encryptionKey, census.censusOrigin, ballotVKHash);
+        p.encryptionKey = key;
+        p.latestStateRoot = GenesisLib.root(processId, ballotMode, key, census.censusOrigin, ballotVKHash);
         p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
@@ -370,6 +402,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         nonReentrant
     {
         DAVINCITypes.Process storage p = _existingProcess(processId);
+        // DKG-mode results come from the committee, not the results guest.
+        if (p.keyMode != DAVINCITypes.KeyMode.SEQUENCER) revert InvalidKeyMode();
 
         // Cannot set results on CANCELLED or RESULTS processes
         DAVINCITypes.ProcessStatus oldStatus = p.status;
@@ -402,6 +436,142 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         emit ProcessResultsSet(processId, msg.sender, result);
     }
 
+    /// @inheritdoc IProcessRegistry
+    function aidFor(bytes31 processId) external view override returns (bytes32) {
+        if (dkgAdapter == address(0)) revert DKGDisabled();
+        return DavinciDKGAdapter(dkgAdapter).aidFor(processId);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    /// @dev Permissionless: the SMT inclusion proof binds the accumulator to the settled
+    ///      state root, so a wrong accumulator cannot be submitted for decryption.
+    function requestResultsDecryption(bytes31 processId, uint256[64] calldata accumulator, bytes32[] calldata siblings)
+        external
+        override
+        nonReentrant
+    {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (p.keyMode == DAVINCITypes.KeyMode.SEQUENCER) revert InvalidKeyMode();
+        if (p.dkgResultsRequested) revert ResultsAlreadyRequested();
+
+        // Same end rule as setProcessResults: ENDED, or READY/PAUSED past the end.
+        DAVINCITypes.ProcessStatus oldStatus = p.status;
+        if (oldStatus == DAVINCITypes.ProcessStatus.CANCELED || oldStatus == DAVINCITypes.ProcessStatus.RESULTS) {
+            revert InvalidStatus();
+        }
+        if (oldStatus != DAVINCITypes.ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
+            revert InvalidTimeBounds();
+        }
+
+        // The leaf hash binds raw bytes; range-checking every coordinate leaves (0, 1)
+        // as the unique identity encoding.
+        for (uint256 i = 0; i < 64; ++i) {
+            if (accumulator[i] >= BjjFormLib.Q) revert InvalidAccumulator();
+        }
+        // Leaf 0x04 value: sha256 of the 64 coordinates as BE32 words.
+        uint256 leaf = uint256(sha256(abi.encode(accumulator)));
+        if (!Sha256SmtLib.verifyInclusion(p.latestStateRoot, GenesisLib.KEY_RESULTS, leaf, siblings)) {
+            revert InvalidInclusionProof();
+        }
+
+        p.dkgResultsRequested = true;
+
+        // The combined plaintexts become public on the DKG before finalize runs, so the
+        // process must leave organizer control here: move it to ENDED (terminal except
+        // for the internal step to RESULTS), or a canceling organizer could read the
+        // tally first and veto it. duration is left alone — the end has already passed
+        // or the organizer ended it.
+        if (oldStatus != DAVINCITypes.ProcessStatus.ENDED) {
+            p.status = DAVINCITypes.ProcessStatus.ENDED;
+            emit ProcessStatusChanged(processId, oldStatus, DAVINCITypes.ProcessStatus.ENDED);
+        }
+
+        // Collect the active (non-identity) ciphertexts of the declared fields.
+        uint256 numFields = p.ballotMode.numFields;
+        uint256[4][] memory cts = new uint256[4][](numFields);
+        uint16 zeroSkipped;
+        uint256 n;
+        for (uint256 i = 0; i < numFields; ++i) {
+            uint256 c1x = accumulator[4 * i];
+            uint256 c1y = accumulator[4 * i + 1];
+            bool c2Identity = accumulator[4 * i + 2] == 0 && accumulator[4 * i + 3] == 1;
+            // A field is either fully identity or fully active: a half-identity
+            // ciphertext cannot happen honestly and the DKG would reject it anyway.
+            if (c1x == 0 && c1y == 1) {
+                if (!c2Identity) revert InvalidAccumulator();
+                zeroSkipped |= uint16(1 << i);
+                continue;
+            }
+            if (c2Identity) revert InvalidAccumulator();
+            cts[n] = [c1x, c1y, accumulator[4 * i + 2], accumulator[4 * i + 3]];
+            ++n;
+        }
+
+        uint16 firstIndex;
+        if (n > 0) {
+            assembly ("memory-safe") {
+                mstore(cts, n) // shrink to the active count
+            }
+            firstIndex = DavinciDKGAdapter(dkgAdapter).submit(p.dkgEpochId, p.dkgAid, cts);
+        }
+        p.dkgFirstIndex = firstIndex;
+        p.dkgCount = uint8(n);
+        p.dkgZeroSkipped = zeroSkipped;
+
+        emit ResultsDecryptionRequested(processId, p.dkgEpochId, p.dkgAid, firstIndex, uint8(n));
+
+        // Nothing to decrypt: every field is zero, finalize right away.
+        if (n == 0) _finalizeDKGResults(processId, p);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function finalizeResultsFromDKG(bytes31 processId) external override nonReentrant {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (p.keyMode == DAVINCITypes.KeyMode.SEQUENCER) revert InvalidKeyMode();
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status == DAVINCITypes.ProcessStatus.CANCELED || status == DAVINCITypes.ProcessStatus.RESULTS) {
+            revert InvalidStatus();
+        }
+        if (!p.dkgResultsRequested) revert ResultsNotReady();
+        _finalizeDKGResults(processId, p);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function revealProcessKey(bytes31 processId, uint256 sk) external override nonReentrant {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (p.keyMode != DAVINCITypes.KeyMode.DKG_LOCKED) revert InvalidKeyMode();
+        DavinciDKGAdapter(dkgAdapter).reveal(p.dkgEpochId, p.dkgAid, sk);
+    }
+
+    /// @dev Reads the combined plaintexts, fills result[] (numFields entries, the same
+    ///      shape setProcessResults stores: DKG plaintexts in field order, 0 for identity
+    ///      fields) and flips the process to RESULTS.
+    function _finalizeDKGResults(bytes31 processId, DAVINCITypes.Process storage p) private {
+        uint256 numFields = p.ballotMode.numFields;
+        uint256[] memory result = new uint256[](numFields);
+        uint256 count = p.dkgCount;
+        if (count > 0) {
+            (bool ready, uint256[] memory values) =
+                DavinciDKGAdapter(dkgAdapter).plaintexts(p.dkgEpochId, p.dkgAid, p.dkgFirstIndex, uint16(count));
+            if (!ready) revert ResultsNotReady();
+            uint256 zeroSkipped = p.dkgZeroSkipped;
+            uint256 j;
+            for (uint256 i = 0; i < numFields; ++i) {
+                if ((zeroSkipped >> i) & 1 == 0) {
+                    result[i] = values[j];
+                    ++j;
+                }
+            }
+        }
+
+        DAVINCITypes.ProcessStatus oldStatus = p.status;
+        p.status = DAVINCITypes.ProcessStatus.RESULTS;
+        p.result = result;
+
+        emit ProcessStatusChanged(processId, oldStatus, DAVINCITypes.ProcessStatus.RESULTS);
+        emit ProcessResultsSet(processId, msg.sender, result);
+    }
+
     /**
      * @dev Validates inputs for a new process and returns the census root to store.
      */
@@ -411,8 +581,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.ProcessStatus status,
         uint256 maxVoters,
         DAVINCITypes.BallotMode calldata ballotMode,
-        DAVINCITypes.Census calldata census,
-        DAVINCITypes.EncryptionKey calldata encryptionKey
+        DAVINCITypes.Census calldata census
     ) private view returns (bytes32 censusRoot) {
         if (processes[processId].organizationId == sender) {
             revert ProcessAlreadyExists();
@@ -461,8 +630,6 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         ) {
             revert InvalidStatus();
         }
-
-        if (!GenesisLib.isValidEncryptionKey(encryptionKey)) revert InvalidEncryptionKey();
     }
 
     /**

@@ -35,7 +35,7 @@ library GenesisLib {
     function root(
         bytes31 processId,
         DAVINCITypes.BallotMode calldata ballotMode,
-        DAVINCITypes.EncryptionKey calldata encryptionKey,
+        DAVINCITypes.EncryptionKey memory encryptionKey,
         DAVINCITypes.CensusOrigin censusOrigin,
         bytes32 ballotVKHash
     ) internal pure returns (bytes32) {
@@ -71,14 +71,14 @@ library GenesisLib {
     }
 
     /// @notice Encryption key leaf: sha256(x_BE32 ‖ y_BE32) over the TE coordinates.
-    function encKeyLeaf(DAVINCITypes.EncryptionKey calldata k) internal pure returns (uint256) {
+    function encKeyLeaf(DAVINCITypes.EncryptionKey memory k) internal pure returns (uint256) {
         return uint256(sha256(abi.encodePacked(k.x, k.y)));
     }
 
     /// @notice True for a canonical point on the circomlib BabyJubJub curve with x != 0,
     ///         which rules out the identity, the order-2 point and gnark's reduced-form
     ///         coordinates. Subgroup membership is left to the batch guest.
-    function isValidEncryptionKey(DAVINCITypes.EncryptionKey calldata k) internal pure returns (bool) {
+    function isValidEncryptionKey(DAVINCITypes.EncryptionKey memory k) internal pure returns (bool) {
         uint256 x = k.x;
         uint256 y = k.y;
         if (x == 0 || x >= BJJ_P || y >= BJJ_P) return false;

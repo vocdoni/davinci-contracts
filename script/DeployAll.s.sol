@@ -23,6 +23,8 @@ contract DeployAllScript is Script {
         bytes32 resultsProgramVK = vm.envBytes32("RESULTS_PROGRAM_VK");
         bytes32 rootCVadcopFinal = vm.envBytes32("ROOT_C_VADCOP_FINAL");
         bytes32 ballotVKHash = vm.envBytes32("BALLOT_VK_HASH");
+        // Optional davinci-dkg manager; zero (the default) disables the DKG key modes.
+        address dkgManager = vm.envOr("DKG_MANAGER", address(0));
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -31,9 +33,10 @@ contract DeployAllScript is Script {
         require(zisk.getRootCVadcopFinal() == rootCVadcopFinal, "ROOT_C_VADCOP_FINAL differs from the verifier setup");
 
         ProcessRegistry processRegistry = new ProcessRegistry(
-            chainId32, address(zisk), batchProgramVK, resultsProgramVK, rootCVadcopFinal, ballotVKHash
+            chainId32, address(zisk), batchProgramVK, resultsProgramVK, rootCVadcopFinal, ballotVKHash, dkgManager
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
+        console.log("DavinciDKGAdapter deployed at:", processRegistry.dkgAdapter());
 
         vm.stopBroadcast();
     }

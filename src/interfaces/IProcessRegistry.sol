@@ -71,6 +71,18 @@ interface IProcessRegistry {
      * @param maxVoters The new max voters of the process
      */
     event ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters);
+    /**
+     * @notice Emitted when the final accumulator of a DKG-mode process is bound to its
+     *         state root and its active ciphertexts are submitted for threshold decryption.
+     * @param processId The ID of the process.
+     * @param epochId The DKG epoch of the process's application.
+     * @param aid The DKG application id.
+     * @param firstIndex The DKG index of the first submitted ciphertext (0 when none).
+     * @param count The number of submitted ciphertexts (identity fields are skipped).
+     */
+    event ResultsDecryptionRequested(
+        bytes31 indexed processId, bytes12 epochId, bytes32 aid, uint16 firstIndex, uint8 count
+    );
 
     /// ERRORS ///
 
@@ -257,6 +269,38 @@ interface IProcessRegistry {
      * @notice Thrown when the sender is not authorized to perform the action.
      */
     error Unauthorized();
+    /**
+     * @notice Thrown when newProcess carries DKG params that do not match its key mode
+     *         (non-zero fields in SEQUENCER mode).
+     */
+    error InvalidDKGParams();
+    /**
+     * @notice Thrown when a DKG key mode is used on a registry deployed without a DKG manager.
+     */
+    error DKGDisabled();
+    /**
+     * @notice Thrown when the call is not valid for the process's key mode.
+     */
+    error InvalidKeyMode();
+    /**
+     * @notice Thrown when the accumulator's SMT inclusion proof does not verify under the
+     *         process's latest state root.
+     */
+    error InvalidInclusionProof();
+    /**
+     * @notice Thrown when an accumulator coordinate is out of range or a field has an
+     *         identity C1 with a non-identity C2.
+     */
+    error InvalidAccumulator();
+    /**
+     * @notice Thrown when finalizeResultsFromDKG runs before the request or before every
+     *         submitted ciphertext has a completed combine.
+     */
+    error ResultsNotReady();
+    /**
+     * @notice Thrown when requestResultsDecryption runs twice for a process.
+     */
+    error ResultsAlreadyRequested();
 
     /// GETTERS ///
 
@@ -306,6 +350,20 @@ interface IProcessRegistry {
      */
     function getProcessEndTime(bytes31 processId) external view returns (uint256);
 
+    /**
+     * @notice The DavinciDKGAdapter created at deploy, or address(0) when DKG modes are
+     *         disabled. Clients read registrationEpoch() from it before a DKG_LOCKED
+     *         newProcess.
+     */
+    function dkgAdapter() external view returns (address);
+
+    /**
+     * @notice The DKG application id a process registers under. Reverts DKGDisabled when
+     *         no adapter is configured.
+     * @param processId The ID of the process (existing or upcoming, see getNextProcessId).
+     */
+    function aidFor(bytes31 processId) external view returns (bytes32);
+
     /// SETTERS ///
 
     /**
@@ -317,7 +375,9 @@ interface IProcessRegistry {
      * @param ballotMode The ballot mode of the process.
      * @param census The census of the process.
      * @param metadata The URI of the metadata.
-     * @param encryptionKey The public key used for vote encryption.
+     * @param encryptionKey The public key used for vote encryption. Must be (0, 0) in the
+     *        DKG key modes, where the registry takes the key from the DKG committee.
+     * @param dkg The key mode and DKG registration arguments (all zero for SEQUENCER).
      */
     function newProcess(
         DAVINCITypes.ProcessStatus status,
@@ -327,7 +387,8 @@ interface IProcessRegistry {
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.Census calldata census,
         string calldata metadata,
-        DAVINCITypes.EncryptionKey calldata encryptionKey
+        DAVINCITypes.EncryptionKey calldata encryptionKey,
+        DAVINCITypes.DKGParams calldata dkg
     ) external returns (bytes31);
 
     /**
@@ -369,6 +430,44 @@ interface IProcessRegistry {
      * @param proofBytes The PLONK proof, abi-encoded uint256[24].
      */
     function setProcessResults(bytes31 processId, bytes calldata publicValues, bytes calldata proofBytes) external;
+
+    /**
+     * @notice Binds the final accumulator of an ended DKG-mode process to its latest state
+     *         root (SMT inclusion of key 0x04) and submits every active field's ciphertext
+     *         to the DKG committee for threshold decryption. Permissionless, at most once
+     *         per process. With no active field (all identity) the results are finalized
+     *         to zero immediately; otherwise the process is moved to ENDED, so the tally
+     *         cannot be read off the DKG and then canceled.
+     * @dev DKG liveness is election liveness: once requested there is no un-request and
+     *      no fallback to setProcessResults, so if more than n - t committee members of
+     *      the registration epoch are gone the combines never complete and the results
+     *      are lost.
+     * @param processId The ID of the process.
+     * @param accumulator The 64 BE coordinates of the results accumulator (16 ElGamal
+     *        ciphertexts, circomlib form), whose sha256 is the value of state leaf 0x04.
+     * @param siblings The SMT inclusion siblings, root to leaf, zero-padded.
+     */
+    function requestResultsDecryption(bytes31 processId, uint256[64] calldata accumulator, bytes32[] calldata siblings)
+        external;
+
+    /**
+     * @notice Reads the DKG's combined plaintexts once every submitted ciphertext is
+     *         decrypted, stores the results and sets the process to RESULTS.
+     *         Permissionless; reverts ResultsNotReady until the combines are complete.
+     * @dev A DKG committee that never completes the combines strands the process short
+     *      of RESULTS forever (see requestResultsDecryption); that is the trust model.
+     * @param processId The ID of the process.
+     */
+    function finalizeResultsFromDKG(bytes31 processId) external;
+
+    /**
+     * @notice Publishes the organizer secret of a DKG_LOCKED process, after which the DKG
+     *         committee can combine decryptions. Permissionless: the DKG checks
+     *         sk·G == PK_org, so only the real secret is accepted.
+     * @param processId The ID of the process.
+     * @param sk The organizer secret key (scalar of the reduced-form organizer key).
+     */
+    function revealProcessKey(bytes31 processId, uint256 sk) external;
 
     /**
      * @notice Settles a state transition proven by the vote-batch guest. Must be sent as a blob

@@ -338,7 +338,7 @@ contract DynamicCensusTest is RegistryTestBase {
             vm.prank(ORGANIZER);
             vm.expectRevert(IProcessRegistry.InvalidCensusAddress.selector);
             registry.newProcess{gas: 5_000_000}(
-                DAVINCITypes.ProcessStatus.READY, block.timestamp, DURATION, MAX_VOTERS, m, c, "", k
+                DAVINCITypes.ProcessStatus.READY, block.timestamp, DURATION, MAX_VOTERS, m, c, "", k, _noDkg()
             );
         }
     }
@@ -398,7 +398,7 @@ contract DynamicCensusTest is RegistryTestBase {
         _assertSettled(pid, t);
     }
 
-    /// @dev The v0.0.49 bug: an unknown root gives rbn = 0 and must not settle.
+    /// @dev An unknown root answers rbn = 0 and must not settle.
     function test_Onchain_RevertWhen_UnknownRoot() public {
         census.setRoot(uint256(OTHER_ROOT));
         bytes31 pid = _create(_onchain(address(census)));

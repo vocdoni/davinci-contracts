@@ -45,8 +45,9 @@ abstract contract RegistryTestBase is Test {
         fixture = vm.readFile("test/vectors/transition.json");
         address verifier = _verifier();
         bytes32 ballotVKHash = fixture.readBytes32(".ballot_vk_hash");
+        address dkgManager = _dkgManager();
         vm.prank(DEPLOYER);
-        registry = new ProcessRegistry(CHAIN_ID, verifier, BATCH_VK, RESULTS_VK, ROOT_C, ballotVKHash);
+        registry = new ProcessRegistry(CHAIN_ID, verifier, BATCH_VK, RESULTS_VK, ROOT_C, ballotVKHash, dkgManager);
         assertEq(address(registry), fixture.readAddress(".registry"), "registry address differs from the fixture");
     }
 
@@ -54,6 +55,14 @@ abstract contract RegistryTestBase is Test {
     function _verifier() internal virtual returns (address) {
         return address(new MockZiskVerifier());
     }
+
+    /// @dev The DKG manager the registry is deployed with (0 = DKG modes disabled).
+    function _dkgManager() internal virtual returns (address) {
+        return address(0);
+    }
+
+    /// @dev All-zero DKGParams: SEQUENCER mode.
+    function _noDkg() internal pure returns (DAVINCITypes.DKGParams memory d) {}
 
     function _ballotMode() internal view returns (DAVINCITypes.BallotMode memory m) {
         m.numFields = uint8(fixture.readUint(".ballot_mode.num_fields"));
@@ -87,7 +96,15 @@ abstract contract RegistryTestBase is Test {
         DAVINCITypes.EncryptionKey memory key = _encKey();
         vm.prank(ORGANIZER);
         pid = registry.newProcess(
-            DAVINCITypes.ProcessStatus.READY, startTime, duration, maxVoters, mode, census, "ipfs://metadata", key
+            DAVINCITypes.ProcessStatus.READY,
+            startTime,
+            duration,
+            maxVoters,
+            mode,
+            census,
+            "ipfs://metadata",
+            key,
+            _noDkg()
         );
     }
 

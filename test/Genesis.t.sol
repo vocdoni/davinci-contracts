@@ -46,7 +46,8 @@ contract GenesisTest is Test {
             bytes32(uint256(1)),
             bytes32(uint256(2)),
             bytes32(uint256(3)),
-            vectors.readBytes32(".ballot_vk_hash")
+            vectors.readBytes32(".ballot_vk_hash"),
+            address(0)
         );
         harness = new GenesisHarness();
     }

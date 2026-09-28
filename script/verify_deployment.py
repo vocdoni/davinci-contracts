@@ -96,6 +96,25 @@ def main():
     check("registry.ballotVKHash", word(get(a.registry, "ballotVKHash()")) == a.ballot_vk_hash.lower())
     reg_chain = int(get(a.registry, "chainID()"), 16)
     check("registry.chainID == rpc chain id", reg_chain == chain, str(reg_chain))
+
+    adapter = "0x" + get(a.registry, "dkgAdapter()")[-40:]
+    if int(adapter, 16) != 0:
+        adp_code = rpc(a.rpc, "eth_getCode", [adapter, "latest"])
+        m, why = masked_match(adp_code, artifact("DavinciDKGAdapter"))
+        check("DavinciDKGAdapter runtime code == local build (immutables masked)", m, why)
+        adp_reg = "0x" + get(adapter, "registry()")[-40:]
+        check("adapter.registry == registry", adp_reg.lower() == a.registry.lower(), adp_reg)
+        # The registrar gate on the DKG side blocks aid front-running and pool
+        # exhaustion; it is a manual owner call, so verify it was made.
+        app_mgr = "0x" + get(adapter, "appManager()")[-40:]
+        registrar = "0x" + get(app_mgr, "registrar()")[-40:]
+        if int(registrar, 16) == 0:
+            check("appManager.registrar set (gate enabled)", False, "registrar is zero")
+        else:
+            check("appManager.registrar == adapter", registrar.lower() == adapter.lower(), registrar)
+        print(f"adapter  {adapter}")
+    else:
+        print("adapter  none (DKG disabled)")
     print(f"verifier {verifier}")
     sys.exit(0 if ok else 1)
 
