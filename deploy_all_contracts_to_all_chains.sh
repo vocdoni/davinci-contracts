@@ -60,6 +60,7 @@ unset_chain_specific_vars() {
     unset STATE_ROOT_LIB_ADDRESS || true
     unset PROCESS_ID_LIB_ADDRESS || true
     unset BLOBS_LIB_ADDRESS || true
+    unset DKG_MANAGER || true
 }
 
 source_env_file() {

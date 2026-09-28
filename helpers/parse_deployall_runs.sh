@@ -26,6 +26,7 @@ chain_to_network() {
   case "$chain" in
     11155111) echo "sepolia" ;;
     1)        echo "mainnet" ;;
+    100)      echo "gnosis" ;;
     8453)     echo "base" ;;
     42220)    echo "celo" ;;
     710)      echo "uzh" ;;
