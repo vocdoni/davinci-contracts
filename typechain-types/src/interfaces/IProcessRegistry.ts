@@ -98,6 +98,7 @@ export declare namespace DAVINCITypes {
     creationBlock: BigNumberish;
     batchNumber: BigNumberish;
     metadataURI: string;
+    metadataHash: BytesLike;
     ballotMode: DAVINCITypes.BallotModeStruct;
     census: DAVINCITypes.CensusStruct;
     keyMode: BigNumberish;
@@ -123,6 +124,7 @@ export declare namespace DAVINCITypes {
     creationBlock: bigint,
     batchNumber: bigint,
     metadataURI: string,
+    metadataHash: string,
     ballotMode: DAVINCITypes.BallotModeStructOutput,
     census: DAVINCITypes.CensusStructOutput,
     keyMode: bigint,
@@ -146,6 +148,7 @@ export declare namespace DAVINCITypes {
     creationBlock: bigint;
     batchNumber: bigint;
     metadataURI: string;
+    metadataHash: string;
     ballotMode: DAVINCITypes.BallotModeStructOutput;
     census: DAVINCITypes.CensusStructOutput;
     keyMode: bigint;
@@ -204,6 +207,7 @@ export interface IProcessRegistryInterface extends Interface {
       | "setProcessCensus"
       | "setProcessDuration"
       | "setProcessMaxVoters"
+      | "setProcessMetadata"
       | "setProcessResults"
       | "setProcessStatus"
       | "submitStateTransition"
@@ -215,6 +219,7 @@ export interface IProcessRegistryInterface extends Interface {
       | "ProcessCreated"
       | "ProcessDurationChanged"
       | "ProcessMaxVotersChanged"
+      | "ProcessMetadataUpdated"
       | "ProcessResultsSet"
       | "ProcessStateTransitioned"
       | "ProcessStatusChanged"
@@ -269,6 +274,7 @@ export interface IProcessRegistryInterface extends Interface {
       DAVINCITypes.BallotModeStruct,
       DAVINCITypes.CensusStruct,
       string,
+      BytesLike,
       DAVINCITypes.EncryptionKeyStruct,
       DAVINCITypes.DKGParamsStruct
     ]
@@ -292,6 +298,10 @@ export interface IProcessRegistryInterface extends Interface {
   encodeFunctionData(
     functionFragment: "setProcessMaxVoters",
     values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProcessMetadata",
+    values: [BytesLike, string, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessResults",
@@ -362,6 +372,10 @@ export interface IProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setProcessMetadata",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setProcessResults",
     data: BytesLike
   ): Result;
@@ -429,6 +443,28 @@ export namespace ProcessMaxVotersChangedEvent {
   export interface OutputObject {
     processId: string;
     maxVoters: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProcessMetadataUpdatedEvent {
+  export type InputTuple = [
+    processId: BytesLike,
+    metadataURI: string,
+    metadataHash: BytesLike
+  ];
+  export type OutputTuple = [
+    processId: string,
+    metadataURI: string,
+    metadataHash: string
+  ];
+  export interface OutputObject {
+    processId: string;
+    metadataURI: string;
+    metadataHash: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -636,7 +672,8 @@ export interface IProcessRegistry extends BaseContract {
       maxVoters: BigNumberish,
       ballotMode: DAVINCITypes.BallotModeStruct,
       census: DAVINCITypes.CensusStruct,
-      metadata: string,
+      metadataURI: string,
+      metadataHash: BytesLike,
       encryptionKey: DAVINCITypes.EncryptionKeyStruct,
       dkg: DAVINCITypes.DKGParamsStruct
     ],
@@ -670,6 +707,12 @@ export interface IProcessRegistry extends BaseContract {
 
   setProcessMaxVoters: TypedContractMethod<
     [processId: BytesLike, maxVoters: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setProcessMetadata: TypedContractMethod<
+    [processId: BytesLike, metadataURI: string, metadataHash: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -753,7 +796,8 @@ export interface IProcessRegistry extends BaseContract {
       maxVoters: BigNumberish,
       ballotMode: DAVINCITypes.BallotModeStruct,
       census: DAVINCITypes.CensusStruct,
-      metadata: string,
+      metadataURI: string,
+      metadataHash: BytesLike,
       encryptionKey: DAVINCITypes.EncryptionKeyStruct,
       dkg: DAVINCITypes.DKGParamsStruct
     ],
@@ -792,6 +836,13 @@ export interface IProcessRegistry extends BaseContract {
     nameOrSignature: "setProcessMaxVoters"
   ): TypedContractMethod<
     [processId: BytesLike, maxVoters: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setProcessMetadata"
+  ): TypedContractMethod<
+    [processId: BytesLike, metadataURI: string, metadataHash: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -851,6 +902,13 @@ export interface IProcessRegistry extends BaseContract {
     ProcessMaxVotersChangedEvent.InputTuple,
     ProcessMaxVotersChangedEvent.OutputTuple,
     ProcessMaxVotersChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProcessMetadataUpdated"
+  ): TypedContractEvent<
+    ProcessMetadataUpdatedEvent.InputTuple,
+    ProcessMetadataUpdatedEvent.OutputTuple,
+    ProcessMetadataUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "ProcessResultsSet"
@@ -924,6 +982,17 @@ export interface IProcessRegistry extends BaseContract {
       ProcessMaxVotersChangedEvent.InputTuple,
       ProcessMaxVotersChangedEvent.OutputTuple,
       ProcessMaxVotersChangedEvent.OutputObject
+    >;
+
+    "ProcessMetadataUpdated(bytes31,string,bytes32)": TypedContractEvent<
+      ProcessMetadataUpdatedEvent.InputTuple,
+      ProcessMetadataUpdatedEvent.OutputTuple,
+      ProcessMetadataUpdatedEvent.OutputObject
+    >;
+    ProcessMetadataUpdated: TypedContractEvent<
+      ProcessMetadataUpdatedEvent.InputTuple,
+      ProcessMetadataUpdatedEvent.OutputTuple,
+      ProcessMetadataUpdatedEvent.OutputObject
     >;
 
     "ProcessResultsSet(bytes31,address,uint256[])": TypedContractEvent<

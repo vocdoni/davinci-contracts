@@ -112,7 +112,8 @@ function newProcess(
     uint256 maxVoters,
     DAVINCITypes.BallotMode calldata ballotMode,
     DAVINCITypes.Census calldata census,
-    string calldata metadata,
+    string calldata metadataURI,
+    bytes32 metadataHash,
     DAVINCITypes.EncryptionKey calldata encryptionKey,
     DAVINCITypes.DKGParams calldata dkg
 ) external returns (bytes31 processId);
@@ -126,11 +127,26 @@ function newProcess(
 | `maxVoters` | Non-zero, and `ballotMode.maxValue <= 10^12 / maxVoters` so every possible tally stays inside the sequencer's bounded decryption search. |
 | `ballotMode` | See below. |
 | `census` | See [Census origins](#census-origins). |
-| `metadata` | Metadata URI, stored as is. |
+| `metadataURI` | Where the metadata document is served. Non-empty. |
+| `metadataHash` | SHA-256 of that document; see [Metadata](#metadata). Non-zero. |
 | `encryptionKey` | The ElGamal public key in sequencer mode; `(0, 0)` in the DKG modes. |
 | `dkg` | Key mode and DKG registration arguments; all zero in sequencer mode. |
 
-The call emits `ProcessCreated(processId, organizer)`.
+The call emits `ProcessCreated(processId, organizer)`, then
+`ProcessMetadataUpdated(processId, metadataURI, metadataHash)`.
+
+### Metadata
+
+The metadata document carries what the registry does not: the title, the question and which
+option each ballot field stands for. `metadataHash` binds the process to that content, as the
+census root binds the census, so a host that serves other bytes no longer matches. The hash is
+SHA-256 over the exact bytes served at `metadataURI`, with no JSON canonicalisation. A client
+fetches the document, hashes the raw body and compares the digest with `metadataHash` from
+`getProcess`; reformatting the document changes its hash.
+
+The organizer can replace both with `setProcessMetadata` until voting closes (see
+[Organizer controls](#organizer-controls)). `newProcess` and every update emit
+`ProcessMetadataUpdated`, so the event log alone is the complete metadata history of a process.
 
 ### Ballot mode
 
@@ -255,6 +271,9 @@ Only the organizer can call these; anyone else gets `Unauthorized`.
 - `setProcessCensus(processId, census)`: origin 2 processes only, while `READY` or `PAUSED` and
   before the end. The new census keeps origin 2, has a non-zero root, a non-empty URI and no
   contract address. Batches proven against the previous root no longer settle.
+- `setProcessMetadata(processId, metadataURI, metadataHash)`: while `READY` or `PAUSED` and
+  before the end, with a non-empty URI and a non-zero hash (see [Metadata](#metadata)). Once the
+  end passes, or the process is ended, canceled or has results, the metadata is frozen.
 
 ## State transitions
 
@@ -379,10 +398,10 @@ complete and the process never reaches `RESULTS`.
 
 - `getProcess(processId)` returns the full `DAVINCITypes.Process`: status, organizer, key,
   `latestStateRoot`, `result`, times, `maxVoters`, `votersCount` (distinct ballot slots
-  written), `overwrittenVotesCount`, `creationBlock`, `batchNumber`, metadata, ballot mode,
-  census, and the DKG fields `keyMode`, `dkgEpochId`, `dkgAid`, `dkgFirstIndex`, `dkgCount`,
-  `dkgZeroSkipped` (bit `i` set when field `i` was skipped as identity) and
-  `dkgResultsRequested`.
+  written), `overwrittenVotesCount`, `creationBlock`, `batchNumber`, `metadataURI`,
+  `metadataHash`, ballot mode, census, and the DKG fields `keyMode`, `dkgEpochId`, `dkgAid`,
+  `dkgFirstIndex`, `dkgCount`, `dkgZeroSkipped` (bit `i` set when field `i` was skipped as
+  identity) and `dkgResultsRequested`.
 - `getNextProcessId(organizer)`, `getProcessEndTime(processId)`, `genesisRoot(...)`,
   `aidFor(processId)`.
 - The immutables `ziskVerifier`, `batchProgramVK`, `resultsProgramVK`, `rootCVadcopFinal`,
@@ -401,6 +420,7 @@ complete and the process never reaches `RESULTS`.
 | `ProcessDurationChanged(bytes31 indexed processId, uint256 duration)` | `setProcessDuration`, `setProcessStatus` to `ENDED` |
 | `ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters)` | `setProcessMaxVoters` |
 | `CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI)` | `setProcessCensus` |
+| `ProcessMetadataUpdated(bytes31 indexed processId, string metadataURI, bytes32 metadataHash)` | `newProcess` (the initial values), `setProcessMetadata` |
 | `ProcessStateTransitioned(bytes31 indexed processId, address indexed sender, bytes32 oldStateRoot, bytes32 newStateRoot, uint256 newVotersCount, uint256 newOverwrittenVotesCount, uint256 nBlobs)` | `submitStateTransition` |
 | `ProcessResultsSet(bytes31 indexed processId, address indexed sender, uint256[] result)` | `setProcessResults`, `finalizeResultsFromDKG`, and `requestResultsDecryption` when every field is identity |
 | `ResultsDecryptionRequested(bytes31 indexed processId, bytes12 epochId, bytes32 aid, uint16 firstIndex, uint8 count)` | `requestResultsDecryption` |
@@ -419,7 +439,7 @@ Errors of `IProcessRegistry` unless noted.
 | `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY` (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
 | `InvalidStartTime` | `newProcess` | start time in the past |
 | `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; new duration zero or not longer |
-| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessCensus`); outside the voting window (settlement); not ended yet (results calls) |
+| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessCensus`, `setProcessMetadata`); outside the voting window (settlement); not ended yet (results calls) |
 | `InvalidMaxVoters` | `newProcess`, `setProcessMaxVoters` | zero, or below `votersCount` |
 | `MaxPossibleResultCapExceeded` | `newProcess`, `setProcessMaxVoters` | `maxValue > 10^12 / maxVoters` |
 | `InvalidMaxCount` | `newProcess` | `numFields` is 0 or above 16 |
@@ -433,6 +453,7 @@ Errors of `IProcessRegistry` unless noted.
 | `InvalidCensusAddress` | `newProcess`, `setProcessCensus` | origin 3 contract without code or not answering `getCensusRoot()`; a non-zero address for another origin |
 | `InvalidCensusRoot` | `newProcess`, `setProcessCensus`, `submitStateTransition` | zero root; CSP root wider than 160 bits; batch census root not accepted |
 | `InvalidCensusURI` | `newProcess`, `setProcessCensus` | empty URI |
+| `InvalidMetadata` | `newProcess`, `setProcessMetadata` | empty metadata URI or zero hash |
 | `CensusNotUpdatable` | `setProcessCensus` | process census is not origin 2 |
 | `InvalidEncryptionKey` | `newProcess` | key not canonical, not on the curve or `x == 0`; a non-zero key in a DKG mode |
 | `InvalidDKGParams` | `newProcess` | non-zero DKG fields in sequencer mode |

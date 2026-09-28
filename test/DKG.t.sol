@@ -12,11 +12,7 @@ import {MockDKG, MockBjj} from "./mocks/MockDKG.sol";
 
 /// @dev External wrapper so tests can call the internal library with calldata arrays.
 contract SmtHarness {
-    function verify(bytes32 root, uint64 key, uint256 value, bytes32[] calldata siblings)
-        external
-        pure
-        returns (bool)
-    {
+    function verify(bytes32 root, uint64 key, uint256 value, bytes32[] calldata siblings) external pure returns (bool) {
         return Sha256SmtLib.verifyInclusion(root, key, value, siblings);
     }
 
@@ -44,7 +40,8 @@ contract DKGDisabledTest is RegistryTestBase {
             MAX_VOTERS,
             _ballotMode(),
             _census(),
-            "",
+            METADATA_URI,
+            METADATA_HASH,
             DAVINCITypes.EncryptionKey(0, 0),
             d
         );
@@ -133,7 +130,8 @@ contract DKGTest is RegistryTestBase {
             MAX_VOTERS,
             _dkgBallotMode(),
             _dkgCensus(),
-            "ipfs://metadata",
+            METADATA_URI,
+            METADATA_HASH,
             DAVINCITypes.EncryptionKey(0, 0),
             d
         );
@@ -196,7 +194,16 @@ contract DKGTest is RegistryTestBase {
         vm.expectRevert(IProcessRegistry.InvalidDKGParams.selector);
         vm.prank(ORGANIZER);
         registry.newProcess(
-            DAVINCITypes.ProcessStatus.READY, 0, DURATION, MAX_VOTERS, _ballotMode(), _census(), "", _encKey(), d
+            DAVINCITypes.ProcessStatus.READY,
+            0,
+            DURATION,
+            MAX_VOTERS,
+            _ballotMode(),
+            _census(),
+            METADATA_URI,
+            METADATA_HASH,
+            _encKey(),
+            d
         );
     }
 
@@ -206,15 +213,32 @@ contract DKGTest is RegistryTestBase {
         vm.expectRevert(IProcessRegistry.InvalidEncryptionKey.selector);
         vm.prank(ORGANIZER);
         registry.newProcess(
-            DAVINCITypes.ProcessStatus.READY, 0, DURATION, MAX_VOTERS, _dkgBallotMode(), _dkgCensus(), "", _encKey(), d
+            DAVINCITypes.ProcessStatus.READY,
+            0,
+            DURATION,
+            MAX_VOTERS,
+            _dkgBallotMode(),
+            _dkgCensus(),
+            METADATA_URI,
+            METADATA_HASH,
+            _encKey(),
+            d
         );
     }
 
     function test_NewProcess_DKGAutomatic() public {
-        bytes31 pid = _automaticProcess();
+        bytes31 pid = registry.getNextProcessId(ORGANIZER);
+        // The metadata is logged after the adapter's registration, as in sequencer mode.
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit IProcessRegistry.ProcessCreated(pid, ORGANIZER);
+        vm.expectEmit(true, false, false, true, address(registry));
+        emit IProcessRegistry.ProcessMetadataUpdated(pid, METADATA_URI, METADATA_HASH);
+        assertEq(_automaticProcess(), pid);
         assertEq(bytes32(pid), bytes32(dkg.readBytes(".process_id")), "fixture pid");
 
         DAVINCITypes.Process memory p = registry.getProcess(pid);
+        assertEq(p.metadataURI, METADATA_URI);
+        assertEq(p.metadataHash, METADATA_HASH);
         assertEq(uint8(p.keyMode), uint8(DAVINCITypes.KeyMode.DKG_AUTOMATIC));
         assertEq(p.dkgEpochId, eid1);
         assertEq(p.dkgAid, registry.aidFor(pid));
@@ -270,7 +294,8 @@ contract DKGTest is RegistryTestBase {
             MAX_VOTERS,
             _dkgBallotMode(),
             _dkgCensus(),
-            "",
+            METADATA_URI,
+            METADATA_HASH,
             DAVINCITypes.EncryptionKey(0, 0),
             d
         );
@@ -338,7 +363,8 @@ contract DKGTest is RegistryTestBase {
             MAX_VOTERS,
             _dkgBallotMode(),
             _dkgCensus(),
-            "",
+            METADATA_URI,
+            METADATA_HASH,
             DAVINCITypes.EncryptionKey(0, 0),
             d
         );

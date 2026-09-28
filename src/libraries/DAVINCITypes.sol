@@ -140,7 +140,8 @@ library DAVINCITypes {
      * @param overwrittenVotesCount The number of times votes were overwritten in the state.
      * @param creationBlock The block number when the process was created.
      * @param batchNumber The batch number of the process that increments with each state transition.
-     * @param metadataURI The URI of the metadata.
+     * @param metadataURI The URI of the metadata document.
+     * @param metadataHash SHA-256 of the exact bytes served at metadataURI (no JSON canonicalisation).
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
      * @param keyMode Where the encryption key comes from.
@@ -167,6 +168,7 @@ library DAVINCITypes {
         uint256 creationBlock;
         uint256 batchNumber;
         string metadataURI;
+        bytes32 metadataHash;
         BallotMode ballotMode;
         Census census;
         KeyMode keyMode;

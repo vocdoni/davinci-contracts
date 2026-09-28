@@ -338,7 +338,16 @@ contract DynamicCensusTest is RegistryTestBase {
             vm.prank(ORGANIZER);
             vm.expectRevert(IProcessRegistry.InvalidCensusAddress.selector);
             registry.newProcess{gas: 5_000_000}(
-                DAVINCITypes.ProcessStatus.READY, block.timestamp, DURATION, MAX_VOTERS, m, c, "", k, _noDkg()
+                DAVINCITypes.ProcessStatus.READY,
+                block.timestamp,
+                DURATION,
+                MAX_VOTERS,
+                m,
+                c,
+                METADATA_URI,
+                METADATA_HASH,
+                k,
+                _noDkg()
             );
         }
     }

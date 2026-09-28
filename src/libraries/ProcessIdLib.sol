@@ -11,18 +11,17 @@ library ProcessIdLib {
      *
      * @dev nonce is passed as uint64 and truncated to uint56.
      */
-    function computeProcessId(
-        uint32 prefix,
-        address creatorAddr,
-        uint64 nonce
-    ) internal pure returns (bytes31 processId) {
+    function computeProcessId(uint32 prefix, address creatorAddr, uint64 nonce)
+        internal
+        pure
+        returns (bytes31 processId)
+    {
         // Build the 31-byte value:
         // - creatorAddr in the top 20 bytes (<< 88)
         // - prefix in bytes 20-23 (<< 56)
         // - nonce in the last 7 bytes (least significant 56 bits)
-        processId = bytes31(
-            uint248((uint248(uint160(creatorAddr)) << 88) | (uint248(prefix) << 56) | uint248(uint56(nonce)))
-        );
+        processId =
+            bytes31(uint248((uint248(uint160(creatorAddr)) << 88) | (uint248(prefix) << 56) | uint248(uint56(nonce))));
     }
 
     /**

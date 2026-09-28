@@ -23,6 +23,15 @@ interface IProcessRegistry {
      * @param censusURI The URI of the new census.
      */
     event CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI);
+    /**
+     * @notice Emitted with a process's metadata at creation and on every setProcessMetadata,
+     *         so the log alone holds the full metadata history.
+     * @param processId The ID of the process.
+     * @param metadataURI The URI of the metadata document.
+     * @param metadataHash SHA-256 of the exact bytes served at metadataURI (no JSON
+     *        canonicalisation).
+     */
+    event ProcessMetadataUpdated(bytes31 indexed processId, string metadataURI, bytes32 metadataHash);
     /*
      * @notice Emitted when the duration of a process is modified.
      * @param processId The ID of the process.
@@ -154,6 +163,10 @@ interface IProcessRegistry {
      * @notice InvalidCensusURI error is emitted when the census URI is invalid.
      */
     error InvalidCensusURI();
+    /**
+     * @notice InvalidMetadata error is emitted when the metadata URI is empty or its hash is zero.
+     */
+    error InvalidMetadata();
     /**
      * @notice InvalidCensusOrigin error is emitted when the census origin is invalid.
      */
@@ -374,7 +387,9 @@ interface IProcessRegistry {
      * @param maxVoters The maximum number of voters allowed.
      * @param ballotMode The ballot mode of the process.
      * @param census The census of the process.
-     * @param metadata The URI of the metadata.
+     * @param metadataURI The URI of the metadata document, non-empty.
+     * @param metadataHash SHA-256 of the exact bytes served at metadataURI (no JSON
+     *        canonicalisation), non-zero. Emitted in ProcessMetadataUpdated.
      * @param encryptionKey The public key used for vote encryption. Must be (0, 0) in the
      *        DKG key modes, where the registry takes the key from the DKG committee.
      * @param dkg The key mode and DKG registration arguments (all zero for SEQUENCER).
@@ -386,7 +401,8 @@ interface IProcessRegistry {
         uint256 maxVoters,
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.Census calldata census,
-        string calldata metadata,
+        string calldata metadataURI,
+        bytes32 metadataHash,
         DAVINCITypes.EncryptionKey calldata encryptionKey,
         DAVINCITypes.DKGParams calldata dkg
     ) external returns (bytes31);
@@ -407,6 +423,17 @@ interface IProcessRegistry {
      *        no contract address.
      */
     function setProcessCensus(bytes31 processId, DAVINCITypes.Census calldata census) external;
+
+    /**
+     * @notice Replaces the metadata URI and hash of a process. Only the organizer, while
+     *         READY or PAUSED and before the end time, so what a ballot field means is
+     *         frozen once voting closes.
+     * @param processId The ID of the process.
+     * @param metadataURI The URI of the new metadata document, non-empty.
+     * @param metadataHash SHA-256 of the exact bytes served at metadataURI (no JSON
+     *        canonicalisation), non-zero.
+     */
+    function setProcessMetadata(bytes31 processId, string calldata metadataURI, bytes32 metadataHash) external;
 
     /**
      * @notice Sets the duration of a process. Only before its current end: past it the tally

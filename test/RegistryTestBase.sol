@@ -37,6 +37,10 @@ abstract contract RegistryTestBase is Test {
     uint256 internal constant DURATION = 1 days;
     uint256 internal constant MAX_VOTERS = 10_000;
     uint256 internal constant BN254_P = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    string internal constant METADATA_URI = "ipfs://metadata";
+    /// @dev sha256("metadata document"), the document behind METADATA_URI. A literal: a
+    ///      sha256() constant is a precompile call at each use and would consume vm.prank.
+    bytes32 internal constant METADATA_HASH = 0xad1b97e9a66b961ecf9c5eb649f5d01b6f01316a6db0b4f8632db058ea1bc8d4;
 
     ProcessRegistry internal registry;
     string internal fixture;
@@ -102,7 +106,8 @@ abstract contract RegistryTestBase is Test {
             maxVoters,
             mode,
             census,
-            "ipfs://metadata",
+            METADATA_URI,
+            METADATA_HASH,
             key,
             _noDkg()
         );

@@ -167,6 +167,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidMetadata",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidMinTotalCost",
     type: "error",
   },
@@ -371,6 +376,31 @@ const _abi = [
       },
     ],
     name: "ProcessMaxVotersChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "metadataURI",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "metadataHash",
+        type: "bytes32",
+      },
+    ],
+    name: "ProcessMetadataUpdated",
     type: "event",
   },
   {
@@ -751,6 +781,11 @@ const _abi = [
             type: "string",
           },
           {
+            internalType: "bytes32",
+            name: "metadataHash",
+            type: "bytes32",
+          },
+          {
             components: [
               {
                 internalType: "bool",
@@ -1021,8 +1056,13 @@ const _abi = [
       },
       {
         internalType: "string",
-        name: "metadata",
+        name: "metadataURI",
         type: "string",
+      },
+      {
+        internalType: "bytes32",
+        name: "metadataHash",
+        type: "bytes32",
       },
       {
         components: [
@@ -1213,6 +1253,29 @@ const _abi = [
       },
     ],
     name: "setProcessMaxVoters",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        internalType: "string",
+        name: "metadataURI",
+        type: "string",
+      },
+      {
+        internalType: "bytes32",
+        name: "metadataHash",
+        type: "bytes32",
+      },
+    ],
+    name: "setProcessMetadata",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

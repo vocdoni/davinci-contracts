@@ -181,7 +181,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         uint256 maxVoters,
         DAVINCITypes.BallotMode calldata ballotMode,
         DAVINCITypes.Census calldata census,
-        string calldata metadata,
+        string calldata metadataURI,
+        bytes32 metadataHash,
         DAVINCITypes.EncryptionKey calldata encryptionKey,
         DAVINCITypes.DKGParams calldata dkg
     ) external override nonReentrant returns (bytes31) {
@@ -190,6 +191,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         // Validate process doesn't exist and validate inputs
         bytes32 censusRoot = _validateNewProcess(processId, sender, status, maxVoters, ballotMode, census);
+        _checkMetadata(metadataURI, metadataHash);
 
         // validate start time, block and duration
         uint256 currentTimestamp = block.timestamp;
@@ -228,7 +230,6 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.organizationId = sender;
         p.encryptionKey = key;
         p.latestStateRoot = GenesisLib.root(processId, ballotMode, key, census.censusOrigin, ballotVKHash);
-        p.metadataURI = metadata;
         p.ballotMode = ballotMode;
         p.census = census;
         p.census.censusRoot = censusRoot;
@@ -238,6 +239,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         processNonce[sender]++;
 
         emit ProcessCreated(processId, sender);
+        _storeMetadata(processId, p, metadataURI, metadataHash);
         return processId;
     }
 
@@ -295,6 +297,26 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.census.censusURI = census.censusURI;
 
         emit CensusUpdated(processId, census.censusRoot, census.censusURI);
+    }
+
+    /// @inheritdoc IProcessRegistry
+    /// @dev Same window as setProcessCensus: once the end passes, the meaning of every ballot
+    ///      field is fixed.
+    function setProcessMetadata(bytes31 processId, string calldata metadataURI, bytes32 metadataHash)
+        external
+        override
+    {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (p.organizationId != msg.sender) revert Unauthorized();
+        _checkMetadata(metadataURI, metadataHash);
+
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
+            revert InvalidStatus();
+        }
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+
+        _storeMetadata(processId, p, metadataURI, metadataHash);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -630,6 +652,23 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         ) {
             revert InvalidStatus();
         }
+    }
+
+    /// @dev Stores a process's metadata and emits ProcessMetadataUpdated.
+    function _storeMetadata(
+        bytes31 processId,
+        DAVINCITypes.Process storage p,
+        string calldata metadataURI,
+        bytes32 metadataHash
+    ) private {
+        p.metadataURI = metadataURI;
+        p.metadataHash = metadataHash;
+        emit ProcessMetadataUpdated(processId, metadataURI, metadataHash);
+    }
+
+    /// @dev A metadata URI must be non-empty and its SHA-256 non-zero.
+    function _checkMetadata(string calldata metadataURI, bytes32 metadataHash) private pure {
+        if (bytes(metadataURI).length == 0 || metadataHash == bytes32(0)) revert InvalidMetadata();
     }
 
     /**

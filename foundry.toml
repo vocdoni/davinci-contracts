@@ -16,6 +16,11 @@ cache_path = "cache_forge"
 # Tests read the Go-generated fixtures in test/vectors.
 fs_permissions = [{ access = "read", path = "./test/vectors" }]
 
+[fmt]
+# Vendored from the ZisK snark setup and kept as shipped: reformatting changes their
+# metadata hash, and with it the runtime code script/verify_deployment.py compares.
+ignore = ["src/verifiers/PlonkVerifier.sol", "src/verifiers/ZiskVerifier.sol"]
+
 [fuzz]
 runs = 5000
 max_test_rejects = 150000

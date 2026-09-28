@@ -84,7 +84,8 @@ contract NewProcessTest is RegistryTestBase {
             MAX_VOTERS,
             _ballotMode(),
             c,
-            "",
+            METADATA_URI,
+            METADATA_HASH,
             _encKey(),
             _noDkg()
         );
@@ -146,7 +147,9 @@ contract NewProcessTest is RegistryTestBase {
         DAVINCITypes.Census memory c = _census();
         vm.expectRevert(IProcessRegistry.InvalidEncryptionKey.selector);
         vm.prank(ORGANIZER);
-        registry.newProcess(DAVINCITypes.ProcessStatus.READY, 0, DURATION, MAX_VOTERS, m, c, "", k, _noDkg());
+        registry.newProcess(
+            DAVINCITypes.ProcessStatus.READY, 0, DURATION, MAX_VOTERS, m, c, METADATA_URI, METADATA_HASH, k, _noDkg()
+        );
     }
 
     // x + p and y + p encode the same on-curve point; only the canonical range check rejects them.
