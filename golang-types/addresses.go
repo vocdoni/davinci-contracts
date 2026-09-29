@@ -77,7 +77,7 @@ const (
 	StateTransitionVerifierGroth16CeloAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	StateTransitionVerifierGroth16SepoliaAddress = "0xc3706532f90ef50f3700eead39478b9a38e22ef3"
 
-	ZiskVerifierGnosisAddress = "0x0dbef559cccb2a085d9d9ac3a13b67148bdb9936"
+	ZiskVerifierGnosisAddress = "0x6d804cc99bfda4e3f6413c3310803d2d2e0a3e3a"
 
 )
 

@@ -108,6 +108,8 @@ export declare namespace DAVINCITypes {
     dkgZeroSkipped: BigNumberish;
     dkgResultsRequested: boolean;
     dkgAid: BytesLike;
+    grace: BigNumberish;
+    lastVoteAt: BigNumberish;
   };
 
   export type ProcessStructOutput = [
@@ -133,7 +135,9 @@ export declare namespace DAVINCITypes {
     dkgCount: bigint,
     dkgZeroSkipped: bigint,
     dkgResultsRequested: boolean,
-    dkgAid: string
+    dkgAid: string,
+    grace: bigint,
+    lastVoteAt: bigint
   ] & {
     status: bigint;
     organizationId: string;
@@ -158,6 +162,8 @@ export declare namespace DAVINCITypes {
     dkgZeroSkipped: bigint;
     dkgResultsRequested: boolean;
     dkgAid: string;
+    grace: bigint;
+    lastVoteAt: bigint;
   };
 
   export type DKGParamsStruct = {
@@ -197,15 +203,21 @@ export interface ProcessRegistryInterface extends Interface {
       | "ballotVKHash"
       | "batchProgramVK"
       | "chainID"
+      | "defaultGrace"
       | "dkgAdapter"
       | "finalizeResultsFromDKG"
       | "genesisRoot"
       | "getNextProcessId"
       | "getProcess"
       | "getProcessEndTime"
+      | "getProcessGraceEnd"
       | "getRVerifierVKeyHash"
       | "getSTVerifierVKeyHash"
+      | "graceCeil"
+      | "graceFloor"
+      | "graceMaxTotal"
       | "newProcess"
+      | "noticeMin"
       | "pidPrefix"
       | "processCount"
       | "processNonce"
@@ -216,6 +228,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "rootCVadcopFinal"
       | "setProcessCensus"
       | "setProcessDuration"
+      | "setProcessGrace"
       | "setProcessMaxVoters"
       | "setProcessMetadata"
       | "setProcessResults"
@@ -229,6 +242,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "CensusUpdated"
       | "ProcessCreated"
       | "ProcessDurationChanged"
+      | "ProcessGraceChanged"
       | "ProcessMaxVotersChanged"
       | "ProcessMetadataUpdated"
       | "ProcessResultsSet"
@@ -251,6 +265,10 @@ export interface ProcessRegistryInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "defaultGrace",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "dkgAdapter",
     values?: undefined
@@ -281,11 +299,24 @@ export interface ProcessRegistryInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "getProcessGraceEnd",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getRVerifierVKeyHash",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getSTVerifierVKeyHash",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "graceCeil", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "graceFloor",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "graceMaxTotal",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -303,6 +334,7 @@ export interface ProcessRegistryInterface extends Interface {
       DAVINCITypes.DKGParamsStruct
     ]
   ): string;
+  encodeFunctionData(functionFragment: "noticeMin", values?: undefined): string;
   encodeFunctionData(functionFragment: "pidPrefix", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "processCount",
@@ -338,6 +370,10 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setProcessDuration",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setProcessGrace",
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -383,6 +419,10 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "defaultGrace",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "dkgAdapter", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "finalizeResultsFromDKG",
@@ -402,6 +442,10 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getProcessGraceEnd",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getRVerifierVKeyHash",
     data: BytesLike
   ): Result;
@@ -409,7 +453,14 @@ export interface ProcessRegistryInterface extends Interface {
     functionFragment: "getSTVerifierVKeyHash",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "graceCeil", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "graceFloor", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "graceMaxTotal",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "noticeMin", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pidPrefix", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "processCount",
@@ -442,6 +493,10 @@ export interface ProcessRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setProcessDuration",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setProcessGrace",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -511,6 +566,19 @@ export namespace ProcessDurationChangedEvent {
   export interface OutputObject {
     processId: string;
     duration: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProcessGraceChangedEvent {
+  export type InputTuple = [processId: BytesLike, grace: BigNumberish];
+  export type OutputTuple = [processId: string, grace: bigint];
+  export interface OutputObject {
+    processId: string;
+    grace: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -712,6 +780,8 @@ export interface ProcessRegistry extends BaseContract {
 
   chainID: TypedContractMethod<[], [bigint], "view">;
 
+  defaultGrace: TypedContractMethod<[], [bigint], "view">;
+
   dkgAdapter: TypedContractMethod<[], [string], "view">;
 
   finalizeResultsFromDKG: TypedContractMethod<
@@ -749,9 +819,21 @@ export interface ProcessRegistry extends BaseContract {
     "view"
   >;
 
+  getProcessGraceEnd: TypedContractMethod<
+    [processId: BytesLike],
+    [bigint],
+    "view"
+  >;
+
   getRVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
 
   getSTVerifierVKeyHash: TypedContractMethod<[], [string], "view">;
+
+  graceCeil: TypedContractMethod<[], [bigint], "view">;
+
+  graceFloor: TypedContractMethod<[], [bigint], "view">;
+
+  graceMaxTotal: TypedContractMethod<[], [bigint], "view">;
 
   newProcess: TypedContractMethod<
     [
@@ -769,6 +851,8 @@ export interface ProcessRegistry extends BaseContract {
     [string],
     "nonpayable"
   >;
+
+  noticeMin: TypedContractMethod<[], [bigint], "view">;
 
   pidPrefix: TypedContractMethod<[], [bigint], "view">;
 
@@ -801,7 +885,9 @@ export interface ProcessRegistry extends BaseContract {
         bigint,
         bigint,
         boolean,
-        string
+        string,
+        bigint,
+        bigint
       ] & {
         status: bigint;
         organizationId: string;
@@ -825,6 +911,8 @@ export interface ProcessRegistry extends BaseContract {
         dkgZeroSkipped: bigint;
         dkgResultsRequested: boolean;
         dkgAid: string;
+        grace: bigint;
+        lastVoteAt: bigint;
       }
     ],
     "view"
@@ -854,6 +942,12 @@ export interface ProcessRegistry extends BaseContract {
 
   setProcessDuration: TypedContractMethod<
     [processId: BytesLike, _duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setProcessGrace: TypedContractMethod<
+    [processId: BytesLike, grace: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -917,6 +1011,9 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "defaultGrace"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "dkgAdapter"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -948,11 +1045,23 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "getProcessEndTime"
   ): TypedContractMethod<[processId: BytesLike], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getProcessGraceEnd"
+  ): TypedContractMethod<[processId: BytesLike], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getRVerifierVKeyHash"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getSTVerifierVKeyHash"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "graceCeil"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "graceFloor"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "graceMaxTotal"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "newProcess"
   ): TypedContractMethod<
@@ -971,6 +1080,9 @@ export interface ProcessRegistry extends BaseContract {
     [string],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "noticeMin"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "pidPrefix"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -1007,7 +1119,9 @@ export interface ProcessRegistry extends BaseContract {
         bigint,
         bigint,
         boolean,
-        string
+        string,
+        bigint,
+        bigint
       ] & {
         status: bigint;
         organizationId: string;
@@ -1031,6 +1145,8 @@ export interface ProcessRegistry extends BaseContract {
         dkgZeroSkipped: bigint;
         dkgResultsRequested: boolean;
         dkgAid: string;
+        grace: bigint;
+        lastVoteAt: bigint;
       }
     ],
     "view"
@@ -1066,6 +1182,13 @@ export interface ProcessRegistry extends BaseContract {
     nameOrSignature: "setProcessDuration"
   ): TypedContractMethod<
     [processId: BytesLike, _duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setProcessGrace"
+  ): TypedContractMethod<
+    [processId: BytesLike, grace: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -1135,6 +1258,13 @@ export interface ProcessRegistry extends BaseContract {
     ProcessDurationChangedEvent.InputTuple,
     ProcessDurationChangedEvent.OutputTuple,
     ProcessDurationChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProcessGraceChanged"
+  ): TypedContractEvent<
+    ProcessGraceChangedEvent.InputTuple,
+    ProcessGraceChangedEvent.OutputTuple,
+    ProcessGraceChangedEvent.OutputObject
   >;
   getEvent(
     key: "ProcessMaxVotersChanged"
@@ -1211,6 +1341,17 @@ export interface ProcessRegistry extends BaseContract {
       ProcessDurationChangedEvent.InputTuple,
       ProcessDurationChangedEvent.OutputTuple,
       ProcessDurationChangedEvent.OutputObject
+    >;
+
+    "ProcessGraceChanged(bytes31,uint32)": TypedContractEvent<
+      ProcessGraceChangedEvent.InputTuple,
+      ProcessGraceChangedEvent.OutputTuple,
+      ProcessGraceChangedEvent.OutputObject
+    >;
+    ProcessGraceChanged: TypedContractEvent<
+      ProcessGraceChangedEvent.InputTuple,
+      ProcessGraceChangedEvent.OutputTuple,
+      ProcessGraceChangedEvent.OutputObject
     >;
 
     "ProcessMaxVotersChanged(bytes31,uint256)": TypedContractEvent<

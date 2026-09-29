@@ -56,6 +56,16 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "EmptyTransition",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "GraceOpen",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidAccumulator",
     type: "error",
   },
@@ -123,6 +133,11 @@ const _abi = [
   {
     inputs: [],
     name: "InvalidEncryptionKey",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidGrace",
     type: "error",
   },
   {
@@ -370,6 +385,25 @@ const _abi = [
       },
       {
         indexed: false,
+        internalType: "uint32",
+        name: "grace",
+        type: "uint32",
+      },
+    ],
+    name: "ProcessGraceChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        indexed: false,
         internalType: "uint256",
         name: "maxVoters",
         type: "uint256",
@@ -553,6 +587,19 @@ const _abi = [
         internalType: "bytes32",
         name: "",
         type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "defaultGrace",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
       },
     ],
     stateMutability: "view",
@@ -899,6 +946,16 @@ const _abi = [
             name: "dkgAid",
             type: "bytes32",
           },
+          {
+            internalType: "uint32",
+            name: "grace",
+            type: "uint32",
+          },
+          {
+            internalType: "uint64",
+            name: "lastVoteAt",
+            type: "uint64",
+          },
         ],
         internalType: "struct DAVINCITypes.Process",
         name: "process",
@@ -917,6 +974,25 @@ const _abi = [
       },
     ],
     name: "getProcessEndTime",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+    ],
+    name: "getProcessGraceEnd",
     outputs: [
       {
         internalType: "uint256",
@@ -948,6 +1024,45 @@ const _abi = [
         internalType: "bytes32",
         name: "",
         type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "graceCeil",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "graceFloor",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "graceMaxTotal",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
       },
     ],
     stateMutability: "view",
@@ -1136,6 +1251,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "noticeMin",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "bytes31",
@@ -1235,6 +1363,24 @@ const _abi = [
       },
     ],
     name: "setProcessDuration",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        internalType: "uint32",
+        name: "grace",
+        type: "uint32",
+      },
+    ],
+    name: "setProcessGrace",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
