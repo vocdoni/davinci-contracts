@@ -9,6 +9,8 @@ import {ZiskVerifier} from "../src/verifiers/ZiskVerifier.sol";
 ///         ProcessRegistry pinned to the davinci-zkvm program vks.
 /// @dev Env: PRIVATE_KEY, CHAIN_ID, BATCH_PROGRAM_VK, RESULTS_PROGRAM_VK, ROOT_C_VADCOP_FINAL,
 ///      BALLOT_VK_HASH (bytes32 hex). ROOT_C_VADCOP_FINAL must match the vendored verifier setup.
+///      Optional: DKG_MANAGER, and in seconds the grace window GRACE_DEFAULT (180), GRACE_FLOOR
+///      (150), GRACE_CEIL (600), GRACE_MAX_TOTAL (1800) and the shorten notice NOTICE_MIN (60).
 contract DeployAllScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -25,6 +27,12 @@ contract DeployAllScript is Script {
         bytes32 ballotVKHash = vm.envBytes32("BALLOT_VK_HASH");
         // Optional davinci-dkg manager; zero (the default) disables the DKG key modes.
         address dkgManager = vm.envOr("DKG_MANAGER", address(0));
+        // Grace window bounds; the registry checks 0 < floor <= default <= ceil <= maxTotal.
+        uint32 defaultGrace = _envSeconds("GRACE_DEFAULT", 180);
+        uint32 graceFloor = _envSeconds("GRACE_FLOOR", 150);
+        uint32 graceCeil = _envSeconds("GRACE_CEIL", 600);
+        uint32 graceMaxTotal = _envSeconds("GRACE_MAX_TOTAL", 1800);
+        uint32 noticeMin = _envSeconds("NOTICE_MIN", 60);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -33,11 +41,44 @@ contract DeployAllScript is Script {
         require(zisk.getRootCVadcopFinal() == rootCVadcopFinal, "ROOT_C_VADCOP_FINAL differs from the verifier setup");
 
         ProcessRegistry processRegistry = new ProcessRegistry(
-            chainId32, address(zisk), batchProgramVK, resultsProgramVK, rootCVadcopFinal, ballotVKHash, dkgManager
+            chainId32,
+            address(zisk),
+            batchProgramVK,
+            resultsProgramVK,
+            rootCVadcopFinal,
+            ballotVKHash,
+            dkgManager,
+            defaultGrace,
+            graceFloor,
+            graceCeil,
+            graceMaxTotal,
+            noticeMin
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
         console.log("DavinciDKGAdapter deployed at:", processRegistry.dkgAdapter());
+        console.log(
+            string.concat(
+                "Grace (s): default ",
+                vm.toString(uint256(defaultGrace)),
+                ", floor ",
+                vm.toString(uint256(graceFloor)),
+                ", ceil ",
+                vm.toString(uint256(graceCeil)),
+                ", max total ",
+                vm.toString(uint256(graceMaxTotal)),
+                "; notice min ",
+                vm.toString(uint256(noticeMin))
+            )
+        );
 
         vm.stopBroadcast();
+    }
+
+    /// @dev A seconds value from the environment, or def when unset.
+    function _envSeconds(string memory name, uint256 def) internal view returns (uint32) {
+        uint256 v = vm.envOr(name, def);
+        require(v <= type(uint32).max, string.concat(name, " exceeds uint32"));
+        // forge-lint: disable-next-line(unsafe-typecast)
+        return uint32(v);
     }
 }

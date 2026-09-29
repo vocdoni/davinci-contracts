@@ -3,7 +3,8 @@
 
 Compares the on-chain runtime code of ZiskVerifier and ProcessRegistry with
 `forge build` output (immutable slots masked), then reads every immutable
-back and compares it with the expected pins. Exit status 1 on any mismatch.
+back and compares it with the expected pins; the grace and notice settings are
+printed, not compared. Exit status 1 on any mismatch.
 
     python3 script/verify_deployment.py --rpc URL --registry 0x... \
         --batch-vk 0x... --results-vk 0x... --root-c 0x... --ballot-vk-hash 0x...
@@ -108,6 +109,11 @@ def main():
     else:
         print("adapter  none (DKG disabled)")
     print(f"verifier {verifier}")
+    for name in ("defaultGrace", "graceFloor", "graceCeil", "graceMaxTotal", "noticeMin"):
+        try:
+            print(f"{name:13} {int(get(a.registry, name + '()'), 16)} s")
+        except SystemExit:  # a registry from before the grace window
+            print(f"{name:13} n/a")
     sys.exit(0 if ok else 1)
 
 

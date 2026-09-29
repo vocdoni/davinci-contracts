@@ -102,6 +102,28 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      *         the DKG key modes are disabled.
      */
     address public immutable dkgAdapter;
+    /**
+     * @notice The grace window every new process starts with, in seconds.
+     */
+    uint32 public immutable defaultGrace;
+    /**
+     * @notice The shortest grace window setProcessGrace accepts, in seconds.
+     */
+    uint32 public immutable graceFloor;
+    /**
+     * @notice The longest grace window setProcessGrace accepts, in seconds.
+     */
+    uint32 public immutable graceCeil;
+    /**
+     * @notice Hard cap on the grace window past the end time, in seconds, however many
+     *         transitions keep extending it.
+     */
+    uint32 public immutable graceMaxTotal;
+    /**
+     * @notice The shortest notice setProcessDuration gives when it shortens a process: the new
+     *         end is at least this many seconds after the call.
+     */
+    uint32 public immutable noticeMin;
 
     /**
      * @notice Initializes the contract.
@@ -113,6 +135,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      * @param _ballotVKHash sha256 digest of the ballot proof VK (davinci.BallotVKLeaf).
      * @param _dkgManager The davinci-dkg DKGManager, or address(0) to disable DKG modes.
      *        When set, the constructor creates the DavinciDKGAdapter.
+     * @param _defaultGrace The grace window of a new process, in seconds.
+     * @param _graceFloor The minimum for setProcessGrace, non-zero and at most _defaultGrace.
+     * @param _graceCeil The maximum for setProcessGrace, at least _defaultGrace.
+     * @param _graceMaxTotal The cap on the window past the end time, at least _graceCeil.
+     * @param _noticeMin The minimum notice, in seconds, for shortening a process.
      */
     constructor(
         uint32 _chainID,
@@ -121,12 +148,25 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes32 _resultsProgramVK,
         bytes32 _rootCVadcopFinal,
         bytes32 _ballotVKHash,
-        address _dkgManager
+        address _dkgManager,
+        uint32 _defaultGrace,
+        uint32 _graceFloor,
+        uint32 _graceCeil,
+        uint32 _graceMaxTotal,
+        uint32 _noticeMin
     ) {
         if (
             _ziskVerifier == address(0) || _batchProgramVK == bytes32(0) || _resultsProgramVK == bytes32(0)
                 || _rootCVadcopFinal == bytes32(0) || _ballotVKHash == bytes32(0)
         ) revert InvalidVerifierConfig();
+        if (
+            _graceFloor == 0 || _graceFloor > _defaultGrace || _defaultGrace > _graceCeil || _graceCeil > _graceMaxTotal
+        ) revert InvalidGrace();
+        defaultGrace = _defaultGrace;
+        graceFloor = _graceFloor;
+        graceCeil = _graceCeil;
+        graceMaxTotal = _graceMaxTotal;
+        noticeMin = _noticeMin;
         ziskVerifier = IZiskVerifier(_ziskVerifier);
         batchProgramVK = _batchProgramVK;
         resultsProgramVK = _resultsProgramVK;
@@ -146,6 +186,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     function getProcessEndTime(bytes31 processId) external view returns (uint256) {
         DAVINCITypes.Process memory p = processes[processId];
         return p.startTime + p.duration;
+    }
+
+    /// @inheritdoc IProcessRegistry
+    function getProcessGraceEnd(bytes31 processId) external view override returns (uint256) {
+        return _graceEnd(processes[processId]);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -234,6 +279,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.census = census;
         p.census.censusRoot = censusRoot;
         p.creationBlock = block.number;
+        p.grace = defaultGrace;
 
         processCount++;
         processNonce[sender]++;
@@ -244,6 +290,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
+    /// @dev ENDED before the end time moves the end to now. Past it the end stays put: moving
+    ///      it forward would reopen a grace window that has already closed.
     function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
@@ -258,8 +306,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (!_validateStatusTransition(oldStatus, newStatus)) revert InvalidStatus();
 
         p.status = newStatus;
-        // if newStatus is ENDED, update duration to the time difference between current time and start time
-        if (newStatus == DAVINCITypes.ProcessStatus.ENDED) {
+        // if newStatus is ENDED before the end, set duration to the time elapsed since start
+        if (newStatus == DAVINCITypes.ProcessStatus.ENDED && block.timestamp < p.startTime + p.duration) {
             uint256 newDuration;
             if (block.timestamp >= p.startTime) {
                 newDuration = block.timestamp - p.startTime;
@@ -320,7 +368,9 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
-    /// @dev Note that the end time of the process is startTime + duration.
+    /// @dev Note that the end time of the process is startTime + duration. A shorter duration
+    ///      needs noticeMin: every node sees the new end before it bites, and no vote admitted
+    ///      under the old one turns late.
     function setProcessDuration(bytes31 processId, uint256 _duration) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
@@ -336,12 +386,13 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         // check valid duration
         uint256 startTime = p.startTime;
-        uint256 oldDuration = p.duration;
+        uint256 oldEnd = startTime + p.duration;
         // Past the end the tally may already be public (results tx in the mempool): no reopening.
-        if (startTime + oldDuration <= block.timestamp) revert InvalidTimeBounds();
+        if (oldEnd <= block.timestamp) revert InvalidTimeBounds();
+        uint256 newEnd = startTime + _duration;
         if (
-            _duration == 0 || startTime + _duration <= block.timestamp
-                || startTime + _duration <= startTime + oldDuration
+            _duration == 0 || newEnd <= block.timestamp || newEnd == oldEnd
+                || (newEnd < oldEnd && newEnd < block.timestamp + noticeMin)
         ) revert InvalidDuration();
 
         p.duration = _duration;
@@ -373,7 +424,27 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
+    /// @dev Same window as setProcessDuration: past the end the grace is already running.
+    function setProcessGrace(bytes31 processId, uint32 grace) external override {
+        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (p.organizationId != msg.sender) revert Unauthorized();
+
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
+            revert InvalidStatus();
+        }
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+        if (grace < graceFloor || grace > graceCeil) revert InvalidGrace();
+
+        p.grace = grace;
+
+        emit ProcessGraceChanged(processId, grace);
+    }
+
+    /// @inheritdoc IProcessRegistry
     /// @dev Permissionless: the proof, the blob openings and root continuity authenticate it.
+    ///      Settles through the grace window past the end, so batches still queued or proving
+    ///      at the end land; PAUSED still blocks settlement.
     function submitStateTransition(
         bytes31 processId,
         bytes calldata publicValues,
@@ -383,9 +454,12 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes[] calldata kzgProofs
     ) external override nonReentrant {
         DAVINCITypes.Process storage p = _existingProcess(processId);
-        if (p.status != DAVINCITypes.ProcessStatus.READY) revert InvalidStatus();
-        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+        DAVINCITypes.ProcessStatus status = p.status;
+        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.ENDED) {
+            revert InvalidStatus();
+        }
         if (block.timestamp < p.startTime) revert InvalidTimeBounds();
+        if (block.timestamp >= _graceEnd(p)) revert InvalidTimeBounds();
 
         _checkGuestOk(publicValues);
         bytes32 rootBefore = PublicsLib.reg32(publicValues, REG_ROOT_BEFORE);
@@ -397,6 +471,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         uint256 overwrites = PublicsLib.word(publicValues, REG_OVERWRITES);
         uint256 newVoters = PublicsLib.word(publicValues, REG_VOTERS) - overwrites;
+        // A refresh-only batch would extend the grace window without carrying a vote.
+        if (newVoters + overwrites == 0) revert EmptyTransition();
         if (votersCount + newVoters > p.maxVoters) revert MaxVotersReached();
 
         uint256 nBlobs = _checkBlobsDigest(publicValues, commitments, ys, kzgProofs);
@@ -410,6 +486,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         p.votersCount = votersCount + newVoters;
         p.overwrittenVotesCount += overwrites;
         ++p.batchNumber;
+        p.lastVoteAt = uint64(block.timestamp);
 
         emit ProcessStateTransitioned(
             processId, msg.sender, rootBefore, rootAfter, p.votersCount, p.overwrittenVotesCount, nBlobs
@@ -437,6 +514,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (oldStatus != DAVINCITypes.ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
+        // and that the grace window has closed, so latestStateRoot is final.
+        if (block.timestamp < _graceEnd(p)) revert GraceOpen();
 
         _checkGuestOk(publicValues);
         if (PublicsLib.reg32(publicValues, REG_RESULTS_STATE_ROOT) != p.latestStateRoot) revert InvalidStateRoot();
@@ -476,7 +555,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (p.keyMode == DAVINCITypes.KeyMode.SEQUENCER) revert InvalidKeyMode();
         if (p.dkgResultsRequested) revert ResultsAlreadyRequested();
 
-        // Same end rule as setProcessResults: ENDED, or READY/PAUSED past the end.
+        // Same end rule as setProcessResults: ENDED, or READY/PAUSED past the end, and the
+        // grace window closed.
         DAVINCITypes.ProcessStatus oldStatus = p.status;
         if (oldStatus == DAVINCITypes.ProcessStatus.CANCELED || oldStatus == DAVINCITypes.ProcessStatus.RESULTS) {
             revert InvalidStatus();
@@ -484,6 +564,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (oldStatus != DAVINCITypes.ProcessStatus.ENDED && p.startTime + p.duration > block.timestamp) {
             revert InvalidTimeBounds();
         }
+        if (block.timestamp < _graceEnd(p)) revert GraceOpen();
 
         // The leaf hash binds raw bytes; range-checking every coordinate leaves (0, 1)
         // as the unique identity encoding.
@@ -554,6 +635,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (status == DAVINCITypes.ProcessStatus.CANCELED || status == DAVINCITypes.ProcessStatus.RESULTS) {
             revert InvalidStatus();
         }
+        if (block.timestamp < _graceEnd(p)) revert GraceOpen();
         if (!p.dkgResultsRequested) revert ResultsNotReady();
         _finalizeDKGResults(processId, p);
     }
@@ -724,6 +806,19 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
         p = processes[processId];
         if (p.organizationId == address(0)) revert ProcessNotFound();
+    }
+
+    /// @dev min(end + graceMaxTotal, max(end, lastVoteAt) + grace). An end within graceMaxTotal
+    ///      of 2^256 (setProcessDuration allows it) never closes; below that nothing overflows,
+    ///      as grace never exceeds graceMaxTotal.
+    function _graceEnd(DAVINCITypes.Process storage p) private view returns (uint256) {
+        uint256 end = p.startTime + p.duration;
+        uint256 maxTotal = graceMaxTotal;
+        if (end > type(uint256).max - maxTotal) return type(uint256).max;
+        uint256 last = p.lastVoteAt;
+        uint256 idleEnd = (last > end ? last : end) + p.grace;
+        uint256 cap = end + maxTotal;
+        return idleEnd < cap ? idleEnd : cap;
     }
 
     /// @dev Checks the census root a batch was proven against (BE integer). Origins 1, 2 and 4

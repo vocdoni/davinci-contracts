@@ -18,6 +18,8 @@ described in the [whitepaper](https://whitepaper.vocdoni.io).
 - [Contracts](#contracts)
 - [Deployments](#deployments)
 - [Processes](#processes)
+  - [Grace window](#grace-window)
+  - [Shortening with notice](#shortening-with-notice)
 - [Creating a process](#creating-a-process)
 - [Organizer controls](#organizer-controls)
 - [State transitions](#state-transitions)
@@ -86,21 +88,70 @@ organizer moves a process with `setProcessStatus`:
 
 | From | Organizer may set | Other ways out |
 |---|---|---|
-| `READY` | `PAUSED`, `CANCELED`, `ENDED` | `RESULTS` or `ENDED` from the results calls, once the end time has passed |
+| `READY` | `PAUSED`, `CANCELED`, `ENDED` | `RESULTS` or `ENDED` from the results calls, once the grace window has closed |
 | `PAUSED` | `READY`, `CANCELED`, `ENDED` | same as `READY` |
 | `ENDED` | none | `RESULTS` from the results calls |
 | `CANCELED` | none | none |
 | `RESULTS` | none | none |
 
-A process ends at `startTime + duration` (`getProcessEndTime`). Setting `ENDED` by hand also
-sets `duration` to the time elapsed since `startTime` (0 if it had not started) and emits
-`ProcessDurationChanged`. Transitions settle only while the process is `READY` and
-`startTime <= block.timestamp < end`; `PAUSED` stops settlement but not the clock.
+A process ends at `startTime + duration` (`getProcessEndTime`). Setting `ENDED` by hand before
+that sets `duration` to the time elapsed since `startTime` (0 if it had not started) and emits
+`ProcessDurationChanged`; past the end it leaves `duration` alone. Transitions settle while the
+process is `READY` or `ENDED` and `startTime <= block.timestamp < getProcessGraceEnd`, a bound
+that runs past the end (see [Grace window](#grace-window)). `PAUSED` stops settlement but not
+the clock.
 
-Results are accepted once the process is `ENDED`, or `READY`/`PAUSED` with its end time passed.
-In sequencer mode `setProcessResults` moves it straight to `RESULTS`. In the DKG modes
-`requestResultsDecryption` first moves it to `ENDED`, which takes it out of the organizer's
-hands, and `finalizeResultsFromDKG` moves it to `RESULTS`.
+Results are accepted once the process is `ENDED`, or `READY`/`PAUSED` with its end time passed,
+and its grace window has closed. In sequencer mode `setProcessResults` moves it straight to
+`RESULTS`. In the DKG modes `requestResultsDecryption` first moves it to `ENDED`, which takes it
+out of the organizer's hands, and `finalizeResultsFromDKG` moves it to `RESULTS`.
+
+### Grace window
+
+Votes cast just before the end can still be queued or proving when it passes. The grace window
+lets them settle: transitions keep landing after the end until
+
+```
+graceEnd = min(end + graceMaxTotal, max(end, lastVoteAt) + grace)
+```
+
+with `end = startTime + duration`, `lastVoteAt` the `block.timestamp` of the last settled
+transition (0 before the first) and `grace` the process's idle window in seconds.
+`getProcessGraceEnd(processId)` returns it. Every settled transition moves `lastVoteAt`, so the
+window stays open while batches keep landing at most `grace` apart, and never past
+`end + graceMaxTotal`. Once `block.timestamp` reaches `graceEnd` nothing settles, `lastVoteAt`
+stops moving and the window never reopens: past the end the duration and `grace` are fixed, and
+`ENDED` no longer moves the end.
+
+A process ended by hand gets the same window, counted from the moment it was ended. `PAUSED`
+blocks settlement inside the window without stopping it, and `READY` inside the window resumes
+it. A transition must carry at least one vote (`EmptyTransition` otherwise), so a batch that
+only re-encrypts cannot extend the window.
+
+`setProcessResults`, `requestResultsDecryption` and `finalizeResultsFromDKG` revert with
+`GraceOpen` while `block.timestamp < graceEnd`, so the tally is always taken over the final
+root. Nothing but the window decides when they unlock: there is no organizer or node signal, so
+any sequencer, known to the organizer or not, gets `grace` seconds after the latest landed batch
+to land its own.
+
+`grace` starts at the registry's `defaultGrace`. The organizer can set it within
+`[graceFloor, graceCeil]` with `setProcessGrace` while the process is `READY` or `PAUSED` and
+before its end.
+
+Trust: the registry cannot tell when a vote was cast, so a sequencer can settle votes cast after
+the end while the window is open. That is bounded, since the window closes at most
+`graceMaxTotal` after the end and each extension costs a batch carrying a vote. It is also
+visible: every transition's block timestamp is public, so anyone can count the batches a
+process settled after its end.
+
+### Shortening with notice
+
+`setProcessDuration` can also move the end earlier, provided the new end is at least `noticeMin`
+seconds after the call (and after `startTime`). That makes an announcement such as "voting
+closes in one minute" a single transaction: nodes see `ProcessDurationChanged` before the new
+end arrives, so they can settle their queues while voting is still open and stop admitting
+votes at the announced moment. No vote admitted under the old end turns late, and the grace
+window follows the new end. `setProcessStatus(ENDED)` remains the way to close at once.
 
 ## Creating a process
 
@@ -133,7 +184,8 @@ function newProcess(
 | `dkg` | Key mode and DKG registration arguments; all zero in sequencer mode. |
 
 The call emits `ProcessCreated(processId, organizer)`, then
-`ProcessMetadataUpdated(processId, metadataURI, metadataHash)`.
+`ProcessMetadataUpdated(processId, metadataURI, metadataHash)`. The process starts with
+`grace = defaultGrace` (see [Grace window](#grace-window)).
 
 ### Metadata
 
@@ -264,8 +316,11 @@ Only the organizer can call these; anyone else gets `Unauthorized`.
 
 - `setProcessStatus(processId, status)`: see [Statuses](#statuses).
 - `setProcessDuration(processId, duration)`: while `READY` or `PAUSED` and before the current end.
-  The duration can only grow, and the new end must be in the future. Once the end has passed the
-  tally may already be public, so the process cannot be reopened.
+  The new end can be any later time, or an earlier one at least `noticeMin` seconds away (see
+  [Shortening with notice](#shortening-with-notice)); `duration` must be non-zero. Once the end
+  has passed the tally may already be public, so the process cannot be reopened.
+- `setProcessGrace(processId, grace)`: while `READY` or `PAUSED` and before the end, with
+  `graceFloor <= grace <= graceCeil`. Emits `ProcessGraceChanged`.
 - `setProcessMaxVoters(processId, maxVoters)`: while `READY` or `PAUSED`. Non-zero, at least the
   current `votersCount`, and within the same result cap as `newProcess`.
 - `setProcessCensus(processId, census)`: origin 2 processes only, while `READY` or `PAUSED` and
@@ -312,7 +367,8 @@ is in davinci-zkvm's `circuit/CIRCUIT.md`):
 
 The checks, in order:
 
-1. The process exists, is `READY` and within its voting window.
+1. The process exists, is `READY` or `ENDED`, and
+   `startTime <= block.timestamp < getProcessGraceEnd(processId)`.
 2. `publicValues` is 512 bytes, `ok == 1` and `fail_mask == 0`.
 3. The state root before equals `latestStateRoot`.
 4. The census root matches: for origins 1, 2 and 4 it equals the stored root; for origin 3 the
@@ -320,7 +376,7 @@ The checks, in order:
    least the process creation block. The census call gets 100k gas and must return a full word.
 5. `occupied_before` equals `votersCount`, the number of distinct ballot slots written so far.
    The guest cannot see the tree, so the registry pins it.
-6. `votersCount + votes - overwrites <= maxVoters`.
+6. `votes > 0` (`EmptyTransition` otherwise) and `votersCount + votes - overwrites <= maxVoters`.
 7. `n_blobs > 0`, the three blob arrays have `n_blobs` entries, the transaction carries no blob
    past `n_blobs`, commitments and proofs are 48 bytes, and
    `sha256(commitment_0 ‖ y_0 ‖ commitment_1 ‖ y_1 ‖ ...)` equals the blobs digest.
@@ -333,8 +389,8 @@ The checks, in order:
    the blob it laid out itself, so the published blobs are the ones the proof covers.
 
 On success `latestStateRoot` becomes the root after, `votersCount` grows by
-`votes - overwrites`, `overwrittenVotesCount` by `overwrites`, `batchNumber` by one, and the
-registry emits `ProcessStateTransitioned`.
+`votes - overwrites`, `overwrittenVotesCount` by `overwrites`, `batchNumber` by one,
+`lastVoteAt` becomes `block.timestamp`, and the registry emits `ProcessStateTransitioned`.
 
 ## Results
 
@@ -345,9 +401,9 @@ function setProcessResults(bytes31 processId, bytes calldata publicValues, bytes
 ```
 
 The results guest proves the tally of a state root. The registry requires a sequencer-mode
-process that is not `CANCELED` or `RESULTS` and has ended, `ok == 1` and `fail_mask == 0`, a
-state root (registers 2..9) equal to `latestStateRoot`, and a PLONK proof verified against
-`resultsProgramVK`. Result `i` is read from registers `10 + 2i` (low 32 bits) and `11 + 2i`
+process that is not `CANCELED` or `RESULTS`, has ended and has a closed grace window
+(`GraceOpen` otherwise), `ok == 1` and `fail_mask == 0`, a state root (registers 2..9) equal to
+`latestStateRoot`, and a PLONK proof verified against `resultsProgramVK`. Result `i` is read from registers `10 + 2i` (low 32 bits) and `11 + 2i`
 (high 32 bits) for each of the `numFields` fields. The process moves to `RESULTS` and the call
 emits `ProcessStatusChanged` and `ProcessResultsSet`.
 
@@ -362,10 +418,11 @@ function finalizeResultsFromDKG(bytes31 processId) external;
 function revealProcessKey(bytes31 processId, uint256 sk) external; // DKG_LOCKED only
 ```
 
-`requestResultsDecryption` runs once per process, after it has ended. `accumulator` holds the
-16 ElGamal ciphertexts of the results leaf as `(C1x, C1y, C2x, C2y)` each, circomlib form,
-big-endian. `siblings` is the SMT inclusion proof of leaf `0x04`, root to leaf, zero-padded,
-at most 64 entries and ending in a zero entry. The registry:
+`requestResultsDecryption` runs once per process, after it has ended and its grace window has
+closed. `accumulator` holds the 16 ElGamal ciphertexts of the results leaf as
+`(C1x, C1y, C2x, C2y)` each, circomlib form, big-endian. `siblings` is the SMT inclusion proof
+of leaf `0x04`, root to leaf, zero-padded, at most 64 entries and ending in a zero entry. The
+registry:
 
 1. requires every coordinate to be below the BN254 scalar field, so `(0, 1)` is the only
    identity encoding;
@@ -384,7 +441,7 @@ zero at once.
 `finalizeResultsFromDKG` reads the combined plaintexts once the committee has decrypted every
 submitted ciphertext, stores `numFields` results in field order (0 for skipped fields), moves
 the process to `RESULTS` and emits `ProcessStatusChanged` and `ProcessResultsSet`. Until then it
-reverts with `ResultsNotReady`.
+reverts with `ResultsNotReady` (`GraceOpen` while the grace window is open).
 
 `revealProcessKey` forwards the organizer secret of a `DKG_LOCKED` process to
 `DKGAppManager.revealOrganizerSecret`, which checks `sk·G == PK_org` and accepts it once. The
@@ -401,12 +458,14 @@ complete and the process never reaches `RESULTS`.
   written), `overwrittenVotesCount`, `creationBlock`, `batchNumber`, `metadataURI`,
   `metadataHash`, ballot mode, census, and the DKG fields `keyMode`, `dkgEpochId`, `dkgAid`,
   `dkgFirstIndex`, `dkgCount`, `dkgZeroSkipped` (bit `i` set when field `i` was skipped as
-  identity) and `dkgResultsRequested`.
-- `getNextProcessId(organizer)`, `getProcessEndTime(processId)`, `genesisRoot(...)`,
-  `aidFor(processId)`.
+  identity) and `dkgResultsRequested`, then `grace` and `lastVoteAt`.
+- `getNextProcessId(organizer)`, `getProcessEndTime(processId)`, `getProcessGraceEnd(processId)`,
+  `genesisRoot(...)`, `aidFor(processId)`.
 - The immutables `ziskVerifier`, `batchProgramVK`, `resultsProgramVK`, `rootCVadcopFinal`,
   `ballotVKHash` and `dkgAdapter`; `getSTVerifierVKeyHash()` and `getRVerifierVKeyHash()` return
-  the batch and results vks.
+  the batch and results vks. The window settings `defaultGrace`, `graceFloor`, `graceCeil`,
+  `graceMaxTotal` and `noticeMin` (seconds, `uint32`) are immutables too, for nodes to read at
+  boot.
 - `chainID`, `pidPrefix`, `processCount`, `processNonce(organizer)`.
 - On the adapter: `registrationEpoch()`, `aidFor(processId)`, `registry`, `manager`,
   `appManager`.
@@ -417,8 +476,9 @@ complete and the process never reaches `RESULTS`.
 |---|---|
 | `ProcessCreated(bytes31 indexed processId, address indexed creator)` | `newProcess` |
 | `ProcessStatusChanged(bytes31 indexed processId, ProcessStatus oldStatus, ProcessStatus newStatus)` | `setProcessStatus`, `setProcessResults`, `requestResultsDecryption` (to `ENDED`, and to `RESULTS` when every field is identity), `finalizeResultsFromDKG` |
-| `ProcessDurationChanged(bytes31 indexed processId, uint256 duration)` | `setProcessDuration`, `setProcessStatus` to `ENDED` |
+| `ProcessDurationChanged(bytes31 indexed processId, uint256 duration)` | `setProcessDuration`, `setProcessStatus` to `ENDED` before the end time |
 | `ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters)` | `setProcessMaxVoters` |
+| `ProcessGraceChanged(bytes31 indexed processId, uint32 grace)` | `setProcessGrace` |
 | `CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI)` | `setProcessCensus` |
 | `ProcessMetadataUpdated(bytes31 indexed processId, string metadataURI, bytes32 metadataHash)` | `newProcess` (the initial values), `setProcessMetadata` |
 | `ProcessStateTransitioned(bytes31 indexed processId, address indexed sender, bytes32 oldStateRoot, bytes32 newStateRoot, uint256 newVotersCount, uint256 newOverwrittenVotesCount, uint256 nBlobs)` | `submitStateTransition` |
@@ -436,10 +496,13 @@ Errors of `IProcessRegistry` unless noted.
 | `ProcessNotFound` | calls taking a process id | no such process |
 | `Unauthorized` | organizer controls | caller is not the organizer |
 | `ProcessAlreadyExists` | `newProcess` | the id is taken |
-| `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY` (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
+| `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY`/`ENDED` (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
 | `InvalidStartTime` | `newProcess` | start time in the past |
-| `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; new duration zero or not longer |
-| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessCensus`, `setProcessMetadata`); outside the voting window (settlement); not ended yet (results calls) |
+| `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; new duration zero or unchanged; an earlier end less than `noticeMin` away |
+| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessCensus`, `setProcessMetadata`, `setProcessGrace`); before `startTime` or at or past the grace end (settlement); not ended yet (results calls) |
+| `InvalidGrace` | constructor, `setProcessGrace` | grace outside `[graceFloor, graceCeil]`; constructor bounds not `0 < graceFloor <= defaultGrace <= graceCeil <= graceMaxTotal` |
+| `GraceOpen` | results calls | the grace window has not closed |
+| `EmptyTransition` | `submitStateTransition` | the batch carries no vote |
 | `InvalidMaxVoters` | `newProcess`, `setProcessMaxVoters` | zero, or below `votersCount` |
 | `MaxPossibleResultCapExceeded` | `newProcess`, `setProcessMaxVoters` | `maxValue > 10^12 / maxVoters` |
 | `InvalidMaxCount` | `newProcess` | `numFields` is 0 or above 16 |
@@ -498,7 +561,12 @@ constructor(
     bytes32 resultsProgramVK,
     bytes32 rootCVadcopFinal,
     bytes32 ballotVKHash,
-    address dkgManager
+    address dkgManager,
+    uint32 defaultGrace,
+    uint32 graceFloor,
+    uint32 graceCeil,
+    uint32 graceMaxTotal,
+    uint32 noticeMin
 )
 ```
 
@@ -513,10 +581,19 @@ It reads:
 | `ROOT_C_VADCOP_FINAL` | root of the ZisK vadcop-final setup; the script aborts unless it equals `ZiskVerifier.getRootCVadcopFinal()` |
 | `BALLOT_VK_HASH` | `sha256` of the ballot proof VK wire bytes, genesis leaf `0x07` (`davinci.BallotVKLeaf` in the davinci-zkvm Go SDK) |
 | `DKG_MANAGER` | optional davinci-dkg `DKGManager`; unset or zero disables the DKG modes |
+| `GRACE_DEFAULT` | optional, seconds: the grace window of a new process (`defaultGrace`, default 180) |
+| `GRACE_FLOOR` | optional, seconds: the minimum for `setProcessGrace` (`graceFloor`, default 150) |
+| `GRACE_CEIL` | optional, seconds: the maximum for `setProcessGrace` (`graceCeil`, default 600) |
+| `GRACE_MAX_TOTAL` | optional, seconds: the cap on the window past the end (`graceMaxTotal`, default 1800) |
+| `NOTICE_MIN` | optional, seconds: the minimum notice for shortening a process (`noticeMin`, default 60) |
 
 The program vks are what `cargo-zisk setup` prints as `Root hash` for each guest ELF;
 davinci-zkvm pins the released ones in `rust-sdk/src/release.rs`. A zero verifier address or
-pin reverts with `InvalidVerifierConfig`.
+pin reverts with `InvalidVerifierConfig`, and grace bounds that are not
+`0 < GRACE_FLOOR <= GRACE_DEFAULT <= GRACE_CEIL <= GRACE_MAX_TOTAL` with `InvalidGrace`. The
+defaults are production values; a local or test chain can deploy with short ones, for example
+`GRACE_DEFAULT=10 GRACE_FLOOR=2 GRACE_CEIL=60 GRACE_MAX_TOTAL=60 NOTICE_MIN=5`. The script
+prints the values it deployed with.
 
 Local node, with the variables above exported (`CHAIN_ID=31337`):
 
@@ -543,9 +620,10 @@ Several chains: put shared values and `DEPLOY_CHAINS=base,sepolia,...` in `.env`
 ./deploy_all_contracts_to_all_chains.sh
 ```
 
-It reloads `.env`, clears the chain-scoped variables, loads each chain's file and calls
-`deploy_all.sh`. `DKG_MANAGER` is not among the variables it clears, so when it is set for one
-chain, set it (to zero if needed) in every chain file.
+It reloads `.env`, clears the chain-scoped variables (`DKG_MANAGER` among them), loads each
+chain's file and calls `deploy_all.sh`. The grace and notice variables are not chain-scoped: a
+value set in one chain file carries over to the chains after it, so set them in `.env` or in
+every chain file.
 
 ### With DKG support
 
@@ -579,6 +657,9 @@ It checks that:
 - when `dkgAdapter()` is set, the adapter's code matches the local build and `adapter.registry()`
   is the registry.
 
+It also prints the grace and notice settings (`defaultGrace`, `graceFloor`, `graceCeil`,
+`graceMaxTotal`, `noticeMin`) without judging them.
+
 Each check prints `OK` or `FAIL`; the exit status is 1 if any fails. Use `--cast` when `cast`
 is not at `~/.foundry/bin/cast`.
 
@@ -611,7 +692,8 @@ forge test --gas-report
 | `Genesis.t.sol` | genesis roots against the Go reference |
 | `Transition.t.sol` | settlement with real KZG openings (PLONK verifier mocked) |
 | `DynamicCensus.t.sol` | census origins 2 and 3 |
-| `Results.t.sol` | `setProcessResults` |
+| `Results.t.sol` | `setProcessResults`, including the grace gate |
+| `Grace.t.sol` | the grace window (settlement, idle extension, cap, freeze), `setProcessGrace`, shortening with notice |
 | `DKG.t.sol` | DKG key modes, against a mock DKG with real BabyJubJub arithmetic |
 | `Publics.t.sol`, `ZiskVerifier.t.sol` | public values decoding and the vendored verifier, against a recorded batch PLONK |
 | `BlobsLib.t.sol`, `ProcessIdLib.t.sol` | library helpers |
@@ -667,8 +749,10 @@ docker compose --profile local down           # the chain is gone after this
 `ANVIL_BLOCK_TIME` seconds (default 1). It deploys from anvil's account 0, pinned to the
 davinci-zkvm release and without DKG, so the addresses are always `ZiskVerifier`
 `0x5FbDB2315678afecb367f032d93F642f64180aa3` and `ProcessRegistry`
-`0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`. A davinci-sequencer runs against it with
-`--blob-source anvil`.
+`0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`. The grace and notice variables of
+[Deploying](#deploying) pass through from the host environment (unset keeps the defaults), so
+exporting the short values shown there before `up` gives a chain with short windows. A
+davinci-sequencer runs against it with `--blob-source anvil`.
 
 `deploy` runs `deploy_all.sh` with the variables of [Deploying](#deploying) from `.env`; the key
 never enters the image. The broadcast record stays in the container, so copy it out before

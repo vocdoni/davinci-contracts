@@ -219,6 +219,7 @@ contract ProcessRegistryTest is RegistryTestBase {
 
         // Set initial state to RESULTS
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
+        _warpToGraceEnd(processId);
         uint64[16] memory values;
         bytes32 root = processRegistry.getProcess(processId).latestStateRoot;
         processRegistry.setProcessResults(processId, _resultsPublics(root, values), "");

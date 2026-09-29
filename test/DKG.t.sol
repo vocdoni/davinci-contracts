@@ -160,11 +160,6 @@ contract DKGTest is RegistryTestBase {
         assertEq(registry.getProcess(pid).latestStateRoot, root, "latestStateRoot slot moved");
     }
 
-    function _warpPastEnd(bytes31 pid) internal {
-        DAVINCITypes.Process memory p = registry.getProcess(pid);
-        vm.warp(p.startTime + p.duration + 1);
-    }
-
     // --- BjjFormLib and the mock's curve math -------------------------------------
 
     function test_BjjFormLib_Constants() public pure {
@@ -401,7 +396,7 @@ contract DKGTest is RegistryTestBase {
 
     function test_Request_ZeroVotesFinalizesImmediately() public {
         bytes31 pid = _automaticProcess();
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         (, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".genesis");
 
         DAVINCITypes.Process memory p = registry.getProcess(pid);
@@ -430,7 +425,7 @@ contract DKGTest is RegistryTestBase {
         bytes31 pid = _automaticProcess();
         (bytes32 root, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".settled");
         _forceRoot(pid, root);
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
 
         bytes32 aid = registry.aidFor(pid);
         vm.expectEmit(true, false, false, true, address(registry));
@@ -490,7 +485,7 @@ contract DKGTest is RegistryTestBase {
 
     function test_Request_RejectsWrongProofs() public {
         bytes31 pid = _automaticProcess();
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         (, uint256[64] memory genesisAcc, bytes32[] memory genesisSiblings) = _inclusion(".genesis");
         (, uint256[64] memory settledAcc, bytes32[] memory settledSiblings) = _inclusion(".settled");
 
@@ -517,7 +512,7 @@ contract DKGTest is RegistryTestBase {
 
     function test_Request_RejectsNonCanonicalCoordinate() public {
         bytes31 pid = _automaticProcess();
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         (, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".genesis");
         acc[1] += BjjFormLib.Q; // y + Q encodes the same point; the leaf binds raw bytes
         vm.expectRevert(IProcessRegistry.InvalidAccumulator.selector);
@@ -528,7 +523,7 @@ contract DKGTest is RegistryTestBase {
         bytes31 pid = _automaticProcess();
         (bytes32 root, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".bad_c1_zero");
         _forceRoot(pid, root);
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         vm.expectRevert(IProcessRegistry.InvalidAccumulator.selector);
         registry.requestResultsDecryption(pid, acc, siblings);
     }
@@ -537,7 +532,7 @@ contract DKGTest is RegistryTestBase {
         bytes31 pid = _automaticProcess();
         (bytes32 root, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".bad_c2_zero");
         _forceRoot(pid, root);
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         vm.expectRevert(IProcessRegistry.InvalidAccumulator.selector);
         registry.requestResultsDecryption(pid, acc, siblings);
     }
@@ -546,7 +541,7 @@ contract DKGTest is RegistryTestBase {
         bytes31 pid = _automaticProcess();
         (bytes32 root, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".settled");
         _forceRoot(pid, root);
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         mock.setSkipAtCall(2); // the second submit lands after someone else's ciphertext
         vm.expectRevert(DavinciDKGAdapter.NonContiguousIndex.selector);
         registry.requestResultsDecryption(pid, acc, siblings);
@@ -557,8 +552,42 @@ contract DKGTest is RegistryTestBase {
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED); // organizer ends early
         (, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".genesis");
-        registry.requestResultsDecryption(pid, acc, siblings); // no warp: ENDED alone qualifies
+        // ENDED moved the end to now, and the grace window runs from there.
+        uint256 graceEnd = registry.getProcessGraceEnd(pid);
+        assertEq(graceEnd, registry.getProcessEndTime(pid) + GRACE);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        vm.warp(graceEnd);
+        registry.requestResultsDecryption(pid, acc, siblings);
         assertEq(uint8(registry.getProcess(pid).status), uint8(DAVINCITypes.ProcessStatus.RESULTS));
+    }
+
+    /// @dev Past the end time the request waits for the grace window, and so does finalize
+    ///      (which otherwise answers ResultsNotReady before any request).
+    function test_RequestAndFinalize_GraceOpen() public {
+        bytes31 pid = _automaticProcess();
+        (bytes32 root, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".settled");
+        _forceRoot(pid, root);
+        uint256 graceEnd = registry.getProcessGraceEnd(pid);
+        assertEq(graceEnd, registry.getProcessEndTime(pid) + GRACE);
+
+        vm.warp(registry.getProcessEndTime(pid));
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+
+        vm.warp(graceEnd - 1);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+
+        vm.warp(graceEnd);
+        vm.expectRevert(IProcessRegistry.ResultsNotReady.selector);
+        registry.finalizeResultsFromDKG(pid);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        assertTrue(registry.getProcess(pid).dkgResultsRequested);
     }
 
     function test_Request_TimeAndStatusRules() public {
@@ -572,14 +601,14 @@ contract DKGTest is RegistryTestBase {
         // Canceled processes cannot be tallied.
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.CANCELED);
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
         registry.requestResultsDecryption(pid, acc, siblings);
     }
 
     function test_Request_SequencerMode() public {
         bytes31 pid = _newProcess(block.timestamp, DURATION, MAX_VOTERS, _ballotMode(), _census());
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         (, uint256[64] memory acc, bytes32[] memory siblings) = _inclusion(".genesis");
         vm.expectRevert(IProcessRegistry.InvalidKeyMode.selector);
         registry.requestResultsDecryption(pid, acc, siblings);
@@ -589,14 +618,14 @@ contract DKGTest is RegistryTestBase {
 
     function test_Finalize_BeforeRequest() public {
         bytes31 pid = _automaticProcess();
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         vm.expectRevert(IProcessRegistry.ResultsNotReady.selector);
         registry.finalizeResultsFromDKG(pid);
     }
 
     function test_SetProcessResults_DKGMode() public {
         bytes31 pid = _automaticProcess();
-        _warpPastEnd(pid);
+        _warpToGraceEnd(pid);
         uint64[16] memory values;
         bytes memory pv = _resultsPublics(registry.getProcess(pid).latestStateRoot, values);
         vm.expectRevert(IProcessRegistry.InvalidKeyMode.selector);

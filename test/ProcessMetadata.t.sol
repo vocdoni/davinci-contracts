@@ -205,6 +205,7 @@ contract ProcessMetadataTest is RegistryTestBase {
         bytes31 pid = _create(METADATA_URI, METADATA_HASH);
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED);
+        _warpToGraceEnd(pid);
         uint64[16] memory values;
         values[0] = 7;
         registry.setProcessResults(pid, _resultsPublics(registry.getProcess(pid).latestStateRoot, values), "");

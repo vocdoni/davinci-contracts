@@ -35,6 +35,12 @@ abstract contract RegistryTestBase is Test {
     bytes32 internal constant RESULTS_VK = keccak256("davinci results program vk");
     bytes32 internal constant ROOT_C = 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80;
     uint256 internal constant DURATION = 1 days;
+    // The production grace bounds (DeployAll defaults).
+    uint32 internal constant GRACE = 180;
+    uint32 internal constant GRACE_FLOOR = 150;
+    uint32 internal constant GRACE_CEIL = 600;
+    uint32 internal constant GRACE_MAX_TOTAL = 1800;
+    uint32 internal constant NOTICE_MIN = 60;
     uint256 internal constant MAX_VOTERS = 10_000;
     uint256 internal constant BN254_P = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
     string internal constant METADATA_URI = "ipfs://metadata";
@@ -50,8 +56,22 @@ abstract contract RegistryTestBase is Test {
         address verifier = _verifier();
         bytes32 ballotVKHash = fixture.readBytes32(".ballot_vk_hash");
         address dkgManager = _dkgManager();
+        (uint32 grace, uint32 floor, uint32 ceil, uint32 maxTotal, uint32 notice) = _timeConfig();
         vm.prank(DEPLOYER);
-        registry = new ProcessRegistry(CHAIN_ID, verifier, BATCH_VK, RESULTS_VK, ROOT_C, ballotVKHash, dkgManager);
+        registry = new ProcessRegistry(
+            CHAIN_ID,
+            verifier,
+            BATCH_VK,
+            RESULTS_VK,
+            ROOT_C,
+            ballotVKHash,
+            dkgManager,
+            grace,
+            floor,
+            ceil,
+            maxTotal,
+            notice
+        );
         assertEq(address(registry), fixture.readAddress(".registry"), "registry address differs from the fixture");
     }
 
@@ -63,6 +83,16 @@ abstract contract RegistryTestBase is Test {
     /// @dev The DKG manager the registry is deployed with (0 = DKG modes disabled).
     function _dkgManager() internal virtual returns (address) {
         return address(0);
+    }
+
+    /// @dev The registry's grace default, floor, ceil and max total, and its notice minimum.
+    function _timeConfig() internal pure virtual returns (uint32, uint32, uint32, uint32, uint32) {
+        return (GRACE, GRACE_FLOOR, GRACE_CEIL, GRACE_MAX_TOTAL, NOTICE_MIN);
+    }
+
+    /// @dev Warps to the grace end of a process, where transitions stop and results open.
+    function _warpToGraceEnd(bytes31 pid) internal {
+        vm.warp(registry.getProcessGraceEnd(pid));
     }
 
     /// @dev All-zero DKGParams: SEQUENCER mode.

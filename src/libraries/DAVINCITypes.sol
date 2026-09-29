@@ -153,6 +153,10 @@ library DAVINCITypes {
      * @param dkgResultsRequested Whether requestResultsDecryption ran (covers the all-identity
      *        case where dkgCount stays 0).
      * @param dkgAid The DKG application id (keccak(chainid, registry, pid) mod Q).
+     * @param grace Idle window past the end, in seconds: transitions settle until
+     *        max(end, lastVoteAt) + grace, capped at end + graceMaxTotal (getProcessGraceEnd).
+     *        defaultGrace at creation.
+     * @param lastVoteAt block.timestamp of the last settled transition, 0 before the first.
      */
     struct Process {
         ProcessStatus status;
@@ -178,5 +182,7 @@ library DAVINCITypes {
         uint16 dkgZeroSkipped;
         bool dkgResultsRequested;
         bytes32 dkgAid;
+        uint32 grace;
+        uint64 lastVoteAt;
     }
 }

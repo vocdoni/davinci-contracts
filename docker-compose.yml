@@ -64,6 +64,12 @@ services:
       RESULTS_PROGRAM_VK: "0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794"
       ROOT_C_VADCOP_FINAL: "0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80"
       BALLOT_VK_HASH: "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e"
+      # Grace window and shorten notice in seconds; unset keeps the DeployAll defaults.
+      GRACE_DEFAULT: ${GRACE_DEFAULT:-}
+      GRACE_FLOOR: ${GRACE_FLOOR:-}
+      GRACE_CEIL: ${GRACE_CEIL:-}
+      GRACE_MAX_TOTAL: ${GRACE_MAX_TOTAL:-}
+      NOTICE_MIN: ${NOTICE_MIN:-}
     command:
       - |
         set -e

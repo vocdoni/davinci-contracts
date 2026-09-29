@@ -81,6 +81,12 @@ interface IProcessRegistry {
      */
     event ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters);
     /**
+     * @notice Emitted when the organizer changes the grace window of a process.
+     * @param processId The ID of the process.
+     * @param grace The new idle window past the end, in seconds.
+     */
+    event ProcessGraceChanged(bytes31 indexed processId, uint32 grace);
+    /**
      * @notice Emitted when the final accumulator of a DKG-mode process is bound to its
      *         state root and its active ciphertexts are submitted for threshold decryption.
      * @param processId The ID of the process.
@@ -314,6 +320,19 @@ interface IProcessRegistry {
      * @notice Thrown when requestResultsDecryption runs twice for a process.
      */
     error ResultsAlreadyRequested();
+    /**
+     * @notice Thrown when a grace value is outside [graceFloor, graceCeil], or when the
+     *         constructor's grace bounds are not 0 < floor <= default <= ceil <= maxTotal.
+     */
+    error InvalidGrace();
+    /**
+     * @notice Thrown when results are set or requested before the grace window has closed.
+     */
+    error GraceOpen();
+    /**
+     * @notice Thrown when a state transition adds no vote (no new voter and no overwrite).
+     */
+    error EmptyTransition();
 
     /// GETTERS ///
 
@@ -362,6 +381,43 @@ interface IProcessRegistry {
      * @return The end time of the process.
      */
     function getProcessEndTime(bytes31 processId) external view returns (uint256);
+
+    /**
+     * @notice Returns when the grace window of a process closes: transitions settle while
+     *         block.timestamp is below it and the results calls open at it. With
+     *         end = startTime + duration it is
+     *         min(end + graceMaxTotal, max(end, lastVoteAt) + grace). Every settled
+     *         transition moves lastVoteAt, so the window extends while votes keep landing,
+     *         up to the cap; once it passes nothing can settle and it never reopens.
+     * @param processId The ID of the process.
+     * @return The grace end, a unix timestamp in seconds.
+     */
+    function getProcessGraceEnd(bytes31 processId) external view returns (uint256);
+
+    /**
+     * @notice The grace window a new process starts with, in seconds.
+     */
+    function defaultGrace() external view returns (uint32);
+
+    /**
+     * @notice The shortest grace window setProcessGrace accepts, in seconds.
+     */
+    function graceFloor() external view returns (uint32);
+
+    /**
+     * @notice The longest grace window setProcessGrace accepts, in seconds.
+     */
+    function graceCeil() external view returns (uint32);
+
+    /**
+     * @notice The cap on the grace window past the end time, in seconds.
+     */
+    function graceMaxTotal() external view returns (uint32);
+
+    /**
+     * @notice The minimum notice, in seconds, for shortening a process with setProcessDuration.
+     */
+    function noticeMin() external view returns (uint32);
 
     /**
      * @notice The DavinciDKGAdapter created at deploy, or address(0) when DKG modes are
@@ -436,10 +492,13 @@ interface IProcessRegistry {
     function setProcessMetadata(bytes31 processId, string calldata metadataURI, bytes32 metadataHash) external;
 
     /**
-     * @notice Sets the duration of a process. Only before its current end: past it the tally
-     *         may already be public, so the election cannot be reopened.
+     * @notice Sets the duration of a process. Only the organizer, while READY or PAUSED and
+     *         before its current end: past it the tally may already be public, so the election
+     *         cannot be reopened. The end can move later freely, or earlier with notice: the
+     *         new end must be at least noticeMin seconds away. The grace window follows the
+     *         new end.
      * @param processId The ID of the process.
-     * @param duration The new duration of the process.
+     * @param duration The new duration of the process, non-zero.
      */
     function setProcessDuration(bytes31 processId, uint256 duration) external;
 
@@ -451,7 +510,17 @@ interface IProcessRegistry {
     function setProcessMaxVoters(bytes31 processId, uint256 maxVoters) external;
 
     /**
+     * @notice Sets the grace window of a process: how long past the end, or past the last
+     *         settled transition, transitions keep settling. Only the organizer, while
+     *         READY or PAUSED and before the end time.
+     * @param processId The ID of the process.
+     * @param grace The idle window in seconds, within [graceFloor, graceCeil].
+     */
+    function setProcessGrace(bytes31 processId, uint32 grace) external;
+
+    /**
      * @notice Sets the results of a process from a results-guest proof over its final state root.
+     *         Only once the grace window has closed (getProcessGraceEnd), so the root is final.
      * @param processId The ID of the process.
      * @param publicValues The 512-byte ZisK public values.
      * @param proofBytes The PLONK proof, abi-encoded uint256[24].
@@ -462,9 +531,10 @@ interface IProcessRegistry {
      * @notice Binds the final accumulator of an ended DKG-mode process to its latest state
      *         root (SMT inclusion of key 0x04) and submits every active field's ciphertext
      *         to the DKG committee for threshold decryption. Permissionless, at most once
-     *         per process. With no active field (all identity) the results are finalized
-     *         to zero immediately; otherwise the process is moved to ENDED, so the tally
-     *         cannot be read off the DKG and then canceled.
+     *         per process, and only once the grace window has closed (getProcessGraceEnd).
+     *         With no active field (all identity) the results are finalized to zero
+     *         immediately; otherwise the process is moved to ENDED, so the tally cannot be
+     *         read off the DKG and then canceled.
      * @dev DKG liveness is election liveness: once requested there is no un-request and
      *      no fallback to setProcessResults, so if more than n - t committee members of
      *      the registration epoch are gone the combines never complete and the results
@@ -498,7 +568,9 @@ interface IProcessRegistry {
 
     /**
      * @notice Settles a state transition proven by the vote-batch guest. Must be sent as a blob
-     *         transaction carrying the transition's blobs in order.
+     *         transaction carrying the transition's blobs in order. Accepted while the process
+     *         is READY or ENDED, from startTime until getProcessGraceEnd, and only for a batch
+     *         with at least one vote. Sets lastVoteAt, which extends the grace window.
      * @param processId The ID of the process.
      * @param publicValues The 512-byte ZisK public values.
      * @param proofBytes The PLONK proof, abi-encoded uint256[24].

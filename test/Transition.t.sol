@@ -36,6 +36,7 @@ contract TransitionTest is RegistryTestBase {
         assertEq(p.votersCount, 3);
         assertEq(p.overwrittenVotesCount, 0);
         assertEq(p.batchNumber, 1);
+        assertEq(p.lastVoteAt, vm.getBlockTimestamp());
     }
 
     function test_SubmitStateTransition_TwoBatchesTwoBlobs() public {
@@ -262,16 +263,26 @@ contract TransitionTest is RegistryTestBase {
         out[hashes.length] = bytes32(uint256(0x01) << 248 | uint256(keccak256("junk blob")) >> 8);
     }
 
-    /// @dev Status changes cannot reopen voting past the end: only the time bound gates it.
-    function test_RevertWhen_ResumedAfterEnd() public {
+    /// @dev Status changes cannot reopen settlement past the grace window: only the time
+    ///      bound gates it.
+    function test_RevertWhen_ResumedAfterGrace() public {
         bytes31 pid = _fixtureProcess();
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.PAUSED);
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.READY);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         _submit(pid, _transition(0));
+    }
+
+    /// @dev A batch without votes (refreshes only) would extend the grace window for nothing.
+    function test_RevertWhen_EmptyTransition() public {
+        bytes31 pid = _fixtureProcess();
+        Transition memory t = _transition(0);
+        _setWord(t.publicValues, 18, 0);
+        vm.expectRevert(IProcessRegistry.EmptyTransition.selector);
+        _submit(pid, t);
     }
 
     function test_RevertWhen_NoBlobs() public {
@@ -328,9 +339,9 @@ contract TransitionTest is RegistryTestBase {
         _submit(pid, _transition(0));
     }
 
-    function test_RevertWhen_AfterEnd() public {
+    function test_RevertWhen_AfterGrace() public {
         bytes31 pid = _fixtureProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         _submit(pid, _transition(0));
     }
@@ -343,11 +354,12 @@ contract TransitionTest is RegistryTestBase {
         _submit(pid, _transition(0));
     }
 
-    function test_RevertWhen_Ended() public {
+    function test_RevertWhen_EndedAfterGrace() public {
         bytes31 pid = _fixtureProcess();
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED);
-        vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
+        _warpToGraceEnd(pid);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         _submit(pid, _transition(0));
     }
 

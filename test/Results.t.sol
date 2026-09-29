@@ -22,9 +22,9 @@ contract ResultsTest is RegistryTestBase {
         assertEq(registry.getProcess(pid).latestStateRoot, fixture.readBytes32(".results.state_root"));
     }
 
-    function test_SetProcessResults_AfterEnd() public {
+    function test_SetProcessResults_AfterGrace() public {
         bytes31 pid = _settledProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
 
         uint256[] memory want = fixture.readUintArray(".results.values");
@@ -51,6 +51,7 @@ contract ResultsTest is RegistryTestBase {
         bytes31 pid = _settledProcess();
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
         vm.prank(address(0xBEEF));
         registry.setProcessResults(pid, pv, proof);
@@ -62,7 +63,7 @@ contract ResultsTest is RegistryTestBase {
         m.numFields = 16;
         m.groupSize = 16;
         bytes31 pid = _newProcess(block.timestamp, DURATION, MAX_VOTERS, m, _census());
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
 
         uint64[16] memory values;
         for (uint256 i = 0; i < 16; i++) {
@@ -86,6 +87,65 @@ contract ResultsTest is RegistryTestBase {
         registry.setProcessResults(pid, pv, proof);
     }
 
+    /// @dev From the end time until the grace end, transitions can still move the root.
+    function test_RevertWhen_GraceOpen() public {
+        bytes31 pid = _settledProcess();
+        uint256 graceEnd = registry.getProcessGraceEnd(pid);
+        assertEq(graceEnd, registry.getProcessEndTime(pid) + GRACE);
+        (bytes memory pv, bytes memory proof) = _results();
+
+        vm.warp(registry.getProcessEndTime(pid));
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.setProcessResults(pid, pv, proof);
+        vm.warp(graceEnd - 1);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.setProcessResults(pid, pv, proof);
+
+        vm.warp(graceEnd);
+        registry.setProcessResults(pid, pv, proof);
+        assertEq(uint256(registry.getProcess(pid).status), uint256(DAVINCITypes.ProcessStatus.RESULTS));
+    }
+
+    /// @dev ENDED by the organizer: the window runs from the moment it ended.
+    function test_RevertWhen_EndedGraceOpen() public {
+        bytes31 pid = _settledProcess();
+        vm.warp(vm.getBlockTimestamp() + 1000);
+        vm.prank(ORGANIZER);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED);
+        uint256 graceEnd = registry.getProcessGraceEnd(pid);
+        assertEq(graceEnd, vm.getBlockTimestamp() + GRACE);
+        (bytes memory pv, bytes memory proof) = _results();
+
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.setProcessResults(pid, pv, proof);
+        vm.warp(graceEnd - 1);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.setProcessResults(pid, pv, proof);
+
+        vm.warp(graceEnd);
+        registry.setProcessResults(pid, pv, proof);
+        assertEq(uint256(registry.getProcess(pid).status), uint256(DAVINCITypes.ProcessStatus.RESULTS));
+    }
+
+    /// @dev A batch landing in the grace window pushes the results back with it.
+    function test_SetProcessResults_WaitsForExtendedGrace() public {
+        bytes31 pid = _fixtureProcess();
+        _submit(pid, _transition(0));
+        uint256 end = registry.getProcessEndTime(pid);
+        vm.warp(end + 100);
+        _submit(pid, _transition(1));
+        assertEq(registry.getProcessGraceEnd(pid), end + 100 + GRACE);
+        (bytes memory pv, bytes memory proof) = _results();
+
+        vm.warp(end + GRACE);
+        vm.expectRevert(IProcessRegistry.GraceOpen.selector);
+        registry.setProcessResults(pid, pv, proof);
+
+        vm.warp(end + 100 + GRACE);
+        registry.setProcessResults(pid, pv, proof);
+        assertEq(uint256(registry.getProcess(pid).status), uint256(DAVINCITypes.ProcessStatus.RESULTS));
+    }
+
     function test_RevertWhen_PausedBeforeEnd() public {
         bytes31 pid = _settledProcess();
         vm.prank(ORGANIZER);
@@ -99,7 +159,7 @@ contract ResultsTest is RegistryTestBase {
         // Results over the final root, but only the first batch settled.
         bytes31 pid = _fixtureProcess();
         _submit(pid, _transition(0));
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
         vm.expectRevert(IProcessRegistry.InvalidStateRoot.selector);
         registry.setProcessResults(pid, pv, proof);
@@ -107,7 +167,7 @@ contract ResultsTest is RegistryTestBase {
 
     function test_RevertWhen_NotOk() public {
         bytes31 pid = _settledProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
         _setWord(pv, 0, 0);
         vm.expectRevert(IProcessRegistry.CircuitFailed.selector);
@@ -116,7 +176,7 @@ contract ResultsTest is RegistryTestBase {
 
     function test_RevertWhen_FailMaskSet() public {
         bytes31 pid = _settledProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
         _setWord(pv, 1, 1 << 4);
         vm.expectRevert(IProcessRegistry.CircuitFailed.selector);
@@ -125,7 +185,7 @@ contract ResultsTest is RegistryTestBase {
 
     function test_RevertWhen_PublicValuesLength() public {
         bytes31 pid = _settledProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
         vm.expectRevert(IProcessRegistry.InvalidPublicValues.selector);
         registry.setProcessResults(pid, bytes.concat(pv, hex"00"), proof);
@@ -133,7 +193,7 @@ contract ResultsTest is RegistryTestBase {
 
     function test_RevertWhen_SecondCall() public {
         bytes31 pid = _settledProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         (bytes memory pv, bytes memory proof) = _results();
         registry.setProcessResults(pid, pv, proof);
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -167,7 +227,7 @@ contract ResultsPinnedVerifierTest is RegistryTestBase {
 
     function test_SetProcessResults_UsesResultsProgramVK() public {
         bytes31 pid = _fixtureProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         uint64[16] memory values;
         registry.setProcessResults(pid, _resultsPublics(registry.getProcess(pid).latestStateRoot, values), "");
         assertEq(uint256(registry.getProcess(pid).status), uint256(DAVINCITypes.ProcessStatus.RESULTS));
@@ -182,7 +242,7 @@ contract ResultsWrongProgramTest is RegistryTestBase {
 
     function test_RevertWhen_WrongProgramVK() public {
         bytes31 pid = _fixtureProcess();
-        vm.warp(block.timestamp + DURATION);
+        _warpToGraceEnd(pid);
         uint64[16] memory values;
         bytes memory pv = _resultsPublics(registry.getProcess(pid).latestStateRoot, values);
         vm.expectRevert(PinnedMockZiskVerifier.InvalidProof.selector);

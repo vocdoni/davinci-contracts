@@ -211,18 +211,41 @@ contract NewProcessTest is RegistryTestBase {
         _newProcess(block.timestamp, DURATION, MAX_VOTERS, m, _census());
     }
 
+    /// @dev External, so vm.expectRevert has a call to expect: forge compiles a test's `new`
+    ///      into a deployCode cheatcode, whose revert ends the test instead.
+    function deploy(address verifier, bytes32 batchVK, bytes32 resultsVK, bytes32 rootC, bytes32 vkHash)
+        external
+        returns (ProcessRegistry)
+    {
+        return new ProcessRegistry(
+            CHAIN_ID,
+            verifier,
+            batchVK,
+            resultsVK,
+            rootC,
+            vkHash,
+            address(0),
+            GRACE,
+            GRACE_FLOOR,
+            GRACE_CEIL,
+            GRACE_MAX_TOTAL,
+            NOTICE_MIN
+        );
+    }
+
     function test_Constructor_RejectsZeroConfig() public {
         bytes32 vkHash = bytes32(uint256(1));
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(0), BATCH_VK, RESULTS_VK, ROOT_C, vkHash, address(0));
+        this.deploy(address(0), BATCH_VK, RESULTS_VK, ROOT_C, vkHash);
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), bytes32(0), RESULTS_VK, ROOT_C, vkHash, address(0));
+        this.deploy(address(1), bytes32(0), RESULTS_VK, ROOT_C, vkHash);
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, bytes32(0), ROOT_C, vkHash, address(0));
+        this.deploy(address(1), BATCH_VK, bytes32(0), ROOT_C, vkHash);
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, bytes32(0), vkHash, address(0));
+        this.deploy(address(1), BATCH_VK, RESULTS_VK, bytes32(0), vkHash);
         vm.expectRevert(IProcessRegistry.InvalidVerifierConfig.selector);
-        new ProcessRegistry(CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, ROOT_C, bytes32(0), address(0));
+        this.deploy(address(1), BATCH_VK, RESULTS_VK, ROOT_C, bytes32(0));
+        assertEq(this.deploy(address(1), BATCH_VK, RESULTS_VK, ROOT_C, vkHash).batchProgramVK(), BATCH_VK);
     }
 
     function test_Constructor_ExposesConfig() public view {
