@@ -54,9 +54,9 @@ Gnosis Chain (chain id 100):
 
 | Contract | Address |
 |---|---|
-| `ZiskVerifier` | `0x6D804CC99BfdA4E3F6413C3310803D2D2e0A3E3A` |
-| `ProcessRegistry` | `0x7e79660dE04b8fC1FFAfB9d09f3B0770Bdb0D831` |
-| `DavinciDKGAdapter` | `0xfcB637FbC34Db90Da9B151dCCfF27838d45114D6` |
+| `ZiskVerifier` | `0x150547716bD6f15D872508b66b2ae7ce17677C9C` |
+| `ProcessRegistry` | `0x6702e0141B6b72bCF8C1bdff20A82A35C5502E7D` |
+| `DavinciDKGAdapter` | `0xE9559c78E7ff8c19937A0657a092A221E90CCBC3` |
 | davinci-dkg `DKGManager` | `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B` |
 
 The registry is pinned to:
@@ -67,6 +67,9 @@ The registry is pinned to:
 | `resultsProgramVK` | `0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794` |
 | `rootCVadcopFinal` | `0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80` |
 | `ballotVKHash` | `0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e` |
+| `defaultGrace` / `graceFloor` / `graceCeil` | 180 / 150 / 600 s |
+| `graceMaxTotal` | 1800 s |
+| `noticeMin` | 60 s |
 
 [Checking a deployment](#checking-a-deployment) shows how to compare these against a local build.
 
@@ -651,7 +654,7 @@ every chain file.
 ```bash
 forge build
 python3 script/verify_deployment.py --rpc "$GNOSIS_RPC_URL" --chain-id 100 \
-    --registry 0x7e79660dE04b8fC1FFAfB9d09f3B0770Bdb0D831 \
+    --registry 0x6702e0141B6b72bCF8C1bdff20A82A35C5502E7D \
     --batch-vk 0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10 \
     --results-vk 0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794 \
     --root-c 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \

@@ -62,7 +62,7 @@ const (
 	ProcessRegistryArbitrumAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	ProcessRegistryBaseAddress = "0xf294d1b02374bc37c2a7980dd62d4bf64d503d52"
 	ProcessRegistryCeloAddress = "0xc2aba38998dfd4cb01edcb327cdc987775e473ef"
-	ProcessRegistryGnosisAddress = "0x7e79660de04b8fc1ffafb9d09f3b0770bdb0d831"
+	ProcessRegistryGnosisAddress = "0x6702e0141b6b72bcf8c1bdff20a82a35c5502e7d"
 	ProcessRegistrySepoliaAddress = "0xc3c87053f2a87a16397dd5c3eb730458bcd1420f"
 
 	ResultsVerifierGroth16ArbSepoliaAddress = "0x26559bd3d8b140461057b1187718f10a175f6e01"
@@ -77,7 +77,7 @@ const (
 	StateTransitionVerifierGroth16CeloAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	StateTransitionVerifierGroth16SepoliaAddress = "0xc3706532f90ef50f3700eead39478b9a38e22ef3"
 
-	ZiskVerifierGnosisAddress = "0x6d804cc99bfda4e3f6413c3310803d2d2e0a3e3a"
+	ZiskVerifierGnosisAddress = "0x150547716bd6f15d872508b66b2ae7ce17677c9c"
 
 )
 
