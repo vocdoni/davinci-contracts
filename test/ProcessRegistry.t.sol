@@ -257,8 +257,8 @@ contract ProcessRegistryTest is RegistryTestBase {
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
     }
 
-    function test_SetProcessStatus_EndedBeforeStart_FromReady() public {
-        // Create a process with start time in the future
+    /// @dev A process starting in startIn seconds, 2000 seconds long.
+    function _futureProcess(DAVINCITypes.ProcessStatus status, uint256 startIn) internal returns (bytes31) {
         DAVINCITypes.Census memory cen = DAVINCITypes.Census({
             onchainAllowAnyValidRoot: false,
             censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
@@ -266,117 +266,57 @@ contract ProcessRegistryTest is RegistryTestBase {
             censusURI: "https://example.com/census",
             contractAddress: address(0)
         });
-
-        DAVINCITypes.EncryptionKey memory key = _encKey();
-
-        uint256 futureStartTime = block.timestamp + 1000; // Start in 1000 seconds
-
-        bytes31 processId = processRegistry.newProcess(
-            DAVINCITypes.ProcessStatus.READY,
-            futureStartTime,
-            2000, // Duration of 2000 seconds
-            10000,
-            defaultBallotMode,
-            cen,
-            METADATA_URI,
-            METADATA_HASH,
-            key,
-            _noDkg()
-        );
-
-        // Verify initial state
-        DAVINCITypes.Process memory processBefore = processRegistry.getProcess(processId);
-        assertEq(processBefore.startTime, futureStartTime);
-        assertEq(processBefore.duration, 2000);
-        assertEq(uint256(processBefore.status), uint256(DAVINCITypes.ProcessStatus.READY));
-
-        // Set status to ENDED before start time
-        processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
-
-        // Verify the process is ENDED and duration is 0
-        DAVINCITypes.Process memory processAfter = processRegistry.getProcess(processId);
-        assertEq(uint256(processAfter.status), uint256(DAVINCITypes.ProcessStatus.ENDED));
-        assertEq(processAfter.duration, 0, "Duration should be 0 when ended before start");
-        assertEq(processAfter.startTime, futureStartTime, "Start time should remain unchanged");
-    }
-
-    function test_SetProcessStatus_EndedBeforeStart_FromPaused() public {
-        // Create a process with start time in the future
-        DAVINCITypes.Census memory cen = DAVINCITypes.Census({
-            onchainAllowAnyValidRoot: false,
-            censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
-            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census",
-            contractAddress: address(0)
-        });
-
-        DAVINCITypes.EncryptionKey memory key = _encKey();
-
-        uint256 futureStartTime = block.timestamp + 500;
-
-        bytes31 processId = processRegistry.newProcess(
-            DAVINCITypes.ProcessStatus.PAUSED, // Start in PAUSED state
-            futureStartTime,
-            1000,
-            10000,
-            defaultBallotMode,
-            cen,
-            METADATA_URI,
-            METADATA_HASH,
-            key,
-            _noDkg()
-        );
-
-        // Verify initial state
-        DAVINCITypes.Process memory processBefore = processRegistry.getProcess(processId);
-        assertEq(uint256(processBefore.status), uint256(DAVINCITypes.ProcessStatus.PAUSED));
-
-        // Set status to ENDED before start time (from PAUSED)
-        processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
-
-        // Verify the process is ENDED and duration is 0
-        DAVINCITypes.Process memory processAfter = processRegistry.getProcess(processId);
-        assertEq(uint256(processAfter.status), uint256(DAVINCITypes.ProcessStatus.ENDED));
-        assertEq(processAfter.duration, 0, "Duration should be 0 when ended before start from PAUSED");
-    }
-
-    function test_SetProcessStatus_EndedBeforeStart_EventEmitted() public {
-        // Create a process with start time in the future
-        DAVINCITypes.Census memory cen = DAVINCITypes.Census({
-            onchainAllowAnyValidRoot: false,
-            censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
-            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census",
-            contractAddress: address(0)
-        });
-
-        DAVINCITypes.EncryptionKey memory key = _encKey();
-
-        uint256 futureStartTime = block.timestamp + 1000;
-
-        bytes31 processId = processRegistry.newProcess(
-            DAVINCITypes.ProcessStatus.READY,
-            futureStartTime,
+        return processRegistry.newProcess(
+            status,
+            vm.getBlockTimestamp() + startIn,
             2000,
             10000,
             defaultBallotMode,
             cen,
             METADATA_URI,
             METADATA_HASH,
-            key,
+            _encKey(),
             _noDkg()
         );
+    }
 
-        // Expect both status change and duration change events
-        vm.expectEmit(true, true, true, true);
-        emit IProcessRegistry.ProcessDurationChanged(processId, 0);
+    /// @dev ENDED before startTime would open a grace window on an election that never ran;
+    ///      CANCELED is how such a process is voided.
+    function test_SetProcessStatus_RevertWhen_EndedBeforeStart() public {
+        uint256 start = vm.getBlockTimestamp() + 1000;
+        bytes31 ready = _futureProcess(DAVINCITypes.ProcessStatus.READY, 1000);
+        bytes31 paused = _futureProcess(DAVINCITypes.ProcessStatus.PAUSED, 1000);
 
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessStatus(ready, DAVINCITypes.ProcessStatus.ENDED);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessStatus(paused, DAVINCITypes.ProcessStatus.ENDED);
+        vm.warp(start - 1);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessStatus(ready, DAVINCITypes.ProcessStatus.ENDED);
+
+        DAVINCITypes.Process memory p = processRegistry.getProcess(ready);
+        assertEq(uint256(p.status), uint256(DAVINCITypes.ProcessStatus.READY));
+        assertEq(p.duration, 2000);
+        assertEq(processRegistry.getProcessEndTime(ready), start + 2000);
+
+        // From startTime on it ends as usual: duration 0 at the very start.
+        vm.warp(start);
+        processRegistry.setProcessStatus(ready, DAVINCITypes.ProcessStatus.ENDED);
+        assertEq(processRegistry.getProcess(ready).duration, 0);
+        assertEq(processRegistry.getProcessGraceEnd(ready), start + GRACE);
+    }
+
+    function test_SetProcessStatus_CanceledBeforeStart() public {
+        bytes31 pid = _futureProcess(DAVINCITypes.ProcessStatus.READY, 1000);
         vm.expectEmit(true, true, true, true);
         emit IProcessRegistry.ProcessStatusChanged(
-            processId, DAVINCITypes.ProcessStatus.READY, DAVINCITypes.ProcessStatus.ENDED
+            pid, DAVINCITypes.ProcessStatus.READY, DAVINCITypes.ProcessStatus.CANCELED
         );
-
-        processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
+        processRegistry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.CANCELED);
+        DAVINCITypes.Process memory p = processRegistry.getProcess(pid);
+        assertEq(uint256(p.status), uint256(DAVINCITypes.ProcessStatus.CANCELED));
+        assertEq(p.duration, 2000);
     }
 
     function test_SetProcessStatus_EndedAfterStart_NormalDuration() public {
@@ -427,96 +367,6 @@ contract ProcessRegistryTest is RegistryTestBase {
         // Duration should be 0 (no time elapsed)
         DAVINCITypes.Process memory process = processRegistry.getProcess(processId);
         assertEq(process.duration, 0, "Duration should be 0 when ended at start time");
-    }
-
-    function test_GetProcessEndTime_WhenEndedBeforeStart() public {
-        // Create a process with start time in the future
-        DAVINCITypes.Census memory cen = DAVINCITypes.Census({
-            onchainAllowAnyValidRoot: false,
-            censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
-            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census",
-            contractAddress: address(0)
-        });
-
-        DAVINCITypes.EncryptionKey memory key = _encKey();
-
-        uint256 futureStartTime = block.timestamp + 1000;
-
-        bytes31 processId = processRegistry.newProcess(
-            DAVINCITypes.ProcessStatus.READY,
-            futureStartTime,
-            2000,
-            10000,
-            defaultBallotMode,
-            cen,
-            METADATA_URI,
-            METADATA_HASH,
-            key,
-            _noDkg()
-        );
-
-        // End process before start time
-        processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
-
-        // Get process end time - should equal start time (since duration is 0)
-        uint256 endTime = processRegistry.getProcessEndTime(processId);
-        assertEq(endTime, futureStartTime, "End time should equal start time when ended before start");
-    }
-
-    function test_SetProcessStatus_EndedBeforeStart_MultipleTimes() public {
-        // Create process 1 - ended immediately
-        DAVINCITypes.Census memory cen = DAVINCITypes.Census({
-            onchainAllowAnyValidRoot: false,
-            censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
-            censusRoot: 0x59a5002406c534a8f713bd96d6ff0fb8d84828aceeba5e26808a0f2df0cc9c03,
-            censusURI: "https://example.com/census",
-            contractAddress: address(0)
-        });
-
-        DAVINCITypes.EncryptionKey memory key1 = _encKey();
-
-        bytes31 processId1 = processRegistry.newProcess(
-            DAVINCITypes.ProcessStatus.READY,
-            block.timestamp + 1000,
-            2000,
-            10000,
-            defaultBallotMode,
-            cen,
-            METADATA_URI,
-            METADATA_HASH,
-            key1,
-            _noDkg()
-        );
-
-        processRegistry.setProcessStatus(processId1, DAVINCITypes.ProcessStatus.ENDED);
-
-        // Create process 2 - also ended before start
-        DAVINCITypes.EncryptionKey memory key2 = _encKey();
-
-        bytes31 processId2 = processRegistry.newProcess(
-            DAVINCITypes.ProcessStatus.READY,
-            block.timestamp + 500,
-            1000,
-            10000,
-            defaultBallotMode,
-            cen,
-            METADATA_URI,
-            METADATA_HASH,
-            key2,
-            _noDkg()
-        );
-
-        processRegistry.setProcessStatus(processId2, DAVINCITypes.ProcessStatus.ENDED);
-
-        // Verify both processes
-        DAVINCITypes.Process memory process1 = processRegistry.getProcess(processId1);
-        DAVINCITypes.Process memory process2 = processRegistry.getProcess(processId2);
-
-        assertEq(process1.duration, 0, "Process 1 duration should be 0");
-        assertEq(process2.duration, 0, "Process 2 duration should be 0");
-        assertEq(uint256(process1.status), uint256(DAVINCITypes.ProcessStatus.ENDED));
-        assertEq(uint256(process2.status), uint256(DAVINCITypes.ProcessStatus.ENDED));
     }
 
     // ========== Ballot Mode Tests ==========
@@ -766,20 +616,23 @@ contract ProcessRegistryTest is RegistryTestBase {
     function test_SetProcessDuration_RevertWhen_AfterEnd() public {
         bytes31 processId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
+        bytes31 paused = createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
+        processRegistry.setProcessStatus(paused, DAVINCITypes.ProcessStatus.PAUSED);
         uint256 end = block.timestamp + 1000;
 
         vm.warp(end);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         processRegistry.setProcessDuration(processId, 2000);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        processRegistry.setProcessDuration(paused, 2000);
 
         vm.warp(end + 500);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         processRegistry.setProcessDuration(processId, 2000);
-
-        processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.PAUSED);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
-        processRegistry.setProcessDuration(processId, 2000);
+        processRegistry.setProcessDuration(paused, 2000);
         assertEq(processRegistry.getProcess(processId).duration, 1000);
+        assertEq(processRegistry.getProcess(paused).duration, 1000);
     }
 
     function test_SetProcessDuration_ExtendJustBeforeEnd() public {

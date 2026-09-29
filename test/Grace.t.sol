@@ -70,12 +70,14 @@ contract GraceTest is RegistryTestBase {
         this.deploy(601, 150, 600, 1800, 60); // default above ceil
         vm.expectRevert(IProcessRegistry.InvalidGrace.selector);
         this.deploy(180, 150, 1801, 1800, 60); // ceil above the cap
+        vm.expectRevert(IProcessRegistry.InvalidGrace.selector);
+        this.deploy(180, 150, 600, 1800, 0); // no notice
 
-        // Equal bounds are a fixed grace; a zero notice lets shortening skip it.
-        ProcessRegistry r = this.deploy(10, 10, 10, 10, 0);
+        // Equal bounds are a fixed grace.
+        ProcessRegistry r = this.deploy(10, 10, 10, 10, 1);
         assertEq(r.defaultGrace(), 10);
         assertEq(r.graceMaxTotal(), 10);
-        assertEq(r.noticeMin(), 0);
+        assertEq(r.noticeMin(), 1);
     }
 
     // --- the window ----------------------------------------------------------------
@@ -130,8 +132,8 @@ contract GraceTest is RegistryTestBase {
         assertEq(registry.getProcess(pid).batchNumber, 2);
     }
 
-    /// @dev Once graceEnd passes nothing moves it again: no landing, no duration, no grace and
-    ///      no status change reopens settlement.
+    /// @dev Once graceEnd passes nothing moves it again: no landing, no duration, no grace, no
+    ///      cap and no status change reopens settlement.
     function test_GraceEnd_NeverReopens() public {
         bytes31 pid = _fixtureProcess();
         uint256 end = _end(pid);
@@ -140,15 +142,17 @@ contract GraceTest is RegistryTestBase {
 
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         _submit(pid, _transition(0));
-        vm.prank(ORGANIZER);
+        vm.startPrank(ORGANIZER);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         registry.setProcessDuration(pid, 2 * DURATION);
-        vm.prank(ORGANIZER);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         registry.setProcessGrace(pid, GRACE_CEIL);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessMaxVoters(pid, 1);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        vm.stopPrank();
 
-        _organizer(pid, DAVINCITypes.ProcessStatus.PAUSED);
-        _organizer(pid, DAVINCITypes.ProcessStatus.READY);
         // ENDED past the end keeps the end where it was.
         vm.recordLogs();
         _organizer(pid, DAVINCITypes.ProcessStatus.ENDED);
@@ -196,18 +200,115 @@ contract GraceTest is RegistryTestBase {
         _submit(pid, _transition(1));
     }
 
-    /// @dev The grace clock never stops: PAUSED blocks settlement inside the window, and
-    ///      resuming inside it settles again.
-    function test_GraceEnd_PausedBlocksSettlement() public {
+    /// @dev A pause blocks settlement only while voting is open: a process paused at the end
+    ///      settles through the window like READY, and the window runs as usual.
+    function test_GraceEnd_PausedAtTheEndSettles() public {
         bytes31 pid = _fixtureProcess();
+        uint256 end = _end(pid);
         _organizer(pid, DAVINCITypes.ProcessStatus.PAUSED);
-        vm.warp(_end(pid) + 10);
+        vm.warp(end - 1);
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
         _submit(pid, _transition(0));
 
-        _organizer(pid, DAVINCITypes.ProcessStatus.READY);
+        vm.warp(end + 10);
         _submit(pid, _transition(0));
-        assertEq(registry.getProcessGraceEnd(pid), _end(pid) + 10 + GRACE);
+        assertEq(uint8(registry.getProcess(pid).status), uint8(DAVINCITypes.ProcessStatus.PAUSED));
+        uint256 graceEnd = registry.getProcessGraceEnd(pid);
+        assertEq(graceEnd, end + 10 + GRACE);
+
+        // Resuming past the end is allowed and changes nothing; pausing again is refused.
+        _organizer(pid, DAVINCITypes.ProcessStatus.READY);
+        vm.prank(ORGANIZER);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        assertEq(registry.getProcessGraceEnd(pid), graceEnd);
+
+        vm.warp(graceEnd);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        _submit(pid, _transition(1));
+    }
+
+    /// @dev PAUSED to ENDED past the end is allowed, keeps the end and keeps settling.
+    function test_GraceEnd_PausedThenEndedPastTheEnd() public {
+        bytes31 pid = _fixtureProcess();
+        uint256 end = _end(pid);
+        _organizer(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        vm.warp(end + 10);
+        _organizer(pid, DAVINCITypes.ProcessStatus.ENDED);
+        assertEq(_end(pid), end);
+        assertEq(registry.getProcessGraceEnd(pid), end + GRACE);
+        _submit(pid, _transition(0));
+        assertEq(registry.getProcessGraceEnd(pid), end + 10 + GRACE);
+    }
+
+    /// @dev READY to PAUSED works up to the last second before the end, never from the end on.
+    function test_SetProcessStatus_RevertWhen_PausedFromTheEnd() public {
+        bytes31 pid = _fixtureProcess();
+        uint256 end = _end(pid);
+        vm.warp(end - 1);
+        _organizer(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        _organizer(pid, DAVINCITypes.ProcessStatus.READY);
+
+        vm.warp(end);
+        vm.prank(ORGANIZER);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        vm.warp(end + GRACE + 1);
+        vm.prank(ORGANIZER);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.PAUSED);
+        assertEq(uint8(registry.getProcess(pid).status), uint8(DAVINCITypes.ProcessStatus.READY));
+    }
+
+    /// @dev A batch of overwrites only (no new voter) is a vote: it passes EmptyTransition,
+    ///      lands at a full maxVoters and extends the window like any other.
+    function test_GraceEnd_OverwriteOnlyBatch() public {
+        bytes31 pid = _fixtureProcess(3);
+        _submit(pid, _transition(0)); // votersCount == maxVoters
+        uint256 end = _end(pid);
+        vm.warp(end + 50);
+
+        Transition memory t = _transition(1);
+        vm.expectRevert(IProcessRegistry.MaxVotersReached.selector);
+        _submit(pid, t);
+
+        // Relabel every vote of the batch as an overwrite (the PLONK verifier is mocked).
+        _setWord(t.publicValues, 19, uint64(t.voters));
+        _submit(pid, t);
+        DAVINCITypes.Process memory p = registry.getProcess(pid);
+        assertEq(p.votersCount, 3);
+        assertEq(p.overwrittenVotesCount, t.voters);
+        assertEq(p.lastVoteAt, end + 50);
+        assertEq(registry.getProcessGraceEnd(pid), end + 50 + GRACE);
+    }
+
+    /// @dev The cap is fixed at the end: lowering it would strand queued new-voter batches,
+    ///      raising it would admit late ones.
+    function test_SetProcessMaxVoters_RevertWhen_PastTheEnd() public {
+        bytes31 pid = _fixtureProcess();
+        _submit(pid, _transition(0));
+        uint256 end = _end(pid);
+        vm.warp(end - 1);
+        vm.prank(ORGANIZER);
+        registry.setProcessMaxVoters(pid, MAX_VOTERS - 1);
+
+        vm.warp(end + 10);
+        vm.startPrank(ORGANIZER);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessMaxVoters(pid, 3);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessMaxVoters(pid, MAX_VOTERS);
+        vm.stopPrank();
+        assertEq(registry.getProcess(pid).maxVoters, MAX_VOTERS - 1);
+
+        // The queued new-voter batch lands under the cap voters saw at the close.
+        _submit(pid, _transition(1));
+        assertEq(registry.getProcess(pid).votersCount, 820);
+    }
+
+    function test_GetProcessGraceEnd_UnknownProcess() public view {
+        assertEq(registry.getProcessGraceEnd(registry.getNextProcessId(ORGANIZER)), 0);
+        assertEq(registry.getProcessGraceEnd(bytes31(0)), 0);
     }
 
     function test_GraceEnd_CanceledBlocksSettlement() public {
@@ -290,10 +391,15 @@ contract GraceTest is RegistryTestBase {
     /// @dev Only while the process is open: past the end the window is already running.
     function test_SetProcessGrace_RevertWhen_NotOpen() public {
         bytes31 pid = _fixtureProcess();
+        bytes31 paused = _newProcess(0, DURATION, MAX_VOTERS, _ballotMode(), _census());
+        _organizer(paused, DAVINCITypes.ProcessStatus.PAUSED);
         vm.warp(_end(pid));
         vm.prank(ORGANIZER);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         registry.setProcessGrace(pid, GRACE_FLOOR);
+        vm.prank(ORGANIZER);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        registry.setProcessGrace(paused, GRACE_FLOOR);
 
         _organizer(pid, DAVINCITypes.ProcessStatus.ENDED);
         vm.prank(ORGANIZER);

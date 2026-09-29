@@ -27,7 +27,7 @@ contract DeployAllScript is Script {
         bytes32 ballotVKHash = vm.envBytes32("BALLOT_VK_HASH");
         // Optional davinci-dkg manager; zero (the default) disables the DKG key modes.
         address dkgManager = vm.envOr("DKG_MANAGER", address(0));
-        // Grace window bounds; the registry checks 0 < floor <= default <= ceil <= maxTotal.
+        // The registry checks 0 < floor <= default <= ceil <= maxTotal and noticeMin > 0.
         uint32 defaultGrace = _envSeconds("GRACE_DEFAULT", 180);
         uint32 graceFloor = _envSeconds("GRACE_FLOOR", 150);
         uint32 graceCeil = _envSeconds("GRACE_CEIL", 600);

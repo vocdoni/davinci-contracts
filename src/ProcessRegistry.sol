@@ -139,7 +139,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      * @param _graceFloor The minimum for setProcessGrace, non-zero and at most _defaultGrace.
      * @param _graceCeil The maximum for setProcessGrace, at least _defaultGrace.
      * @param _graceMaxTotal The cap on the window past the end time, at least _graceCeil.
-     * @param _noticeMin The minimum notice, in seconds, for shortening a process.
+     * @param _noticeMin The minimum notice, in seconds, for shortening a process, non-zero.
      */
     constructor(
         uint32 _chainID,
@@ -161,6 +161,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         ) revert InvalidVerifierConfig();
         if (
             _graceFloor == 0 || _graceFloor > _defaultGrace || _defaultGrace > _graceCeil || _graceCeil > _graceMaxTotal
+                || _noticeMin == 0
         ) revert InvalidGrace();
         defaultGrace = _defaultGrace;
         graceFloor = _graceFloor;
@@ -291,7 +292,10 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
     /// @inheritdoc IProcessRegistry
     /// @dev ENDED before the end time moves the end to now. Past it the end stays put: moving
-    ///      it forward would reopen a grace window that has already closed.
+    ///      it forward would reopen a grace window that has already closed. Two transitions the
+    ///      matrix allows are refused by time: ENDED before startTime (CANCELED is how a process
+    ///      that never opened is voided) and PAUSED from the end on (a pause cannot hold the
+    ///      grace window shut).
     function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
@@ -304,16 +308,15 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         // validate status transition
         DAVINCITypes.ProcessStatus oldStatus = p.status;
         if (!_validateStatusTransition(oldStatus, newStatus)) revert InvalidStatus();
+        uint256 startTime = p.startTime;
+        uint256 end = startTime + p.duration;
+        if (newStatus == DAVINCITypes.ProcessStatus.ENDED && block.timestamp < startTime) revert InvalidTimeBounds();
+        if (newStatus == DAVINCITypes.ProcessStatus.PAUSED && block.timestamp >= end) revert InvalidTimeBounds();
 
         p.status = newStatus;
         // if newStatus is ENDED before the end, set duration to the time elapsed since start
-        if (newStatus == DAVINCITypes.ProcessStatus.ENDED && block.timestamp < p.startTime + p.duration) {
-            uint256 newDuration;
-            if (block.timestamp >= p.startTime) {
-                newDuration = block.timestamp - p.startTime;
-            } else {
-                newDuration = 0; // Process never started so duration is 0
-            }
+        if (newStatus == DAVINCITypes.ProcessStatus.ENDED && block.timestamp < end) {
+            uint256 newDuration = block.timestamp - startTime;
             p.duration = newDuration;
             emit ProcessDurationChanged(processId, newDuration);
         }
@@ -413,6 +416,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
             revert InvalidStatus();
         }
+        // Past the end the cap would pick which queued batches still land in the grace window.
+        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
 
         // check valid maxVoters
         if (_maxVoters == 0 || _maxVoters < p.votersCount) revert InvalidMaxVoters();
@@ -444,7 +449,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     /// @inheritdoc IProcessRegistry
     /// @dev Permissionless: the proof, the blob openings and root continuity authenticate it.
     ///      Settles through the grace window past the end, so batches still queued or proving
-    ///      at the end land; PAUSED still blocks settlement.
+    ///      at the end land. PAUSED blocks settlement only while voting is open: a process
+    ///      paused at the end settles through the window like READY or ENDED.
     function submitStateTransition(
         bytes31 processId,
         bytes calldata publicValues,
@@ -455,9 +461,10 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     ) external override nonReentrant {
         DAVINCITypes.Process storage p = _existingProcess(processId);
         DAVINCITypes.ProcessStatus status = p.status;
-        if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.ENDED) {
-            revert InvalidStatus();
-        }
+        if (
+            status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.ENDED
+                && !(status == DAVINCITypes.ProcessStatus.PAUSED && block.timestamp >= p.startTime + p.duration)
+        ) revert InvalidStatus();
         if (block.timestamp < p.startTime) revert InvalidTimeBounds();
         if (block.timestamp >= _graceEnd(p)) revert InvalidTimeBounds();
 

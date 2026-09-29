@@ -322,7 +322,8 @@ interface IProcessRegistry {
     error ResultsAlreadyRequested();
     /**
      * @notice Thrown when a grace value is outside [graceFloor, graceCeil], or when the
-     *         constructor's grace bounds are not 0 < floor <= default <= ceil <= maxTotal.
+     *         constructor's bounds are not 0 < floor <= default <= ceil <= maxTotal with a
+     *         non-zero noticeMin.
      */
     error InvalidGrace();
     /**
@@ -464,7 +465,9 @@ interface IProcessRegistry {
     ) external returns (bytes31);
 
     /**
-     * @notice Sets the status of a process.
+     * @notice Sets the status of a process. ENDED is refused before startTime (CANCELED voids
+     *         a process that never opened) and PAUSED from the end time on, both with
+     *         InvalidTimeBounds.
      * @param processId The ID of the process.
      * @param newStatus The new status of the process.
      */
@@ -503,7 +506,8 @@ interface IProcessRegistry {
     function setProcessDuration(bytes31 processId, uint256 duration) external;
 
     /**
-     * @notice Sets the maximum number of voters allowed in a process.
+     * @notice Sets the maximum number of voters allowed in a process. Only the organizer, while
+     *         READY or PAUSED and before the end time.
      * @param processId The ID of the process.
      * @param maxVoters The new maximum number of voters.
      */
@@ -569,8 +573,9 @@ interface IProcessRegistry {
     /**
      * @notice Settles a state transition proven by the vote-batch guest. Must be sent as a blob
      *         transaction carrying the transition's blobs in order. Accepted while the process
-     *         is READY or ENDED, from startTime until getProcessGraceEnd, and only for a batch
-     *         with at least one vote. Sets lastVoteAt, which extends the grace window.
+     *         is READY or ENDED, or PAUSED from its end time on, from startTime until
+     *         getProcessGraceEnd, and only for a batch with at least one vote. Sets lastVoteAt,
+     *         which extends the grace window.
      * @param processId The ID of the process.
      * @param publicValues The 512-byte ZisK public values.
      * @param proofBytes The PLONK proof, abi-encoded uint256[24].

@@ -88,18 +88,20 @@ organizer moves a process with `setProcessStatus`:
 
 | From | Organizer may set | Other ways out |
 |---|---|---|
-| `READY` | `PAUSED`, `CANCELED`, `ENDED` | `RESULTS` or `ENDED` from the results calls, once the grace window has closed |
-| `PAUSED` | `READY`, `CANCELED`, `ENDED` | same as `READY` |
+| `READY` | `PAUSED` (before the end time), `CANCELED`, `ENDED` (from `startTime` on) | `RESULTS` or `ENDED` from the results calls, once the grace window has closed |
+| `PAUSED` | `READY`, `CANCELED`, `ENDED` (from `startTime` on) | same as `READY` |
 | `ENDED` | none | `RESULTS` from the results calls |
 | `CANCELED` | none | none |
 | `RESULTS` | none | none |
 
 A process ends at `startTime + duration` (`getProcessEndTime`). Setting `ENDED` by hand before
-that sets `duration` to the time elapsed since `startTime` (0 if it had not started) and emits
-`ProcessDurationChanged`; past the end it leaves `duration` alone. Transitions settle while the
-process is `READY` or `ENDED` and `startTime <= block.timestamp < getProcessGraceEnd`, a bound
-that runs past the end (see [Grace window](#grace-window)). `PAUSED` stops settlement but not
-the clock.
+that sets `duration` to the time elapsed since `startTime` and emits `ProcessDurationChanged`;
+past the end it leaves `duration` alone. `ENDED` is refused before `startTime` and `PAUSED` from
+the end time on, both with `InvalidTimeBounds`: a process that never opened is voided with
+`CANCELED`, and a pause cannot outlast voting. Transitions settle while
+`startTime <= block.timestamp < getProcessGraceEnd`, a bound that runs past the end (see
+[Grace window](#grace-window)), and the process is `READY`, `ENDED`, or `PAUSED` past its end
+time. A pause during voting stops settlement but not the clock.
 
 Results are accepted once the process is `ENDED`, or `READY`/`PAUSED` with its end time passed,
 and its grace window has closed. In sequencer mode `setProcessResults` moves it straight to
@@ -120,13 +122,14 @@ transition (0 before the first) and `grace` the process's idle window in seconds
 `getProcessGraceEnd(processId)` returns it. Every settled transition moves `lastVoteAt`, so the
 window stays open while batches keep landing at most `grace` apart, and never past
 `end + graceMaxTotal`. Once `block.timestamp` reaches `graceEnd` nothing settles, `lastVoteAt`
-stops moving and the window never reopens: past the end the duration and `grace` are fixed, and
-`ENDED` no longer moves the end.
+stops moving and the window never reopens: past the end the duration, `grace` and `maxVoters`
+are fixed, and `ENDED` no longer moves the end.
 
-A process ended by hand gets the same window, counted from the moment it was ended. `PAUSED`
-blocks settlement inside the window without stopping it, and `READY` inside the window resumes
-it. A transition must carry at least one vote (`EmptyTransition` otherwise), so a batch that
-only re-encrypts cannot extend the window.
+A process ended by hand gets the same window, counted from the moment it was ended. A process
+paused during voting stays blocked until the end time and then settles through the window like
+`READY`, so a pause cannot hold the window shut until it expires. A transition must carry at
+least one vote (`EmptyTransition` otherwise), so a batch that only re-encrypts cannot extend
+the window; a batch of overwrites alone is a vote and does.
 
 `setProcessResults`, `requestResultsDecryption` and `finalizeResultsFromDKG` revert with
 `GraceOpen` while `block.timestamp < graceEnd`, so the tally is always taken over the final
@@ -143,6 +146,12 @@ the end while the window is open. That is bounded, since the window closes at mo
 `graceMaxTotal` after the end and each extension costs a batch carrying a vote. It is also
 visible: every transition's block timestamp is public, so anyone can count the batches a
 process settled after its end.
+
+For census origin 3 the window also accepts census roots that appeared after the end: the
+registry checks that the census contract held the root at some block since the process was
+created, and does not know the block the election ended at. A census contract used with this
+registry should therefore stop changing at the election end. Honest nodes refuse votes after
+the end anyway, so this only matters together with a sequencer that admits late votes.
 
 ### Shortening with notice
 
@@ -321,8 +330,9 @@ Only the organizer can call these; anyone else gets `Unauthorized`.
   has passed the tally may already be public, so the process cannot be reopened.
 - `setProcessGrace(processId, grace)`: while `READY` or `PAUSED` and before the end, with
   `graceFloor <= grace <= graceCeil`. Emits `ProcessGraceChanged`.
-- `setProcessMaxVoters(processId, maxVoters)`: while `READY` or `PAUSED`. Non-zero, at least the
-  current `votersCount`, and within the same result cap as `newProcess`.
+- `setProcessMaxVoters(processId, maxVoters)`: while `READY` or `PAUSED` and before the end.
+  Non-zero, at least the current `votersCount`, and within the same result cap as `newProcess`.
+  Past the end the cap would decide which queued batches still land in the grace window.
 - `setProcessCensus(processId, census)`: origin 2 processes only, while `READY` or `PAUSED` and
   before the end. The new census keeps origin 2, has a non-zero root, a non-empty URI and no
   contract address. Batches proven against the previous root no longer settle.
@@ -367,7 +377,7 @@ is in davinci-zkvm's `circuit/CIRCUIT.md`):
 
 The checks, in order:
 
-1. The process exists, is `READY` or `ENDED`, and
+1. The process exists, is `READY`, `ENDED`, or `PAUSED` past its end time, and
    `startTime <= block.timestamp < getProcessGraceEnd(processId)`.
 2. `publicValues` is 512 bytes, `ok == 1` and `fail_mask == 0`.
 3. The state root before equals `latestStateRoot`.
@@ -496,11 +506,11 @@ Errors of `IProcessRegistry` unless noted.
 | `ProcessNotFound` | calls taking a process id | no such process |
 | `Unauthorized` | organizer controls | caller is not the organizer |
 | `ProcessAlreadyExists` | `newProcess` | the id is taken |
-| `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY`/`ENDED` (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
+| `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY`/`ENDED`, or `PAUSED` before its end (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
 | `InvalidStartTime` | `newProcess` | start time in the past |
 | `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; new duration zero or unchanged; an earlier end less than `noticeMin` away |
-| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessCensus`, `setProcessMetadata`, `setProcessGrace`); before `startTime` or at or past the grace end (settlement); not ended yet (results calls) |
-| `InvalidGrace` | constructor, `setProcessGrace` | grace outside `[graceFloor, graceCeil]`; constructor bounds not `0 < graceFloor <= defaultGrace <= graceCeil <= graceMaxTotal` |
+| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessMaxVoters`, `setProcessCensus`, `setProcessMetadata`, `setProcessGrace`); `ENDED` before `startTime` or `PAUSED` from the end on (`setProcessStatus`); before `startTime` or at or past the grace end (settlement); not ended yet (results calls) |
+| `InvalidGrace` | constructor, `setProcessGrace` | grace outside `[graceFloor, graceCeil]`; constructor bounds not `0 < graceFloor <= defaultGrace <= graceCeil <= graceMaxTotal` with `noticeMin > 0` |
 | `GraceOpen` | results calls | the grace window has not closed |
 | `EmptyTransition` | `submitStateTransition` | the batch carries no vote |
 | `InvalidMaxVoters` | `newProcess`, `setProcessMaxVoters` | zero, or below `votersCount` |
@@ -590,7 +600,8 @@ It reads:
 The program vks are what `cargo-zisk setup` prints as `Root hash` for each guest ELF;
 davinci-zkvm pins the released ones in `rust-sdk/src/release.rs`. A zero verifier address or
 pin reverts with `InvalidVerifierConfig`, and grace bounds that are not
-`0 < GRACE_FLOOR <= GRACE_DEFAULT <= GRACE_CEIL <= GRACE_MAX_TOTAL` with `InvalidGrace`. The
+`0 < GRACE_FLOOR <= GRACE_DEFAULT <= GRACE_CEIL <= GRACE_MAX_TOTAL`, or `NOTICE_MIN=0`, with
+`InvalidGrace`. The
 defaults are production values; a local or test chain can deploy with short ones, for example
 `GRACE_DEFAULT=10 GRACE_FLOOR=2 GRACE_CEIL=60 GRACE_MAX_TOTAL=60 NOTICE_MIN=5`. The script
 prints the values it deployed with.
@@ -693,7 +704,7 @@ forge test --gas-report
 | `Transition.t.sol` | settlement with real KZG openings (PLONK verifier mocked) |
 | `DynamicCensus.t.sol` | census origins 2 and 3 |
 | `Results.t.sol` | `setProcessResults`, including the grace gate |
-| `Grace.t.sol` | the grace window (settlement, idle extension, cap, freeze), `setProcessGrace`, shortening with notice |
+| `Grace.t.sol` | the grace window (settlement, idle extension, cap, freeze, pauses at the end), `setProcessGrace`, `setProcessMaxVoters` past the end, shortening with notice |
 | `DKG.t.sol` | DKG key modes, against a mock DKG with real BabyJubJub arithmetic |
 | `Publics.t.sol`, `ZiskVerifier.t.sol` | public values decoding and the vendored verifier, against a recorded batch PLONK |
 | `BlobsLib.t.sol`, `ProcessIdLib.t.sol` | library helpers |
