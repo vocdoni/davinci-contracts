@@ -22,7 +22,7 @@ Call out any constraint and/or assumption relevant for the development and use o
 
 **Additional information (if required)**
 
-- Infrastucture needed (e.g. web3 endpoint)
+- Infrastructure needed (e.g. web3 endpoint)
 - Drawbacks
 - Alternatives
 - Benchmarks

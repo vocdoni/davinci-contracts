@@ -24,7 +24,7 @@ contract BlobsLibTestHelper {
 }
 
 /// @title BlobsLib Test Suite
-/// @notice Comprehensive tests for the BlobsLib library covering all functions and edge cases
+/// @notice The tests run outside a blob transaction, so every BLOBHASH reads zero.
 contract BlobsLibTest is Test {
     using BlobsLib for *;
 
@@ -34,16 +34,14 @@ contract BlobsLibTest is Test {
                             TEST CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    // Test data for KZG operations
     bytes32 constant TEST_VERSIONED_HASH = 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef;
     bytes32 constant TEST_Z = 0x1111111111111111111111111111111111111111111111111111111111111111;
     bytes32 constant TEST_Y = 0x2222222222222222222222222222222222222222222222222222222222222222;
 
-    // 48-byte test commitment (G1 compressed point)
+    // Arbitrary bytes with the length of a KZG commitment and proof; not curve points.
     bytes constant TEST_COMMITMENT =
         hex"123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0";
 
-    // 48-byte test proof (G1 compressed point)
     bytes constant TEST_PROOF =
         hex"abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012345678a";
 
@@ -59,7 +57,6 @@ contract BlobsLibTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function setUp() public {
-        // Setup test environment
         vm.label(address(this), "BlobsLibTest");
         helper = new BlobsLibTestHelper();
         vm.label(address(helper), "BlobsLibTestHelper");
@@ -71,11 +68,9 @@ contract BlobsLibTest is Test {
 
     /// @notice Test blobHash function with various indices
     function test_blobHash() public view {
-        // Test with index 0 (should return 0 in normal test environment)
         bytes32 hash0 = BlobsLib.blobHash(0);
         assertEq(hash0, bytes32(0), "blobHash(0) should return 0 in test environment");
 
-        // Test with higher indices
         bytes32 hash1 = BlobsLib.blobHash(1);
         assertEq(hash1, bytes32(0), "blobHash(1) should return 0 in test environment");
 
@@ -92,8 +87,7 @@ contract BlobsLibTest is Test {
     /// @notice Test blobBaseFee function
     function test_blobBaseFee() public view {
         uint256 baseFee = BlobsLib.blobBaseFee();
-        // In test environment, this should return 0 or a default value
-        // We just verify it doesn't revert
+        // Only checks that the call does not revert.
         assertTrue(baseFee >= 0, "blobBaseFee should not revert");
     }
 
@@ -109,15 +103,13 @@ contract BlobsLibTest is Test {
         uint256 fee2 = BlobsLib.calculateBlobFee(2);
         uint256 fee6 = BlobsLib.calculateBlobFee(6);
 
-        // Verify fees scale correctly (in test environment, base fee is 0, so all fees will be 0)
-        // But we can still verify the function doesn't revert and returns consistent results
+        // Only checks that the calls do not revert and the fee does not fall with the count.
         assertTrue(fee2 >= fee1, "Fee for 2 blobs should be >= fee for 1 blob");
         assertTrue(fee6 >= fee2, "Fee for 6 blobs should be >= fee for 2 blobs");
     }
 
     /// @notice Test calculateBlobFee with maximum blob count
     function test_calculateBlobFee_MaxBlobs() public view {
-        // Test with maximum reasonable blob count (6 as per EIP-4844)
         uint256 fee = BlobsLib.calculateBlobFee(6);
         assertTrue(fee >= 0, "Fee calculation should not revert for max blobs");
     }
@@ -147,7 +139,6 @@ contract BlobsLibTest is Test {
     /// @notice Test verifyKZG with correct input length
     function test_verifyKZG_CorrectInputLength() public {
         bytes memory validInput = new bytes(KZG_INPUT_LENGTH);
-        // Fill with test data
         for (uint8 i = 0; i < 192; i++) {
             validInput[i] = bytes1(i);
         }
@@ -192,23 +183,19 @@ contract BlobsLibTest is Test {
     function test_calcBlobHashV1_ValidCommitment() public pure {
         bytes32 hash = BlobsLib.calcBlobHashV1(TEST_COMMITMENT);
 
-        // Verify the hash has version byte 0x01
         uint8 versionByte = uint8(uint256(hash) >> 248);
         assertEq(versionByte, 0x01, "Version byte should be 0x01");
 
-        // Verify it's not zero
         assertTrue(hash != bytes32(0), "Hash should not be zero for valid commitment");
     }
 
     /// @notice Test calcBlobHashV1 with various commitment sizes
     function test_calcBlobHashV1_VariousSizes() public pure {
-        // Test with 1 byte
         bytes memory smallCommitment = new bytes(1);
         smallCommitment[0] = 0xFF;
         bytes32 hash1 = BlobsLib.calcBlobHashV1(smallCommitment);
         assertTrue(hash1 != bytes32(0), "Should handle small commitments");
 
-        // Test with 32 bytes
         bytes memory mediumCommitment = new bytes(32);
         for (uint8 i = 0; i < 32; i++) {
             mediumCommitment[i] = bytes1(i);
@@ -216,11 +203,9 @@ contract BlobsLibTest is Test {
         bytes32 hash2 = BlobsLib.calcBlobHashV1(mediumCommitment);
         assertTrue(hash2 != bytes32(0), "Should handle medium commitments");
 
-        // Test with 48 bytes (standard KZG commitment size)
         bytes32 hash3 = BlobsLib.calcBlobHashV1(TEST_COMMITMENT);
         assertTrue(hash3 != bytes32(0), "Should handle standard commitments");
 
-        // All hashes should be different
         assertTrue(hash1 != hash2, "Different commitments should produce different hashes");
         assertTrue(hash2 != hash3, "Different commitments should produce different hashes");
         assertTrue(hash1 != hash3, "Different commitments should produce different hashes");
@@ -232,7 +217,6 @@ contract BlobsLibTest is Test {
 
         assertEq(input.length, KZG_INPUT_LENGTH, "Input should be 192 bytes");
 
-        // Verify the structure
         bytes32 extractedHash;
         assembly {
             extractedHash := mload(add(input, 0x20))
@@ -285,12 +269,10 @@ contract BlobsLibTest is Test {
         assertEq(proof.commitment.length, KZG_COMMITMENT_LENGTH, "Commitment length should be 48");
         assertEq(proof.proof.length, KZG_PROOF_LENGTH, "Proof length should be 48");
 
-        // Verify commitment bytes
         for (uint256 i = 0; i < KZG_COMMITMENT_LENGTH; i++) {
             assertEq(proof.commitment[i], TEST_COMMITMENT[i], "Commitment bytes should match");
         }
 
-        // Verify proof bytes
         for (uint256 i = 0; i < KZG_PROOF_LENGTH; i++) {
             assertEq(proof.proof[i], TEST_PROOF[i], "Proof bytes should match");
         }
@@ -323,17 +305,13 @@ contract BlobsLibTest is Test {
 
     /// @notice Test round-trip encoding/decoding of KZG input
     function test_KZGInput_RoundTrip() public pure {
-        // Build input
         bytes memory input = BlobsLib.buildKZGInput(TEST_VERSIONED_HASH, TEST_Z, TEST_Y, TEST_COMMITMENT, TEST_PROOF);
 
-        // Decode input
         BlobsLib.KZGProof memory proof = BlobsLib.decodeKZGInput(input);
 
-        // Rebuild input from decoded proof
         bytes memory rebuiltInput =
             BlobsLib.buildKZGInput(proof.versionedHash, proof.z, proof.y, proof.commitment, proof.proof);
 
-        // Verify they match
         assertEq(input.length, rebuiltInput.length, "Input lengths should match");
         for (uint256 i = 0; i < input.length; i++) {
             assertEq(input[i], rebuiltInput[i], "Input bytes should match");
@@ -361,7 +339,6 @@ contract BlobsLibTest is Test {
         if (commitment.length == 0) {
             assertEq(hash, bytes32(0), "Empty commitment should return zero");
         } else {
-            // Version byte should always be 0x01
             uint8 versionByte = uint8(uint256(hash) >> 248);
             assertEq(versionByte, 0x01, "Version byte should be 0x01");
         }
@@ -383,11 +360,9 @@ contract BlobsLibTest is Test {
 
     /// @notice Fuzz test for blobHash
     function testFuzz_blobHash(uint256 idx) public view {
-        // Limit index to reasonable range
         idx = bound(idx, 0, 1000);
 
         bytes32 hash = BlobsLib.blobHash(idx);
-        // In test environment, should always return 0
         assertEq(hash, bytes32(0), "Should return zero in test environment");
     }
 
@@ -401,7 +376,6 @@ contract BlobsLibTest is Test {
         BlobsLib.calcBlobHashV1(TEST_COMMITMENT);
         uint256 gasUsed = gasBefore - gasleft();
 
-        // Verify reasonable gas usage (should be less than 10k gas)
         assertTrue(gasUsed < 10000, "calcBlobHashV1 should use reasonable gas");
     }
 
@@ -411,7 +385,6 @@ contract BlobsLibTest is Test {
         BlobsLib.buildKZGInput(TEST_VERSIONED_HASH, TEST_Z, TEST_Y, TEST_COMMITMENT, TEST_PROOF);
         uint256 gasUsed = gasBefore - gasleft();
 
-        // Verify reasonable gas usage
         assertTrue(gasUsed < 20000, "buildKZGInput should use reasonable gas");
     }
 
@@ -423,7 +396,6 @@ contract BlobsLibTest is Test {
         BlobsLib.decodeKZGInput(input);
         uint256 gasUsed = gasBefore - gasleft();
 
-        // Verify reasonable gas usage
         assertTrue(gasUsed < 30000, "decodeKZGInput should use reasonable gas");
     }
 }

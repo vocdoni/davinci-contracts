@@ -241,16 +241,22 @@ contract ProcessRegistryTest is RegistryTestBase {
         bytes31 processId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
 
+        vm.expectEmit(true, false, false, true, address(processRegistry));
         emit IProcessRegistry.ProcessStatusChanged(
             processId, DAVINCITypes.ProcessStatus.READY, DAVINCITypes.ProcessStatus.PAUSED
         );
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.PAUSED);
 
+        vm.expectEmit(true, false, false, true, address(processRegistry));
         emit IProcessRegistry.ProcessStatusChanged(
             processId, DAVINCITypes.ProcessStatus.PAUSED, DAVINCITypes.ProcessStatus.READY
         );
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.READY);
 
+        // Ended before the end time: the duration shrinks to the time elapsed, here 0.
+        vm.expectEmit(true, false, false, true, address(processRegistry));
+        emit IProcessRegistry.ProcessDurationChanged(processId, 0);
+        vm.expectEmit(true, false, false, true, address(processRegistry));
         emit IProcessRegistry.ProcessStatusChanged(
             processId, DAVINCITypes.ProcessStatus.READY, DAVINCITypes.ProcessStatus.ENDED
         );
@@ -320,24 +326,19 @@ contract ProcessRegistryTest is RegistryTestBase {
     }
 
     function test_SetProcessStatus_EndedAfterStart_NormalDuration() public {
-        // Create a process that starts immediately
         bytes31 processId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
 
-        // Warp time forward 500 seconds (half the duration)
         vm.warp(block.timestamp + 500);
 
-        // Set status to ENDED after process has started
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
 
-        // Verify duration is calculated correctly (500 seconds elapsed)
         DAVINCITypes.Process memory process = processRegistry.getProcess(processId);
         assertEq(uint256(process.status), uint256(DAVINCITypes.ProcessStatus.ENDED));
         assertEq(process.duration, 500, "Duration should be time elapsed since start");
     }
 
     function test_SetProcessStatus_EndedExactlyAtStartTime() public {
-        // Create a process with start time equal to current time
         DAVINCITypes.Census memory cen = DAVINCITypes.Census({
             onchainAllowAnyValidRoot: false,
             censusOrigin: DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1,
@@ -361,10 +362,8 @@ contract ProcessRegistryTest is RegistryTestBase {
             _noDkg()
         );
 
-        // End process at exact start time (same block)
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.ENDED);
 
-        // Duration should be 0 (no time elapsed)
         DAVINCITypes.Process memory process = processRegistry.getProcess(processId);
         assertEq(process.duration, 0, "Duration should be 0 when ended at start time");
     }
@@ -372,7 +371,7 @@ contract ProcessRegistryTest is RegistryTestBase {
     // ========== Ballot Mode Tests ==========
 
     function test_ValidateBallotMode_ValidCases() public {
-        // Test case 1: Basic valid ballot mode
+        // Bounded sums.
         DAVINCITypes.BallotMode memory validBallotMode1 = DAVINCITypes.BallotMode({
             uniqueValues: false,
             numFields: 1,
@@ -387,7 +386,7 @@ contract ProcessRegistryTest is RegistryTestBase {
             createTestProcess(validBallotMode1, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
         assertTrue(processId1 != bytes31(0));
 
-        // Test case 2: Valid ballot with zero maxValueSum
+        // maxValueSum 0: the voter weight is the limit.
         DAVINCITypes.BallotMode memory validBallotMode2 = DAVINCITypes.BallotMode({
             uniqueValues: true,
             numFields: 5,
@@ -402,7 +401,7 @@ contract ProcessRegistryTest is RegistryTestBase {
             createTestProcess(validBallotMode2, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
         assertTrue(processId2 != bytes31(0));
 
-        // Test case 3: Edge case - maxValue equals minValue
+        // maxValue equals minValue.
         DAVINCITypes.BallotMode memory validBallotMode3 = DAVINCITypes.BallotMode({
             uniqueValues: false,
             numFields: 8,
@@ -544,6 +543,7 @@ contract ProcessRegistryTest is RegistryTestBase {
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
         uint256 newDuration = 2000000;
 
+        vm.expectEmit(true, false, false, true, address(processRegistry));
         emit IProcessRegistry.ProcessDurationChanged(processId, newDuration);
         processRegistry.setProcessDuration(processId, newDuration);
 
@@ -570,7 +570,6 @@ contract ProcessRegistryTest is RegistryTestBase {
         bytes31 processId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
 
-        // Set process to CANCELED
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.CANCELED);
 
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -582,9 +581,9 @@ contract ProcessRegistryTest is RegistryTestBase {
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
         uint256 newDuration = 2000000;
 
-        // Set process to PAUSED
         processRegistry.setProcessStatus(processId, DAVINCITypes.ProcessStatus.PAUSED);
 
+        vm.expectEmit(true, false, false, true, address(processRegistry));
         emit IProcessRegistry.ProcessDurationChanged(processId, newDuration);
         processRegistry.setProcessDuration(processId, newDuration);
 
@@ -604,8 +603,7 @@ contract ProcessRegistryTest is RegistryTestBase {
         bytes31 processId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
 
-        // Try to set a duration that would make the process end in the past
-        uint256 invalidDuration = 1; // Very short duration that will definitely be in the past
+        uint256 invalidDuration = 1; // ends in the past
 
         vm.expectRevert(IProcessRegistry.InvalidDuration.selector);
         processRegistry.setProcessDuration(processId, invalidDuration);
@@ -648,6 +646,7 @@ contract ProcessRegistryTest is RegistryTestBase {
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
         uint256 maxDuration = type(uint256).max - block.timestamp;
 
+        vm.expectEmit(true, false, false, true, address(processRegistry));
         emit IProcessRegistry.ProcessDurationChanged(processId, maxDuration);
         processRegistry.setProcessDuration(processId, maxDuration);
 
@@ -657,21 +656,17 @@ contract ProcessRegistryTest is RegistryTestBase {
 
     // ========== Process Getters Tests ==========
     function test_GetNextProcessId_Basic() public {
-        // Get the next process ID for the organization
         vm.startPrank(ORGANIZER);
         bytes32 nextProcessId = processRegistry.getNextProcessId(ORGANIZER);
         uint64 currentNonce = processRegistry.processNonce(ORGANIZER);
         assertEq(currentNonce, uint64(0));
-        // Create a new process
         bytes31 processId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
 
-        // Verify that the next process ID matches the created process ID
         assertEq(nextProcessId, processId);
         uint64 nextCurrentNonce = processRegistry.processNonce(ORGANIZER);
         assertEq(nextCurrentNonce, uint64(1));
 
-        // Create another process
         bytes32 otherNextProcessId = processRegistry.getNextProcessId(ORGANIZER);
         bytes32 otherProcessId =
             createTestProcess(defaultBallotMode, DAVINCITypes.CensusOrigin.MERKLE_TREE_OFFCHAIN_STATIC_V1);
@@ -688,7 +683,6 @@ contract ProcessRegistryTest is RegistryTestBase {
     }
 
     function test_newProcess_CensusOrigin() public {
-        // 6 test cases
         CensusOriginTestCase[] memory testCases = new CensusOriginTestCase[](6);
 
         testCases[0] = CensusOriginTestCase({
@@ -739,7 +733,6 @@ contract ProcessRegistryTest is RegistryTestBase {
             revertData: bytes4(0)
         });
 
-        // Iterate over test cases
         for (uint256 i = 0; i < testCases.length; i++) {
             CensusOriginTestCase memory tc = testCases[i];
 

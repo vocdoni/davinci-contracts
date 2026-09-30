@@ -77,7 +77,7 @@ fi
 : "${BALLOT_VK_HASH:?BALLOT_VK_HASH is not set (env or .env)}"
 export BATCH_PROGRAM_VK RESULTS_PROGRAM_VK ROOT_C_VADCOP_FINAL BALLOT_VK_HASH
 
-# ProcessRegistry links no external libraries; the script deploys ZiskVerifier and the registry.
+# Deploys ZiskVerifier, then ProcessRegistry (and the DKG adapter when DKG_MANAGER is set).
 log_info "Deploying main contracts..."
 
 forge script script/DeployAll.s.sol:DeployAllScript \

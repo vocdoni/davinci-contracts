@@ -46,6 +46,7 @@ const (
 	TestNetwork     = "test"
 	ArbitrumNetwork = "arbitrum"
 	ArbSepoliaNetwork = "arb-sepolia"
+	GnosisNetwork   = "gnosis"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
@@ -57,6 +58,7 @@ var AvailableNetworksByName = map[string]uint32{
 	TestNetwork:     1337, // Local test network
 	ArbitrumNetwork: 42161,
 	ArbSepoliaNetwork: 421614,
+	GnosisNetwork:   100,
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
@@ -68,6 +70,7 @@ var AvailableNetworksByID = map[uint32]string{
 	1337:     TestNetwork,
 	42161:	  ArbitrumNetwork,
 	421614:   ArbSepoliaNetwork,
+	100:      GnosisNetwork,
 }
 
 // Contract name constants
@@ -76,6 +79,7 @@ const (
 	StateTransitionVerifierGroth16Contract = "stateTransitionVerifierGroth16"
 	ResultsVerifierGroth16Contract         = "resultsVerifierGroth16"
 	SequencerRegistryContract              = "sequencerRegistry"
+	ZiskVerifierContract                   = "ziskVerifier"
 )
 
 // Dummy consts until we deploy on Mainnet and develop SequencerRegistry
@@ -150,6 +154,7 @@ func GetAllContractAddresses(network string) map[string]string {
 		StateTransitionVerifierGroth16Contract,
 		ResultsVerifierGroth16Contract,
 		SequencerRegistryContract,
+		ZiskVerifierContract,
 	}
 
 	for _, contract := range contracts {
@@ -186,6 +191,11 @@ func GetCeloAddresses() map[string]string {
 // GetArbSepoliaAddresses returns all contract addresses for Arbitrum Sepolia network
 func GetArbSepoliaAddresses() map[string]string {
 	return GetAllContractAddresses(ArbSepoliaNetwork)
+}
+
+// GetGnosisAddresses returns all contract addresses for Gnosis network
+func GetGnosisAddresses() map[string]string {
+	return GetAllContractAddresses(GnosisNetwork)
 }
 EOF
 

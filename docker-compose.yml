@@ -28,7 +28,7 @@ services:
         forge test -vvv
 
   # Keeps the forge broadcast record in the container; copy it out with
-  # docker compose cp (see the README).
+  # docker compose cp (see docs/deployment.md).
   deploy:
     profiles: ["deploy"]
     <<: *contracts
