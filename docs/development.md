@@ -5,7 +5,7 @@ and [jq](https://jqlang.org/) for the bindings; Go (version in `test/vectors/go.
 regenerate the test vectors.
 
 ```bash
-git clone --recurse-submodules --branch zkvm https://github.com/vocdoni/davinci-contracts.git
+git clone --recurse-submodules https://github.com/vocdoni/davinci-contracts.git
 cd davinci-contracts
 npm install   # only needed for the bindings and linters
 ```

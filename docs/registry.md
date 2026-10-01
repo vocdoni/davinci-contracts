@@ -195,7 +195,7 @@ replaced in, and 0 for a root it never held. A batch proven against an evicted r
 settling, and the census has to be append-only with fixed weights;
 [`ICensusValidator.sol`](../src/interfaces/ICensusValidator.sol) explains why.
 [davinci-onchain-census-contract](https://github.com/vocdoni/davinci-onchain-census-contract)
-(branch `davinci-zkvm`) provides such a census.
+provides such a census.
 
 ### Key modes
 

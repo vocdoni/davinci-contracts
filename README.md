@@ -68,7 +68,7 @@ A local chain with the contracts deployed and pinned to the davinci-zkvm release
 Docker, and [Foundry](https://getfoundry.sh/) for `cast`:
 
 ```bash
-git clone --recurse-submodules --branch zkvm https://github.com/vocdoni/davinci-contracts.git
+git clone --recurse-submodules https://github.com/vocdoni/davinci-contracts.git
 cd davinci-contracts
 docker compose --profile local up -d
 docker compose --profile local logs -f deploy-local   # waits for the deployment
@@ -198,7 +198,7 @@ DKG support.
 ## Development
 
 ```bash
-git clone --recurse-submodules --branch zkvm https://github.com/vocdoni/davinci-contracts.git
+git clone --recurse-submodules https://github.com/vocdoni/davinci-contracts.git
 cd davinci-contracts
 forge build
 forge test

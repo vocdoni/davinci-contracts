@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (`zkvm` branch)
+## Unreleased
 
 - `newProcess` takes `bytes32 metadataHash` right after the metadata URI: the SHA-256 of the
   exact bytes served there. An empty URI or a zero hash reverts `InvalidMetadata`.
@@ -10,7 +10,7 @@
 - `ProcessMetadataUpdated(processId, metadataURI, metadataHash)` is emitted by `newProcess` and
   `setProcessMetadata`.
 
-## 2026-09-28 (`zkvm` branch)
+## 2026-09-28
 
 - `submitStateTransition` verifies the davinci-zkvm batch PLONK through `ZiskVerifier`
   against pinned program vks, binds EIP-4844 blobs with point-evaluation openings and
