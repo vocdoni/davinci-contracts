@@ -593,6 +593,22 @@ contract CouncilTest is CouncilTestBase {
         assertTrue(cadapter.isDecryptionOpen(CID));
         vm.expectRevert(ICouncilManagerErrors.UnknownCeremony.selector);
         cadapter.isDecryptionOpen(bytes12(uint96(9)));
+
+        // The mock's policy view agrees with its gate.
+        MockCouncilManager.PhasePolicyView memory v = council.getPolicy(CID);
+        assertEq(v.decryptionMode, uint8(MockCouncilManager.PhaseMode.Scheduled));
+        assertEq(v.decryptionOpenAt, openAt);
+        assertTrue(v.decryptionOpen);
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Manual, 0, openAt + 1);
+        v = council.getPolicy(CID);
+        assertEq(v.manualDecryptionFallbackAt, openAt + 1);
+        assertFalse(v.decryptionOpen);
+        council.openDecryption(CID);
+        v = council.getPolicy(CID);
+        assertEq(v.manualOpenedAt, openAt);
+        assertTrue(v.decryptionOpen);
+        vm.expectRevert(MockCouncilManager.AlreadyOpen.selector);
+        council.openDecryption(CID);
     }
 
     /// @dev An all-zero tally ends six months before a scheduled opening: the request records

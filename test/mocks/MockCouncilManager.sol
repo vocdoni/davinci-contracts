@@ -13,7 +13,8 @@ import {ICouncilManagerErrors as E} from "../../src/interfaces/council/ICouncilM
  *      check is left to the real manager's suite. The decryption gate is the §8.7 predicate
  *      over the ceremony's policy, and setPlaintext (a combine) is refused while it is closed.
  *      Test setters: newCeremony, setPhase, setDecryptionPolicy, openDecryption,
- *      allowAdapter, authorizeCreator, setPlaintext.
+ *      allowAdapter, authorizeCreator, setPlaintext. Extras of the real manager's read
+ *      surface: getPolicy (decryption fields), getRequestIds, requestCts, bindingCreator.
  */
 contract MockCouncilManager is ICouncilManager {
     uint256 internal constant P = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -39,6 +40,18 @@ contract MockCouncilManager is ICouncilManager {
     /// @dev The manager's openDecryption reverts; they never reach the adapter.
     error WrongMode();
     error AlreadyOpen();
+
+    /// @dev The manager's `PhasePolicyView` (architecture §1.2).
+    struct PhasePolicyView {
+        uint8 registrationMode;
+        uint8 decryptionMode;
+        uint64 dealingDuration;
+        uint64 decryptionOpenAt;
+        uint64 manualDecryptionFallbackAt;
+        uint64 manualOpenedAt;
+        bool decryptionOpen;
+        bool scheduledRegistrationCloseDue;
+    }
 
     struct Ceremony {
         Phase phase;
@@ -213,6 +226,16 @@ contract MockCouncilManager is ICouncilManager {
     }
 
     // --- extras the real manager also has --------------------------------------------
+
+    /// @dev The decryption half of the real view; the registration fields read 0.
+    function getPolicy(bytes12 cid) external view returns (PhasePolicyView memory v) {
+        Ceremony storage c = _existing(cid);
+        v.decryptionMode = uint8(c.decryptionMode);
+        v.decryptionOpenAt = c.decryptionOpenAt;
+        v.manualDecryptionFallbackAt = c.manualDecryptionFallbackAt;
+        v.manualOpenedAt = c.manualOpenedAt;
+        v.decryptionOpen = isDecryptionOpen(cid);
+    }
 
     function getRequestIds(bytes12 cid) external view returns (bytes32[] memory) {
         return _existing(cid).requestIds;
