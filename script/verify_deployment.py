@@ -11,6 +11,7 @@ printed, not compared. Exit status 1 on any mismatch.
 """
 import argparse
 import json
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -26,6 +27,44 @@ def rpc(url, method, params):
     if "error" in out:
         raise SystemExit(f"{method}: {out['error']}")
     return out["result"]
+
+
+ADDRESS_WORD = re.compile(r"0x0{24}[0-9a-fA-F]{40}")
+
+
+def council_adapter(url, registry, calldata):
+    """The registry's councilAdapter(), or None when the registry has no such function.
+
+    Absent means only what a registry from before the COUNCIL mode answers: an execution
+    revert without revert data, or an empty return. A transport failure, any other JSON-RPC
+    error, a revert carrying data or a result that is not one address word raises SystemExit,
+    so an unreachable or misbehaving RPC fails the verification instead of passing it.
+    """
+    body = json.dumps(
+        {"jsonrpc": "2.0", "id": 1, "method": "eth_call", "params": [{"to": registry, "data": calldata}, "latest"]}
+    )
+    req = urllib.request.Request(url, data=body.encode(), headers=UA)
+    try:
+        out = json.load(urllib.request.urlopen(req, timeout=30))
+    except Exception as e:  # noqa: BLE001 - every transport or decoding failure fails closed
+        raise SystemExit(f"councilAdapter(): {e}")
+    if not isinstance(out, dict):
+        raise SystemExit(f"councilAdapter(): malformed response {out!r}")
+    if "error" in out:
+        err = out["error"]
+        if (
+            isinstance(err, dict)
+            and "execution reverted" in str(err.get("message", "")).lower()
+            and err.get("data") in (None, "", "0x")
+        ):
+            return None
+        raise SystemExit(f"councilAdapter(): {err}")
+    result = out.get("result")
+    if result == "0x":
+        return None
+    if not isinstance(result, str) or not ADDRESS_WORD.fullmatch(result):
+        raise SystemExit(f"councilAdapter(): malformed result {result!r}")
+    return "0x" + result[-40:]
 
 
 def selector(sig, cast="cast"):
@@ -109,10 +148,15 @@ def main():
     else:
         print("adapter  none (DKG disabled)")
     try:
-        council = "0x" + get(a.registry, "councilAdapter()")[-40:]
-    except SystemExit:  # a registry from before the COUNCIL mode
-        council = "0x" + "0" * 40
-    if int(council, 16) != 0:
+        council = council_adapter(a.rpc, a.registry, selector("councilAdapter()", a.cast))
+    except SystemExit as e:  # unreadable is a failure, never "no adapter"
+        check("registry.councilAdapter() readable", False, str(e))
+        council = "unreadable"
+    if council == "unreadable":
+        pass
+    elif council is None:
+        print("council none (no councilAdapter(): a registry from before the COUNCIL mode)")
+    elif int(council, 16) != 0:
         cad_code = rpc(a.rpc, "eth_getCode", [council, "latest"])
         m, why = masked_match(cad_code, artifact("CouncilAdapter"))
         check("CouncilAdapter runtime code == local build (immutables masked)", m, why)
