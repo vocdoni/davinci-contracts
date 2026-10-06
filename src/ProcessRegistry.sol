@@ -12,6 +12,8 @@ import {PublicsLib} from "./libraries/PublicsLib.sol";
 import {Sha256SmtLib} from "./libraries/Sha256SmtLib.sol";
 import {BjjFormLib} from "./libraries/BjjFormLib.sol";
 import {DavinciDKGAdapter} from "./DavinciDKGAdapter.sol";
+import {CouncilAdapter} from "./CouncilAdapter.sol";
+import {IDkgResultsAdapter} from "./interfaces/IDkgResultsAdapter.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
@@ -103,6 +105,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      */
     address public immutable dkgAdapter;
     /**
+     * @notice The CouncilAdapter this registry created at deploy, or address(0) when the
+     *         COUNCIL key mode is disabled.
+     */
+    address public immutable councilAdapter;
+    /**
      * @notice The grace window every new process starts with, in seconds.
      */
     uint32 public immutable defaultGrace;
@@ -135,6 +142,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      * @param _ballotVKHash sha256 digest of the ballot proof VK (davinci.BallotVKLeaf).
      * @param _dkgManager The davinci-dkg DKGManager, or address(0) to disable DKG modes.
      *        When set, the constructor creates the DavinciDKGAdapter.
+     * @param _councilManager The Council manager, or address(0) to disable the COUNCIL
+     *        mode. When set, the constructor creates the CouncilAdapter.
      * @param _defaultGrace The grace window of a new process, in seconds.
      * @param _graceFloor The minimum for setProcessGrace, non-zero and at most _defaultGrace.
      * @param _graceCeil The maximum for setProcessGrace, at least _defaultGrace.
@@ -149,6 +158,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes32 _rootCVadcopFinal,
         bytes32 _ballotVKHash,
         address _dkgManager,
+        address _councilManager,
         uint32 _defaultGrace,
         uint32 _graceFloor,
         uint32 _graceCeil,
@@ -176,6 +186,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         chainID = _chainID;
         pidPrefix = ProcessIdLib.getPrefix(_chainID, address(this));
         dkgAdapter = _dkgManager == address(0) ? address(0) : address(new DavinciDKGAdapter(_dkgManager));
+        // Created second, so the DKG adapter keeps its address (CREATE(registry, 1)).
+        councilAdapter = _councilManager == address(0) ? address(0) : address(new CouncilAdapter(_councilManager));
     }
 
     /// @inheritdoc IProcessRegistry
@@ -250,7 +262,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         DAVINCITypes.Process storage p = processes[processId];
 
         // Resolve the encryption key: the caller's in SEQUENCER mode, the DKG committee's
-        // (converted to circomlib form) in the DKG modes.
+        // (converted to circomlib form) in the DKG modes, the Council ceremony's in COUNCIL.
         DAVINCITypes.EncryptionKey memory key = encryptionKey;
         if (dkg.mode == DAVINCITypes.KeyMode.SEQUENCER) {
             if (
@@ -259,9 +271,18 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
             ) revert InvalidDKGParams();
         } else {
             if (encryptionKey.x != 0 || encryptionKey.y != 0) revert InvalidEncryptionKey();
-            if (dkgAdapter == address(0)) revert DKGDisabled();
-            (bytes12 eid, bytes32 aid, uint256 teX, uint256 teY) =
-                DavinciDKGAdapter(dkgAdapter).register(processId, dkg);
+            bytes12 eid;
+            bytes32 aid;
+            uint256 teX;
+            uint256 teY;
+            if (dkg.mode == DAVINCITypes.KeyMode.COUNCIL) {
+                if (councilAdapter == address(0)) revert CouncilDisabled();
+                // The ceremony authorizes the creator, so the adapter must learn it.
+                (eid, aid, teX, teY) = CouncilAdapter(councilAdapter).register(processId, sender, dkg);
+            } else {
+                if (dkgAdapter == address(0)) revert DKGDisabled();
+                (eid, aid, teX, teY) = DavinciDKGAdapter(dkgAdapter).register(processId, dkg);
+            }
             key = DAVINCITypes.EncryptionKey(teX, teY);
             p.keyMode = dkg.mode;
             p.dkgEpochId = eid;
@@ -622,7 +643,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
             assembly ("memory-safe") {
                 mstore(cts, n) // shrink to the active count
             }
-            firstIndex = DavinciDKGAdapter(dkgAdapter).submit(p.dkgEpochId, p.dkgAid, cts);
+            firstIndex = _adapterFor(p.keyMode).submit(p.dkgEpochId, p.dkgAid, cts);
         }
         p.dkgFirstIndex = firstIndex;
         p.dkgCount = uint8(n);
@@ -648,6 +669,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
+    /// @dev COUNCIL processes have no organizer key and revert InvalidKeyMode here too.
     function revealProcessKey(bytes31 processId, uint256 sk) external override nonReentrant {
         DAVINCITypes.Process storage p = _existingProcess(processId);
         if (p.keyMode != DAVINCITypes.KeyMode.DKG_LOCKED) revert InvalidKeyMode();
@@ -663,7 +685,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         uint256 count = p.dkgCount;
         if (count > 0) {
             (bool ready, uint256[] memory values) =
-                DavinciDKGAdapter(dkgAdapter).plaintexts(p.dkgEpochId, p.dkgAid, p.dkgFirstIndex, uint16(count));
+                _adapterFor(p.keyMode).plaintexts(p.dkgEpochId, p.dkgAid, p.dkgFirstIndex, uint16(count));
             if (!ready) revert ResultsNotReady();
             uint256 zeroSkipped = p.dkgZeroSkipped;
             uint256 j;
@@ -681,6 +703,12 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         emit ProcessStatusChanged(processId, oldStatus, DAVINCITypes.ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, msg.sender, result);
+    }
+
+    /// @dev The results adapter of a non-SEQUENCER process: the CouncilAdapter for
+    ///      COUNCIL, the DavinciDKGAdapter for the DKG modes.
+    function _adapterFor(DAVINCITypes.KeyMode mode) private view returns (IDkgResultsAdapter) {
+        return IDkgResultsAdapter(mode == DAVINCITypes.KeyMode.COUNCIL ? councilAdapter : dkgAdapter);
     }
 
     /**

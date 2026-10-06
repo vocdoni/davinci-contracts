@@ -101,12 +101,15 @@ library DAVINCITypes {
      *         SEQUENCER: the organizer/sequencer supplies it (results via the zkVM results
      *         guest). DKG_AUTOMATIC: a davinci-dkg committee pool key; the committee alone
      *         decrypts the final accumulator. DKG_LOCKED: pool key plus an organizer key;
-     *         results wait for revealProcessKey.
+     *         results wait for revealProcessKey. COUNCIL: the key of a Live Council
+     *         (invite-only threshold DKG) ceremony; its committee decrypts the final
+     *         accumulator.
      */
     enum KeyMode {
         SEQUENCER,
         DKG_AUTOMATIC,
-        DKG_LOCKED
+        DKG_LOCKED,
+        COUNCIL
     }
 
     /**
@@ -114,7 +117,8 @@ library DAVINCITypes {
      *         For DKG_LOCKED, epochId picks the epoch (the PoP binds it) and the organizer
      *         key plus Schnorr PoP are in the DKG's reduced (a = -1) form, exactly as
      *         DKGAppManager.registerApplication takes them. For DKG_AUTOMATIC only mode
-     *         is read; the adapter picks the epoch.
+     *         is read; the adapter picks the epoch. For COUNCIL, epochId carries the
+     *         Council ceremony id and the organizer key and PoP fields must be zero.
      */
     struct DKGParams {
         KeyMode mode;
@@ -145,14 +149,16 @@ library DAVINCITypes {
      * @param ballotMode The ballot mode.
      * @param census The census of the process.
      * @param keyMode Where the encryption key comes from.
-     * @param dkgEpochId The DKG epoch the process registered against (DKG modes).
+     * @param dkgEpochId The DKG epoch the process registered against (DKG modes), or the
+     *        Council ceremony id (COUNCIL).
      * @param dkgFirstIndex Index of the first ciphertext submitted by requestResultsDecryption.
      * @param dkgCount Number of ciphertexts submitted; > 0 also means results were requested.
      * @param dkgZeroSkipped Bitmask of fields recorded as 0 without a DKG submission
      *        (identity ciphertexts), bit i = field i.
      * @param dkgResultsRequested Whether requestResultsDecryption ran (covers the all-identity
      *        case where dkgCount stays 0).
-     * @param dkgAid The DKG application id (keccak(chainid, registry, pid) mod Q).
+     * @param dkgAid The DKG application id (keccak(chainid, registry, pid) mod Q), or the
+     *        Council request id the process was bound under (COUNCIL).
      * @param grace Idle window past the end, in seconds: transitions settle until
      *        max(end, lastVoteAt) + grace, capped at end + graceMaxTotal (getProcessGraceEnd).
      *        defaultGrace at creation.

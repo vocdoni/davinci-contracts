@@ -108,6 +108,19 @@ def main():
         print(f"adapter  {adapter}")
     else:
         print("adapter  none (DKG disabled)")
+    try:
+        council = "0x" + get(a.registry, "councilAdapter()")[-40:]
+    except SystemExit:  # a registry from before the COUNCIL mode
+        council = "0x" + "0" * 40
+    if int(council, 16) != 0:
+        cad_code = rpc(a.rpc, "eth_getCode", [council, "latest"])
+        m, why = masked_match(cad_code, artifact("CouncilAdapter"))
+        check("CouncilAdapter runtime code == local build (immutables masked)", m, why)
+        cad_reg = "0x" + get(council, "registry()")[-40:]
+        check("councilAdapter.registry == registry", cad_reg.lower() == a.registry.lower(), cad_reg)
+        print(f"council {council} (manager 0x{get(council, 'manager()')[-40:]})")
+    else:
+        print("council none (COUNCIL disabled)")
     print(f"verifier {verifier}")
     for name in ("defaultGrace", "graceFloor", "graceCeil", "graceMaxTotal", "noticeMin"):
         try:

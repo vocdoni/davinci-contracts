@@ -9,8 +9,9 @@ import {ZiskVerifier} from "../src/verifiers/ZiskVerifier.sol";
 ///         ProcessRegistry pinned to the davinci-zkvm program vks.
 /// @dev Env: PRIVATE_KEY, CHAIN_ID, BATCH_PROGRAM_VK, RESULTS_PROGRAM_VK, ROOT_C_VADCOP_FINAL,
 ///      BALLOT_VK_HASH (bytes32 hex). ROOT_C_VADCOP_FINAL must match the vendored verifier setup.
-///      Optional: DKG_MANAGER, and in seconds the grace window GRACE_DEFAULT (180), GRACE_FLOOR
-///      (150), GRACE_CEIL (600), GRACE_MAX_TOTAL (1800) and the shorten notice NOTICE_MIN (60).
+///      Optional: DKG_MANAGER, COUNCIL_MANAGER, and in seconds the grace window GRACE_DEFAULT
+///      (180), GRACE_FLOOR (150), GRACE_CEIL (600), GRACE_MAX_TOTAL (1800) and the shorten notice
+///      NOTICE_MIN (60).
 contract DeployAllScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -27,6 +28,8 @@ contract DeployAllScript is Script {
         bytes32 ballotVKHash = vm.envBytes32("BALLOT_VK_HASH");
         // Optional davinci-dkg manager; zero (the default) disables the DKG key modes.
         address dkgManager = vm.envOr("DKG_MANAGER", address(0));
+        // Optional Council manager; zero (the default) disables the COUNCIL key mode.
+        address councilManager = vm.envOr("COUNCIL_MANAGER", address(0));
         // The registry checks 0 < floor <= default <= ceil <= maxTotal and noticeMin > 0.
         uint32 defaultGrace = _envSeconds("GRACE_DEFAULT", 180);
         uint32 graceFloor = _envSeconds("GRACE_FLOOR", 150);
@@ -48,6 +51,7 @@ contract DeployAllScript is Script {
             rootCVadcopFinal,
             ballotVKHash,
             dkgManager,
+            councilManager,
             defaultGrace,
             graceFloor,
             graceCeil,
@@ -56,6 +60,7 @@ contract DeployAllScript is Script {
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
         console.log("DavinciDKGAdapter deployed at:", processRegistry.dkgAdapter());
+        console.log("CouncilAdapter deployed at:", processRegistry.councilAdapter());
         console.log(
             string.concat(
                 "Grace (s): default ",

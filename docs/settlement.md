@@ -84,7 +84,9 @@ fields. The process moves to `RESULTS` and the call emits `ProcessStatusChanged`
 
 ## Results in the DKG modes
 
-DKG processes do not use `setProcessResults` (it reverts with `InvalidKeyMode`).
+DKG and `COUNCIL` processes do not use `setProcessResults` (it reverts with `InvalidKeyMode`).
+Both go through the calls below; the registry picks the adapter by the process's key mode, the
+`CouncilAdapter` for `COUNCIL` and the `DavinciDKGAdapter` otherwise.
 
 ```solidity
 function requestResultsDecryption(bytes31 processId, uint256[64] calldata accumulator, bytes32[] calldata siblings) external;
@@ -109,6 +111,11 @@ registry:
    contiguous ciphertext indices;
 5. emits `ResultsDecryptionRequested(processId, epochId, aid, firstIndex, count)`.
 
+For `COUNCIL` the active ciphertexts go to the Council manager as one request
+(`submitRequest(ceremonyId, processId, cts)`), in circomlib form, with `firstIndex` 0;
+`epochId` and `aid` in the event are the ceremony id and the request id. The manager checks
+each half is canonical, in the prime subgroup and not the identity.
+
 If every declared field is identity nothing is submitted and the results are finalized to
 zero at once.
 
@@ -116,6 +123,9 @@ zero at once.
 submitted ciphertext, stores `numFields` results in field order (0 for skipped fields), moves
 the process to `RESULTS` and emits `ProcessStatusChanged` and `ProcessResultsSet`. Until then it
 reverts with `ResultsNotReady` (`GraceOpen` while the grace window is open).
+
+For `COUNCIL`, finalization reads the whole request at once and is ready only when every
+field is combined. `revealProcessKey` reverts with `InvalidKeyMode`: there is no organizer key.
 
 `revealProcessKey` forwards the organizer secret of a `DKG_LOCKED` process to
 `DKGAppManager.revealOrganizerSecret`, which checks `sk·G == PK_org` and accepts it once. The

@@ -33,9 +33,10 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `InvalidCensusURI` | `newProcess`, `setProcessCensus` | empty URI |
 | `InvalidMetadata` | `newProcess`, `setProcessMetadata` | empty metadata URI or zero hash |
 | `CensusNotUpdatable` | `setProcessCensus` | process census is not origin 2 |
-| `InvalidEncryptionKey` | `newProcess` | key not canonical, not on the curve or `x == 0`; a non-zero key in a DKG mode |
-| `InvalidDKGParams` | `newProcess` | non-zero DKG fields in sequencer mode |
+| `InvalidEncryptionKey` | `newProcess` | key not canonical, not on the curve or `x == 0`; a non-zero key in a DKG or Council mode |
+| `InvalidDKGParams` | `newProcess` | non-zero DKG fields in sequencer mode; in `COUNCIL`, a zero ceremony id or a non-zero organizer/PoP field (raised by the Council adapter, same selector) |
 | `DKGDisabled` | `newProcess`, `aidFor` | DKG mode on a registry without a DKG manager |
+| `CouncilDisabled` | `newProcess` | `COUNCIL` on a registry without a Council manager |
 | `InvalidPublicValues` | settlement, `setProcessResults` | `publicValues` not 512 bytes |
 | `CircuitFailed` | settlement, `setProcessResults` | `ok != 1` or `fail_mask != 0` |
 | `InvalidStateRoot` | settlement, `setProcessResults` | root does not match `latestStateRoot` |
@@ -56,11 +57,18 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `NoLiveEpoch` (adapter) | `newProcess` | `DKG_AUTOMATIC` found no Live epoch with a free pool key |
 | `NonContiguousIndex` (adapter) | `requestResultsDecryption` | the DKG assigned non-consecutive ciphertext indices |
 | `NotRegistry` (adapter) | adapter `register`, `submit`, `reveal` | caller is not the registry that created the adapter |
+| `UnknownRequest` (Council adapter) | `plaintexts` | no request submitted under that request id and ceremony |
+| `InvalidFieldRange` (Council adapter) | `plaintexts` | `first != 0` or `count` differs from the request's field count |
+| `RequestMismatch` (Council adapter) | `requestResultsDecryption`, `plaintexts` | the manager answered for another request or with the wrong number of values |
+| `UnsupportedKeyMode` (Council adapter) | adapter `reveal` | Council has no organizer key |
 | `InvalidVerifierConfig` | constructor | zero verifier address or pin |
 
 Errors from davinci-dkg pass through unchanged. On `newProcess` these include `InvalidEpoch`
 or `InvalidPhase` for an unknown or not yet Live `DKG_LOCKED` epoch, and `InvalidSchnorrProof`;
-on `revealProcessKey`, `InvalidOrganizerSecret` and `AlreadyRevealed`. `IProcessRegistry` also
+on `revealProcessKey`, `InvalidOrganizerSecret` and `AlreadyRevealed`. Council manager errors
+pass through too: on `newProcess`, `UnknownCeremony`, `WrongPhase`, `NotAllowedAdapter` and
+`NotAuthorizedCreator`; on `requestResultsDecryption`, the request admission errors
+(`NotInSubgroup`, `InvalidPoint`, `NonCanonical`, `BadFieldCount`, ...). `IProcessRegistry` also
 declares `InvalidBlockNumber`, `InvalidMaxValue`, `InvalidMinValue`, `InvalidMinTotalCost`,
 `InvalidUniqueValues`, `CannotAcceptResult`, `ProcessNotEnded` and `ProofInvalid`, which this
 registry never raises.

@@ -200,11 +200,11 @@ provides such a census.
 ### Key modes
 
 ```solidity
-enum KeyMode { SEQUENCER, DKG_AUTOMATIC, DKG_LOCKED }
+enum KeyMode { SEQUENCER, DKG_AUTOMATIC, DKG_LOCKED, COUNCIL }
 
 struct DKGParams {
     KeyMode mode;
-    bytes12 epochId; // DKG_LOCKED only: the epoch the proof of possession binds
+    bytes12 epochId; // DKG_LOCKED: the epoch the proof of possession binds; COUNCIL: the ceremony id
     uint256 orgPKx;  // DKG_LOCKED only: organizer key, reduced form
     uint256 orgPKy;
     uint256 popAx;   // DKG_LOCKED only: Schnorr proof of possession
@@ -228,8 +228,20 @@ struct DKGParams {
   it. The committee cannot finish decrypting until the organizer secret is published with
   `revealProcessKey`.
 
+- `COUNCIL`: `encryptionKey` is `(0, 0)`, `epochId` names a Council ceremony and every other
+  `DKGParams` field is zero (`InvalidDKGParams` otherwise, as for a zero ceremony id). The
+  `CouncilAdapter` binds the process to the ceremony with `bindProcess(ceremonyId, processId,
+  creator)`, where `creator` is the `newProcess` caller; the manager requires the ceremony to be
+  Live, the adapter allowed and the creator authorized by the ceremony's organizer, and its
+  errors (`NotAllowedAdapter`, `NotAuthorizedCreator`, `WrongPhase`, `UnknownCeremony`) pass
+  through. The process key is the ceremony key, already in circomlib form; every process bound to
+  a ceremony shares it. The registry stores the ceremony id as `dkgEpochId` and the Council
+  request id as `dkgAid`; the adapter maps the request id back to the process id
+  (`bindings(requestId)`). Only the ceremony's committee decrypts the tally.
+
 The DKG modes need a registry deployed with a DKG manager (`dkgAdapter()` non-zero), otherwise
-they revert with `DKGDisabled`. The application id is
+they revert with `DKGDisabled`; `COUNCIL` needs a Council manager (`councilAdapter()`
+non-zero), otherwise it reverts with `CouncilDisabled`. The application id is
 `keccak256(abi.encode(chainid, registry, processId)) mod Q`, never 0 (`aidFor`). Each
 application allows only the adapter to submit ciphertexts, at most 16 of them. The registry
 converts the DKG key to circomlib form and stores `keyMode`, `dkgEpochId` and `dkgAid` on the
@@ -282,13 +294,14 @@ parameters of an election are fixed once voting closes.
 - `getNextProcessId(organizer)`, `getProcessEndTime(processId)`, `getProcessGraceEnd(processId)`,
   `genesisRoot(...)`, `aidFor(processId)`.
 - The immutables `ziskVerifier`, `batchProgramVK`, `resultsProgramVK`, `rootCVadcopFinal`,
-  `ballotVKHash` and `dkgAdapter`; `getSTVerifierVKeyHash()` and `getRVerifierVKeyHash()` return
+  `ballotVKHash`, `dkgAdapter` and `councilAdapter`; `getSTVerifierVKeyHash()` and `getRVerifierVKeyHash()` return
   the batch and results vks. The window settings `defaultGrace`, `graceFloor`, `graceCeil`,
   `graceMaxTotal` and `noticeMin` (seconds, `uint32`) are immutables too, for nodes to read at
   boot.
 - `chainID`, `pidPrefix`, `processCount`, `processNonce(organizer)`.
 - On the adapter: `registrationEpoch()`, `aidFor(processId)`, `registry`, `manager`,
-  `appManager`.
+  `appManager`. On the Council adapter: `bindings(requestId)` (ceremony id, submitted field
+  count, process id), `registry`, `manager`.
 
 ## Events
 

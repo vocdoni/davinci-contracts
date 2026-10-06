@@ -35,6 +35,7 @@ constructor(
 | `ROOT_C_VADCOP_FINAL` | root of the ZisK vadcop-final setup; the script aborts unless it equals `ZiskVerifier.getRootCVadcopFinal()` |
 | `BALLOT_VK_HASH` | `sha256` of the ballot proof VK wire bytes, genesis leaf `0x07` |
 | `DKG_MANAGER` | optional davinci-dkg `DKGManager`; unset or zero disables the DKG modes |
+| `COUNCIL_MANAGER` | optional Council manager; unset or zero disables the `COUNCIL` mode |
 | `GRACE_DEFAULT` | optional, seconds: the grace window of a new process (`defaultGrace`, default 180) |
 | `GRACE_FLOOR` | optional, seconds: the minimum for `setProcessGrace` (`graceFloor`, default 150) |
 | `GRACE_CEIL` | optional, seconds: the maximum for `setProcessGrace` (`graceCeil`, default 600) |
@@ -122,10 +123,10 @@ Several chains: put shared values and `DEPLOY_CHAINS=base,sepolia,...` in `.env`
 ./deploy_all_contracts_to_all_chains.sh
 ```
 
-It reloads `.env`, clears the chain-scoped variables (`DKG_MANAGER` among them), loads each
-chain's file and calls `deploy_all.sh`. The grace and notice variables are not chain-scoped: a
-value set in one chain file carries over to the chains after it, so set them in `.env` or in
-every chain file.
+It reloads `.env`, clears the chain-scoped variables (`DKG_MANAGER` and `COUNCIL_MANAGER`
+among them), loads each chain's file and calls `deploy_all.sh`. The grace and notice variables
+are not chain-scoped: a value set in one chain file carries over to the chains after it, so set
+them in `.env` or in every chain file.
 
 With Docker, the `deploy` profile runs `deploy_all.sh` with the variables from `.env`; the key
 never enters the image. The broadcast record stays in the container, so copy it out before
@@ -144,6 +145,13 @@ helpers/write_contract_addresses.sh
 2. Deploy with `DKG_MANAGER` set. The registry constructor creates the `DavinciDKGAdapter`,
    which reads `appManager()` from the manager; the script logs its address and
    `dkgAdapter()` returns it.
+
+## Council support
+
+Deploy with `COUNCIL_MANAGER` set to a Council manager (vocdoni/davinci-dkg-council). The registry
+constructor creates the `CouncilAdapter` after the DKG adapter, so the DKG adapter's address
+does not move; the script logs it and `councilAdapter()` returns it. Each ceremony organizer
+then allows that adapter and authorizes the process creators on the manager.
 
 ## After a deployment
 

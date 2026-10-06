@@ -56,6 +56,7 @@ abstract contract RegistryTestBase is Test {
         address verifier = _verifier();
         bytes32 ballotVKHash = fixture.readBytes32(".ballot_vk_hash");
         address dkgManager = _dkgManager();
+        address councilManager = _councilManager();
         (uint32 grace, uint32 floor, uint32 ceil, uint32 maxTotal, uint32 notice) = _timeConfig();
         vm.prank(DEPLOYER);
         registry = new ProcessRegistry(
@@ -66,6 +67,7 @@ abstract contract RegistryTestBase is Test {
             ROOT_C,
             ballotVKHash,
             dkgManager,
+            councilManager,
             grace,
             floor,
             ceil,
@@ -82,6 +84,11 @@ abstract contract RegistryTestBase is Test {
 
     /// @dev The DKG manager the registry is deployed with (0 = DKG modes disabled).
     function _dkgManager() internal virtual returns (address) {
+        return address(0);
+    }
+
+    /// @dev The Council manager the registry is deployed with (0 = COUNCIL disabled).
+    function _councilManager() internal virtual returns (address) {
         return address(0);
     }
 

@@ -90,9 +90,10 @@ interface IProcessRegistry {
      * @notice Emitted when the final accumulator of a DKG-mode process is bound to its
      *         state root and its active ciphertexts are submitted for threshold decryption.
      * @param processId The ID of the process.
-     * @param epochId The DKG epoch of the process's application.
-     * @param aid The DKG application id.
-     * @param firstIndex The DKG index of the first submitted ciphertext (0 when none).
+     * @param epochId The DKG epoch of the process's application (COUNCIL: the ceremony id).
+     * @param aid The DKG application id (COUNCIL: the request id).
+     * @param firstIndex The DKG index of the first submitted ciphertext (0 when none, and
+     *        always 0 for COUNCIL).
      * @param count The number of submitted ciphertexts (identity fields are skipped).
      */
     event ResultsDecryptionRequested(
@@ -298,6 +299,11 @@ interface IProcessRegistry {
      */
     error DKGDisabled();
     /**
+     * @notice Thrown when the COUNCIL key mode is used on a registry deployed without a
+     *         Council manager.
+     */
+    error CouncilDisabled();
+    /**
      * @notice Thrown when the call is not valid for the process's key mode.
      */
     error InvalidKeyMode();
@@ -428,6 +434,13 @@ interface IProcessRegistry {
     function dkgAdapter() external view returns (address);
 
     /**
+     * @notice The CouncilAdapter created at deploy, or address(0) when the COUNCIL mode is
+     *         disabled. A ceremony organizer allows it on the Council manager, and authorizes
+     *         the process creators, before COUNCIL processes can bind to the ceremony.
+     */
+    function councilAdapter() external view returns (address);
+
+    /**
      * @notice The DKG application id a process registers under. Reverts DKGDisabled when
      *         no adapter is configured.
      * @param processId The ID of the process (existing or upcoming, see getNextProcessId).
@@ -448,8 +461,9 @@ interface IProcessRegistry {
      * @param metadataHash SHA-256 of the exact bytes served at metadataURI (no JSON
      *        canonicalisation), non-zero. Emitted in ProcessMetadataUpdated.
      * @param encryptionKey The public key used for vote encryption. Must be (0, 0) in the
-     *        DKG key modes, where the registry takes the key from the DKG committee.
-     * @param dkg The key mode and DKG registration arguments (all zero for SEQUENCER).
+     *        DKG key modes and COUNCIL, where the registry takes the key from the committee.
+     * @param dkg The key mode and DKG registration arguments (all zero for SEQUENCER; for
+     *        COUNCIL only the mode and the ceremony id in epochId).
      */
     function newProcess(
         DAVINCITypes.ProcessStatus status,
@@ -534,8 +548,9 @@ interface IProcessRegistry {
     /**
      * @notice Binds the final accumulator of an ended DKG-mode process to its latest state
      *         root (SMT inclusion of key 0x04) and submits every active field's ciphertext
-     *         to the DKG committee for threshold decryption. Permissionless, at most once
-     *         per process, and only once the grace window has closed (getProcessGraceEnd).
+     *         to the DKG committee for threshold decryption (COUNCIL: as one request to
+     *         the Council manager). Permissionless, at most once per process, and only
+     *         once the grace window has closed (getProcessGraceEnd).
      *         With no active field (all identity) the results are finalized to zero
      *         immediately; otherwise the process is moved to ENDED, so the tally cannot be
      *         read off the DKG and then canceled.

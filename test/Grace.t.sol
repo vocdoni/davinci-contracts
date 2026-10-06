@@ -57,7 +57,19 @@ contract GraceTest is RegistryTestBase {
     ///      into a deployCode cheatcode, whose revert ends the test instead.
     function deploy(uint32 d, uint32 f, uint32 c, uint32 m, uint32 n) external returns (ProcessRegistry) {
         return new ProcessRegistry(
-            CHAIN_ID, address(1), BATCH_VK, RESULTS_VK, ROOT_C, bytes32(uint256(1)), address(0), d, f, c, m, n
+            CHAIN_ID,
+            address(1),
+            BATCH_VK,
+            RESULTS_VK,
+            ROOT_C,
+            bytes32(uint256(1)),
+            address(0),
+            address(0),
+            d,
+            f,
+            c,
+            m,
+            n
         );
     }
 

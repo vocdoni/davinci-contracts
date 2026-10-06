@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- `KeyMode.COUNCIL` (3): the process key is the key of a Live Council ceremony (invite-only
+  threshold DKG), named by `DKGParams.epochId`; the organizer and PoP fields must be zero. The
+  constructor takes `address _councilManager` after `_dkgManager` (zero disables the mode,
+  `CouncilDisabled`) and creates a `CouncilAdapter`, exposed as `councilAdapter()`, after the
+  DKG adapter. The adapter binds the process with the creator (the `newProcess` caller), stores
+  the request id as `dkgAid`, submits the accumulator as one request and reads back the whole
+  vector. `requestResultsDecryption` and `finalizeResultsFromDKG` pick the adapter by key mode;
+  `revealProcessKey` rejects `COUNCIL` with `InvalidKeyMode`. `DeployAll` reads
+  `COUNCIL_MANAGER`.
 - `newProcess` takes `bytes32 metadataHash` right after the metadata URI: the SHA-256 of the
   exact bytes served there. An empty URI or a zero hash reverts `InvalidMetadata`.
   `DAVINCITypes.Process` gains `metadataHash` after `metadataURI`.

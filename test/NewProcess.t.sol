@@ -225,6 +225,7 @@ contract NewProcessTest is RegistryTestBase {
             rootC,
             vkHash,
             address(0),
+            address(0),
             GRACE,
             GRACE_FLOOR,
             GRACE_CEIL,
