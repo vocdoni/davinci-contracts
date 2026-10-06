@@ -11,6 +11,12 @@
   vector. `requestResultsDecryption` and `finalizeResultsFromDKG` pick the adapter by key mode;
   `revealProcessKey` rejects `COUNCIL` with `InvalidKeyMode`. `DeployAll` reads
   `COUNCIL_MANAGER`.
+- Council decryption gate (Council protocol v2): `CouncilAdapter.isDecryptionOpen(cid)` reads
+  the manager's gate. For `COUNCIL` only, `requestResultsDecryption` no longer finalizes an
+  all-identity tally before the ceremony opens decryption (the process stays `ENDED`), and
+  `finalizeResultsFromDKG` reverts with the new `DecryptionNotOpen` until it opens, on both
+  paths. The vendored `ICouncilManager` is the v2 adapter surface: `isDecryptionOpen` added,
+  `getRequest` replaced by `getRequestMeta`; `ICouncilManagerErrors` gains `DecryptionNotOpen`.
 - `newProcess` takes `bytes32 metadataHash` right after the metadata URI: the SHA-256 of the
   exact bytes served there. An empty URI or a zero hash reverts `InvalidMetadata`.
   `DAVINCITypes.Process` gains `metadataHash` after `metadataURI`.

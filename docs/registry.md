@@ -40,7 +40,8 @@ settlement but not the clock.
 Results are accepted once the process is `ENDED`, or `READY`/`PAUSED` with its end time passed,
 and its grace window has closed. In sequencer mode `setProcessResults` moves it straight to
 `RESULTS`. In the DKG modes `requestResultsDecryption` first moves it to `ENDED`, which takes it
-out of the organizer's hands, and `finalizeResultsFromDKG` moves it to `RESULTS`.
+out of the organizer's hands, and `finalizeResultsFromDKG` moves it to `RESULTS`; for
+`COUNCIL` not before the ceremony opens decryption ([settlement](settlement.md#the-council-decryption-gate)).
 
 ## Grace window
 
@@ -237,7 +238,8 @@ struct DKGParams {
   through. The process key is the ceremony key, already in circomlib form; every process bound to
   a ceremony shares it. The registry stores the ceremony id as `dkgEpochId` and the Council
   request id as `dkgAid`; the adapter maps the request id back to the process id
-  (`bindings(requestId)`). Only the ceremony's committee decrypts the tally.
+  (`bindings(requestId)`). Only the ceremony's committee decrypts the tally, and no result,
+  not even an all-zero one, is published before the ceremony opens decryption.
 
 The DKG modes need a registry deployed with a DKG manager (`dkgAdapter()` non-zero), otherwise
 they revert with `DKGDisabled`; `COUNCIL` needs a Council manager (`councilAdapter()`
@@ -301,19 +303,20 @@ parameters of an election are fixed once voting closes.
 - `chainID`, `pidPrefix`, `processCount`, `processNonce(organizer)`.
 - On the adapter: `registrationEpoch()`, `aidFor(processId)`, `registry`, `manager`,
   `appManager`. On the Council adapter: `bindings(requestId)` (ceremony id, submitted field
-  count, process id), `registry`, `manager`.
+  count, process id), `isDecryptionOpen(ceremonyId)` (the manager's decryption gate),
+  `registry`, `manager`.
 
 ## Events
 
 | Event | Emitted by |
 |---|---|
 | `ProcessCreated(bytes31 indexed processId, address indexed creator)` | `newProcess` |
-| `ProcessStatusChanged(bytes31 indexed processId, ProcessStatus oldStatus, ProcessStatus newStatus)` | `setProcessStatus`, `setProcessResults`, `requestResultsDecryption` (to `ENDED`, and to `RESULTS` when every field is identity), `finalizeResultsFromDKG` |
+| `ProcessStatusChanged(bytes31 indexed processId, ProcessStatus oldStatus, ProcessStatus newStatus)` | `setProcessStatus`, `setProcessResults`, `requestResultsDecryption` (to `ENDED`, and to `RESULTS` when every field is identity, for `COUNCIL` only once decryption is open), `finalizeResultsFromDKG` |
 | `ProcessDurationChanged(bytes31 indexed processId, uint256 duration)` | `setProcessDuration`, `setProcessStatus` to `ENDED` before the end time |
 | `ProcessMaxVotersChanged(bytes31 indexed processId, uint256 maxVoters)` | `setProcessMaxVoters` |
 | `ProcessGraceChanged(bytes31 indexed processId, uint32 grace)` | `setProcessGrace` |
 | `CensusUpdated(bytes31 indexed processId, bytes32 censusRoot, string censusURI)` | `setProcessCensus` |
 | `ProcessMetadataUpdated(bytes31 indexed processId, string metadataURI, bytes32 metadataHash)` | `newProcess` (the initial values), `setProcessMetadata` |
 | `ProcessStateTransitioned(bytes31 indexed processId, address indexed sender, bytes32 oldStateRoot, bytes32 newStateRoot, uint256 newVotersCount, uint256 newOverwrittenVotesCount, uint256 nBlobs)` | `submitStateTransition` |
-| `ProcessResultsSet(bytes31 indexed processId, address indexed sender, uint256[] result)` | `setProcessResults`, `finalizeResultsFromDKG`, and `requestResultsDecryption` when every field is identity |
+| `ProcessResultsSet(bytes31 indexed processId, address indexed sender, uint256[] result)` | `setProcessResults`, `finalizeResultsFromDKG`, and `requestResultsDecryption` when every field is identity (for `COUNCIL` only once decryption is open) |
 | `ResultsDecryptionRequested(bytes31 indexed processId, bytes12 epochId, bytes32 aid, uint16 firstIndex, uint8 count)` | `requestResultsDecryption` |

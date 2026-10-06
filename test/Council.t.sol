@@ -2,9 +2,11 @@
 pragma solidity ^0.8.28;
 
 import {stdJson} from "forge-std/StdJson.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {RegistryTestBase} from "./RegistryTestBase.sol";
 import {DKGTest} from "./DKG.t.sol";
 import {IProcessRegistry} from "../src/interfaces/IProcessRegistry.sol";
+import {ICouncilManager} from "../src/interfaces/council/ICouncilManager.sol";
 import {ICouncilManagerErrors} from "../src/interfaces/council/ICouncilManagerErrors.sol";
 import {DAVINCITypes} from "../src/libraries/DAVINCITypes.sol";
 import {Sha256SmtLib} from "../src/libraries/Sha256SmtLib.sol";
@@ -160,6 +162,8 @@ contract CouncilTest is CouncilTestBase {
         assertEq(CouncilAdapter.InvalidKeyMode.selector, IProcessRegistry.InvalidKeyMode.selector);
         assertEq(CouncilAdapter.InvalidDKGParams.selector, IProcessRegistry.InvalidDKGParams.selector);
         assertEq(CouncilAdapter.UnknownRequest.selector, ICouncilManagerErrors.UnknownRequest.selector);
+        // The registry's gate revert is the manager's.
+        assertEq(IProcessRegistry.DecryptionNotOpen.selector, ICouncilManagerErrors.DecryptionNotOpen.selector);
     }
 
     function test_Adapter_OnlyRegistry() public {
@@ -324,7 +328,8 @@ contract CouncilTest is CouncilTestBase {
         assertEq(p.dkgZeroSkipped, (1 << 1) | (1 << 3));
 
         // One request, the active fields in order, TE words untouched.
-        (bytes12 rcid, uint8 fieldCount,,, uint256[4][] memory cts) = council.getRequest(rid);
+        (bytes12 rcid, uint8 fieldCount,,) = council.getRequestMeta(rid);
+        uint256[4][] memory cts = council.requestCts(rid);
         assertEq(rcid, CID);
         assertEq(fieldCount, 2);
         assertEq(cts.length, 2);
@@ -377,7 +382,7 @@ contract CouncilTest is CouncilTestBase {
 
         DAVINCITypes.Process memory p = registry.getProcess(pid);
         assertEq(p.dkgZeroSkipped, (1 << 0) | (1 << 2));
-        (,,,, uint256[4][] memory cts) = council.getRequest(rid);
+        uint256[4][] memory cts = council.requestCts(rid);
         assertEq(cts.length, 2);
         assertEq(keccak256(abi.encode(cts[0])), keccak256(abi.encode(_field(acc, 1))));
         assertEq(keccak256(abi.encode(cts[1])), keccak256(abi.encode(_field(acc, 3))));
@@ -417,7 +422,7 @@ contract CouncilTest is CouncilTestBase {
 
         (,, bool requested) = council.getBinding(address(cadapter), pid);
         assertFalse(requested, "nothing sent to the manager");
-        (, uint8 fieldCount,,,) = council.getRequest(rid);
+        (, uint8 fieldCount,,) = council.getRequestMeta(rid);
         assertEq(fieldCount, 0, "bound, never submitted");
     }
 
@@ -540,7 +545,7 @@ contract CouncilTest is CouncilTestBase {
         assertEq(dp.dkgFirstIndex, 1, "MockDKG indices are 1-based");
         assertEq(mock.ctCount(eid1, dp.dkgAid), 2);
         bytes32 rid = registry.getProcess(cPid).dkgAid;
-        (, uint8 fieldCount,,,) = council.getRequest(rid);
+        (, uint8 fieldCount,,) = council.getRequestMeta(rid);
         assertEq(fieldCount, 2);
 
         mock.setPlaintext(eid1, dp.dkgAid, 1, 10);
@@ -554,6 +559,229 @@ contract CouncilTest is CouncilTestBase {
         council.setPlaintext(rid, 1, 40);
         registry.finalizeResultsFromDKG(cPid);
         _assertResults(cPid, [uint256(30), 0, 40, 0]);
+    }
+
+    // --- decryption gate (Council protocol §8.7) ---------------------------------------
+
+    uint64 internal constant SIX_MONTHS = 182 days;
+
+    /// @dev A COUNCIL process with an all-identity accumulator, requested at its grace end.
+    function _requestZeroResults() internal returns (bytes31 pid) {
+        pid = _councilProcess();
+        uint256[64] memory acc = _identityAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+        registry.requestResultsDecryption(pid, acc, siblings);
+    }
+
+    /// @dev Requested, ENDED, no results.
+    function _assertWaiting(bytes31 pid) internal view {
+        DAVINCITypes.Process memory p = registry.getProcess(pid);
+        assertEq(uint8(p.status), uint8(DAVINCITypes.ProcessStatus.ENDED));
+        assertTrue(p.dkgResultsRequested);
+        assertEq(p.result.length, 0);
+    }
+
+    function test_Gate_AdapterReadsTheManager() public {
+        assertTrue(cadapter.isDecryptionOpen(CID));
+        uint64 openAt = uint64(block.timestamp + 1 days);
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Scheduled, openAt, 0);
+        assertFalse(cadapter.isDecryptionOpen(CID));
+        vm.warp(openAt - 1);
+        assertFalse(cadapter.isDecryptionOpen(CID));
+        vm.warp(openAt);
+        assertTrue(cadapter.isDecryptionOpen(CID));
+        vm.expectRevert(ICouncilManagerErrors.UnknownCeremony.selector);
+        cadapter.isDecryptionOpen(bytes12(uint96(9)));
+    }
+
+    /// @dev An all-zero tally ends six months before a scheduled opening: the request records
+    ///      ENDED and nothing else, nobody can publish or cancel meanwhile, and anyone publishes
+    ///      the zero vector from the opening on.
+    function test_Gate_ZeroResultsWaitForScheduledOpening() public {
+        uint64 openAt = uint64(block.timestamp + SIX_MONTHS);
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Scheduled, openAt, 0);
+        bytes31 pid = _councilProcess();
+        bytes32 rid = registry.getProcess(pid).dkgAid;
+        uint256[64] memory acc = _identityAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+
+        vm.recordLogs();
+        registry.requestResultsDecryption(pid, acc, siblings);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        assertEq(logs.length, 2, "no ProcessResultsSet");
+        assertEq(logs[0].topics[0], IProcessRegistry.ProcessStatusChanged.selector);
+        assertEq(
+            keccak256(logs[0].data),
+            keccak256(abi.encode(DAVINCITypes.ProcessStatus.READY, DAVINCITypes.ProcessStatus.ENDED))
+        );
+        assertEq(logs[1].topics[0], IProcessRegistry.ResultsDecryptionRequested.selector);
+        assertEq(keccak256(logs[1].data), keccak256(abi.encode(CID, rid, uint16(0), uint8(0))));
+        _assertWaiting(pid);
+        DAVINCITypes.Process memory p = registry.getProcess(pid);
+        assertEq(p.dkgCount, 0);
+        assertEq(p.dkgZeroSkipped, 0xf);
+        (,, bool requested) = council.getBinding(address(cadapter), pid);
+        assertFalse(requested, "nothing sent to the manager");
+
+        vm.expectRevert(IProcessRegistry.DecryptionNotOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+        vm.expectRevert(IProcessRegistry.ResultsAlreadyRequested.selector);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        vm.prank(ORGANIZER);
+        vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
+        registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.CANCELED);
+        vm.warp(openAt - 1);
+        vm.expectRevert(IProcessRegistry.DecryptionNotOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+        _assertWaiting(pid);
+
+        vm.warp(openAt);
+        vm.expectEmit(true, false, false, true, address(registry));
+        emit IProcessRegistry.ProcessStatusChanged(
+            pid, DAVINCITypes.ProcessStatus.ENDED, DAVINCITypes.ProcessStatus.RESULTS
+        );
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit IProcessRegistry.ProcessResultsSet(pid, STRANGER, new uint256[](4));
+        vm.prank(STRANGER);
+        registry.finalizeResultsFromDKG(pid);
+        _assertResults(pid, [uint256(0), 0, 0, 0]);
+        vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
+        registry.finalizeResultsFromDKG(pid);
+    }
+
+    /// @dev Manual opening without a fallback: the zero results wait for the organizer, for
+    ///      years if need be.
+    function test_Gate_ZeroResultsWaitForManualOpening() public {
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Manual, 0, 0);
+        bytes31 pid = _requestZeroResults();
+        _assertWaiting(pid);
+        vm.warp(block.timestamp + 10 * 365 days);
+        vm.expectRevert(IProcessRegistry.DecryptionNotOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+
+        council.openDecryption(CID);
+        registry.finalizeResultsFromDKG(pid);
+        _assertResults(pid, [uint256(0), 0, 0, 0]);
+    }
+
+    /// @dev Manual opening with a fallback date and an absent organizer: the date alone opens
+    ///      the gate, with no transaction on the manager.
+    function test_Gate_ZeroResultsOpenAtTheManualFallback() public {
+        uint64 fallbackAt = uint64(block.timestamp + SIX_MONTHS);
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Manual, 0, fallbackAt);
+        bytes31 pid = _requestZeroResults();
+        vm.warp(fallbackAt - 1);
+        vm.expectRevert(IProcessRegistry.DecryptionNotOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+        _assertWaiting(pid);
+        vm.warp(fallbackAt);
+        registry.finalizeResultsFromDKG(pid);
+        _assertResults(pid, [uint256(0), 0, 0, 0]);
+    }
+
+    /// @dev A request made after the opening takes the fast path, as before.
+    function test_Gate_ZeroResultsFinalizeAtRequestOnceOpen() public {
+        uint64 openAt = uint64(block.timestamp + 1);
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Scheduled, openAt, 0);
+        assertFalse(cadapter.isDecryptionOpen(CID));
+        bytes31 pid = _councilProcess();
+        uint256[64] memory acc = _identityAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+        assertTrue(cadapter.isDecryptionOpen(CID));
+        registry.requestResultsDecryption(pid, acc, siblings);
+        _assertResults(pid, [uint256(0), 0, 0, 0]);
+    }
+
+    /// @dev Nonzero results: the request is admitted while the gate is closed, no combine
+    ///      lands and the registry refuses to finalize until the opening.
+    function test_Gate_NonzeroResultsWaitForOpening() public {
+        uint64 openAt = uint64(block.timestamp + SIX_MONTHS);
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Scheduled, openAt, 0);
+        bytes31 pid = _councilProcess();
+        bytes32 rid = registry.getProcess(pid).dkgAid;
+        uint256[64] memory acc = _settledAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        (, uint8 fieldCount,,) = council.getRequestMeta(rid);
+        assertEq(fieldCount, 2, "admitted while closed");
+        _assertWaiting(pid);
+
+        vm.expectRevert(ICouncilManagerErrors.DecryptionNotOpen.selector);
+        council.setPlaintext(rid, 0, 77);
+        vm.expectRevert(IProcessRegistry.DecryptionNotOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+
+        vm.warp(openAt);
+        vm.expectRevert(IProcessRegistry.ResultsNotReady.selector);
+        registry.finalizeResultsFromDKG(pid);
+        council.setPlaintext(rid, 0, 77);
+        council.setPlaintext(rid, 1, 99);
+        registry.finalizeResultsFromDKG(pid);
+        _assertResults(pid, [uint256(77), 0, 99, 0]);
+    }
+
+    /// @dev The registry checks the gate itself on the nonzero path too: complete plaintexts
+    ///      under a gate the manager reports closed (which the real manager cannot produce)
+    ///      are not published.
+    function test_Gate_RegistryChecksTheNonzeroPathItself() public {
+        bytes31 pid = _councilProcess();
+        bytes32 rid = registry.getProcess(pid).dkgAid;
+        uint256[64] memory acc = _settledAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        council.setPlaintext(rid, 0, 1);
+        council.setPlaintext(rid, 1, 2);
+        (bool ready,) = cadapter.plaintexts(CID, rid, 0, 2);
+        assertTrue(ready);
+
+        vm.mockCall(address(council), abi.encodeCall(ICouncilManager.isDecryptionOpen, (CID)), abi.encode(false));
+        vm.expectRevert(IProcessRegistry.DecryptionNotOpen.selector);
+        registry.finalizeResultsFromDKG(pid);
+        vm.clearMockedCalls();
+        registry.finalizeResultsFromDKG(pid);
+        _assertResults(pid, [uint256(1), 0, 2, 0]);
+    }
+
+    /// @dev The gate is COUNCIL-only: with the ceremony closed, a DKG-mode all-zero tally
+    ///      still finalizes at the request, and the Council side is never asked.
+    function test_Gate_DKGZeroResultsIgnoreIt() public {
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Manual, 0, 0);
+        DAVINCITypes.DKGParams memory auto_;
+        auto_.mode = DAVINCITypes.KeyMode.DKG_AUTOMATIC;
+        bytes31 pid = _newKeyedProcess(ORGANIZER, auto_);
+        uint256[64] memory acc = _identityAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+
+        vm.expectCall(address(cadapter), abi.encodeWithSelector(CouncilAdapter.isDecryptionOpen.selector), 0);
+        vm.expectCall(address(council), abi.encodeWithSelector(ICouncilManager.isDecryptionOpen.selector), 0);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        _assertResults(pid, [uint256(0), 0, 0, 0]);
+    }
+
+    /// @dev Same for a nonzero DKG-mode tally: finalized once combined, gate or not.
+    function test_Gate_DKGNonzeroResultsIgnoreIt() public {
+        council.setDecryptionPolicy(CID, MockCouncilManager.PhaseMode.Manual, 0, 0);
+        DAVINCITypes.DKGParams memory auto_;
+        auto_.mode = DAVINCITypes.KeyMode.DKG_AUTOMATIC;
+        bytes31 pid = _newKeyedProcess(ORGANIZER, auto_);
+        uint256[64] memory acc = _settledAccumulator();
+        bytes32[] memory siblings = _settle(pid, acc);
+        _warpToGraceEnd(pid);
+
+        vm.expectCall(address(cadapter), abi.encodeWithSelector(CouncilAdapter.isDecryptionOpen.selector), 0);
+        vm.expectCall(address(council), abi.encodeWithSelector(ICouncilManager.isDecryptionOpen.selector), 0);
+        registry.requestResultsDecryption(pid, acc, siblings);
+        DAVINCITypes.Process memory dp = registry.getProcess(pid);
+        mock.setPlaintext(eid1, dp.dkgAid, dp.dkgFirstIndex, 10);
+        mock.setPlaintext(eid1, dp.dkgAid, dp.dkgFirstIndex + 1, 20);
+        registry.finalizeResultsFromDKG(pid);
+        _assertResults(pid, [uint256(10), 0, 20, 0]);
     }
 }
 

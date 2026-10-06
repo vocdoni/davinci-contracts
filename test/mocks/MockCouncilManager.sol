@@ -5,13 +5,15 @@ import {ICouncilManager} from "../../src/interfaces/council/ICouncilManager.sol"
 import {ICouncilManagerErrors as E} from "../../src/interfaces/council/ICouncilManagerErrors.sol";
 
 /**
- * @dev The CouncilManager's adapter surface (ICouncilManager) with the checks, revert order
- *      and request-id derivation of vocdoni/davinci-dkg-council `solidity/src/CouncilManager.sol`.
- *      Ceremonies, authorization and plaintexts come from test setters instead of
- *      signed actions, dealings, partials and combines. A ciphertext half is checked canonical,
- *      on the TE curve and not the identity; the prime-subgroup check is left to the real
- *      manager's suite.
- *      Test setters: newCeremony, setPhase, allowAdapter, authorizeCreator, setPlaintext.
+ * @dev The CouncilManager's adapter surface (ICouncilManager, protocol v2) with the checks,
+ *      revert order and request-id derivation of vocdoni/davinci-dkg-council
+ *      `solidity/src/CouncilManager.sol`. Ceremonies, authorization and plaintexts come from
+ *      test setters instead of signed actions, dealings, partials and combines. A ciphertext
+ *      half is checked canonical, on the TE curve and not the identity; the prime-subgroup
+ *      check is left to the real manager's suite. The decryption gate is the §8.7 predicate
+ *      over the ceremony's policy, and setPlaintext (a combine) is refused while it is closed.
+ *      Test setters: newCeremony, setPhase, setDecryptionPolicy, openDecryption,
+ *      allowAdapter, authorizeCreator, setPlaintext.
  */
 contract MockCouncilManager is ICouncilManager {
     uint256 internal constant P = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -28,8 +30,22 @@ contract MockCouncilManager is ICouncilManager {
         Aborted
     }
 
+    /// @dev Values of the manager's `PhaseMode` (protocol §2.3).
+    enum PhaseMode {
+        Manual,
+        Scheduled
+    }
+
+    /// @dev The manager's openDecryption reverts; they never reach the adapter.
+    error WrongMode();
+    error AlreadyOpen();
+
     struct Ceremony {
         Phase phase;
+        PhaseMode decryptionMode;
+        uint64 decryptionOpenAt; // Scheduled only
+        uint64 manualDecryptionFallbackAt; // Manual only, 0 = no fallback
+        uint64 manualOpenedAt; // 0 until openDecryption
         uint256 pkX;
         uint256 pkY;
         bytes32[] requestIds;
@@ -54,10 +70,29 @@ contract MockCouncilManager is ICouncilManager {
 
     // --- test setters ------------------------------------------------------------
 
+    /// @dev A Live ceremony whose decryption is already open: Scheduled, opening now.
     function newCeremony(bytes12 cid, uint256 pkX, uint256 pkY) external {
         Ceremony storage c = ceremonies[cid];
         c.phase = Phase.Live;
         (c.pkX, c.pkY) = (pkX, pkY);
+        (c.decryptionMode, c.decryptionOpenAt) = (PhaseMode.Scheduled, uint64(block.timestamp));
+    }
+
+    /// @dev Replaces the decryption policy (the real one is fixed at createCeremony) and
+    ///      clears a manual opening.
+    function setDecryptionPolicy(bytes12 cid, PhaseMode mode, uint64 openAt, uint64 fallbackAt) external {
+        Ceremony storage c = ceremonies[cid];
+        (c.decryptionMode, c.decryptionOpenAt, c.manualDecryptionFallbackAt, c.manualOpenedAt) =
+        (mode, openAt, fallbackAt, 0);
+    }
+
+    /// @dev The organizer's openDecryption, without the signed action.
+    function openDecryption(bytes12 cid) external {
+        Ceremony storage c = _existing(cid);
+        if (c.phase != Phase.Live) revert E.WrongPhase();
+        if (c.decryptionMode != PhaseMode.Manual) revert WrongMode();
+        if (isDecryptionOpen(cid)) revert AlreadyOpen();
+        c.manualOpenedAt = uint64(block.timestamp);
     }
 
     function setPhase(bytes12 cid, Phase phase) external {
@@ -72,10 +107,11 @@ contract MockCouncilManager is ICouncilManager {
         ceremonies[cid].creators[creator] = true;
     }
 
-    /// @dev Marks `field` combined with `value`, as a combine would.
+    /// @dev Marks `field` combined with `value`, as a combine would: only once the gate is open.
     function setPlaintext(bytes32 requestId, uint8 field, uint64 value) external {
         Request storage r = requests[requestId];
         require(field < r.fieldCount, "field");
+        if (!isDecryptionOpen(r.cid)) revert E.DecryptionNotOpen();
         r.plaintexts[field] = value;
         r.completedBitmap |= uint16(1 << field);
     }
@@ -140,18 +176,13 @@ contract MockCouncilManager is ICouncilManager {
         ready = count != 0 && r.completedBitmap == (1 << count) - 1;
     }
 
-    function getRequest(bytes32 requestId)
+    function getRequestMeta(bytes32 requestId)
         external
         view
-        returns (bytes12 cid, uint8 fieldCount, uint16 completedBitmap, uint16 partialBitmap, uint256[4][] memory cts)
+        returns (bytes12 cid, uint8 fieldCount, uint16 completedBitmap, uint16 partialBitmap)
     {
         Request storage r = _bound(requestId);
-        fieldCount = r.fieldCount;
-        cts = new uint256[4][](fieldCount);
-        for (uint256 k; k < fieldCount; ++k) {
-            cts[k] = r.cts[k];
-        }
-        return (r.cid, fieldCount, r.completedBitmap, 0, cts);
+        return (r.cid, r.fieldCount, r.completedBitmap, 0);
     }
 
     function getBinding(address adapter, bytes31 processId)
@@ -171,10 +202,30 @@ contract MockCouncilManager is ICouncilManager {
         return (c.pkX, c.pkY);
     }
 
+    /// @dev Protocol §8.7.
+    function isDecryptionOpen(bytes12 cid) public view returns (bool) {
+        Ceremony storage c = _existing(cid);
+        if (c.phase != Phase.Live) return false;
+        if (c.decryptionMode == PhaseMode.Scheduled) return block.timestamp >= c.decryptionOpenAt;
+        return
+            c.manualOpenedAt != 0
+                || (c.manualDecryptionFallbackAt != 0 && block.timestamp >= c.manualDecryptionFallbackAt);
+    }
+
     // --- extras the real manager also has --------------------------------------------
 
     function getRequestIds(bytes12 cid) external view returns (bytes32[] memory) {
         return _existing(cid).requestIds;
+    }
+
+    /// @dev The submitted ciphertexts in full (the real manager stores them compressed and
+    ///      serves getRequestCompressed).
+    function requestCts(bytes32 requestId) external view returns (uint256[4][] memory cts) {
+        Request storage r = _bound(requestId);
+        cts = new uint256[4][](r.fieldCount);
+        for (uint256 k; k < cts.length; ++k) {
+            cts[k] = r.cts[k];
+        }
     }
 
     /// @dev The creator of a request (the real manager's getRequestOrigin, third value).

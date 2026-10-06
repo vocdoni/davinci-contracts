@@ -117,7 +117,8 @@ For `COUNCIL` the active ciphertexts go to the Council manager as one request
 each half is canonical, in the prime subgroup and not the identity.
 
 If every declared field is identity nothing is submitted and the results are finalized to
-zero at once.
+zero at once, except for a `COUNCIL` process whose ceremony has not opened decryption yet
+(below).
 
 `finalizeResultsFromDKG` reads the combined plaintexts once the committee has decrypted every
 submitted ciphertext, stores `numFields` results in field order (0 for skipped fields), moves
@@ -126,6 +127,27 @@ reverts with `ResultsNotReady` (`GraceOpen` while the grace window is open).
 
 For `COUNCIL`, finalization reads the whole request at once and is ready only when every
 field is combined. `revealProcessKey` reverts with `InvalidKeyMode`: there is no organizer key.
+
+### The Council decryption gate
+
+A Council ceremony fixes at creation when decryption may open: on a scheduled date, or when
+its organizer opens it, optionally with a fallback date. The manager refuses partial
+decryptions and combines before that, and the registry publishes no result of a `COUNCIL`
+process before it either, read through `CouncilAdapter.isDecryptionOpen(ceremonyId)`:
+
+- `requestResultsDecryption` is accepted while the gate is closed. Active fields are submitted
+  as usual (the manager admits requests before the opening). An all-identity tally is not
+  finalized: the process stays `ENDED` with `dkgResultsRequested` set and `dkgCount` 0, and
+  only `ProcessStatusChanged` (to `ENDED`) and `ResultsDecryptionRequested` are emitted.
+- `finalizeResultsFromDKG` reverts with `DecryptionNotOpen` (the manager's selector) until the
+  gate opens, on the all-zero path and the nonzero path alike. Once open it behaves as for the
+  other modes: anyone can call it, and the zero vector, or the combined plaintexts once ready,
+  are published.
+
+The opening can be months after the vote ends, and a scheduled date or fallback opens the gate
+without any transaction, so a node or client that finalizes keeps retrying until it succeeds.
+Like the manager's gate this is policy, not a time lock: `t` colluding committee members can
+always decrypt off chain earlier. The other key modes never consult it.
 
 `revealProcessKey` forwards the organizer secret of a `DKG_LOCKED` process to
 `DKGAppManager.revealOrganizerSecret`, which checks `sk·G == PK_org` and accepts it once. The

@@ -13,6 +13,8 @@ import {DAVINCITypes} from "./libraries/DAVINCITypes.sol";
  *         reads the combined plaintexts back. Created by the ProcessRegistry constructor, so
  *         `registry` is fixed to its creator. A ceremony's organizer must allow this adapter
  *         and authorize the process creator on the manager before a process can bind.
+ *         Results wait for the ceremony's decryption gate, which the registry reads through
+ *         isDecryptionOpen.
  * @dev Council stores and returns circomlib (TE) points, the registry's form, so unlike
  *      DavinciDKGAdapter nothing is converted. The registry stores the request id as the
  *      process's dkgAid; the manager keys requests by the process id, which this adapter
@@ -108,6 +110,13 @@ contract CouncilAdapter is IDkgResultsAdapter {
         if (first != 0 || count != b.fieldCount) revert InvalidFieldRange();
         (ready, values) = manager.getPlaintexts(requestId);
         if (ready && values.length != count) revert RequestMismatch();
+    }
+
+    /// @notice Whether ceremony `cid` has opened decryption (the manager's gate, Council
+    ///         protocol §8.7). The registry asks before it publishes any result of a COUNCIL
+    ///         process, the all-zero vector included.
+    function isDecryptionOpen(bytes12 cid) external view returns (bool) {
+        return manager.isDecryptionOpen(cid);
     }
 
     /// @notice Council processes have no organizer key; always reverts.

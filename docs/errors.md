@@ -54,6 +54,7 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `InvalidAccumulator` | `requestResultsDecryption` | a coordinate not below the field, or a field with only one identity half |
 | `InvalidInclusionProof` | `requestResultsDecryption` | accumulator not included under `latestStateRoot` |
 | `ResultsNotReady` | `finalizeResultsFromDKG` | not requested yet, or a combine is still missing |
+| `DecryptionNotOpen` | `finalizeResultsFromDKG` | `COUNCIL` process whose ceremony has not opened decryption yet, all-zero tallies included; retry later (same selector as the Council manager's) |
 | `NoLiveEpoch` (adapter) | `newProcess` | `DKG_AUTOMATIC` found no Live epoch with a free pool key |
 | `NonContiguousIndex` (adapter) | `requestResultsDecryption` | the DKG assigned non-consecutive ciphertext indices |
 | `NotRegistry` (adapter) | adapter `register`, `submit`, `reveal` | caller is not the registry that created the adapter |

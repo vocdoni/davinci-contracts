@@ -651,8 +651,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         emit ResultsDecryptionRequested(processId, p.dkgEpochId, p.dkgAid, firstIndex, uint8(n));
 
-        // Nothing to decrypt: every field is zero, finalize right away.
-        if (n == 0) _finalizeDKGResults(processId, p);
+        // Nothing to decrypt: every field is zero, finalize right away. A COUNCIL process
+        // whose ceremony has not opened decryption yet stays ENDED instead: its all-zero
+        // results wait for the gate like any other, and finalizeResultsFromDKG publishes
+        // them once it opens.
+        if (n == 0 && _decryptionOpen(p)) _finalizeDKGResults(processId, p);
     }
 
     /// @inheritdoc IProcessRegistry
@@ -665,6 +668,10 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         }
         if (block.timestamp < _graceEnd(p)) revert GraceOpen();
         if (!p.dkgResultsRequested) revert ResultsNotReady();
+        // On the nonzero path the manager refuses combines while the gate is closed, so
+        // plaintexts cannot be ready; on the zero path the manager is never asked, and
+        // this check is the only gate.
+        if (!_decryptionOpen(p)) revert DecryptionNotOpen();
         _finalizeDKGResults(processId, p);
     }
 
@@ -703,6 +710,13 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
         emit ProcessStatusChanged(processId, oldStatus, DAVINCITypes.ProcessStatus.RESULTS);
         emit ProcessResultsSet(processId, msg.sender, result);
+    }
+
+    /// @dev Whether the results of a non-SEQUENCER process may be published: the Council
+    ///      ceremony's decryption gate for COUNCIL, always true for the DKG modes.
+    function _decryptionOpen(DAVINCITypes.Process storage p) private view returns (bool) {
+        return
+            p.keyMode != DAVINCITypes.KeyMode.COUNCIL || CouncilAdapter(councilAdapter).isDecryptionOpen(p.dkgEpochId);
     }
 
     /// @dev The results adapter of a non-SEQUENCER process: the CouncilAdapter for

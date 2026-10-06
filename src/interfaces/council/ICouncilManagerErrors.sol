@@ -9,7 +9,11 @@ pragma solidity ^0.8.28;
  *         gives clients their names: bindProcess (UnknownCeremony, WrongPhase,
  *         NotAllowedAdapter, NotAuthorizedCreator, AlreadyBound), submitRequest (UnknownCeremony,
  *         UnknownBinding, WrongPhase, AlreadyRequested, BadFieldCount, and the per-point
- *         NonCanonical, InvalidPoint, NotInSubgroup) and getPlaintexts (UnknownRequest).
+ *         NonCanonical, InvalidPoint, NotInSubgroup), getPlaintexts (UnknownRequest) and
+ *         isDecryptionOpen (UnknownCeremony). DecryptionNotOpen is the manager's gate error
+ *         (submitPartial, combine, publishPartialData); the registry reverts with the same
+ *         selector (IProcessRegistry.DecryptionNotOpen) when a COUNCIL process's results are
+ *         finalized before its ceremony opens decryption.
  */
 interface ICouncilManagerErrors {
     error UnknownCeremony();
@@ -24,4 +28,5 @@ interface ICouncilManagerErrors {
     error InvalidPoint();
     error NotInSubgroup();
     error UnknownRequest();
+    error DecryptionNotOpen();
 }

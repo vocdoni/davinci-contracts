@@ -327,6 +327,12 @@ interface IProcessRegistry {
      */
     error ResultsAlreadyRequested();
     /**
+     * @notice Thrown when finalizeResultsFromDKG runs for a COUNCIL process whose ceremony
+     *         has not opened decryption yet (Council protocol §8.7). Selector-identical to
+     *         the Council manager's DecryptionNotOpen (ICouncilManagerErrors).
+     */
+    error DecryptionNotOpen();
+    /**
      * @notice Thrown when a grace value is outside [graceFloor, graceCeil], or when the
      *         constructor's bounds are not 0 < floor <= default <= ceil <= maxTotal with a
      *         non-zero noticeMin.
@@ -551,9 +557,11 @@ interface IProcessRegistry {
      *         to the DKG committee for threshold decryption (COUNCIL: as one request to
      *         the Council manager). Permissionless, at most once per process, and only
      *         once the grace window has closed (getProcessGraceEnd).
-     *         With no active field (all identity) the results are finalized to zero
-     *         immediately; otherwise the process is moved to ENDED, so the tally cannot be
-     *         read off the DKG and then canceled.
+     *         The process is moved to ENDED, so the tally cannot be read off the DKG and
+     *         then canceled. With no active field (all identity) nothing is submitted and
+     *         the results are finalized to zero immediately, except for a COUNCIL process
+     *         whose ceremony has not opened decryption: it stays ENDED, and
+     *         finalizeResultsFromDKG publishes the zero vector once the gate opens.
      * @dev DKG liveness is election liveness: once requested there is no un-request and
      *      no fallback to setProcessResults, so if more than n - t committee members of
      *      the registration epoch are gone the combines never complete and the results
@@ -570,6 +578,9 @@ interface IProcessRegistry {
      * @notice Reads the DKG's combined plaintexts once every submitted ciphertext is
      *         decrypted, stores the results and sets the process to RESULTS.
      *         Permissionless; reverts ResultsNotReady until the combines are complete.
+     *         For a COUNCIL process it reverts DecryptionNotOpen until the ceremony opens
+     *         decryption, on the all-zero path too: callers retry later, possibly months
+     *         later if the ceremony schedules its opening so.
      * @dev A DKG committee that never completes the combines strands the process short
      *      of RESULTS forever (see requestResultsDecryption); that is the trust model.
      * @param processId The ID of the process.
