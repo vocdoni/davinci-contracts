@@ -26,6 +26,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "DecryptionNotOpen",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidPoint",
     type: "error",
   },

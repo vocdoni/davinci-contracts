@@ -55,6 +55,7 @@ export interface CouncilAdapterInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "bindings"
+      | "isDecryptionOpen"
       | "manager"
       | "plaintexts"
       | "register"
@@ -64,6 +65,10 @@ export interface CouncilAdapterInterface extends Interface {
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "bindings", values: [BytesLike]): string;
+  encodeFunctionData(
+    functionFragment: "isDecryptionOpen",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "manager", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "plaintexts",
@@ -88,6 +93,10 @@ export interface CouncilAdapterInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "bindings", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "isDecryptionOpen",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "manager", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "plaintexts", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "register", data: BytesLike): Result;
@@ -150,6 +159,8 @@ export interface CouncilAdapter extends BaseContract {
     ],
     "view"
   >;
+
+  isDecryptionOpen: TypedContractMethod<[cid: BytesLike], [boolean], "view">;
 
   manager: TypedContractMethod<[], [string], "view">;
 
@@ -216,6 +227,9 @@ export interface CouncilAdapter extends BaseContract {
     ],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "isDecryptionOpen"
+  ): TypedContractMethod<[cid: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "manager"
   ): TypedContractMethod<[], [string], "view">;

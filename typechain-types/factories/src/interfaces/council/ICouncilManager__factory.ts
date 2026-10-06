@@ -138,7 +138,7 @@ const _abi = [
         type: "bytes32",
       },
     ],
-    name: "getRequest",
+    name: "getRequestMeta",
     outputs: [
       {
         internalType: "bytes12",
@@ -160,10 +160,24 @@ const _abi = [
         name: "partialBitmap",
         type: "uint16",
       },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
       {
-        internalType: "uint256[4][]",
-        name: "cts",
-        type: "uint256[4][]",
+        internalType: "bytes12",
+        name: "cid",
+        type: "bytes12",
+      },
+    ],
+    name: "isDecryptionOpen",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
       },
     ],
     stateMutability: "view",

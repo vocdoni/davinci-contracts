@@ -28,7 +28,8 @@ export interface ICouncilManagerInterface extends Interface {
       | "getBinding"
       | "getPlaintexts"
       | "getPublicKey"
-      | "getRequest"
+      | "getRequestMeta"
+      | "isDecryptionOpen"
       | "submitRequest"
   ): FunctionFragment;
 
@@ -49,7 +50,11 @@ export interface ICouncilManagerInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "getRequest",
+    functionFragment: "getRequestMeta",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isDecryptionOpen",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -74,7 +79,14 @@ export interface ICouncilManagerInterface extends Interface {
     functionFragment: "getPublicKey",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "getRequest", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRequestMeta",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isDecryptionOpen",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "submitRequest",
     data: BytesLike
@@ -156,19 +168,20 @@ export interface ICouncilManager extends BaseContract {
     "view"
   >;
 
-  getRequest: TypedContractMethod<
+  getRequestMeta: TypedContractMethod<
     [requestId: BytesLike],
     [
-      [string, bigint, bigint, bigint, [bigint, bigint, bigint, bigint][]] & {
+      [string, bigint, bigint, bigint] & {
         cid: string;
         fieldCount: bigint;
         completedBitmap: bigint;
         partialBitmap: bigint;
-        cts: [bigint, bigint, bigint, bigint][];
       }
     ],
     "view"
   >;
+
+  isDecryptionOpen: TypedContractMethod<[cid: BytesLike], [boolean], "view">;
 
   submitRequest: TypedContractMethod<
     [
@@ -221,20 +234,22 @@ export interface ICouncilManager extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "getRequest"
+    nameOrSignature: "getRequestMeta"
   ): TypedContractMethod<
     [requestId: BytesLike],
     [
-      [string, bigint, bigint, bigint, [bigint, bigint, bigint, bigint][]] & {
+      [string, bigint, bigint, bigint] & {
         cid: string;
         fieldCount: bigint;
         completedBitmap: bigint;
         partialBitmap: bigint;
-        cts: [bigint, bigint, bigint, bigint][];
       }
     ],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "isDecryptionOpen"
+  ): TypedContractMethod<[cid: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "submitRequest"
   ): TypedContractMethod<
