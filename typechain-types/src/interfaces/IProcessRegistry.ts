@@ -199,6 +199,7 @@ export interface IProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "aidFor"
+      | "councilAdapter"
       | "defaultGrace"
       | "dkgAdapter"
       | "finalizeResultsFromDKG"
@@ -241,6 +242,10 @@ export interface IProcessRegistryInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "aidFor", values: [BytesLike]): string;
+  encodeFunctionData(
+    functionFragment: "councilAdapter",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "defaultGrace",
     values?: undefined
@@ -360,6 +365,10 @@ export interface IProcessRegistryInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "aidFor", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "councilAdapter",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "defaultGrace",
     data: BytesLike
@@ -691,6 +700,8 @@ export interface IProcessRegistry extends BaseContract {
 
   aidFor: TypedContractMethod<[processId: BytesLike], [string], "view">;
 
+  councilAdapter: TypedContractMethod<[], [string], "view">;
+
   defaultGrace: TypedContractMethod<[], [bigint], "view">;
 
   dkgAdapter: TypedContractMethod<[], [string], "view">;
@@ -839,6 +850,9 @@ export interface IProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "aidFor"
   ): TypedContractMethod<[processId: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "councilAdapter"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "defaultGrace"
   ): TypedContractMethod<[], [bigint], "view">;

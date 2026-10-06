@@ -51,6 +51,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "CouncilDisabled",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "DKGDisabled",
     type: "error",
   },
@@ -587,6 +592,19 @@ const _abi = [
         internalType: "bytes32",
         name: "",
         type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "councilAdapter",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",

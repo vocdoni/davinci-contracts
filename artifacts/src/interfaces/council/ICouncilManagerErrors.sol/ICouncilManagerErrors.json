@@ -1,0 +1,71 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ICouncilManagerErrors",
+  "sourceName": "src/interfaces/council/ICouncilManagerErrors.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "AlreadyBound",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "AlreadyRequested",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "BadFieldCount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPoint",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NonCanonical",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAllowedAdapter",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAuthorizedCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInSubgroup",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UnknownBinding",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UnknownCeremony",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UnknownRequest",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WrongPhase",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

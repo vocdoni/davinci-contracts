@@ -203,6 +203,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "ballotVKHash"
       | "batchProgramVK"
       | "chainID"
+      | "councilAdapter"
       | "defaultGrace"
       | "dkgAdapter"
       | "finalizeResultsFromDKG"
@@ -265,6 +266,10 @@ export interface ProcessRegistryInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "councilAdapter",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "defaultGrace",
     values?: undefined
@@ -419,6 +424,10 @@ export interface ProcessRegistryInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "councilAdapter",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "defaultGrace",
     data: BytesLike
@@ -780,6 +789,8 @@ export interface ProcessRegistry extends BaseContract {
 
   chainID: TypedContractMethod<[], [bigint], "view">;
 
+  councilAdapter: TypedContractMethod<[], [string], "view">;
+
   defaultGrace: TypedContractMethod<[], [bigint], "view">;
 
   dkgAdapter: TypedContractMethod<[], [string], "view">;
@@ -1010,6 +1021,9 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "councilAdapter"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "defaultGrace"
   ): TypedContractMethod<[], [bigint], "view">;

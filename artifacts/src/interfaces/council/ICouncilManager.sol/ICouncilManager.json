@@ -1,0 +1,200 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ICouncilManager",
+  "sourceName": "src/interfaces/council/ICouncilManager.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes12",
+          "name": "cid",
+          "type": "bytes12"
+        },
+        {
+          "internalType": "bytes31",
+          "name": "processId",
+          "type": "bytes31"
+        },
+        {
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        }
+      ],
+      "name": "bindProcess",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "requestId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "pkX",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "pkY",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "adapter",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes31",
+          "name": "processId",
+          "type": "bytes31"
+        }
+      ],
+      "name": "getBinding",
+      "outputs": [
+        {
+          "internalType": "bytes12",
+          "name": "cid",
+          "type": "bytes12"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "requestId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bool",
+          "name": "requested",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "requestId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getPlaintexts",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "ready",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes12",
+          "name": "cid",
+          "type": "bytes12"
+        }
+      ],
+      "name": "getPublicKey",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "x",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "y",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "requestId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getRequest",
+      "outputs": [
+        {
+          "internalType": "bytes12",
+          "name": "cid",
+          "type": "bytes12"
+        },
+        {
+          "internalType": "uint8",
+          "name": "fieldCount",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint16",
+          "name": "completedBitmap",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "partialBitmap",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint256[4][]",
+          "name": "cts",
+          "type": "uint256[4][]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes12",
+          "name": "cid",
+          "type": "bytes12"
+        },
+        {
+          "internalType": "bytes31",
+          "name": "processId",
+          "type": "bytes31"
+        },
+        {
+          "internalType": "uint256[4][]",
+          "name": "cts",
+          "type": "uint256[4][]"
+        }
+      ],
+      "name": "submitRequest",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "requestId",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

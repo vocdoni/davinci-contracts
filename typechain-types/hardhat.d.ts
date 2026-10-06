@@ -18,9 +18,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ReentrancyGuard__factory>;
     getContractFactory(
+      name: "CouncilAdapter",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CouncilAdapter__factory>;
+    getContractFactory(
       name: "DavinciDKGAdapter",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DavinciDKGAdapter__factory>;
+    getContractFactory(
+      name: "ICouncilManager",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICouncilManager__factory>;
+    getContractFactory(
+      name: "ICouncilManagerErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICouncilManagerErrors__factory>;
     getContractFactory(
       name: "IDKGAppManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -33,6 +45,10 @@ declare module "hardhat/types/runtime" {
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICensusValidator__factory>;
+    getContractFactory(
+      name: "IDkgResultsAdapter",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IDkgResultsAdapter__factory>;
     getContractFactory(
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -68,10 +84,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ReentrancyGuard>;
     getContractAt(
+      name: "CouncilAdapter",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CouncilAdapter>;
+    getContractAt(
       name: "DavinciDKGAdapter",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.DavinciDKGAdapter>;
+    getContractAt(
+      name: "ICouncilManager",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICouncilManager>;
+    getContractAt(
+      name: "ICouncilManagerErrors",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICouncilManagerErrors>;
     getContractAt(
       name: "IDKGAppManager",
       address: string | ethers.Addressable,
@@ -87,6 +118,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ICensusValidator>;
+    getContractAt(
+      name: "IDkgResultsAdapter",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IDkgResultsAdapter>;
     getContractAt(
       name: "IProcessRegistry",
       address: string | ethers.Addressable,
@@ -128,9 +164,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
     deployContract(
+      name: "CouncilAdapter",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CouncilAdapter>;
+    deployContract(
       name: "DavinciDKGAdapter",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DavinciDKGAdapter>;
+    deployContract(
+      name: "ICouncilManager",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICouncilManager>;
+    deployContract(
+      name: "ICouncilManagerErrors",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICouncilManagerErrors>;
     deployContract(
       name: "IDKGAppManager",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -143,6 +191,10 @@ declare module "hardhat/types/runtime" {
       name: "ICensusValidator",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ICensusValidator>;
+    deployContract(
+      name: "IDkgResultsAdapter",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDkgResultsAdapter>;
     deployContract(
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -178,10 +230,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
     deployContract(
+      name: "CouncilAdapter",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CouncilAdapter>;
+    deployContract(
       name: "DavinciDKGAdapter",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DavinciDKGAdapter>;
+    deployContract(
+      name: "ICouncilManager",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICouncilManager>;
+    deployContract(
+      name: "ICouncilManagerErrors",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICouncilManagerErrors>;
     deployContract(
       name: "IDKGAppManager",
       args: any[],
@@ -197,6 +264,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ICensusValidator>;
+    deployContract(
+      name: "IDkgResultsAdapter",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IDkgResultsAdapter>;
     deployContract(
       name: "IProcessRegistry",
       args: any[],

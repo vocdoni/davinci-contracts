@@ -45,6 +45,11 @@
     },
     {
       "inputs": [],
+      "name": "CouncilDisabled",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "DKGDisabled",
       "type": "error"
     },
@@ -581,6 +586,19 @@
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "councilAdapter",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
