@@ -198,7 +198,7 @@ anvil --fork-url https://rpc.gnosischain.com --port 8546
 ./deploy_all.sh
 ```
 
-### Council test registry on Gnosis
+### Council test registry on Gnosis (retired)
 
 A TEST registry for the Council round trip, deployed 2026-10-07 from this branch at `f4abc5d`
 (block 48,627,101, tx `0xc3c4b4e6ff079457888f867f54404840c5ea71ed21009dcc982e1a3ef2013a04`),
@@ -211,6 +211,9 @@ settings, so released sequencers and provers accept it:
 | `CouncilAdapter` | `0x4817493b792db101dcc75306754242ceFd928E40` (Council manager `0x2f5b110864cbad4017fe8ac59111812278f5f71f`, on a development trusted setup; the production beta uses it too) |
 | `DavinciDKGAdapter` | `0x9d356d42eC5a04ABeaDA1AE31D83Eb431f120958` (davinci-dkg `DKGManager` `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B`) |
 | `ZiskVerifier` | `0x150547716bD6f15D872508b66b2ae7ce17677C9C` (reused) |
+
+**Retired 2026-10-07.** Superseded by the production beta registry R2
+(`0x20b96e465CA7C3536B9C733571ec1eCf42b2eA21`). No sequencer follows this registry.
 
 The three new contracts are source-verified on Gnosisscan and Blockscout, and
 `script/verify_deployment.py` passes against a build of `f4abc5d`. Its broadcast record is not

@@ -4,10 +4,10 @@ Solidity contracts of the [DAVINCI](https://davinci.vote) voting protocol. Organ
 voting processes in the `ProcessRegistry`, and sequencers settle each batch of votes and the
 final tally on it with zero-knowledge proofs.
 
-[![test](https://github.com/vocdoni/davinci-contracts/actions/workflows/test.yml/badge.svg?branch=zkvm)](https://github.com/vocdoni/davinci-contracts/actions/workflows/test.yml)
+[![test](https://github.com/vocdoni/davinci-contracts/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/vocdoni/davinci-contracts/actions/workflows/test.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-This code is a work in progress and not meant for production use yet. The protocol is
+In production beta on Gnosis Chain on development trusted setups. The protocol is
 described in the [whitepaper](https://whitepaper.vocdoni.io).
 
 ## Overview
@@ -25,16 +25,16 @@ process.
 Voting ends at `startTime + duration`. Batches still in flight keep settling during a short
 grace window, and once it closes the tally is published over the final state root. With a
 sequencer key it comes with a second PLONK from the zkVM results guest (`setProcessResults`).
-With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committee, the committee
-threshold-decrypts it (`requestResultsDecryption`, then `finalizeResultsFromDKG`).
+With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committee (`DKG_AUTOMATIC` or `DKG_LOCKED` key mode), the committee threshold-decrypts it (`requestResultsDecryption`, then `finalizeResultsFromDKG`). With a `COUNCIL` key mode, an invite-only Council ceremony from [davinci-dkg-council](https://github.com/vocdoni/davinci-dkg-council) holds the key; the ceremony's organizer opens decryption, unlocking every process bound to it at once.
 
 | Contract | Role |
 |---|---|
 | [`ProcessRegistry`](src/ProcessRegistry.sol) | Processes and their lifecycle, transition settlement, results. |
 | [`ZiskVerifier`](src/verifiers/ZiskVerifier.sol) | ZisK PLONK verifier, vendored from the ZisK snark setup. |
-| [`DavinciDKGAdapter`](src/DavinciDKGAdapter.sol) | The registry's link to davinci-dkg, created by the registry when a DKG manager is configured. |
+| [`DavinciDKGAdapter`](src/DavinciDKGAdapter.sol) | The registry's link to davinci-dkg (`DKG_AUTOMATIC` / `DKG_LOCKED` key modes), created by the registry when a DKG manager is configured. |
+| [`CouncilAdapter`](src/CouncilAdapter.sol) | The registry's link to davinci-dkg-council (`COUNCIL` key mode), created by the registry when a Council manager is configured. |
 | [`src/libraries/`](src/libraries) | Genesis root, SHA-256 sparse Merkle tree, public values, blobs, process ids, BabyJubJub forms. |
-| [`src/interfaces/`](src/interfaces) | `IProcessRegistry`, `IZiskVerifier`, `ICensusValidator` (on-chain censuses) and the davinci-dkg subset the adapter calls. |
+| [`src/interfaces/`](src/interfaces) | `IProcessRegistry`, `IZiskVerifier`, `ICensusValidator` (on-chain censuses), `src/interfaces/dkg/` (the davinci-dkg subset the DKG adapter calls) and `src/interfaces/council/` (the Council manager subset the Council adapter calls). |
 
 ## Deployments
 
