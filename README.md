@@ -38,7 +38,31 @@ threshold-decrypts it (`requestResultsDecryption`, then `finalizeResultsFromDKG`
 
 ## Deployments
 
-Gnosis Chain (chain id 100), built from commit `9b03f18`:
+### Gnosis Chain production beta
+
+**PENDING: not deployed yet.** Every `TBD` below is a placeholder until the deployment lands;
+`deployments/100.json` will hold the verified record.
+
+Gnosis Chain (chain id 100), built from commit `TBD`, start block `TBD`:
+
+| Contract | Address |
+|---|---|
+| `ProcessRegistry` | `TBD` |
+| `DavinciDKGAdapter` | `TBD` |
+| davinci-dkg `DKGManager` | `TBD` (the redeploy that binds application ids to their registrant, [vocdoni/davinci-dkg#14](https://github.com/vocdoni/davinci-dkg/issues/14)) |
+| `CouncilAdapter` | `TBD` |
+| Council manager | `0x2f5b110864cbad4017fe8ac59111812278f5f71f` (development trusted setup, `circuits-v1`) |
+| `ZiskVerifier` | `0x150547716bD6f15D872508b66b2ae7ce17677C9C` (reused from the registry below) |
+
+It reuses the previous registry's verifier and copies its pins and grace settings
+(`PINS_FROM_REGISTRY`), so the pins table below covers both. The Council manager runs on
+a development trusted setup: whoever holds that setup's toxic waste can forge dealings, so
+treat COUNCIL processes as a beta.
+
+### Gnosis Chain, previous registry
+
+Gnosis Chain (chain id 100), built from commit `9b03f18`. It stays on chain, but is retired once
+the production beta registry is live: sequencers and SDKs move to the new one.
 
 | Contract | Address |
 |---|---|
@@ -47,7 +71,7 @@ Gnosis Chain (chain id 100), built from commit `9b03f18`:
 | `DavinciDKGAdapter` | `0xE9559c78E7ff8c19937A0657a092A221E90CCBC3` |
 | davinci-dkg `DKGManager` | `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B` |
 
-The registry is pinned to:
+Both registries are pinned to:
 
 | Immutable | Value |
 |---|---|
@@ -174,11 +198,16 @@ types of this checkout into `dist/`.
 | `BATCH_PROGRAM_VK`, `RESULTS_PROGRAM_VK` | program vks of the davinci-zkvm vote-batch and results guests |
 | `ROOT_C_VADCOP_FINAL` | root of the ZisK setup; must match the vendored verifier |
 | `BALLOT_VK_HASH` | hash of the ballot proof verification key |
+| `ZISK_VERIFIER` | optional deployed `ZiskVerifier` to reuse |
+| `PINS_FROM_REGISTRY` | optional live registry to inherit `ZISK_VERIFIER`, the four pins and the grace settings from |
 | `DKG_MANAGER` | optional davinci-dkg manager; enables the DKG key modes |
+| `COUNCIL_MANAGER` | optional Council manager; enables the `COUNCIL` key mode |
 | `GRACE_DEFAULT`, `GRACE_FLOOR`, `GRACE_CEIL`, `GRACE_MAX_TOTAL`, `NOTICE_MIN` | optional grace window and notice settings, in seconds (180, 150, 600, 1800, 60) |
 
-Sequencers refuse a registry pinned to other values than the davinci-zkvm release they run; the
-current ones are in the [deployments table](#deployments).
+It then checks the deployment against the build with `script/verify_deployment.py` and writes
+the verified record to `deployments/<chain id>.json`. Sequencers refuse a registry pinned to
+other values than the davinci-zkvm release they run; the current ones are in the
+[deployments table](#deployments).
 [docs/deployment.md](docs/deployment.md) covers source verification, several chains, Docker and
 DKG support.
 

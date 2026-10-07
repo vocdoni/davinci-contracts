@@ -8,6 +8,10 @@
   davinci-dkg's rule that an application id's low 160 bits are its registrant, nobody can
   register a process's id ahead of the adapter and block its creation (vocdoni/davinci-dkg#14).
   Clients that read the id from `aidFor` need no change; ones that computed it must follow.
+- Deployment: `DeployAll` takes `PINS_FROM_REGISTRY` to reuse a live registry's verifier and copy
+  its pins and grace settings, and rejects managers without code. `deploy_all.sh` checks every
+  deployment with `verify_deployment.py` (now also the Council adapter, both managers and the
+  application id namespace) and writes the verified record to `deployments/<chain id>.json`.
 - `KeyMode.COUNCIL` (3): the process key is the key of a Live Council ceremony (invite-only
   threshold DKG), named by `DKGParams.epochId`; the organizer and PoP fields must be zero. The
   constructor takes `address _councilManager` after `_dkgManager` (zero disables the mode,

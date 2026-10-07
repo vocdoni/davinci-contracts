@@ -1,8 +1,8 @@
 # Deploying
 
-[`script/DeployAll.s.sol`](../script/DeployAll.s.sol) deploys `ZiskVerifier` and then
-`ProcessRegistry`, which creates the `DavinciDKGAdapter` itself when a DKG manager is
-configured. The target chain needs EIP-4844: the `BLOBHASH` opcode and the point-evaluation
+[`script/DeployAll.s.sol`](../script/DeployAll.s.sol) deploys `ZiskVerifier` (or reuses a
+deployed one) and then `ProcessRegistry`, which creates the `DavinciDKGAdapter` itself when a
+DKG manager is configured and the `CouncilAdapter` when a Council manager is. The target chain needs EIP-4844: the `BLOBHASH` opcode and the point-evaluation
 precompile at `0x0a`.
 
 ```solidity
@@ -14,6 +14,7 @@ constructor(
     bytes32 rootCVadcopFinal,
     bytes32 ballotVKHash,
     address dkgManager,
+    address councilManager,
     uint32 defaultGrace,
     uint32 graceFloor,
     uint32 graceCeil,
@@ -35,8 +36,9 @@ constructor(
 | `ROOT_C_VADCOP_FINAL` | root of the ZisK vadcop-final setup; the script aborts unless it equals `ZiskVerifier.getRootCVadcopFinal()` |
 | `BALLOT_VK_HASH` | `sha256` of the ballot proof VK wire bytes, genesis leaf `0x07` |
 | `ZISK_VERIFIER` | optional deployed `ZiskVerifier` to reuse instead of deploying one; it must report `ROOT_C_VADCOP_FINAL`, and the script logs its code hash (the sequencers' `ZISK_VERIFIER_CODEHASH` pin) |
-| `DKG_MANAGER` | optional davinci-dkg `DKGManager`; unset or zero disables the DKG modes |
-| `COUNCIL_MANAGER` | optional Council manager; unset or zero disables the `COUNCIL` mode |
+| `PINS_FROM_REGISTRY` | optional live `ProcessRegistry` on the same chain to inherit from: its `ZiskVerifier` is reused and its four pins and five grace settings copied, so none of those variables is needed. Any of them that is also set must equal the inherited value, otherwise the script aborts before broadcasting |
+| `DKG_MANAGER` | optional davinci-dkg `DKGManager`; unset or zero disables the DKG modes. It must have code and an `appManager()`. Use a davinci-dkg deployment that binds application ids to their registrant ([vocdoni/davinci-dkg#14](https://github.com/vocdoni/davinci-dkg/issues/14)): an older one accepts the adapter's ids too, but lets anyone take a process's id first and block its creation |
+| `COUNCIL_MANAGER` | optional Council manager; unset or zero disables the `COUNCIL` mode. It must have code and differ from `DKG_MANAGER` |
 | `GRACE_DEFAULT` | optional, seconds: the grace window of a new process (`defaultGrace`, default 180) |
 | `GRACE_FLOOR` | optional, seconds: the minimum for `setProcessGrace` (`graceFloor`, default 150) |
 | `GRACE_CEIL` | optional, seconds: the maximum for `setProcessGrace` (`graceCeil`, default 600) |
@@ -113,9 +115,15 @@ Single chain, with the variables above in `.env`:
 ./deploy_all.sh
 ```
 
-It runs the script with `--broadcast --slow` and the optimizer settings of `foundry.toml`,
-verifies the sources according to `VERIFY_MODE`, then regenerates `golang-types/addresses.go`
-from the broadcast logs.
+It runs the script with `--broadcast --slow` and the optimizer settings of `foundry.toml` and
+verifies the sources according to `VERIFY_MODE`. It then runs
+[`script/verify_deployment.py`](verification.md) against the new registry, with the pins (or
+`PINS_FROM_REGISTRY`) and both managers as the expected values (unset expects that mode
+disabled), and writes what it verified to `deployments/<chain id>.json`: addresses of the
+registry, verifier, both adapters and their managers, the `ZiskVerifier` code hash, pins, grace
+settings, commit, deployer, block and transaction hashes. A failed check stops the script before
+it regenerates `golang-types/addresses.go` from the broadcast logs and leaves no record. It needs
+`jq` and `python3` besides Foundry.
 
 Several chains: put shared values and `DEPLOY_CHAINS=base,sepolia,...` in `.env`, and
 `CHAIN_ID`, `RPC_URL` and anything chain-specific in `.env.<chain>` (or `.env-<chain>`), then:
@@ -136,6 +144,7 @@ removing it, then regenerate the Go addresses on the host:
 ```bash
 docker compose --profile deploy up deploy
 docker compose --profile deploy cp deploy:/app/broadcast/DeployAll.s.sol/. broadcast/DeployAll.s.sol/
+docker compose --profile deploy cp deploy:/app/deployments/. deployments/
 docker compose --profile deploy rm -f deploy
 helpers/write_contract_addresses.sh
 ```
@@ -154,6 +163,41 @@ constructor creates the `CouncilAdapter` after the DKG adapter, so the DKG adapt
 does not move; the script logs it and `councilAdapter()` returns it. Each ceremony organizer
 then allows that adapter and authorizes the process creators on the manager.
 
+## Gnosis production beta
+
+The production beta registry on Gnosis takes the new davinci-dkg manager (with the
+application id binding of vocdoni/davinci-dkg#14) and the Council manager, and inherits the
+verifier, pins and grace settings of the previous production registry. With this `.env`
+(`DKG_MANAGER` is a placeholder until davinci-dkg is redeployed):
+
+```bash
+CHAIN_ID=100
+RPC_URL=https://rpc.gnosischain.com
+PRIVATE_KEY=...                     # the deployer key, never committed
+ETHERSCAN_API_KEY=...               # Gnosisscan, for source verification
+PINS_FROM_REGISTRY=0x6702e0141B6b72bCF8C1bdff20A82A35C5502E7D
+DKG_MANAGER=TBD                     # the davinci-dkg DKGManager redeployed for #14
+COUNCIL_MANAGER=0x2f5b110864cbad4017fe8ac59111812278f5f71f
+```
+
+```bash
+./deploy_all.sh
+```
+
+The new registry reuses `ZiskVerifier` `0x150547716bD6f15D872508b66b2ae7ce17677C9C`. Commit
+`deployments/100.json`, `broadcast/DeployAll.s.sol/100/run-latest.json` (which replaces the
+previous registry's record) and `golang-types/addresses.go`, and fill in the
+[deployments table](../README.md#deployments). Before broadcasting, a rehearsal on a fork runs
+the same script against an Anvil fork of Gnosis with any funded key and `VERIFY_MODE=false`;
+do it in a scratch checkout, since it rewrites the chain 100 broadcast record:
+
+```bash
+anvil --fork-url https://rpc.gnosischain.com --port 8546
+# .env as above with RPC_URL=http://127.0.0.1:8546, VERIFY_MODE=false, an anvil key and, for
+# DKG_MANAGER, a davinci-dkg suite deployed on the fork (davinci-dkg solidity/script/DeployAll.s.sol)
+./deploy_all.sh
+```
+
 ### Council test registry on Gnosis
 
 A TEST registry for the Council round trip, deployed 2026-10-07 from this branch at `f4abc5d`
@@ -164,7 +208,7 @@ settings, so released sequencers and provers accept it:
 | Contract | Address |
 |---|---|
 | `ProcessRegistry` | `0x847a16CC56E0Ef57FEc28735105941a0299cDC62` |
-| `CouncilAdapter` | `0x4817493b792db101dcc75306754242ceFd928E40` (Council manager `0x2f5b110864cbad4017fe8ac59111812278f5f71f`, a development-setup test deployment) |
+| `CouncilAdapter` | `0x4817493b792db101dcc75306754242ceFd928E40` (Council manager `0x2f5b110864cbad4017fe8ac59111812278f5f71f`, on a development trusted setup; the production beta uses it too) |
 | `DavinciDKGAdapter` | `0x9d356d42eC5a04ABeaDA1AE31D83Eb431f120958` (davinci-dkg `DKGManager` `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B`) |
 | `ZiskVerifier` | `0x150547716bD6f15D872508b66b2ae7ce17677C9C` (reused) |
 
@@ -176,5 +220,7 @@ committed: `broadcast/DeployAll.s.sol/100/run-latest.json` stays the production 
 
 Forge writes the record to `broadcast/DeployAll.s.sol/<chain id>/run-latest.json`, including the
 commit it was built from. The repository tracks that file for every public chain, and
-`golang-types/addresses.go` is generated from it. Check the result with
-[verification.md](verification.md).
+`golang-types/addresses.go` is generated from it; a run that reused a `ZiskVerifier` takes its
+address from the registry's constructor arguments. `deploy_all.sh` also writes the verified
+record `deployments/<chain id>.json`, tracked as well (not for local chain ids). Check the result
+again at any time with [verification.md](verification.md).
