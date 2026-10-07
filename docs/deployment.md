@@ -34,6 +34,7 @@ constructor(
 | `RESULTS_PROGRAM_VK` | program vk of the davinci-zkvm results guest |
 | `ROOT_C_VADCOP_FINAL` | root of the ZisK vadcop-final setup; the script aborts unless it equals `ZiskVerifier.getRootCVadcopFinal()` |
 | `BALLOT_VK_HASH` | `sha256` of the ballot proof VK wire bytes, genesis leaf `0x07` |
+| `ZISK_VERIFIER` | optional deployed `ZiskVerifier` to reuse instead of deploying one; it must report `ROOT_C_VADCOP_FINAL`, and the script logs its code hash (the sequencers' `ZISK_VERIFIER_CODEHASH` pin) |
 | `DKG_MANAGER` | optional davinci-dkg `DKGManager`; unset or zero disables the DKG modes |
 | `COUNCIL_MANAGER` | optional Council manager; unset or zero disables the `COUNCIL` mode |
 | `GRACE_DEFAULT` | optional, seconds: the grace window of a new process (`defaultGrace`, default 180) |
@@ -152,6 +153,24 @@ Deploy with `COUNCIL_MANAGER` set to a Council manager (vocdoni/davinci-dkg-coun
 constructor creates the `CouncilAdapter` after the DKG adapter, so the DKG adapter's address
 does not move; the script logs it and `councilAdapter()` returns it. Each ceremony organizer
 then allows that adapter and authorizes the process creators on the manager.
+
+### Council test registry on Gnosis
+
+A TEST registry for the Council round trip, deployed 2026-10-07 from this branch at `f4abc5d`
+(block 48,627,101, tx `0xc3c4b4e6ff079457888f867f54404840c5ea71ed21009dcc982e1a3ef2013a04`),
+reusing the production `ZiskVerifier` (`ZISK_VERIFIER`) and the production pins and grace
+settings, so released sequencers and provers accept it:
+
+| Contract | Address |
+|---|---|
+| `ProcessRegistry` | `0x847a16CC56E0Ef57FEc28735105941a0299cDC62` |
+| `CouncilAdapter` | `0x4817493b792db101dcc75306754242ceFd928E40` (Council manager `0x2f5b110864cbad4017fe8ac59111812278f5f71f`, a development-setup test deployment) |
+| `DavinciDKGAdapter` | `0x9d356d42eC5a04ABeaDA1AE31D83Eb431f120958` (davinci-dkg `DKGManager` `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B`) |
+| `ZiskVerifier` | `0x150547716bD6f15D872508b66b2ae7ce17677C9C` (reused) |
+
+The three new contracts are source-verified on Gnosisscan and Blockscout, and
+`script/verify_deployment.py` passes against a build of `f4abc5d`. Its broadcast record is not
+committed: `broadcast/DeployAll.s.sol/100/run-latest.json` stays the production one.
 
 ## After a deployment
 
