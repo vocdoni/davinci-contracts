@@ -1,0 +1,31 @@
+{
+  "chainId": 100,
+  "pinsFrom": "0x6702e0141B6b72bCF8C1bdff20A82A35C5502E7D",
+  "processRegistry": "0x20b96e465ca7c3536b9c733571ec1ecf42b2ea21",
+  "ziskVerifier": "0x150547716bd6f15d872508b66b2ae7ce17677c9c",
+  "ziskVerifierCodeHash": "0x82385a405b7301345d7e246017846ca3228aaea349cb68b116d76e0e77056566",
+  "pins": {
+    "batchProgramVK": "0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10",
+    "resultsProgramVK": "0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794",
+    "rootCVadcopFinal": "0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80",
+    "ballotVKHash": "0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e"
+  },
+  "dkgAdapter": "0xb74270af067bd75e30cc0cc6d24786ebd6816919",
+  "dkgManager": "0xc6fb38c42ed3fb35d363a702218746d5c7da36bf",
+  "dkgAppManager": "0x81bac6b9aae85311741204c22cbaab96f03b567a",
+  "councilAdapter": "0x33e91518521feb5d2a14928563dc6930bc2f0755",
+  "councilManager": "0x2f5b110864cbad4017fe8ac59111812278f5f71f",
+  "grace": {
+    "defaultGrace": 180,
+    "graceFloor": 150,
+    "graceCeil": 600,
+    "graceMaxTotal": 1800,
+    "noticeMin": 60
+  },
+  "commit": "4e4f6c8",
+  "deployer": "0x42fc20654efd78c6887ff0bd1cc50c9ec1dab589",
+  "block": 48633301,
+  "transactions": {
+    "ProcessRegistry": "0x7f600b7243d86da2bdda4a360e2fe2846413b131b1c839d26ffd14d583f23746"
+  }
+}

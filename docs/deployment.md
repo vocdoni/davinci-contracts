@@ -167,8 +167,8 @@ then allows that adapter and authorizes the process creators on the manager.
 
 The production beta registry on Gnosis takes the new davinci-dkg manager (with the
 application id binding of vocdoni/davinci-dkg#14) and the Council manager, and inherits the
-verifier, pins and grace settings of the previous production registry. With this `.env`
-(`DKG_MANAGER` is a placeholder until davinci-dkg is redeployed):
+verifier, pins and grace settings of the previous production registry. It was deployed on
+2026-10-07 with this `.env` (addresses in the [deployments table](../README.md#deployments)):
 
 ```bash
 CHAIN_ID=100
@@ -176,7 +176,7 @@ RPC_URL=https://rpc.gnosischain.com
 PRIVATE_KEY=...                     # the deployer key, never committed
 ETHERSCAN_API_KEY=...               # Gnosisscan, for source verification
 PINS_FROM_REGISTRY=0x6702e0141B6b72bCF8C1bdff20A82A35C5502E7D
-DKG_MANAGER=TBD                     # the davinci-dkg DKGManager redeployed for #14
+DKG_MANAGER=0xC6Fb38c42ed3FB35D363a702218746d5C7Da36BF  # davinci-dkg v0.10.0, with #14
 COUNCIL_MANAGER=0x2f5b110864cbad4017fe8ac59111812278f5f71f
 ```
 

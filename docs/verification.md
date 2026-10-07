@@ -36,20 +36,20 @@ comments included, so build from the exact commit. Forge records it as `commit` 
 `broadcast/DeployAll.s.sol/<chain id>/run-latest.json`; the
 [deployments table](../README.md#deployments) lists it too.
 
-For the Gnosis production beta registry (**TBD**: fill in the addresses and commit once it
-is deployed, from `deployments/100.json`), with `RPC` a Gnosis Chain JSON-RPC endpoint:
+For the Gnosis production beta registry (the values of `deployments/100.json`), with `RPC` a
+Gnosis Chain JSON-RPC endpoint:
 
 ```bash
-git checkout TBD
+git checkout 4e4f6c8
 forge build
 python3 script/verify_deployment.py --rpc "$RPC" --chain-id 100 \
-    --registry TBD \
+    --registry 0x20b96e465CA7C3536B9C733571ec1eCf42b2eA21 \
     --pins-from 0x6702e0141B6b72bCF8C1bdff20A82A35C5502E7D \
     --batch-vk 0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10 \
     --results-vk 0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794 \
     --root-c 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
     --ballot-vk-hash 0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
-    --dkg-manager TBD \
+    --dkg-manager 0xC6Fb38c42ed3FB35D363a702218746d5C7Da36BF \
     --council-manager 0x2f5b110864cbad4017fe8ac59111812278f5f71f
 ```
 

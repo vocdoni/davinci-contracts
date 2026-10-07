@@ -40,17 +40,16 @@ threshold-decrypts it (`requestResultsDecryption`, then `finalizeResultsFromDKG`
 
 ### Gnosis Chain production beta
 
-**PENDING: not deployed yet.** Every `TBD` below is a placeholder until the deployment lands;
-`deployments/100.json` will hold the verified record.
-
-Gnosis Chain (chain id 100), built from commit `TBD`, start block `TBD`:
+Gnosis Chain (chain id 100), deployed 2026-10-07 from commit `4e4f6c8` at block 48,633,301.
+Every contract is source-verified on Gnosisscan, Blockscout and Sourcify, and
+[`deployments/100.json`](deployments/100.json) holds the verified record:
 
 | Contract | Address |
 |---|---|
-| `ProcessRegistry` | `TBD` |
-| `DavinciDKGAdapter` | `TBD` |
-| davinci-dkg `DKGManager` | `TBD` (the redeploy that binds application ids to their registrant, [vocdoni/davinci-dkg#14](https://github.com/vocdoni/davinci-dkg/issues/14)) |
-| `CouncilAdapter` | `TBD` |
+| `ProcessRegistry` | `0x20b96e465CA7C3536B9C733571ec1eCf42b2eA21` |
+| `DavinciDKGAdapter` | `0xB74270Af067Bd75e30cC0cc6D24786EbD6816919` |
+| davinci-dkg `DKGManager` | `0xC6Fb38c42ed3FB35D363a702218746d5C7Da36BF` (the redeploy that binds application ids to their registrant, [vocdoni/davinci-dkg#14](https://github.com/vocdoni/davinci-dkg/issues/14)) |
+| `CouncilAdapter` | `0x33e91518521Feb5D2A14928563dc6930Bc2F0755` |
 | Council manager | `0x2f5b110864cbad4017fe8ac59111812278f5f71f` (development trusted setup, `circuits-v1`) |
 | `ZiskVerifier` | `0x150547716bD6f15D872508b66b2ae7ce17677C9C` (reused from the registry below) |
 
@@ -61,8 +60,8 @@ treat COUNCIL processes as a beta.
 
 ### Gnosis Chain, previous registry
 
-Gnosis Chain (chain id 100), built from commit `9b03f18`. It stays on chain, but is retired once
-the production beta registry is live: sequencers and SDKs move to the new one.
+Gnosis Chain (chain id 100), built from commit `9b03f18`. Retired on 2026-10-07: it stays on
+chain, but sequencers and SDKs use the production beta registry above.
 
 | Contract | Address |
 |---|---|

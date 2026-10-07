@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## 2026-10-07
 
+- Gnosis production beta registry `0x20b96e465CA7C3536B9C733571ec1eCf42b2eA21` (block
+  48,633,301): DKG modes on davinci-dkg `0xC6Fb38c42ed3FB35D363a702218746d5C7Da36BF`, `COUNCIL`
+  on the Council manager `0x2f5b110864cbad4017fe8ac59111812278f5f71f`, verifier, pins and grace
+  settings inherited from the previous registry `0x6702e014…E7D`, now retired.
 - `DavinciDKGAdapter.aidFor` (and so `registry.aidFor` and the stored `dkgAid`) returns
   `salt << 160 | adapter`, with `salt` the top 92 bits of
   `keccak256(abi.encode(chainid, registry, processId))`, instead of that hash mod Q. Paired with
