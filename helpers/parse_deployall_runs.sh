@@ -71,7 +71,18 @@ for run in "${RUN_FILES[@]}"; do
             addr: (.contractAddress | tostring | ascii_downcase)
           } catch empty
         )
-      | reduce .[] as $c ({}; .[$c.key] = $c.addr);
+      | reduce .[] as $c ({}; .[$c.key] = $c.addr)
+      # A run that reused a ZiskVerifier (ZISK_VERIFIER, PINS_FROM_REGISTRY) did not create
+      # one: take it from the ProcessRegistry constructor arguments, the second one in the
+      # ZisK-era constructor (12 or more arguments; older ones took other verifiers).
+      | if has("ziskVerifier") then .
+        else
+          ([$runfile[0].transactions[]?
+            | select(.transactionType=="CREATE" and .contractName=="ProcessRegistry")
+            | select((.arguments // []) | length >= 12)
+            | .arguments[1]][0]) as $v
+          | if $v == null then . else .ziskVerifier = ($v | ascii_downcase) end
+        end;
 
     . as $existing
     | created_map as $new

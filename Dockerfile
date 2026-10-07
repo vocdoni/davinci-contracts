@@ -12,10 +12,10 @@
 ARG FOUNDRY_VERSION=v1.8.3
 FROM ghcr.io/foundry-rs/foundry:${FOUNDRY_VERSION}
 
-# jq for deploy_all.sh.
+# jq and python3 for deploy_all.sh.
 USER root
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y jq && \
+    apt-get install --no-install-recommends -y jq python3 && \
     rm -rf /var/lib/apt/lists/* && \
     install -d -o foundry -g foundry /app
 USER foundry

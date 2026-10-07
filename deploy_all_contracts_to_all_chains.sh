@@ -62,6 +62,8 @@ unset_chain_specific_vars() {
     unset BLOBS_LIB_ADDRESS || true
     unset DKG_MANAGER || true
     unset COUNCIL_MANAGER || true
+    unset ZISK_VERIFIER || true
+    unset PINS_FROM_REGISTRY || true
 }
 
 source_env_file() {

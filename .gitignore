@@ -30,3 +30,6 @@ dist/
 *.tsbuildinfo
 
 bash_utils.sh
+# Deployment records of local chains
+/deployments/31337.json
+/deployments/1337.json
