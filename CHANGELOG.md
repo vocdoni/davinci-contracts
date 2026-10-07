@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- `DavinciDKGAdapter.aidFor` (and so `registry.aidFor` and the stored `dkgAid`) returns
+  `salt << 160 | adapter`, with `salt` the top 92 bits of
+  `keccak256(abi.encode(chainid, registry, processId))`, instead of that hash mod Q. Paired with
+  davinci-dkg's rule that an application id's low 160 bits are its registrant, nobody can
+  register a process's id ahead of the adapter and block its creation (vocdoni/davinci-dkg#14).
+  Clients that read the id from `aidFor` need no change; ones that computed it must follow.
 - `KeyMode.COUNCIL` (3): the process key is the key of a Live Council ceremony (invite-only
   threshold DKG), named by `DKGParams.epochId`; the organizer and PoP fields must be zero. The
   constructor takes `address _councilManager` after `_dkgManager` (zero disables the mode,

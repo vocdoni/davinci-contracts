@@ -44,12 +44,14 @@ contract DavinciDKGAdapter {
         appManager = IDKGAppManager(IDKGManager(dkgManager).appManager());
     }
 
-    /// @notice The DKG application id of a process: keccak(chainid, registry, pid) mod Q,
-    ///         never 0. Deterministic and collision-free across registries.
+    /// @notice The DKG application id of a process, `salt << 160 | address(this)` with
+    ///         salt the top 92 bits of keccak(chainid, registry, pid). The DKG only lets an
+    ///         account register ids whose low 160 bits are its own address, so these ids
+    ///         are this adapter's alone: nobody can take a process's id ahead of it. Never
+    ///         0 and below 2^252 < Q; deterministic and collision-free across registries.
     function aidFor(bytes31 processId) public view returns (bytes32) {
-        uint256 a = uint256(keccak256(abi.encode(block.chainid, registry, processId))) % BjjFormLib.Q;
-        if (a == 0) a = 1;
-        return bytes32(a);
+        uint256 salt = uint256(keccak256(abi.encode(block.chainid, registry, processId))) >> 164;
+        return bytes32((salt << 160) | uint256(uint160(address(this))));
     }
 
     /// @notice The newest Live epoch with a free pool key, scanning backwards at most

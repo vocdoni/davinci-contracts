@@ -8,6 +8,7 @@ import {DAVINCITypes} from "../src/libraries/DAVINCITypes.sol";
 import {BjjFormLib} from "../src/libraries/BjjFormLib.sol";
 import {Sha256SmtLib} from "../src/libraries/Sha256SmtLib.sol";
 import {DavinciDKGAdapter} from "../src/DavinciDKGAdapter.sol";
+import {DKGTypes} from "../src/interfaces/dkg/DKGTypes.sol";
 import {MockDKG, MockBjj} from "./mocks/MockDKG.sol";
 
 /// @dev External wrapper so tests can call the internal library with calldata arrays.
@@ -307,11 +308,38 @@ contract DKGTest is RegistryTestBase {
     function test_AidFor() public view {
         bytes31 pid = bytes31(dkg.readBytes(".process_id"));
         bytes32 aid = registry.aidFor(pid);
-        uint256 expected = uint256(keccak256(abi.encode(block.chainid, address(registry), pid))) % BjjFormLib.Q;
-        if (expected == 0) expected = 1;
-        assertEq(aid, bytes32(expected));
-        assertTrue(uint256(aid) != 0 && uint256(aid) < BjjFormLib.Q);
+        uint256 salt = uint256(keccak256(abi.encode(block.chainid, address(registry), pid))) >> 164;
+        assertEq(aid, bytes32((salt << 160) | uint256(uint160(address(adapter)))));
+        // The DKG's namespace rule: the low 160 bits are the registrant, the adapter.
+        assertEq(address(uint160(uint256(aid))), address(adapter));
+        assertTrue(uint256(aid) != 0 && uint256(aid) < 2 ** 252 && uint256(aid) < BjjFormLib.Q);
         assertEq(aid, adapter.aidFor(pid));
+        assertTrue(aid != registry.aidFor(bytes31(uint248(pid) + 1)));
+    }
+
+    /// @dev vocdoni/davinci-dkg#14: nobody can register a process's application id ahead of
+    ///      the adapter, since the DKG only accepts ids bound to the registrant.
+    function test_AidFor_CannotBeTakenAhead() public {
+        bytes31 pid = registry.getNextProcessId(ORGANIZER);
+        bytes32 aid = registry.aidFor(pid);
+        address[] memory submitters = new address[](0);
+        DKGTypes.AppPolicy memory policy = DKGTypes.AppPolicy({
+            mode: DKGTypes.AppMode.Automatic,
+            openSubmission: false,
+            submitters: submitters,
+            maxCiphertexts: 16,
+            notBeforeBlock: 0,
+            notAfterBlock: 0,
+            decryptNotBefore: 0,
+            decryptNotAfter: 0
+        });
+        bytes12 eid = adapter.registrationEpoch();
+        vm.expectRevert(MockDKG.InvalidApplication.selector);
+        vm.prank(address(0xBAD));
+        mock.registerApplication(eid, aid, policy, 0, 1, 0, 0, 0);
+
+        assertEq(_automaticProcess(), pid);
+        assertEq(registry.getProcess(pid).dkgAid, aid);
     }
 
     function test_Adapter_OnlyRegistry() public {

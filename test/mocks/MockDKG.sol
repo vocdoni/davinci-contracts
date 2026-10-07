@@ -49,7 +49,8 @@ library MockBjj {
  * @dev One contract playing both the DKGManager and the DKGAppManager (appManager()
  *      returns itself). Matches the vendored dkg interfaces' ABI without inheriting them
  *      (the two error sets would collide) and uses real reduced-form BabyJubJub math for
- *      the application key and the reveal check; only the Schnorr PoP is skipped.
+ *      the application key and the reveal check; only the Schnorr PoP is skipped. Like
+ *      the real DKGAppManager, it only registers ids bound to the registrant.
  *      Test setters: newEpoch, setLive, setPoolNext, setPlaintext.
  */
 contract MockDKG {
@@ -171,6 +172,11 @@ contract MockDKG {
     ) external {
         Epoch storage e = epochs[eid];
         if (!e.live) revert InvalidPhase();
+        // DKGAppManager._requireValidAid: a non-zero field element whose low 160 bits are
+        // the registrant (aid = salt << 160 | msg.sender).
+        if (aid == bytes32(0) || uint256(aid) >= MockBjj.Q || address(uint160(uint256(aid))) != msg.sender) {
+            revert InvalidApplication();
+        }
         App storage a = apps[eid][aid];
         if (a.exists) revert ApplicationAlreadyExists();
         if (e.next >= e.keys.length) revert PoolExhausted();

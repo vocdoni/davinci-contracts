@@ -157,8 +157,9 @@ library DAVINCITypes {
      *        (identity ciphertexts), bit i = field i.
      * @param dkgResultsRequested Whether requestResultsDecryption ran (covers the all-identity
      *        case where dkgCount stays 0).
-     * @param dkgAid The DKG application id (keccak(chainid, registry, pid) mod Q), or the
-     *        Council request id the process was bound under (COUNCIL).
+     * @param dkgAid The DKG application id (DavinciDKGAdapter.aidFor: a salt from
+     *        keccak(chainid, registry, pid) above the adapter's address), or the Council
+     *        request id the process was bound under (COUNCIL).
      * @param grace Idle window past the end, in seconds: transitions settle until
      *        max(end, lastVoteAt) + grace, capped at end + graceMaxTotal (getProcessGraceEnd).
      *        defaultGrace at creation.

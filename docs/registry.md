@@ -243,8 +243,12 @@ struct DKGParams {
 
 The DKG modes need a registry deployed with a DKG manager (`dkgAdapter()` non-zero), otherwise
 they revert with `DKGDisabled`; `COUNCIL` needs a Council manager (`councilAdapter()`
-non-zero), otherwise it reverts with `CouncilDisabled`. The application id is
-`keccak256(abi.encode(chainid, registry, processId)) mod Q`, never 0 (`aidFor`). Each
+non-zero), otherwise it reverts with `CouncilDisabled`. The application id (`aidFor`) is
+`salt << 160 | adapter`, where `salt` is the top 92 bits of
+`keccak256(abi.encode(chainid, registry, processId))` and `adapter` the `DavinciDKGAdapter`
+address. davinci-dkg only lets an account register ids whose low 160 bits are its own address,
+so no one but the adapter can register a process's id, even though anyone can compute it in
+advance (vocdoni/davinci-dkg#14); the id is below `2^252`, so a valid field element. Each
 application allows only the adapter to submit ciphertexts, at most 16 of them. The registry
 converts the DKG key to circomlib form and stores `keyMode`, `dkgEpochId` and `dkgAid` on the
 process.
