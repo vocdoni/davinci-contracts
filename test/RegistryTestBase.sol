@@ -57,6 +57,7 @@ abstract contract RegistryTestBase is Test {
         bytes32 ballotVKHash = fixture.readBytes32(".ballot_vk_hash");
         address dkgManager = _dkgManager();
         address councilManager = _councilManager();
+        address l1Verifier = _l1BlobVerifier();
         (uint32 grace, uint32 floor, uint32 ceil, uint32 maxTotal, uint32 notice) = _timeConfig();
         vm.prank(DEPLOYER);
         registry = new ProcessRegistry(
@@ -73,7 +74,7 @@ abstract contract RegistryTestBase is Test {
             ceil,
             maxTotal,
             notice,
-            address(0)
+            l1Verifier
         );
         assertEq(address(registry), fixture.readAddress(".registry"), "registry address differs from the fixture");
     }
@@ -90,6 +91,11 @@ abstract contract RegistryTestBase is Test {
 
     /// @dev The Council manager the registry is deployed with (0 = COUNCIL disabled).
     function _councilManager() internal virtual returns (address) {
+        return address(0);
+    }
+
+    /// @dev The L1 blob verifier the registry is deployed with (0 = blob mode).
+    function _l1BlobVerifier() internal virtual returns (address) {
         return address(0);
     }
 
