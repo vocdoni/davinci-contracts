@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {DAVINCITypes} from "../libraries/DAVINCITypes.sol";
+import {IL1BlobVerifier} from "./IL1BlobVerifier.sol";
 
 /**
  * @title IProcessRegistry
@@ -347,6 +348,11 @@ interface IProcessRegistry {
      */
     error EmptyTransition();
 
+    /**
+     * @notice The submit entry point does not match the registry's DA mode (blob mode or L1-blob mode).
+     */
+    error WrongDAMode();
+
     /// GETTERS ///
 
     /**
@@ -431,6 +437,11 @@ interface IProcessRegistry {
      * @notice The minimum notice, in seconds, for shortening a process with setProcessDuration.
      */
     function noticeMin() external view returns (uint32);
+
+    /**
+     * @notice The verifier of Ethereum blob-transaction proofs, or address(0) in blob mode.
+     */
+    function l1BlobVerifier() external view returns (IL1BlobVerifier);
 
     /**
      * @notice The DavinciDKGAdapter created at deploy, or address(0) when DKG modes are

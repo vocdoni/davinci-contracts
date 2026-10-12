@@ -72,7 +72,8 @@ abstract contract RegistryTestBase is Test {
             floor,
             ceil,
             maxTotal,
-            notice
+            notice,
+            address(0)
         );
         assertEq(address(registry), fixture.readAddress(".registry"), "registry address differs from the fixture");
     }
