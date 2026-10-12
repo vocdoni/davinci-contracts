@@ -520,6 +520,51 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs, _blobHashes(nBlobs));
     }
 
+    /// @inheritdoc IProcessRegistry
+    /// @dev L1-blob mode: the blobs live in Ethereum blob transactions proven through `l1`.
+    function submitStateTransitionL1(
+        bytes31 processId,
+        bytes calldata publicValues,
+        bytes calldata proofBytes,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs,
+        IL1BlobVerifier.L1BlobProof calldata l1
+    ) external override nonReentrant {
+        if (address(l1BlobVerifier) == address(0)) revert WrongDAMode();
+        (
+            DAVINCITypes.Process storage p,
+            bytes32 rootBefore,
+            uint256 votersCount,
+            uint256 newVoters,
+            uint256 overwrites
+        ) = _prepareTransition(processId, publicValues);
+        (bytes32[] memory vhs, uint256[] memory l1Blocks) =
+            _settleL1(processId, rootBefore, publicValues, proofBytes, commitments, ys, kzgProofs, l1);
+        _applyTransition(p, processId, publicValues, rootBefore, votersCount, newVoters, overwrites, commitments.length);
+        emit ProcessStateTransitionedL1(processId, l1Blocks, vhs);
+    }
+
+    /// @dev L1-mode checks and proof verification: the arrays, the pair digest, the L1 proofs, the
+    ///      blob count, the SNARK and the KZG openings. Split out of the entry point for stack depth.
+    function _settleL1(
+        bytes31 processId,
+        bytes32 rootBefore,
+        bytes calldata publicValues,
+        bytes calldata proofBytes,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs,
+        IL1BlobVerifier.L1BlobProof calldata l1
+    ) private view returns (bytes32[] memory vhs, uint256[] memory l1Blocks) {
+        uint256 nBlobs = _checkBlobArrays(publicValues, commitments, ys, kzgProofs);
+        _checkDigest(publicValues, commitments, ys, kzgProofs);
+        (vhs, l1Blocks) = l1BlobVerifier.verify(l1);
+        if (vhs.length != nBlobs) revert BlobCountMismatch();
+        ziskVerifier.verifySnarkProof(batchProgramVK, rootCVadcopFinal, publicValues, proofBytes);
+        _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs, vhs);
+    }
+
     /// @dev Status, time window, guest ok flag, root continuity, census root, occupancy and
     ///      voter-count checks shared by both settlement entry points.
     function _prepareTransition(bytes31 processId, bytes calldata publicValues)

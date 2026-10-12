@@ -60,6 +60,15 @@ interface IProcessRegistry {
     );
 
     /*
+     * @notice Emitted when a state transition is settled in L1-blob mode, next to
+     *         ProcessStateTransitioned.
+     * @param processId The ID of the process.
+     * @param l1BlockNumbers The Ethereum block of each proven blob transaction.
+     * @param versionedHashes The versioned hash of each blob of the transition, in order.
+     */
+    event ProcessStateTransitionedL1(bytes31 indexed processId, uint256[] l1BlockNumbers, bytes32[] versionedHashes);
+
+    /*
      * @notice Emitted when the results of a process are set.
      * @param processId The ID of the process.
      * @param sender The address of the sender.
@@ -627,5 +636,27 @@ interface IProcessRegistry {
         bytes[] calldata commitments,
         bytes32[] calldata ys,
         bytes[] calldata kzgProofs
+    ) external;
+
+    /**
+     * @notice Settles a state transition in L1-blob mode (OP Stack registries). The blobs live in
+     *         Ethereum blob transactions, proven in Ethereum's canonical chain through `l1`.
+     *         Same status and time rules as submitStateTransition. Reverts WrongDAMode in blob mode.
+     * @param processId The ID of the process.
+     * @param publicValues The 512-byte ZisK public values.
+     * @param proofBytes The PLONK proof, abi-encoded uint256[24].
+     * @param commitments The 48-byte KZG commitment of each blob.
+     * @param ys The big-endian evaluation of each blob at its bound point.
+     * @param kzgProofs The 48-byte opening proof of each blob at its bound point.
+     * @param l1 The Ethereum headers and blob transaction inclusion proofs.
+     */
+    function submitStateTransitionL1(
+        bytes31 processId,
+        bytes calldata publicValues,
+        bytes calldata proofBytes,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs,
+        IL1BlobVerifier.L1BlobProof calldata l1
     ) external;
 }
