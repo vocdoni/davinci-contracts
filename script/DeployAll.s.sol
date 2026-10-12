@@ -34,6 +34,7 @@ contract DeployAllScript is Script {
         uint32 graceCeil;
         uint32 graceMaxTotal;
         uint32 noticeMin;
+        address l1BlobVerifier; // zero is blob mode
     }
 
     function run() public {
@@ -71,13 +72,15 @@ contract DeployAllScript is Script {
             c.graceFloor,
             c.graceCeil,
             c.graceMaxTotal,
-            c.noticeMin
+            c.noticeMin,
+            c.l1BlobVerifier
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
         console.log("DavinciDKGAdapter deployed at:", processRegistry.dkgAdapter());
         console.log("  DKG manager:", c.dkgManager);
         console.log("CouncilAdapter deployed at:", processRegistry.councilAdapter());
         console.log("  Council manager:", c.councilManager);
+        console.log("L1 blob verifier:", c.l1BlobVerifier);
         console.log("Batch program vk:", vm.toString(c.batchProgramVK));
         console.log("Results program vk:", vm.toString(c.resultsProgramVK));
         console.log("rootCVadcopFinal:", vm.toString(c.rootCVadcopFinal));
@@ -109,6 +112,8 @@ contract DeployAllScript is Script {
         c.dkgManager = _envAddress("DKG_MANAGER");
         // Optional Council manager; zero (the default) disables the COUNCIL key mode.
         c.councilManager = _envAddress("COUNCIL_MANAGER");
+        // Optional IL1BlobVerifier; zero (the default) deploys a blob-mode registry.
+        c.l1BlobVerifier = vm.envOr("L1_BLOB_VERIFIER", address(0));
 
         ProcessRegistry source = ProcessRegistry(_envAddress("PINS_FROM_REGISTRY"));
         if (address(source) == address(0)) {

@@ -230,7 +230,8 @@ contract NewProcessTest is RegistryTestBase {
             GRACE_FLOOR,
             GRACE_CEIL,
             GRACE_MAX_TOTAL,
-            NOTICE_MIN
+            NOTICE_MIN,
+            address(0)
         );
     }
 

@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IProcessRegistry} from "./interfaces/IProcessRegistry.sol";
 import {IZiskVerifier} from "./interfaces/IZiskVerifier.sol";
+import {IL1BlobVerifier} from "./interfaces/IL1BlobVerifier.sol";
 import {ICensusValidator} from "./interfaces/ICensusValidator.sol";
 import {DAVINCITypes} from "./libraries/DAVINCITypes.sol";
 import {ProcessIdLib} from "./libraries/ProcessIdLib.sol";
@@ -131,6 +132,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      *         end is at least this many seconds after the call.
      */
     uint32 public immutable noticeMin;
+    /**
+     * @notice The verifier of Ethereum blob-transaction proofs, or address(0) when this
+     *         registry settles with blobs of its own chain (blob mode).
+     */
+    IL1BlobVerifier public immutable l1BlobVerifier;
 
     /**
      * @notice Initializes the contract.
@@ -149,6 +155,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
      * @param _graceCeil The maximum for setProcessGrace, at least _defaultGrace.
      * @param _graceMaxTotal The cap on the window past the end time, at least _graceCeil.
      * @param _noticeMin The minimum notice, in seconds, for shortening a process, non-zero.
+     * @param _l1BlobVerifier The IL1BlobVerifier for L1-blob mode, or address(0) for blob mode.
      */
     constructor(
         uint32 _chainID,
@@ -163,7 +170,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         uint32 _graceFloor,
         uint32 _graceCeil,
         uint32 _graceMaxTotal,
-        uint32 _noticeMin
+        uint32 _noticeMin,
+        address _l1BlobVerifier
     ) {
         if (
             _ziskVerifier == address(0) || _batchProgramVK == bytes32(0) || _resultsProgramVK == bytes32(0)
@@ -178,6 +186,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         graceCeil = _graceCeil;
         graceMaxTotal = _graceMaxTotal;
         noticeMin = _noticeMin;
+        l1BlobVerifier = IL1BlobVerifier(_l1BlobVerifier);
         ziskVerifier = IZiskVerifier(_ziskVerifier);
         batchProgramVK = _batchProgramVK;
         resultsProgramVK = _resultsProgramVK;
@@ -480,7 +489,51 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes32[] calldata ys,
         bytes[] calldata kzgProofs
     ) external override nonReentrant {
-        DAVINCITypes.Process storage p = _existingProcess(processId);
+        if (address(l1BlobVerifier) != address(0)) revert WrongDAMode();
+        (
+            DAVINCITypes.Process storage p,
+            bytes32 rootBefore,
+            uint256 votersCount,
+            uint256 newVoters,
+            uint256 overwrites
+        ) = _prepareTransition(processId, publicValues);
+        _settleBlobs(processId, rootBefore, publicValues, proofBytes, commitments, ys, kzgProofs);
+        _applyTransition(p, processId, publicValues, rootBefore, votersCount, newVoters, overwrites, commitments.length);
+    }
+
+    /// @dev Blob-mode checks and proof verification: the arrays, the transaction's blob count, the
+    ///      pair digest, the SNARK and the KZG openings. Split out of the entry point for stack depth.
+    function _settleBlobs(
+        bytes31 processId,
+        bytes32 rootBefore,
+        bytes calldata publicValues,
+        bytes calldata proofBytes,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs
+    ) private {
+        uint256 nBlobs = _checkBlobArrays(publicValues, commitments, ys, kzgProofs);
+        // No blob may follow the n the guest committed to: nodes decode every blob of the tx.
+        if (BlobsLib.blobHash(nBlobs) != bytes32(0)) revert BlobCountMismatch();
+        _checkDigest(publicValues, commitments, ys, kzgProofs);
+        ziskVerifier.verifySnarkProof(batchProgramVK, rootCVadcopFinal, publicValues, proofBytes);
+        _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs, _blobHashes(nBlobs));
+    }
+
+    /// @dev Status, time window, guest ok flag, root continuity, census root, occupancy and
+    ///      voter-count checks shared by both settlement entry points.
+    function _prepareTransition(bytes31 processId, bytes calldata publicValues)
+        private
+        view
+        returns (
+            DAVINCITypes.Process storage p,
+            bytes32 rootBefore,
+            uint256 votersCount,
+            uint256 newVoters,
+            uint256 overwrites
+        )
+    {
+        p = _existingProcess(processId);
         DAVINCITypes.ProcessStatus status = p.status;
         if (
             status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.ENDED
@@ -490,25 +543,40 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (block.timestamp >= _graceEnd(p)) revert InvalidTimeBounds();
 
         _checkGuestOk(publicValues);
-        bytes32 rootBefore = PublicsLib.reg32(publicValues, REG_ROOT_BEFORE);
+        rootBefore = PublicsLib.reg32(publicValues, REG_ROOT_BEFORE);
         if (rootBefore != p.latestStateRoot) revert InvalidStateRoot();
         _checkCensusRoot(p, PublicsLib.reverse32(PublicsLib.reg32(publicValues, REG_CENSUS_ROOT)));
         // occupied_before counts the distinct slots written so far, which is votersCount.
-        uint256 votersCount = p.votersCount;
+        votersCount = p.votersCount;
         if (PublicsLib.word(publicValues, REG_OCCUPIED_BEFORE) != votersCount) revert InvalidOccupiedBefore();
 
-        uint256 overwrites = PublicsLib.word(publicValues, REG_OVERWRITES);
-        uint256 newVoters = PublicsLib.word(publicValues, REG_VOTERS) - overwrites;
+        overwrites = PublicsLib.word(publicValues, REG_OVERWRITES);
+        newVoters = PublicsLib.word(publicValues, REG_VOTERS) - overwrites;
         // A refresh-only batch would extend the grace window without carrying a vote.
         if (newVoters + overwrites == 0) revert EmptyTransition();
         if (votersCount + newVoters > p.maxVoters) revert MaxVotersReached();
+    }
 
-        uint256 nBlobs = _checkBlobsDigest(publicValues, commitments, ys, kzgProofs);
+    /// @dev The versioned hashes of the first n blobs of this transaction. Zeros are rejected per
+    ///      index in _verifyOpenings, interleaved with each opening.
+    function _blobHashes(uint256 n) private view returns (bytes32[] memory vhs) {
+        vhs = new bytes32[](n);
+        for (uint256 i = 0; i < n; ++i) {
+            vhs[i] = BlobsLib.blobHash(i);
+        }
+    }
 
-        ziskVerifier.verifySnarkProof(batchProgramVK, rootCVadcopFinal, publicValues, proofBytes);
-
-        _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs);
-
+    /// @dev Writes the new root and counters and emits ProcessStateTransitioned.
+    function _applyTransition(
+        DAVINCITypes.Process storage p,
+        bytes31 processId,
+        bytes calldata publicValues,
+        bytes32 rootBefore,
+        uint256 votersCount,
+        uint256 newVoters,
+        uint256 overwrites,
+        uint256 nBlobs
+    ) private {
         bytes32 rootAfter = PublicsLib.reg32(publicValues, REG_ROOT_AFTER);
         p.latestStateRoot = rootAfter;
         p.votersCount = votersCount + newVoters;
@@ -905,20 +973,27 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         }
     }
 
-    /// @dev Checks the blob arrays and the transaction's blobs against n_blobs, and the pair
-    ///      digest the guest published.
-    function _checkBlobsDigest(
+    /// @dev Reads n_blobs from the publics and checks it is non-zero and matches the array lengths.
+    function _checkBlobArrays(
         bytes calldata publicValues,
         bytes[] calldata commitments,
         bytes32[] calldata ys,
         bytes[] calldata kzgProofs
-    ) private view returns (uint256 n) {
+    ) private pure returns (uint256 n) {
         n = PublicsLib.word(publicValues, REG_N_BLOBS);
         if (n == 0) revert NoBlobs();
         if (commitments.length != n || ys.length != n || kzgProofs.length != n) revert BlobCountMismatch();
-        // No blob may follow the n the guest committed to: nodes decode every blob of the tx.
-        if (BlobsLib.blobHash(n) != bytes32(0)) revert BlobCountMismatch();
+    }
 
+    /// @dev Checks each commitment and proof length and the (commitment, y) pair digest the
+    ///      guest published.
+    function _checkDigest(
+        bytes calldata publicValues,
+        bytes[] calldata commitments,
+        bytes32[] calldata ys,
+        bytes[] calldata kzgProofs
+    ) private pure {
+        uint256 n = commitments.length;
         bytes memory pairs = new bytes(n * 80);
         for (uint256 i = 0; i < n; ++i) {
             bytes calldata c = commitments[i];
@@ -934,6 +1009,14 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (sha256(pairs) != PublicsLib.reg32(publicValues, REG_BLOBS_DIGEST)) revert InvalidBlobsDigest();
     }
 
+    /// @dev z = sha256(BE32(pid) ‖ BE32(root) ‖ commitment) mod r_bls. Split out of _verifyOpenings
+    ///      to keep its stack shallow.
+    function _point(bytes31 processId, bytes32 rootBefore, bytes calldata commitment) private pure returns (bytes32) {
+        bytes32 pidBE = bytes32(uint256(uint248(processId)));
+        bytes32 rootBE = PublicsLib.reverse32(rootBefore);
+        return bytes32(uint256(sha256(abi.encodePacked(pidBE, rootBE, commitment))) % BLS_MODULUS);
+    }
+
     /// @dev Opens blob i of this transaction at z_i = sha256(BE32(pid) ‖ BE32(root) ‖ commitment_i)
     ///      mod r_bls, the point the guest evaluated it at, and checks y_i.
     function _verifyOpenings(
@@ -941,16 +1024,16 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         bytes32 rootBefore,
         bytes[] calldata commitments,
         bytes32[] calldata ys,
-        bytes[] calldata kzgProofs
+        bytes[] calldata kzgProofs,
+        bytes32[] memory vhs
     ) private view {
-        bytes32 pidBE = bytes32(uint256(uint248(processId)));
-        bytes32 rootBE = PublicsLib.reverse32(rootBefore);
         for (uint256 i = 0; i < commitments.length; ++i) {
-            bytes32 versionedHash = BlobsLib.blobHash(i);
-            if (versionedHash == bytes32(0)) revert MissingBlob(i);
-            bytes32 z = bytes32(uint256(sha256(abi.encodePacked(pidBE, rootBE, commitments[i]))) % BLS_MODULUS);
-            (bool ok, bytes memory out) =
-                POINT_EVALUATION.staticcall(abi.encodePacked(versionedHash, z, ys[i], commitments[i], kzgProofs[i]));
+            if (vhs[i] == bytes32(0)) revert MissingBlob(i);
+            (bool ok, bytes memory out) = POINT_EVALUATION.staticcall(
+                abi.encodePacked(
+                    vhs[i], _point(processId, rootBefore, commitments[i]), ys[i], commitments[i], kzgProofs[i]
+                )
+            );
             // Also rejects a chain where 0x0A is not the precompile (empty return data).
             if (!ok || out.length != 64) revert InvalidBlobOpening(i);
             (uint256 fieldElements, uint256 modulus) = abi.decode(out, (uint256, uint256));

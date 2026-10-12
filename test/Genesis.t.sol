@@ -53,7 +53,8 @@ contract GenesisTest is Test {
             150,
             600,
             1800,
-            60
+            60,
+            address(0)
         );
         harness = new GenesisHarness();
     }
