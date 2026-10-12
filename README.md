@@ -38,6 +38,22 @@ With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committe
 
 ## Deployments
 
+### OP Mainnet, L1-blob mode
+
+OP Mainnet (chain id 10), deployed 2026-10-12 from commit `e7de916` at block 158125136. The
+registry settles transitions on OP while their blobs live in Ethereum blob transactions, checked
+by its `L1BlobVerifier` against OP's `L1Block` predeploy
+([settlement.md](docs/settlement.md#l1-blob-mode)). [`deployments/10.json`](deployments/10.json)
+holds the verified record. Not source-verified on an explorer yet.
+
+| Contract | Address |
+|---|---|
+| `ProcessRegistry` | `0x8b63fAE96948D69CF92Eb40e4EE0fCE40962267d` |
+| `L1BlobVerifier` | `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529` (reads `L1Block` `0x4200000000000000000000000000000000000015`) |
+| `ZiskVerifier` | `0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c` (deployed earlier; same code hash as Gnosis') |
+
+Same pins as the Gnosis registry below; production grace defaults; no DKG or Council adapter.
+
 ### Gnosis Chain production beta
 
 Gnosis Chain (chain id 100), deployed 2026-10-07 from commit `4e4f6c8` at block 48,633,301.
