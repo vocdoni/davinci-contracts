@@ -172,6 +172,26 @@ new registry. The target chain needs the point-evaluation precompile at `0x0a`, 
 `BLOBHASH` of its own blobs. A local dry run needs a stand-in `L1Block` (`test/mocks/MockL1Block.sol`).
 See [settlement.md](settlement.md#l1-blob-mode) for the proof and its limits.
 
+## OP Mainnet
+
+Deployed on 2026-10-12 with `L1_BLOCK` (a fresh `L1BlobVerifier` on the OP predeploy), the
+`ZiskVerifier` deployed earlier and the release pins, from the owner's account, with no `.env`
+(variables set in a subshell; the RPC and the key never written to disk):
+
+```bash
+CHAIN_ID=10 VERIFY_MODE=false \
+ZISK_VERIFIER=0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c \
+L1_BLOCK=0x4200000000000000000000000000000000000015 \
+BATCH_PROGRAM_VK=0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10 \
+RESULTS_PROGRAM_VK=0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794 \
+ROOT_C_VADCOP_FINAL=0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
+BALLOT_VK_HASH=0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
+RPC_URL=... PRIVATE_KEY=... ./deploy_all.sh
+```
+
+The script ran `forge script` once without `--broadcast` first. Addresses are in the
+[deployments table](../README.md#deployments).
+
 ## Council support
 
 Deploy with `COUNCIL_MANAGER` set to a Council manager (vocdoni/davinci-dkg-council). The registry
