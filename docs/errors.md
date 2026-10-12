@@ -55,6 +55,8 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `TxAboveOrigin(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | transaction `tx` names a header newer than the anchor (or an index past the headers) |
 | `NotBlobTx(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | proven value is not a type-3 envelope with at least 11 fields, or its blob hash list is empty |
 | `BadVersionedHash(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | a blob versioned hash of transaction `tx` is not 32 bytes starting with `0x01` |
+| `TxTooOld(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | transaction `tx` sits more than `MAX_AGE` (7200) L1 blocks behind OP's current origin |
+| (`require` strings) (`MerkleTrie`) | `submitStateTransitionL1` | a bad transaction proof reverts with a `require` string, not a custom error |
 | `InvalidProof` (`ZiskVerifier`) | settlement, `setProcessResults` | PLONK proof does not verify |
 | `InvalidKeyMode` | results calls, `revealProcessKey` | call not valid for the process's key mode |
 | `ResultsAlreadyRequested` | `requestResultsDecryption` | second request |

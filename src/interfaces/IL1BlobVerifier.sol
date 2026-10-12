@@ -20,8 +20,22 @@ interface IL1BlobVerifier {
     error TxAboveOrigin(uint256 tx);
     error NotBlobTx(uint256 tx);
     error BadVersionedHash(uint256 tx);
+    error TxTooOld(uint256 tx);
+
+    event OriginRecorded(uint256 indexed number, bytes32 hash);
 
     function l1Block() external view returns (address);
 
-    function verify(L1BlobProof calldata p) external view returns (bytes32[] memory vhs, uint256[] memory txBlocks);
+    /// Records OP's current L1 origin (number, hash) so later proofs can anchor at it.
+    function record() external;
+
+    /// The recorded hash of L1 block `number`, or zero.
+    function recorded(uint256 number) external view returns (bytes32);
+
+    /// Oldest L1 block a proof may reference, counted back from the current origin.
+    function MAX_AGE() external view returns (uint256);
+
+    /// @return vhs Versioned hashes of every transaction, in order.
+    /// @return blobBlocks One entry per versioned hash (parallel to `vhs`): the L1 block of its transaction.
+    function verify(L1BlobProof calldata p) external view returns (bytes32[] memory vhs, uint256[] memory blobBlocks);
 }

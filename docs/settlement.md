@@ -119,14 +119,18 @@ concatenation of those lists in the order of `txs`.
 
 **Anchoring.** `L1Block.hash()` on the L2 (predeploy `0x4200000000000000000000000000000000000015`)
 is the hash of OP's current L1 origin. The chain is anchored at the first header whose keccak
-equals it (`L1OriginMismatch` if none does). A transaction may only sit in the anchor header or an
-older one (`TxAboveOrigin`); headers above the anchor are ignored. Consequences:
+equals it **or** equals a hash stored by `record()` for the block number in that same header
+(`L1OriginMismatch` if none does). `record()` is permissionless: it stores OP's current
+`(number, hash)` and emits `OriginRecorded`. A transaction may only sit in the anchor header or an
+older one (`TxAboveOrigin`) and at most `MAX_AGE` (7200, one day of L1 blocks) behind the current
+origin (`TxTooOld`); headers above the anchor are ignored. Consequences:
 
-- A proof can only refer to L1 blocks at or below OP's current origin, so the sequencer waits for
-  the origin to reach the blob block before it settles.
+- A proof can only refer to L1 blocks at or below its anchor, so the sequencer waits for the origin
+  to reach the blob block before it settles.
 - `L1Block` exposes only the current origin. If the origin moves past the top header of a proof
-  before it lands, the proof still verifies only when its headers include the new origin; nodes
-  therefore build headers up to the Ethereum head, so a few origin advances do not invalidate it.
+  before it lands, the proof still verifies only when its headers include the new origin or an
+  origin recorded earlier. Nodes send a few headers above the current origin, or anchor at an origin
+  they recorded when the proof takes longer. The proof cost is about 60-75k gas per header.
 - The vendored `RLPReader` caps lists at 32 items. Ethereum headers have 21 items today, which
   leaves about 11 more appended fields before a new verifier, and so a new registry, is needed.
 
@@ -137,7 +141,8 @@ and then
 event ProcessStateTransitionedL1(bytes31 indexed processId, uint256[] l1BlockNumbers, bytes32[] versionedHashes);
 ```
 
-with the L1 block number of each proven transaction and the flattened versioned hashes, so
+with the flattened versioned hashes and, parallel to them, the L1 block number of the transaction
+holding each one (`l1BlockNumbers` has the same length as `versionedHashes`), so
 followers know where to fetch the blobs (an Ethereum beacon API or archive).
 
 ## Results in sequencer mode

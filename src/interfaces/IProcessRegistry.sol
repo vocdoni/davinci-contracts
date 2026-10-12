@@ -63,7 +63,8 @@ interface IProcessRegistry {
      * @notice Emitted when a state transition is settled in L1-blob mode, next to
      *         ProcessStateTransitioned.
      * @param processId The ID of the process.
-     * @param l1BlockNumbers The Ethereum block of each proven blob transaction.
+     * @param l1BlockNumbers The Ethereum block of the transaction holding each versioned hash (same length as
+     *        `versionedHashes`).
      * @param versionedHashes The versioned hash of each blob of the transition, in order.
      */
     event ProcessStateTransitionedL1(bytes31 indexed processId, uint256[] l1BlockNumbers, bytes32[] versionedHashes);
