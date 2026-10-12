@@ -1,6 +1,6 @@
 # Errors
 
-Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTransition`;
+Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTransition` or, in L1-blob mode, `submitStateTransitionL1`;
 "results calls" are `setProcessResults`, `requestResultsDecryption` and
 `finalizeResultsFromDKG`.
 
@@ -43,11 +43,18 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `InvalidOccupiedBefore` | settlement | `occupied_before != votersCount` |
 | `MaxVotersReached` | settlement | the batch would exceed `maxVoters` |
 | `NoBlobs` | settlement | `n_blobs == 0` |
-| `BlobCountMismatch` | settlement | array lengths differ from `n_blobs`, or the transaction carries an extra blob |
+| `BlobCountMismatch` | settlement | array lengths differ from `n_blobs`; blob mode: the transaction carries an extra blob; L1-blob mode: the proof yields another number of versioned hashes |
 | `InvalidBlobCommitmentLength`, `InvalidKZGProofLength` | settlement | not 48 bytes |
 | `InvalidBlobsDigest` | settlement | commitment/evaluation digest differs from the proof's |
-| `MissingBlob(index)` | settlement | the transaction has no blob at `index` |
+| `MissingBlob(index)` | settlement (blob mode) | the transaction has no blob at `index` |
 | `InvalidBlobOpening(index)` | settlement | the point-evaluation precompile rejects blob `index` |
+| `WrongDAMode` | settlement | `submitStateTransition` on an L1-blob registry, or `submitStateTransitionL1` on a blob-mode one |
+| `L1OriginMismatch` (`L1BlobVerifier`) | `submitStateTransitionL1` | no header of the proof hashes to `L1Block.hash()`, the L2's current L1 origin; resend with headers that include it |
+| `BrokenHeaderChain(index)` (`L1BlobVerifier`) | `submitStateTransitionL1` | `keccak256(headers[index])` is not the `parentHash` of `headers[index - 1]` |
+| `BadHeader(index)` (`L1BlobVerifier`) | `submitStateTransitionL1` | header with fewer than 9 RLP items, or `parentHash` or `transactionsRoot` not 32 bytes |
+| `TxAboveOrigin(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | transaction `tx` names a header newer than the anchor (or an index past the headers) |
+| `NotBlobTx(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | proven value is not a type-3 envelope with at least 11 fields, or its blob hash list is empty |
+| `BadVersionedHash(tx)` (`L1BlobVerifier`) | `submitStateTransitionL1` | a blob versioned hash of transaction `tx` is not 32 bytes starting with `0x01` |
 | `InvalidProof` (`ZiskVerifier`) | settlement, `setProcessResults` | PLONK proof does not verify |
 | `InvalidKeyMode` | results calls, `revealProcessKey` | call not valid for the process's key mode |
 | `ResultsAlreadyRequested` | `requestResultsDecryption` | second request |

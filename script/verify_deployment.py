@@ -10,7 +10,7 @@ are compared with --pins-from and printed otherwise. Exit status 1 on any mismat
     python3 script/verify_deployment.py --rpc URL --registry 0x... \
         --batch-vk 0x... --results-vk 0x... --root-c 0x... --ballot-vk-hash 0x...
     python3 script/verify_deployment.py --rpc URL --registry 0x... --pins-from 0x... \
-        --dkg-manager 0x... --council-manager 0x... [--broadcast run-latest.json --record out.json]
+        --dkg-manager 0x... --council-manager 0x... [--l1-block 0x...] [--broadcast run-latest.json --record out.json]
 """
 import argparse
 import json
@@ -138,6 +138,11 @@ def main():
     ap.add_argument("--verifier", help="expected ziskVerifier()")
     ap.add_argument("--dkg-manager", help="expected DavinciDKGAdapter manager; zero expects DKG disabled")
     ap.add_argument("--council-manager", help="expected CouncilAdapter manager; zero expects COUNCIL disabled")
+    ap.add_argument(
+        "--l1-block",
+        default="0x4200000000000000000000000000000000000015",
+        help="expected L1BlobVerifier.l1Block() when the registry is in L1-blob mode (OP Stack predeploy by default)",
+    )
     ap.add_argument("--broadcast", help="forge run-latest.json of the deployment, for the record")
     ap.add_argument("--record", help="write the verified deployment as JSON here (only when every check passes)")
     ap.add_argument("--cast", default=str(Path.home() / ".foundry/bin/cast"))
@@ -211,6 +216,8 @@ def main():
         "dkgAppManager": None,
         "councilAdapter": None,
         "councilManager": None,
+        "l1BlobVerifier": None,
+        "l1Block": None,
     }
     if a.record:
         out = subprocess.run([a.cast, "keccak", ver_code], capture_output=True, text=True, check=True)
@@ -263,6 +270,22 @@ def main():
             print("council none (no councilAdapter(): a registry from before the COUNCIL mode)")
         else:
             print("council none (COUNCIL disabled)")
+    try:
+        l1v = addr(get(a.registry, "l1BlobVerifier()"))
+    except SystemExit:  # a registry from before the L1-blob mode
+        l1v = None
+    if l1v is not None and int(l1v, 16) != 0:
+        v_code = rpc(a.rpc, "eth_getCode", [l1v, "latest"])
+        m, why = masked_match(v_code, artifact("L1BlobVerifier"))
+        check("L1BlobVerifier runtime code == local build (immutables masked)", m, why)
+        l1b = addr(get(l1v, "l1Block()"))
+        check("l1BlobVerifier.l1Block == --l1-block", same(l1b, a.l1_block), l1b)
+        record.update(l1BlobVerifier=l1v, l1Block=l1b)
+        print(f"l1 blob  {l1v} (L1Block {l1b})")
+    elif l1v is None:
+        print("l1 blob  n/a (a registry from before the L1-blob mode)")
+    else:
+        print("l1 blob  none (blob mode)")
     print(f"verifier {verifier}")
     grace = {}
     for name in GRACE:

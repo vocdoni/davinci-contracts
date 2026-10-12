@@ -68,6 +68,78 @@ On success `latestStateRoot` becomes the root after, `votersCount` grows by
 `votes - overwrites`, `overwrittenVotesCount` by `overwrites`, `batchNumber` by one,
 `lastVoteAt` becomes `block.timestamp`, and the registry emits `ProcessStateTransitioned`.
 
+## L1-blob mode
+
+A registry deployed with a non-zero `l1BlobVerifier` is made for OP Stack chains, where the
+`BLOBHASH` opcode only sees the L2's own transactions. It keeps the blobs in Ethereum blob
+transactions and proves on the L2 that those transactions are canonical. The mode is fixed at
+construction: `submitStateTransition` reverts `WrongDAMode` on such a registry and
+`submitStateTransitionL1` reverts `WrongDAMode` on a blob-mode one.
+
+```solidity
+function submitStateTransitionL1(
+    bytes31 processId,
+    bytes calldata publicValues,
+    bytes calldata proofBytes,
+    bytes[] calldata commitments,
+    bytes32[] calldata ys,
+    bytes[] calldata kzgProofs,
+    IL1BlobVerifier.L1BlobProof calldata l1
+) external;
+```
+
+Flow: the sequencer posts the transition's blobs on Ethereum in type-3 transactions, waits until
+OP's L1 origin has reached their block, and calls the entry point with an `L1BlobProof`. The
+registry runs the same status, time, root, census, occupancy and voter-count checks, the same
+array and blobs-digest checks and the same PLONK verification as above, but takes the versioned
+hashes from `l1BlobVerifier.verify(l1)` instead of `BLOBHASH`: it requires exactly `n_blobs` of
+them (`BlobCountMismatch` otherwise) and opens commitment `i` against hash `i` with the
+point-evaluation precompile, at the same `z_i` as in blob mode. The precompile also checks that the
+commitment hashes to the versioned hash, so the opened blobs are the ones in the L1 transactions.
+No `MissingBlob` or transaction blob count applies.
+
+```solidity
+struct L1TxProof { uint256 headerIndex; bytes key; bytes[] proof; }
+struct L1BlobProof { bytes[] headers; L1TxProof[] txs; }
+```
+
+| Field | Content |
+|---|---|
+| `headers` | RLP-encoded Ethereum block headers, newest first; `keccak256(headers[i+1])` must equal the `parentHash` (item 0) of `headers[i]` (`BrokenHeaderChain(i+1)`) |
+| `txs[t].headerIndex` | index in `headers` of the block holding transaction `t` |
+| `txs[t].key` | `rlp(txIndex)` of the transaction in that block |
+| `txs[t].proof` | Merkle-Patricia proof of `key` against `transactionsRoot` (header item 4) |
+
+Headers are read by list index (`parentHash` 0, `transactionsRoot` 4, `number` 8) without
+checking the item count, so forks that append fields do not change the layout; a header with fewer
+than 9 items, or a 32-byte field of another length, is `BadHeader`. The proven value of each
+transaction must be a type-3 envelope `0x03 ‖ rlp([...])`; `blob_versioned_hashes` is item 10, must
+be non-empty and every hash must be 32 bytes starting with `0x01`. The result `vhs` is the
+concatenation of those lists in the order of `txs`.
+
+**Anchoring.** `L1Block.hash()` on the L2 (predeploy `0x4200000000000000000000000000000000000015`)
+is the hash of OP's current L1 origin. The chain is anchored at the first header whose keccak
+equals it (`L1OriginMismatch` if none does). A transaction may only sit in the anchor header or an
+older one (`TxAboveOrigin`); headers above the anchor are ignored. Consequences:
+
+- A proof can only refer to L1 blocks at or below OP's current origin, so the sequencer waits for
+  the origin to reach the blob block before it settles.
+- `L1Block` exposes only the current origin. If the origin moves past the top header of a proof
+  before it lands, the proof still verifies only when its headers include the new origin; nodes
+  therefore build headers up to the Ethereum head, so a few origin advances do not invalidate it.
+- The vendored `RLPReader` caps lists at 32 items. Ethereum headers have 21 items today, which
+  leaves about 11 more appended fields before a new verifier, and so a new registry, is needed.
+
+On success the registry applies the transition exactly as above, emits `ProcessStateTransitioned`
+and then
+
+```solidity
+event ProcessStateTransitionedL1(bytes31 indexed processId, uint256[] l1BlockNumbers, bytes32[] versionedHashes);
+```
+
+with the L1 block number of each proven transaction and the flattened versioned hashes, so
+followers know where to fetch the blobs (an Ethereum beacon API or archive).
+
 ## Results in sequencer mode
 
 ```solidity

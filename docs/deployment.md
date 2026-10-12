@@ -19,7 +19,8 @@ constructor(
     uint32 graceFloor,
     uint32 graceCeil,
     uint32 graceMaxTotal,
-    uint32 noticeMin
+    uint32 noticeMin,
+    address l1BlobVerifier
 )
 ```
 
@@ -39,6 +40,8 @@ constructor(
 | `PINS_FROM_REGISTRY` | optional live `ProcessRegistry` on the same chain to inherit from: its `ZiskVerifier` is reused and its four pins and five grace settings copied, so none of those variables is needed. Any of them that is also set must equal the inherited value, otherwise the script aborts before broadcasting |
 | `DKG_MANAGER` | optional davinci-dkg `DKGManager`; unset or zero disables the DKG modes. It must have code and an `appManager()`. Use a davinci-dkg deployment that binds application ids to their registrant ([vocdoni/davinci-dkg#14](https://github.com/vocdoni/davinci-dkg/issues/14)): an older one accepts the adapter's ids too, but lets anyone take a process's id first and block its creation |
 | `COUNCIL_MANAGER` | optional Council manager; unset or zero disables the `COUNCIL` mode. It must have code and differ from `DKG_MANAGER` |
+| `L1_BLOB_VERIFIER` | optional deployed `L1BlobVerifier`; non-zero makes the registry an L1-blob-mode one (see [settlement.md](settlement.md#l1-blob-mode)). Unset or zero is blob mode |
+| `L1_BLOCK` | optional OP Stack `L1Block` address (`0x4200000000000000000000000000000000000015` on OP chains): when `L1_BLOB_VERIFIER` is unset, the script deploys `new L1BlobVerifier(L1_BLOCK)` before the registry and uses it. It must have code. A mock on a local chain |
 | `GRACE_DEFAULT` | optional, seconds: the grace window of a new process (`defaultGrace`, default 180) |
 | `GRACE_FLOOR` | optional, seconds: the minimum for `setProcessGrace` (`graceFloor`, default 150) |
 | `GRACE_CEIL` | optional, seconds: the maximum for `setProcessGrace` (`graceCeil`, default 600) |
@@ -155,6 +158,19 @@ helpers/write_contract_addresses.sh
 2. Deploy with `DKG_MANAGER` set. The registry constructor creates the `DavinciDKGAdapter`,
    which reads `appManager()` from the manager; the script logs its address and
    `dkgAdapter()` returns it.
+
+## L1-blob mode
+
+For OP Stack chains. Deploy with `L1_BLOCK` set to the chain's `L1Block` predeploy, or with
+`L1_BLOB_VERIFIER` set to a verifier deployed earlier (it is stateless and ownerless, so one can
+serve several registries on the same chain). The verifier is created before the registry, which
+does not change the other contracts' deployment order, but the registry's address then comes from a later nonce than the fixed local one above; the script logs `L1BlobVerifier deployed
+at` and the verifier and `L1Block` addresses. `verify_deployment.py` reads `l1BlobVerifier()`,
+compares its code with the local build and its `l1Block()` with `--l1-block` (default the OP
+predeploy; `deploy_all.sh` passes `L1_BLOCK` when set). The mode is immutable: switching needs a
+new registry. The target chain needs the point-evaluation precompile at `0x0a`, but not
+`BLOBHASH` of its own blobs. A local dry run needs a stand-in `L1Block` (`test/mocks/MockL1Block.sol`).
+See [settlement.md](settlement.md#l1-blob-mode) for the proof and its limits.
 
 ## Council support
 

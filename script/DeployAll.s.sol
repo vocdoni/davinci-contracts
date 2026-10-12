@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ProcessRegistry} from "../src/ProcessRegistry.sol";
+import {L1BlobVerifier} from "../src/L1BlobVerifier.sol";
 import {ZiskVerifier} from "../src/verifiers/ZiskVerifier.sol";
 import {IDKGManager} from "../src/interfaces/dkg/IDKGManager.sol";
 
@@ -12,7 +13,9 @@ import {IDKGManager} from "../src/interfaces/dkg/IDKGManager.sol";
 ///      BALLOT_VK_HASH (bytes32 hex). ROOT_C_VADCOP_FINAL must match the vendored verifier setup.
 ///      Optional: ZISK_VERIFIER (reuse a deployed verifier instead of deploying one; it must
 ///      report ROOT_C_VADCOP_FINAL, and its code hash is logged for the release pin),
-///      DKG_MANAGER, COUNCIL_MANAGER, and in seconds the grace window GRACE_DEFAULT
+///      DKG_MANAGER, COUNCIL_MANAGER, L1_BLOB_VERIFIER (an existing IL1BlobVerifier; non-zero makes
+///      the registry an L1-blob-mode one) or L1_BLOCK (deploy a new L1BlobVerifier on that
+///      OP Stack L1Block predeploy, 0x4200...0015, when L1_BLOB_VERIFIER is unset), and in seconds the grace window GRACE_DEFAULT
 ///      (180), GRACE_FLOOR (150), GRACE_CEIL (600), GRACE_MAX_TOTAL (1800) and the shorten notice
 ///      NOTICE_MIN (60).
 ///      PINS_FROM_REGISTRY, a live ProcessRegistry on the same chain, replaces all of the
@@ -35,6 +38,7 @@ contract DeployAllScript is Script {
         uint32 graceMaxTotal;
         uint32 noticeMin;
         address l1BlobVerifier; // zero is blob mode
+        address l1Block; // L1Block to deploy a verifier on when l1BlobVerifier is zero
     }
 
     function run() public {
@@ -59,6 +63,12 @@ contract DeployAllScript is Script {
         console.log("ZiskVerifier code hash:", vm.toString(address(zisk).codehash));
         require(zisk.getRootCVadcopFinal() == c.rootCVadcopFinal, "ROOT_C_VADCOP_FINAL differs from the verifier setup");
 
+        if (c.l1BlobVerifier == address(0) && c.l1Block != address(0)) {
+            require(c.l1Block.code.length > 0, "L1_BLOCK has no code");
+            c.l1BlobVerifier = address(new L1BlobVerifier(c.l1Block));
+            console.log("L1BlobVerifier deployed at:", c.l1BlobVerifier);
+        }
+
         ProcessRegistry processRegistry = new ProcessRegistry(
             c.chainId,
             address(zisk),
@@ -81,6 +91,7 @@ contract DeployAllScript is Script {
         console.log("CouncilAdapter deployed at:", processRegistry.councilAdapter());
         console.log("  Council manager:", c.councilManager);
         console.log("L1 blob verifier:", c.l1BlobVerifier);
+        console.log("L1 block:", c.l1BlobVerifier == address(0) ? address(0) : address(L1BlobVerifier(c.l1BlobVerifier).l1Block()));
         console.log("Batch program vk:", vm.toString(c.batchProgramVK));
         console.log("Results program vk:", vm.toString(c.resultsProgramVK));
         console.log("rootCVadcopFinal:", vm.toString(c.rootCVadcopFinal));
@@ -112,8 +123,10 @@ contract DeployAllScript is Script {
         c.dkgManager = _envAddress("DKG_MANAGER");
         // Optional Council manager; zero (the default) disables the COUNCIL key mode.
         c.councilManager = _envAddress("COUNCIL_MANAGER");
-        // Optional IL1BlobVerifier; zero (the default) deploys a blob-mode registry.
-        c.l1BlobVerifier = vm.envOr("L1_BLOB_VERIFIER", address(0));
+        // Optional IL1BlobVerifier; zero (the default) deploys a blob-mode registry unless
+        // L1_BLOCK asks for a new verifier on that L1Block.
+        c.l1BlobVerifier = _envAddress("L1_BLOB_VERIFIER");
+        c.l1Block = _envAddress("L1_BLOCK");
 
         ProcessRegistry source = ProcessRegistry(_envAddress("PINS_FROM_REGISTRY"));
         if (address(source) == address(0)) {
