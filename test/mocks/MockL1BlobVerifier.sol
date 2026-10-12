@@ -19,6 +19,16 @@ contract MockL1BlobVerifier is IL1BlobVerifier {
         return address(0);
     }
 
+    function record() external {}
+
+    function recorded(uint256) external pure returns (bytes32) {
+        return bytes32(0);
+    }
+
+    function MAX_AGE() external pure returns (uint256) {
+        return 7200;
+    }
+
     function verify(L1BlobProof calldata) external view returns (bytes32[] memory, uint256[] memory) {
         if (fail) revert L1OriginMismatch();
         return (vhs, blocks);

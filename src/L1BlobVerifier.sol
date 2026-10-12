@@ -9,12 +9,19 @@ import {Bytes} from "./libraries/op/Bytes.sol";
 
 /// @title L1BlobVerifier
 /// @notice Proves on an OP Stack chain that blob transactions are in Ethereum's canonical chain.
-///         Headers come newest first; the chain is anchored at any header whose hash is OP's
-///         current L1 origin, and transactions may only sit in that header or older ones.
-///         Stateless and ownerless.
+///         Headers come newest first; the chain is anchored at a header whose hash is OP's current
+///         L1 origin or an origin recorded earlier with `record()`, and transactions may only sit in
+///         that header or older ones (at most MAX_AGE blocks behind the current origin). Returns the
+///         L1 block of every versioned hash. Ownerless; the only state is the permissionless record.
 contract L1BlobVerifier is IL1BlobVerifier {
     /// The L1Block predeploy (0x4200…0015 on OP Stack chains).
     address public immutable override l1Block;
+
+    /// One day of L1 blocks.
+    uint256 public constant override MAX_AGE = 7200;
+
+    /// L1 origins recorded from OP's L1Block, by block number.
+    mapping(uint256 => bytes32) public override recorded;
 
     constructor(address _l1Block) {
         require(_l1Block != address(0), "L1BlobVerifier: zero L1Block");
@@ -22,11 +29,19 @@ contract L1BlobVerifier is IL1BlobVerifier {
     }
 
     /// @inheritdoc IL1BlobVerifier
+    function record() external override {
+        uint64 n = IL1Block(l1Block).number();
+        bytes32 h = IL1Block(l1Block).hash();
+        recorded[n] = h;
+        emit OriginRecorded(n, h);
+    }
+
+    /// @inheritdoc IL1BlobVerifier
     function verify(L1BlobProof calldata p)
         external
         view
         override
-        returns (bytes32[] memory vhs, uint256[] memory txBlocks)
+        returns (bytes32[] memory vhs, uint256[] memory blobBlocks)
     {
         uint256 nh = p.headers.length;
         bytes32[] memory txRoots = new bytes32[](nh);
@@ -35,20 +50,25 @@ contract L1BlobVerifier is IL1BlobVerifier {
 
         uint256 nt = p.txs.length;
         bytes32[][] memory perTx = new bytes32[][](nt);
-        txBlocks = new uint256[](nt);
+        uint256[] memory txBlocks = new uint256[](nt);
         uint256 total;
+        uint256 originNumber = IL1Block(l1Block).number();
         for (uint256 t = 0; t < nt; ++t) {
             L1TxProof calldata tx_ = p.txs[t];
             if (tx_.headerIndex < anchor || tx_.headerIndex >= nh) revert TxAboveOrigin(t);
+            uint256 blockOfTx = numbers[tx_.headerIndex];
+            if (originNumber > blockOfTx && originNumber - blockOfTx > MAX_AGE) revert TxTooOld(t);
             bytes memory env = MerkleTrie.get(tx_.key, tx_.proof, txRoots[tx_.headerIndex]);
             perTx[t] = _blobHashes(env, t);
-            txBlocks[t] = numbers[tx_.headerIndex];
+            txBlocks[t] = blockOfTx;
             total += perTx[t].length;
         }
         vhs = new bytes32[](total);
+        blobBlocks = new uint256[](total);
         uint256 k;
         for (uint256 t = 0; t < nt; ++t) {
             for (uint256 j = 0; j < perTx[t].length; ++j) {
+                blobBlocks[k] = txBlocks[t];
                 vhs[k++] = perTx[t][j];
             }
         }
@@ -67,18 +87,22 @@ contract L1BlobVerifier is IL1BlobVerifier {
             bytes memory h = p.headers[i];
             bytes32 hash = keccak256(h);
             if (i > 0 && hash != expected) revert BrokenHeaderChain(i);
-            if (anchor == type(uint256).max && hash == origin) anchor = i;
             RLPReader.RLPItem[] memory f = RLPReader.readList(h);
             if (f.length < 9) revert BadHeader(i);
             expected = _bytes32(RLPReader.readBytes(f[0]), i);
             txRoots[i] = _bytes32(RLPReader.readBytes(f[4]), i);
-            numbers[i] = _uint(RLPReader.readBytes(f[8]));
+            uint256 number = _uint(RLPReader.readBytes(f[8]));
+            numbers[i] = number;
+            if (anchor == type(uint256).max && (hash == origin || (recorded[number] != 0 && recorded[number] == hash)))
+            {
+                anchor = i;
+            }
         }
         if (anchor == type(uint256).max) revert L1OriginMismatch();
     }
 
     /// Type-3 envelope -> blob_versioned_hashes (list item 10), non-empty, each 0x01-prefixed.
-    function _blobHashes(bytes memory env, uint256 t) private pure returns (bytes32[] memory out) {
+    function _blobHashes(bytes memory env, uint256 t) internal pure returns (bytes32[] memory out) {
         if (env.length < 2 || env[0] != 0x03) revert NotBlobTx(t);
         RLPReader.RLPItem[] memory f = RLPReader.readList(Bytes.slice(env, 1));
         if (f.length < 11) revert NotBlobTx(t);
