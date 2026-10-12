@@ -92,9 +92,13 @@ else
     fi
 fi
 # The managers the adapters must point at; unset or empty expects the mode disabled.
+# L1-blob mode: L1_BLOB_VERIFIER reuses a verifier, else L1_BLOCK deploys one on that L1Block;
+# the registry's verifier is read back and checked either way.
+export L1_BLOB_VERIFIER="${L1_BLOB_VERIFIER:-}" L1_BLOCK="${L1_BLOCK:-}"
+VERIFY_DEPLOYMENT_ARGS+=(--l1-block "${L1_BLOCK:-0x4200000000000000000000000000000000000015}")
 VERIFY_DEPLOYMENT_ARGS+=(--dkg-manager "${DKG_MANAGER:-0x0}" --council-manager "${COUNCIL_MANAGER:-0x0}")
 
-# Deploys ZiskVerifier, then ProcessRegistry (and the DKG adapter when DKG_MANAGER is set, the
+# Deploys ZiskVerifier, then L1BlobVerifier (when L1_BLOCK is set), then ProcessRegistry (and the DKG adapter when DKG_MANAGER is set, the
 # Council adapter when COUNCIL_MANAGER is set).
 log_info "Deploying main contracts..."
 
