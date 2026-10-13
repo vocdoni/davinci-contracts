@@ -57,7 +57,7 @@ constructor(
 | `ETHERSCAN_API_KEY` | explorer key for source verification |
 | `ETHERSCAN_API_URL` | optional verifier endpoint for explorers other than Etherscan |
 | `DEBUG_DEPLOY` | `true` traces the script |
-| `EXPECT_DA_MODE` | `l1` or `blob`: the mode the run must produce, checked before `forge script` against `L1_BLOB_VERIFIER` / `L1_BLOCK` (a misspelled name otherwise silently deploys a blob-mode registry). Optional, but required on chains 10 and 11155420 |
+| `EXPECT_DA_MODE` | `l1` or `blob`: the mode the run must produce, checked before `forge script` against `L1_BLOB_VERIFIER` / `L1_BLOCK` (a misspelled name otherwise silently deploys a blob-mode registry). Required on every chain except 31337 and 1337 (as `VERIFY_MODE=auto`); an empty or all-zero address counts as unset |
 | `EXPECT_GRACE` | optional `DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE` in seconds the registry must read back (e.g. `300,240,600,1800,60`); a misspelled `GRACE_*` silently keeps its default |
 
 [`.env.example`](../.env.example) lists them all.

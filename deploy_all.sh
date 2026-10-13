@@ -98,20 +98,22 @@ export L1_BLOB_VERIFIER="${L1_BLOB_VERIFIER:-}" L1_BLOCK="${L1_BLOCK:-}"
 VERIFY_DEPLOYMENT_ARGS+=(--l1-block "${L1_BLOCK:-0x4200000000000000000000000000000000000015}")
 VERIFY_DEPLOYMENT_ARGS+=(--dkg-manager "${DKG_MANAGER:-0x0}" --council-manager "${COUNCIL_MANAGER:-0x0}")
 # EXPECT_DA_MODE (l1|blob): the DA mode this run must produce, independent of the variables that
-# select it, so a misspelled L1_BLOB_VERIFIER or L1_BLOCK aborts before anything is sent. Optional
-# (like EXPECT_GRACE) so local and test flows keep working, but mandatory on OP Mainnet and OP
-# Sepolia, where a blob-mode registry is useless and immutable.
+# select it, so a misspelled L1_BLOB_VERIFIER or L1_BLOCK aborts before anything is sent. Required
+# on every chain except the local ones (31337, 1337), like VERIFY_MODE=auto; an empty or all-zero
+# address counts as unset.
+nonzero() { [ -n "$1" ] && ! [[ "$1" =~ ^0x0*$ ]]; }
 case "${EXPECT_DA_MODE:-}" in
     "")
         case "$CHAIN_ID" in
-            10|11155420) log_error "EXPECT_DA_MODE (l1|blob) is required on chain $CHAIN_ID"; exit 1 ;;
+            31337|1337) ;;
+            *) log_error "EXPECT_DA_MODE (l1|blob) is required on chain $CHAIN_ID"; exit 1 ;;
         esac ;;
     l1)
-        { [ -n "$L1_BLOB_VERIFIER" ] || [ -n "$L1_BLOCK" ]; } \
-            || { log_error "EXPECT_DA_MODE=l1 but neither L1_BLOB_VERIFIER nor L1_BLOCK is set"; exit 1; } ;;
+        nonzero "$L1_BLOB_VERIFIER" || nonzero "$L1_BLOCK" \
+            || { log_error "EXPECT_DA_MODE=l1 but L1_BLOB_VERIFIER and L1_BLOCK are unset or zero"; exit 1; } ;;
     blob)
-        { [ -z "$L1_BLOB_VERIFIER" ] && [ -z "$L1_BLOCK" ]; } \
-            || { log_error "EXPECT_DA_MODE=blob but L1_BLOB_VERIFIER or L1_BLOCK is set"; exit 1; } ;;
+        { ! nonzero "$L1_BLOB_VERIFIER" && ! nonzero "$L1_BLOCK"; } \
+            || { log_error "EXPECT_DA_MODE=blob but L1_BLOB_VERIFIER or L1_BLOCK is non-zero"; exit 1; } ;;
     *)  log_error "Invalid EXPECT_DA_MODE='$EXPECT_DA_MODE'. Use: l1|blob."; exit 1 ;;
 esac
 # EXPECT_GRACE (DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE in seconds): the grace settings the registry
@@ -141,9 +143,9 @@ RECORD="deployments/$CHAIN_ID.json"
 log_info "Verifying ProcessRegistry $REGISTRY and writing $RECORD..."
 # The registry's L1 blob verifier must be the reused one, else the one this run deployed, else none
 # (blob mode): an unset or misspelled L1_BLOB_VERIFIER would silently deploy a blob-mode registry.
-if [ -n "$L1_BLOB_VERIFIER" ]; then
+if nonzero "$L1_BLOB_VERIFIER"; then
     EXPECT_L1V="$L1_BLOB_VERIFIER"
-elif [ -n "$L1_BLOCK" ]; then
+elif nonzero "$L1_BLOCK"; then
     EXPECT_L1V="$(jq -r '[.transactions[] | select(.transactionType == "CREATE" and .contractName == "L1BlobVerifier")][0].contractAddress // empty' "$RUN_FILE")"
     [ -n "$EXPECT_L1V" ] || { echo "L1_BLOCK is set but $RUN_FILE has no L1BlobVerifier" >&2; exit 1; }
 else
