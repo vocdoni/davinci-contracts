@@ -180,22 +180,27 @@ See [settlement.md](settlement.md#l1-blob-mode) for the proof and its limits.
 
 ## OP Mainnet
 
-Deployed on 2026-10-12 with `L1_BLOCK` (a fresh `L1BlobVerifier` on the OP predeploy), the
-`ZiskVerifier` deployed earlier and the release pins, from the owner's account, with no `.env`
+Deployed on 2026-10-13 reusing the `ZiskVerifier` and the `L1BlobVerifier` of the first OP registry
+(the verifier is stateless apart from its permissionless origin record), on the davinci-zkvm v0.2.0
+pins and a grace window that fits the Ethereum leg, from the owner's account, with no `.env`
 (variables set in a subshell; the RPC and the key never written to disk):
 
 ```bash
 CHAIN_ID=10 VERIFY_MODE=false \
 ZISK_VERIFIER=0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c \
-L1_BLOCK=0x4200000000000000000000000000000000000015 \
-BATCH_PROGRAM_VK=0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10 \
-RESULTS_PROGRAM_VK=0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794 \
+L1_BLOB_VERIFIER=0x3B95BC14F43ed8Addb83F84D10A949De74eE7529 \
+BATCH_PROGRAM_VK=0xa0ad5c4c7e39d4a7007933158181418a752e6c1563a211af84c579640db435fa \
+RESULTS_PROGRAM_VK=0xe693589453ecaee63eba697c48d4c5321a714bb18c2d84a97437b3f368578f68 \
 ROOT_C_VADCOP_FINAL=0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
 BALLOT_VK_HASH=0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
+GRACE_DEFAULT=300 GRACE_FLOOR=240 GRACE_CEIL=600 GRACE_MAX_TOTAL=1800 NOTICE_MIN=60 \
+EXPECT_GRACE=300,240,600,1800,60 \
 RPC_URL=... PRIVATE_KEY=... ./deploy_all.sh
 ```
 
-The script ran `forge script` once without `--broadcast` first. Addresses are in the
+The script ran `forge script` once without `--broadcast` first. The first OP registry
+(2026-10-12, `L1_BLOCK` instead of `L1_BLOB_VERIFIER`, the v0.1 pins, the default grace) is
+retired; its record is `deployments/10-0x8b63.json`. Addresses are in the
 [deployments table](../README.md#deployments).
 
 ## Council support
