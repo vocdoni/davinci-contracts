@@ -26,15 +26,37 @@ ROOT = Path(__file__).resolve().parent.parent
 UA = {"Content-Type": "application/json", "User-Agent": "davinci-verify"}
 
 
+def scrub(text, url):
+    """`text` without the parts of the RPC URL (path, host, userinfo, query) a server may echo."""
+    text = str(text)
+    try:
+        u = urlsplit(url)
+        parts = [u.path.strip("/"), u.query, u.netloc, u.netloc.rpartition("@")[0]]
+    except ValueError:
+        parts = []
+    for part in sorted({p for p in parts if len(p) > 1}, key=len, reverse=True):
+        text = text.replace(part, "<rpc>")
+    return text
+
+
+def failure(e, url):
+    """One line for a transport or decoding failure: type and reason or code, scrubbed."""
+    return f"{type(e).__name__}: {scrub(getattr(e, 'reason', getattr(e, 'code', '')), url)}"
+
+
 def rpc(url, method, params):
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
     req = urllib.request.Request(url, data=body.encode(), headers=UA)
     try:
         out = json.load(urllib.request.urlopen(req, timeout=30))
     except Exception as e:  # noqa: BLE001 - one line; the URL may carry a key and is never echoed
-        raise SystemExit(f"{method}: {type(e).__name__}: {getattr(e, 'reason', getattr(e, 'code', ''))}")
+        raise SystemExit(f"{method}: {failure(e, url)}")
+    if not isinstance(out, dict):
+        raise SystemExit(f"{method}: malformed response")
     if "error" in out:
-        raise SystemExit(f"{method}: {out['error']}")
+        raise SystemExit(f"{method}: {scrub(out['error'], url)}")
+    if "result" not in out:
+        raise SystemExit(f"{method}: response without a result")
     return out["result"]
 
 
@@ -56,9 +78,9 @@ def optional_address(url, registry, calldata, what="councilAdapter()"):
     try:
         out = json.load(urllib.request.urlopen(req, timeout=30))
     except Exception as e:  # noqa: BLE001 - every transport or decoding failure fails closed
-        raise SystemExit(f"{what}: {e}")
+        raise SystemExit(f"{what}: {failure(e, url)}")
     if not isinstance(out, dict):
-        raise SystemExit(f"{what}: malformed response {out!r}")
+        raise SystemExit(f"{what}: malformed response")
     if "error" in out:
         err = out["error"]
         if (
@@ -67,7 +89,7 @@ def optional_address(url, registry, calldata, what="councilAdapter()"):
             and err.get("data") in (None, "", "0x")
         ):
             return None
-        raise SystemExit(f"{what}: {err}")
+        raise SystemExit(f"{what}: {scrub(err, url)}")
     result = out.get("result")
     if result == "0x":
         return None
@@ -163,8 +185,12 @@ def main():
     ap.add_argument("--record", help="write the verified deployment as JSON here (only when every check passes)")
     ap.add_argument("--cast", default=str(Path.home() / ".foundry/bin/cast"))
     a = ap.parse_args()
-    u = urlsplit(a.rpc)
-    if u.scheme not in ("http", "https") or not u.netloc or re.search(r"[\s\x00-\x1f\x7f]", a.rpc):
+    try:
+        u = urlsplit(a.rpc)
+        bad = u.scheme not in ("http", "https") or not u.netloc
+    except ValueError:
+        bad = True
+    if bad or re.search(r"[\s\x00-\x1f\x7f]", a.rpc):
         ap.error("--rpc must be an http(s) URL without whitespace (not echoed: it may carry a key)")
     if a.l1_blob_verifier is not None and not re.fullmatch(r"0x[0-9a-fA-F]{1,40}", a.l1_blob_verifier):
         ap.error("--l1-blob-verifier takes a hex address or 0x0")
