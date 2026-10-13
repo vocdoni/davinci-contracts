@@ -218,6 +218,7 @@ types of this checkout into `dist/`.
 | `DKG_MANAGER` | optional davinci-dkg manager; enables the DKG key modes |
 | `COUNCIL_MANAGER` | optional Council manager; enables the `COUNCIL` key mode |
 | `GRACE_DEFAULT`, `GRACE_FLOOR`, `GRACE_CEIL`, `GRACE_MAX_TOTAL`, `NOTICE_MIN` | optional grace window and notice settings, in seconds (180, 150, 600, 1800, 60) |
+| `EXPECT_GRACE` | optional `DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE` in seconds the registry must read back (e.g. `300,240,600,1800,60`); a misspelled `GRACE_*` silently keeps its default |
 
 It then checks the deployment against the build with `script/verify_deployment.py` and writes
 the verified record to `deployments/<chain id>.json`. Sequencers refuse a registry pinned to
