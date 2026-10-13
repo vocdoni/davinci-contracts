@@ -47,7 +47,7 @@ contract TransitionTest is RegistryTestBase {
         assertEq(t.nBlobs, 2);
         assertEq(t.overwrites, 3);
         vm.expectEmit(true, true, false, true, address(registry));
-        emit IProcessRegistry.ProcessStateTransitioned(pid, address(this), t.rootBefore, t.rootAfter, 820, 3, 2);
+        emit IProcessRegistry.ProcessStateTransitioned(pid, address(this), t.rootBefore, t.rootAfter, 1000, 3, 2);
         vm.blobhashes(t.versionedHashes);
         uint256 g = gasleft();
         registry.submitStateTransition(pid, t.publicValues, t.proofBytes, t.commitments, t.ys, t.kzgProofs);
@@ -55,8 +55,8 @@ contract TransitionTest is RegistryTestBase {
 
         DAVINCITypes.Process memory p = registry.getProcess(pid);
         assertEq(p.latestStateRoot, t.rootAfter);
-        // 3 fresh votes, then 820 votes of which 3 overwrite the first batch.
-        assertEq(p.votersCount, 820);
+        // 3 fresh votes, then 1000 votes of which 3 overwrite the first batch.
+        assertEq(p.votersCount, 1000);
         assertEq(p.overwrittenVotesCount, 3);
         assertEq(p.batchNumber, 2);
     }
@@ -145,7 +145,7 @@ contract TransitionTest is RegistryTestBase {
         _settleBoth(pid);
         Transition memory t = _transition(1);
         _setReg32(t.publicValues, 2, t.rootAfter);
-        _setWord(t.publicValues, 42, 823);
+        _setWord(t.publicValues, 42, 1003);
         vm.expectRevert(IProcessRegistry.InvalidOccupiedBefore.selector);
         _submit(pid, t);
     }
@@ -378,7 +378,7 @@ contract TransitionTest is RegistryTestBase {
     }
 
     function test_RevertWhen_MaxVotersExceededBySecondBatch() public {
-        bytes31 pid = _fixtureProcess(819);
+        bytes31 pid = _fixtureProcess(999);
         _submit(pid, _transition(0));
         vm.expectRevert(IProcessRegistry.MaxVotersReached.selector);
         _submit(pid, _transition(1));

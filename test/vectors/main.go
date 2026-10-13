@@ -597,7 +597,7 @@ type dynamicJSON struct {
 }
 
 // transitionFixture builds two transitions for the organizer's first process:
-// three fresh votes on one blob, then 820 votes (three overwrites) on two
+// three fresh votes on one blob, then 1000 votes (three overwrites) on two
 // blobs. Roots after are placeholders: the forge tests use a mock verifier.
 func transitionFixture(chainID uint32, registry, creator common.Address, prefix uint32, vkLeaf *big.Int) (fixtureFile, [][][]byte) {
 	mode := fixtureModes[0]
@@ -625,7 +625,7 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 	}
 	b1 := batch{voteIDs: []uint64{1<<63 | 11, 1<<63 | 7, 1<<63 | 23}, slots: []uint64{0x18, 0x19, 0x1a}}
 	b2 := batch{w: 3, occ: 3}
-	for j := uint64(0); j < 820; j++ {
+	for j := uint64(0); j < 1000; j++ {
 		b2.voteIDs = append(b2.voteIDs, 1<<63|(1000+j))
 		if j < 3 {
 			b2.slots = append(b2.slots, 0x18+j)
@@ -640,7 +640,7 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 			updates[i] = davinci.SlotUpdate{Key: s, Ballot: pt.ballot(nf)}
 		}
 		rootBE := [32]byte(reverse(root))
-		tb, err := davinci.BuildTransitionBlobs(nf, pidBE, rootBE, b.voteIDs, updates, pt.ballot(nf))
+		tb, err := davinci.BuildTransitionBlobs(nf, pidBE, rootBE, b.voteIDs, updates)
 		check(err, "BuildTransitionBlobs")
 
 		after := sha256.Sum256([]byte(fmt.Sprintf("davinci-contracts fixture root %d", t+1)))

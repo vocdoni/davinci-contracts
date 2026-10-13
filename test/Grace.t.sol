@@ -316,7 +316,7 @@ contract GraceTest is RegistryTestBase {
 
         // The queued new-voter batch lands under the cap voters saw at the close.
         _submit(pid, _transition(1));
-        assertEq(registry.getProcess(pid).votersCount, 820);
+        assertEq(registry.getProcess(pid).votersCount, 1000);
     }
 
     function test_GetProcessGraceEnd_UnknownProcess() public view {

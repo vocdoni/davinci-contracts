@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: vocdoni/davinci-zkvm
-          ref: v0.1.1
+          ref: a335db50106e494c25997e3fe02465c25a38ca8f
           path: davinci-zkvm
 
       - name: Checkout davinci-circom (artifacts only)
