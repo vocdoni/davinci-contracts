@@ -9,7 +9,7 @@ mismatch. --record writes what was verified as JSON, only when every check passe
 
     python3 script/verify_deployment.py --rpc URL --registry 0x... \
         --batch-vk 0x... --results-vk 0x... --root-c 0x... --ballot-vk-hash 0x... \
-        [--grace 300,240,600,1800,60]
+        [--grace 300,240,600,1800,60] [--l1-blob-verifier 0x...|0x0]
     python3 script/verify_deployment.py --rpc URL --registry 0x... --pins-from 0x... \
         --dkg-manager 0x... --council-manager 0x... [--l1-block 0x...] [--broadcast run-latest.json --record out.json]
 """
@@ -37,8 +37,8 @@ def rpc(url, method, params):
 ADDRESS_WORD = re.compile(r"0x0{24}[0-9a-fA-F]{40}")
 
 
-def council_adapter(url, registry, calldata):
-    """The registry's councilAdapter(), or None when the registry has no such function.
+def optional_address(url, registry, calldata, what="councilAdapter()"):
+    """The registry's address getter `what`, or None when the registry has no such function.
 
     Absent means only what a registry from before the COUNCIL mode answers: an execution
     revert without revert data, or an empty return. A transport failure, any other JSON-RPC
@@ -52,9 +52,9 @@ def council_adapter(url, registry, calldata):
     try:
         out = json.load(urllib.request.urlopen(req, timeout=30))
     except Exception as e:  # noqa: BLE001 - every transport or decoding failure fails closed
-        raise SystemExit(f"councilAdapter(): {e}")
+        raise SystemExit(f"{what}: {e}")
     if not isinstance(out, dict):
-        raise SystemExit(f"councilAdapter(): malformed response {out!r}")
+        raise SystemExit(f"{what}: malformed response {out!r}")
     if "error" in out:
         err = out["error"]
         if (
@@ -63,12 +63,12 @@ def council_adapter(url, registry, calldata):
             and err.get("data") in (None, "", "0x")
         ):
             return None
-        raise SystemExit(f"councilAdapter(): {err}")
+        raise SystemExit(f"{what}: {err}")
     result = out.get("result")
     if result == "0x":
         return None
     if not isinstance(result, str) or not ADDRESS_WORD.fullmatch(result):
-        raise SystemExit(f"councilAdapter(): malformed result {result!r}")
+        raise SystemExit(f"{what}: malformed result {result!r}")
     return "0x" + result[-40:]
 
 
@@ -149,6 +149,11 @@ def main():
         metavar="DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE",
         help="expected defaultGrace, graceFloor, graceCeil, graceMaxTotal and noticeMin in seconds "
         "(DeployAll keeps its default for a GRACE_* variable that is unset or misspelled)",
+    )
+    ap.add_argument(
+        "--l1-blob-verifier",
+        metavar="ADDR|0x0",
+        help="expected registry.l1BlobVerifier(); 0x0 expects blob mode. Without it the mode is only printed",
     )
     ap.add_argument("--broadcast", help="forge run-latest.json of the deployment, for the record")
     ap.add_argument("--record", help="write the verified deployment as JSON here (only when every check passes)")
@@ -261,7 +266,7 @@ def main():
             check("DKG disabled as --dkg-manager expects", int(a.dkg_manager, 16) == 0)
         print("adapter  none (DKG disabled)")
     try:
-        council = council_adapter(a.rpc, a.registry, selector("councilAdapter()", a.cast))
+        council = optional_address(a.rpc, a.registry, selector("councilAdapter()", a.cast))
     except SystemExit as e:  # unreadable is a failure, never "no adapter"
         check("registry.councilAdapter() readable", False, str(e))
         council = "unreadable"
@@ -287,10 +292,19 @@ def main():
         else:
             print("council none (COUNCIL disabled)")
     try:
-        l1v = addr(get(a.registry, "l1BlobVerifier()"))
-    except SystemExit:  # a registry from before the L1-blob mode
-        l1v = None
-    if l1v is not None and int(l1v, 16) != 0:
+        l1v = optional_address(a.rpc, a.registry, selector("l1BlobVerifier()", a.cast), "l1BlobVerifier()")
+    except SystemExit as e:  # unreadable is a failure, never "blob mode" or "pre-L1 registry"
+        check("registry.l1BlobVerifier() readable", False, str(e))
+        l1v = "unreadable"
+    if a.l1_blob_verifier is not None:
+        want = int(a.l1_blob_verifier, 16)
+        if want == 0:
+            check("registry is in blob mode as --l1-blob-verifier 0x0 expects", l1v is None or (l1v != "unreadable" and int(l1v, 16) == 0), str(l1v))
+        else:
+            check("registry.l1BlobVerifier == --l1-blob-verifier", l1v not in (None, "unreadable") and same(l1v, a.l1_blob_verifier), str(l1v))
+    if l1v == "unreadable":
+        pass
+    elif l1v is not None and int(l1v, 16) != 0:
         v_code = rpc(a.rpc, "eth_getCode", [l1v, "latest"])
         m, why = masked_match(v_code, artifact("L1BlobVerifier"))
         check("L1BlobVerifier runtime code == local build (immutables masked)", m, why)

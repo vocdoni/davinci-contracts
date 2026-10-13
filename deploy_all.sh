@@ -122,7 +122,17 @@ RUN_FILE="broadcast/DeployAll.s.sol/$CHAIN_ID/run-latest.json"
 REGISTRY="$(jq -r '[.transactions[] | select(.transactionType == "CREATE" and .contractName == "ProcessRegistry")][0].contractAddress' "$RUN_FILE")"
 RECORD="deployments/$CHAIN_ID.json"
 log_info "Verifying ProcessRegistry $REGISTRY and writing $RECORD..."
+# The registry's L1 blob verifier must be the reused one, else the one this run deployed, else none
+# (blob mode): an unset or misspelled L1_BLOB_VERIFIER would silently deploy a blob-mode registry.
+if [ -n "$L1_BLOB_VERIFIER" ]; then
+    EXPECT_L1V="$L1_BLOB_VERIFIER"
+elif [ -n "$L1_BLOCK" ]; then
+    EXPECT_L1V="$(jq -r '[.transactions[] | select(.transactionType == "CREATE" and .contractName == "L1BlobVerifier")][0].contractAddress // empty' "$RUN_FILE")"
+    [ -n "$EXPECT_L1V" ] || { echo "L1_BLOCK is set but $RUN_FILE has no L1BlobVerifier" >&2; exit 1; }
+else
+    EXPECT_L1V=0x0
+fi
 python3 script/verify_deployment.py --rpc "$RPC_URL" --chain-id "$CHAIN_ID" --registry "$REGISTRY" \
-    "${VERIFY_DEPLOYMENT_ARGS[@]}" --cast "$(command -v cast)" --broadcast "$RUN_FILE" --record "$RECORD"
+    --l1-blob-verifier "$EXPECT_L1V" "${VERIFY_DEPLOYMENT_ARGS[@]}" --cast "$(command -v cast)" --broadcast "$RUN_FILE" --record "$RECORD"
 
 "$SCRIPT_DIR/helpers/write_contract_addresses.sh"
