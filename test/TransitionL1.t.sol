@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.28;
 
+import {stdJson} from "forge-std/StdJson.sol";
 import {RegistryTestBase} from "./RegistryTestBase.sol";
 import {IProcessRegistry} from "../src/interfaces/IProcessRegistry.sol";
 import {IL1BlobVerifier} from "../src/interfaces/IL1BlobVerifier.sol";
+import {L1BlobVerifier} from "../src/L1BlobVerifier.sol";
 import {DAVINCITypes} from "../src/libraries/DAVINCITypes.sol";
 import {MockL1BlobVerifier} from "./mocks/MockL1BlobVerifier.sol";
+import {MockL1Block} from "./mocks/MockL1Block.sol";
 
 /// @dev L1-blob mode: the blob hashes come from the (mocked) L1 verifier instead of BLOBHASH.
 ///      The registry address does not depend on the mock: the mock is deployed by the test
@@ -125,5 +128,84 @@ contract TransitionL1WrongModeTest is RegistryTestBase {
         IL1BlobVerifier.L1BlobProof memory l1;
         vm.expectRevert(IProcessRegistry.WrongDAMode.selector);
         registry.submitStateTransitionL1(pid, t.publicValues, t.proofBytes, t.commitments, t.ys, t.kzgProofs, l1);
+    }
+}
+
+/// @dev L1-blob mode with the real L1BlobVerifier: the fixture transitions' blobs in synthetic
+///      Ethereum blob transactions (test/vectors/l1blob, written by `go run .`). The second
+///      transition's two blobs went out in two transactions, as a node posts a transition
+///      above one transaction's blob limit; the proof lists them in blob order.
+contract TransitionL1TwoTxTest is RegistryTestBase {
+    using stdJson for string;
+
+    MockL1Block internal l1;
+
+    function _l1BlobVerifier() internal override returns (address) {
+        l1 = new MockL1Block();
+        return address(new L1BlobVerifier(address(l1)));
+    }
+
+    /// @dev The L1 proof of fixture `name`, with OP's origin set at its top header.
+    function _proof(string memory name)
+        internal
+        returns (IL1BlobVerifier.L1BlobProof memory p, uint256[] memory blocks)
+    {
+        string memory j = vm.readFile(string.concat("test/vectors/l1blob/", name, ".json"));
+        p.headers = j.readBytesArray(".headers");
+        uint256 nt = abi.decode(vm.parseJson(j, ".txs"), (bytes[])).length;
+        p.txs = new IL1BlobVerifier.L1TxProof[](nt);
+        for (uint256 i = 0; i < nt; ++i) {
+            string memory b = string.concat(".txs[", vm.toString(i), "]");
+            p.txs[i].headerIndex = j.readUint(string.concat(b, ".header_index"));
+            p.txs[i].key = j.readBytes(string.concat(b, ".key"));
+            p.txs[i].proof = j.readBytesArray(string.concat(b, ".proof"));
+        }
+        blocks = j.readUintArray(".expected_tx_blocks");
+        l1.set(uint64(j.readUintArray(".header_numbers")[0]), j.readBytes32Array(".header_hashes")[0]);
+    }
+
+    function _submitL1(bytes31 pid, Transition memory t, IL1BlobVerifier.L1BlobProof memory p) internal {
+        registry.submitStateTransitionL1(pid, t.publicValues, t.proofBytes, t.commitments, t.ys, t.kzgProofs, p);
+    }
+
+    /// @dev The first transition, from its one-transaction proof.
+    function _first() internal returns (bytes31 pid) {
+        pid = _fixtureProcess();
+        (IL1BlobVerifier.L1BlobProof memory p,) = _proof("one_tx");
+        _submitL1(pid, _transition(0), p);
+    }
+
+    function _settledTwoTx(bytes31 pid, string memory name, uint256 b0, uint256 b1) internal {
+        Transition memory t = _transition(1);
+        (IL1BlobVerifier.L1BlobProof memory p, uint256[] memory blocks) = _proof(name);
+        assertEq(t.commitments.length, 2);
+        assertEq(blocks[0], b0);
+        assertEq(blocks[1], b1);
+        vm.expectEmit(true, false, false, true, address(registry));
+        emit IProcessRegistry.ProcessStateTransitionedL1(pid, blocks, t.versionedHashes);
+        _submitL1(pid, t, p);
+        DAVINCITypes.Process memory proc = registry.getProcess(pid);
+        assertEq(proc.latestStateRoot, t.rootAfter);
+        assertEq(proc.batchNumber, 2);
+        assertEq(proc.votersCount, 1000);
+    }
+
+    function test_SubmitL1_TwoTransactionsInChunkOrder() public {
+        _settledTwoTx(_first(), "two_tx", 2000, 2002);
+    }
+
+    function test_SubmitL1_RepostedFirstChunkInTheNewerBlock() public {
+        _settledTwoTx(_first(), "two_tx_reposted", 2002, 2000);
+    }
+
+    /// The same two transactions listed newest blob first: the openings follow the proof order,
+    /// so commitment 0 meets the second blob's hash.
+    function test_RevertWhen_L1_ChunksOutOfOrder() public {
+        bytes31 pid = _first();
+        Transition memory t = _transition(1);
+        (IL1BlobVerifier.L1BlobProof memory p,) = _proof("two_tx");
+        (p.txs[0], p.txs[1]) = (p.txs[1], p.txs[0]);
+        vm.expectRevert(abi.encodeWithSelector(IProcessRegistry.InvalidBlobOpening.selector, 0));
+        _submitL1(pid, t, p);
     }
 }

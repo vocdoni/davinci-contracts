@@ -242,6 +242,77 @@ contract L1BlobVerifierTest is Test {
         }
     }
 
+    /// One transition in two transactions two blocks apart (synthetic headers, test/vectors).
+    function test_TwoTxsInTwoBlocks() public {
+        Fx memory fx = _load("two_tx");
+        l1.set(uint64(fx.blocks[1]) + 1, fx.hashes[0]);
+        (bytes32[] memory vhs, uint256[] memory blocks) = v.verify(fx.p);
+        assertEq(vhs, fx.vhs);
+        assertEq(blocks, fx.blocks);
+        assertEq(blocks[0], 2000);
+        assertEq(blocks[1], 2002);
+    }
+
+    /// The first transaction was posted again and landed after the second: the proof still
+    /// lists it first, and the hashes come back in proof order.
+    function test_TwoTxs_RepostedFirstInTheNewerBlock() public {
+        Fx memory fx = _load("two_tx_reposted");
+        l1.set(2003, fx.hashes[0]);
+        (bytes32[] memory vhs, uint256[] memory blocks) = v.verify(fx.p);
+        assertEq(vhs, _load("two_tx").vhs);
+        assertEq(blocks, fx.blocks);
+        assertEq(blocks[0], 2002);
+        assertEq(blocks[1], 2000);
+    }
+
+    /// A recorded origin between the two blocks anchors the older transaction only.
+    function test_RevertWhen_TwoTxs_RecordBelowTheNewer() public {
+        Fx memory fx = _load("two_tx");
+        assertEq(_number(fx.p.headers[2]), 2001);
+        l1.set(2001, fx.hashes[2]);
+        v.record();
+        l1.set(2011, keccak256("later"));
+        vm.expectRevert(abi.encodeWithSelector(IL1BlobVerifier.TxAboveOrigin.selector, 1));
+        v.verify(fx.p);
+        fx = _load("two_tx_reposted");
+        l1.set(2001, fx.hashes[2]);
+        v.record();
+        l1.set(2011, keccak256("later"));
+        vm.expectRevert(abi.encodeWithSelector(IL1BlobVerifier.TxAboveOrigin.selector, 0));
+        v.verify(fx.p);
+    }
+
+    /// A record at the newer block anchors both.
+    function test_TwoTxs_RecordAtTheNewer() public {
+        Fx memory fx = _load("two_tx");
+        l1.set(2002, fx.hashes[1]);
+        v.record();
+        l1.set(2040, keccak256("later"));
+        (bytes32[] memory vhs, uint256[] memory blocks) = v.verify(fx.p);
+        assertEq(vhs, fx.vhs);
+        assertEq(blocks, fx.blocks);
+    }
+
+    /// The largest proof a node sends: 64 headers and three transactions (13 blobs, a 512-vote
+    /// 16-field batch of revotes). It must leave the settlement well inside OP's 128 KB transaction
+    /// limit and the node's gas estimate.
+    function test_WorstCaseProof_FitsOP() public {
+        Fx memory fx = _load("worst_case");
+        assertEq(fx.p.headers.length, 64);
+        assertEq(fx.p.txs.length, 3);
+        l1.set(_number(fx.p.headers[0]), fx.hashes[0]);
+        uint256 g = gasleft();
+        (bytes32[] memory vhs, uint256[] memory blocks) = v.verify(fx.p);
+        uint256 used = g - gasleft();
+        assertEq(vhs, fx.vhs);
+        assertEq(blocks, fx.blocks);
+        uint256 size = abi.encode(fx.p).length;
+        emit log_named_uint("verify gas, 64 headers and 3 transactions", used);
+        emit log_named_uint("proof calldata bytes", size);
+        assertLt(size, 64_000);
+        assertLt(used, 8_000_000);
+    }
+
     function test_RevertWhen_HeaderIndexOutOfRange() public {
         Fx memory fx = _load("recent");
         l1.set(1, fx.hashes[0]);
