@@ -105,9 +105,9 @@ and in another shell:
 
 ```bash
 export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 CHAIN_ID=31337 \
-  BATCH_PROGRAM_VK=0xa0ad5c4c7e39d4a7007933158181418a752e6c1563a211af84c579640db435fa \
-  RESULTS_PROGRAM_VK=0xe693589453ecaee63eba697c48d4c5321a714bb18c2d84a97437b3f368578f68 \
-  ROOT_C_VADCOP_FINAL=0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
+  BATCH_PROGRAM_VK=0xe39e460085ecddecf365649a61183a71c0fe778aa9c06fd2aa1a6c43cddb988b \
+  RESULTS_PROGRAM_VK=0x394694558f39d0b2da0bbb09322333a0f567ee8d16bea2f354543a086587d167 \
+  ROOT_C_VADCOP_FINAL=0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265 \
   BALLOT_VK_HASH=0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e
 forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
 ```
@@ -202,7 +202,7 @@ RPC_URL=... PRIVATE_KEY=... ./deploy_all.sh
 The script logs the verifier's code hash; it must equal `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1`
 (`ZISK_VERIFIER_CODEHASH` in davinci-zkvm). The new registry address is TBD until the deploy step fills it.
 
-### Retired OP Mainnet registry (v0.2.0 vks, ZisK 1.3.0)
+### OP Mainnet registry being retired (v0.2.0 vks, ZisK 1.3.0)
 
 Deployed on 2026-10-13 reusing the `ZiskVerifier` and the `L1BlobVerifier` of the first OP registry
 (the verifier is stateless apart from its permissionless origin record), on the davinci-zkvm v0.2.0
