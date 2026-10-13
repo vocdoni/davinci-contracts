@@ -58,7 +58,23 @@ python3 script/verify_deployment.py --rpc "$RPC" --chain-id 100 \
     --council-manager 0x2f5b110864cbad4017fe8ac59111812278f5f71f
 ```
 
-For the OP Mainnet registry (`deployments/10.json`), with `RPC` an OP Mainnet JSON-RPC endpoint:
+For the OP Mainnet ZisK 1.3.2 registry, with `RPC` an OP Mainnet JSON-RPC endpoint (the registry and verifier
+addresses are TBD until the deploy step fills them, and its record `deployments/10-<registry>.json` is not written yet):
+
+```bash
+python3 script/verify_deployment.py --rpc "$RPC" --chain-id 10 \
+    --registry <TBD registry> \
+    --verifier <TBD verifier> \
+    --batch-vk 0xe39e460085ecddecf365649a61183a71c0fe778aa9c06fd2aa1a6c43cddb988b \
+    --results-vk 0x394694558f39d0b2da0bbb09322333a0f567ee8d16bea2f354543a086587d167 \
+    --root-c 0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265 \
+    --ballot-vk-hash 0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
+    --dkg-manager 0x0 --council-manager 0x0 \
+    --l1-block 0x4200000000000000000000000000000000000015 --grace 300,240,600,1800,60 \
+    --l1-blob-verifier 0x3B95BC14F43ed8Addb83F84D10A949De74eE7529
+```
+
+For the retired OP Mainnet registry (`deployments/10.json`, v0.2.0 vks, ZisK 1.3.0):
 
 ```bash
 git checkout 44fdca1
@@ -102,7 +118,7 @@ an independent source:
   (`davinci.BallotVKLeaf` in the davinci-zkvm Go SDK).
 
 davinci-zkvm also pins the `keccak256` of the `ZiskVerifier` runtime code
-(`ZISK_VERIFIER_CODEHASH`), and sequencers refuse a registry whose verifier has other code. To
+(`ZISK_VERIFIER_CODEHASH`, `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` for ZisK 1.3.2-alpha; the Gnosis verifier below is the older 1.3.0 one), and sequencers refuse a registry whose verifier has other code. To
 compare:
 
 ```bash

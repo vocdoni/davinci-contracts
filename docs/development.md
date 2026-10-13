@@ -80,6 +80,48 @@ npm run slither
 npm run mythril
 ```
 
+## Vendoring the ZisK verifier
+
+The registry verifies PLONK proofs through three files copied from the ZisK snark setup
+(`<zisk home>/provingKeySnark/final/`):
+
+| Source | Destination | Edit |
+|---|---|---|
+| `PlonkVerifier.sol` | `src/verifiers/PlonkVerifier.sol` | none, byte-identical |
+| `IZiskVerifier.sol` | `src/interfaces/IZiskVerifier.sol` | none, byte-identical |
+| `ZiskVerifier.sol` | `src/verifiers/ZiskVerifier.sol` | the `IZiskVerifier` import path only |
+
+Upstream `ZiskVerifier.sol` imports `./IZiskVerifier.sol`; here the interface lives in
+`src/interfaces/`. Make no other edit (no reformatting, NatSpec, license or pragma change): the
+bytecode embeds the metadata hash of every source in the compilation unit, so any byte change in
+any of the three files moves the code hash. `foundry.toml` lists both verifier files under
+`[fmt] ignore`; keep that.
+
+```bash
+S=~/.zisk-1.3.2/provingKeySnark/final      # the snark setup of the ZisK release
+cp "$S/PlonkVerifier.sol" src/verifiers/PlonkVerifier.sol
+cp "$S/IZiskVerifier.sol" src/interfaces/IZiskVerifier.sol
+sed 's|import {IZiskVerifier} from "./IZiskVerifier.sol";|import {IZiskVerifier} from "../interfaces/IZiskVerifier.sol";|' \
+  "$S/ZiskVerifier.sol" > src/verifiers/ZiskVerifier.sol
+
+diff "$S/ZiskVerifier.sol" src/verifiers/ZiskVerifier.sol   # exactly line 4 differs
+
+forge build
+cast keccak $(jq -r .deployedBytecode.object out/ZiskVerifier.sol/ZiskVerifier.json)
+```
+
+`ZiskVerifier` has no immutables, so that keccak equals `cast codehash <deployed verifier>`. It is
+`ZISK_VERIFIER_CODEHASH` in davinci-zkvm `rust-sdk/src/release.rs`, which sequencers check at boot;
+`script/verify_deployment.py` computes the same value. The hash also depends on the build settings:
+`solc 0.8.28`, `evm_version = cancun`, optimizer on with 200 runs, `via_ir = true`, the default
+`bytecode_hash = ipfs` and `cbor_metadata = true`, and the committed `remappings.txt`. Change none of
+them in the same change. The expected value for ZisK 1.3.2-alpha is
+`0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` (forge 1.8.3).
+
+After a new release also re-record `test/vectors/recorded_batch_snark.json` (`program_vk`,
+`root_c_vadcop_final`, `public_values`, `proof_bytes` of a real batch job) and regenerate the decoded
+`publics.json` with `cd test/vectors && go run . -recorded recorded_batch_snark.json`.
+
 ## Vendored code
 
 `src/verifiers/PlonkVerifier.sol` and `ZiskVerifier.sol` are copied from the ZisK snark setup

@@ -33,7 +33,7 @@ abstract contract RegistryTestBase is Test {
     uint32 internal constant CHAIN_ID = 1337;
     bytes32 internal constant BATCH_VK = keccak256("davinci batch program vk");
     bytes32 internal constant RESULTS_VK = keccak256("davinci results program vk");
-    bytes32 internal constant ROOT_C = 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80;
+    bytes32 internal constant ROOT_C = 0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265;
     uint256 internal constant DURATION = 1 days;
     // The production grace bounds (DeployAll defaults).
     uint32 internal constant GRACE = 180;
