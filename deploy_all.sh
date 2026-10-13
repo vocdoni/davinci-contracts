@@ -97,6 +97,23 @@ fi
 export L1_BLOB_VERIFIER="${L1_BLOB_VERIFIER:-}" L1_BLOCK="${L1_BLOCK:-}"
 VERIFY_DEPLOYMENT_ARGS+=(--l1-block "${L1_BLOCK:-0x4200000000000000000000000000000000000015}")
 VERIFY_DEPLOYMENT_ARGS+=(--dkg-manager "${DKG_MANAGER:-0x0}" --council-manager "${COUNCIL_MANAGER:-0x0}")
+# EXPECT_DA_MODE (l1|blob): the DA mode this run must produce, independent of the variables that
+# select it, so a misspelled L1_BLOB_VERIFIER or L1_BLOCK aborts before anything is sent. Optional
+# (like EXPECT_GRACE) so local and test flows keep working, but mandatory on OP Mainnet and OP
+# Sepolia, where a blob-mode registry is useless and immutable.
+case "${EXPECT_DA_MODE:-}" in
+    "")
+        case "$CHAIN_ID" in
+            10|11155420) log_error "EXPECT_DA_MODE (l1|blob) is required on chain $CHAIN_ID"; exit 1 ;;
+        esac ;;
+    l1)
+        { [ -n "$L1_BLOB_VERIFIER" ] || [ -n "$L1_BLOCK" ]; } \
+            || { log_error "EXPECT_DA_MODE=l1 but neither L1_BLOB_VERIFIER nor L1_BLOCK is set"; exit 1; } ;;
+    blob)
+        { [ -z "$L1_BLOB_VERIFIER" ] && [ -z "$L1_BLOCK" ]; } \
+            || { log_error "EXPECT_DA_MODE=blob but L1_BLOB_VERIFIER or L1_BLOCK is set"; exit 1; } ;;
+    *)  log_error "Invalid EXPECT_DA_MODE='$EXPECT_DA_MODE'. Use: l1|blob."; exit 1 ;;
+esac
 # EXPECT_GRACE (DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE in seconds): the grace settings the registry
 # must read back. DeployAll keeps its default for a GRACE_* variable that is unset or misspelled.
 if [ -n "${EXPECT_GRACE:-}" ]; then
