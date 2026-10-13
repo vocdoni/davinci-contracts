@@ -38,13 +38,36 @@ With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committe
 
 ## Deployments
 
-### OP Mainnet, L1-blob mode
+### OP Mainnet, ZisK 1.3.2 registry
+
+OP Mainnet (chain id 10), on the davinci-zkvm ZisK 1.3.2-alpha pins, replacing the registry below.
+Not deployed yet: the deploy step fills `ProcessRegistry` and `ZiskVerifier` (the 1.3.0 verifier
+cannot be reused, it hard-codes the old `rootCVadcopFinal`). `L1BlobVerifier` is reused.
+
+| Contract | Address |
+|---|---|
+| `ProcessRegistry` | `TBD (filled by the deploy step)` |
+| `L1BlobVerifier` | `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529` (reads `L1Block` `0x4200000000000000000000000000000000000015`; reused) |
+| `ZiskVerifier` | `TBD (filled by the deploy step)`; runtime code hash `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` |
+
+| Immutable | Value |
+|---|---|
+| `batchProgramVK` | `0xe39e460085ecddecf365649a61183a71c0fe778aa9c06fd2aa1a6c43cddb988b` |
+| `resultsProgramVK` | `0x394694558f39d0b2da0bbb09322333a0f567ee8d16bea2f354543a086587d167` |
+| `rootCVadcopFinal` | `0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265` |
+| `ballotVKHash` | `0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e` |
+| `defaultGrace` / `graceFloor` / `graceCeil` | 300 / 240 / 600 s |
+| `graceMaxTotal` | 1800 s |
+| `noticeMin` | 60 s |
+
+### OP Mainnet, L1-blob mode (v0.2.0 registry, to be retired)
 
 OP Mainnet (chain id 10), deployed 2026-10-13 from commit `44fdca1` at block 158155408, on the
 davinci-zkvm v0.2.0 program vks. The registry settles transitions on OP while their blobs live in
 Ethereum blob transactions, checked by its `L1BlobVerifier` against OP's `L1Block` predeploy
 ([settlement.md](docs/settlement.md#l1-blob-mode)). [`deployments/10.json`](deployments/10.json)
-holds the verified record. Not source-verified on an explorer yet.
+holds the verified record. Not source-verified on an explorer yet. It is about to be retired: it
+stays on the v0.2.0 vks and ZisK 1.3.0, and sequencers move to the ZisK 1.3.2 registry above.
 
 | Contract | Address |
 |---|---|

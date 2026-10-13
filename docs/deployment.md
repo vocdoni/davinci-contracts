@@ -183,6 +183,27 @@ See [settlement.md](settlement.md#l1-blob-mode) for the proof and its limits.
 
 ## OP Mainnet
 
+The ZisK 1.3.2 registry is deployed like the one below, with these differences: a new `ZiskVerifier`
+(vendored per [development.md](development.md#vendoring-the-zisk-verifier); the old one hard-codes the
+previous `rootCVadcopFinal`, so do not set `ZISK_VERIFIER`), and the davinci-zkvm ZisK 1.3.2-alpha pins:
+
+```bash
+CHAIN_ID=10 VERIFY_MODE=false \
+L1_BLOB_VERIFIER=0x3B95BC14F43ed8Addb83F84D10A949De74eE7529 EXPECT_DA_MODE=l1 \
+BATCH_PROGRAM_VK=0xe39e460085ecddecf365649a61183a71c0fe778aa9c06fd2aa1a6c43cddb988b \
+RESULTS_PROGRAM_VK=0x394694558f39d0b2da0bbb09322333a0f567ee8d16bea2f354543a086587d167 \
+ROOT_C_VADCOP_FINAL=0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265 \
+BALLOT_VK_HASH=0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
+GRACE_DEFAULT=300 GRACE_FLOOR=240 GRACE_CEIL=600 GRACE_MAX_TOTAL=1800 NOTICE_MIN=60 \
+EXPECT_GRACE=300,240,600,1800,60 \
+RPC_URL=... PRIVATE_KEY=... ./deploy_all.sh
+```
+
+The script logs the verifier's code hash; it must equal `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1`
+(`ZISK_VERIFIER_CODEHASH` in davinci-zkvm). The new registry address is TBD until the deploy step fills it.
+
+### Retired OP Mainnet registry (v0.2.0 vks, ZisK 1.3.0)
+
 Deployed on 2026-10-13 reusing the `ZiskVerifier` and the `L1BlobVerifier` of the first OP registry
 (the verifier is stateless apart from its permissionless origin record), on the davinci-zkvm v0.2.0
 pins and a grace window that fits the Ethereum leg, from the owner's account, with no `.env`
