@@ -7,5 +7,7 @@ import type * as dkg from "./dkg";
 export type { dkg };
 export type { ICensusValidator } from "./ICensusValidator";
 export type { IDkgResultsAdapter } from "./IDkgResultsAdapter";
+export type { IL1BlobVerifier } from "./IL1BlobVerifier";
+export type { IL1Block } from "./IL1Block";
 export type { IProcessRegistry } from "./IProcessRegistry";
 export type { IZiskVerifier } from "./IZiskVerifier";

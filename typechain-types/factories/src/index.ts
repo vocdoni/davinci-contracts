@@ -6,4 +6,5 @@ export * as libraries from "./libraries";
 export * as verifiers from "./verifiers";
 export { CouncilAdapter__factory } from "./CouncilAdapter__factory";
 export { DavinciDKGAdapter__factory } from "./DavinciDKGAdapter__factory";
+export { L1BlobVerifier__factory } from "./L1BlobVerifier__factory";
 export { ProcessRegistry__factory } from "./ProcessRegistry__factory";

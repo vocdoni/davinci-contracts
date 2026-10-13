@@ -9,4 +9,5 @@ import type * as verifiers from "./verifiers";
 export type { verifiers };
 export type { CouncilAdapter } from "./CouncilAdapter";
 export type { DavinciDKGAdapter } from "./DavinciDKGAdapter";
+export type { L1BlobVerifier } from "./L1BlobVerifier";
 export type { ProcessRegistry } from "./ProcessRegistry";

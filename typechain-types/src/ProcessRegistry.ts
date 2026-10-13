@@ -195,6 +195,30 @@ export declare namespace DAVINCITypes {
   };
 }
 
+export declare namespace IL1BlobVerifier {
+  export type L1TxProofStruct = {
+    headerIndex: BigNumberish;
+    key: BytesLike;
+    proof: BytesLike[];
+  };
+
+  export type L1TxProofStructOutput = [
+    headerIndex: bigint,
+    key: string,
+    proof: string[]
+  ] & { headerIndex: bigint; key: string; proof: string[] };
+
+  export type L1BlobProofStruct = {
+    headers: BytesLike[];
+    txs: IL1BlobVerifier.L1TxProofStruct[];
+  };
+
+  export type L1BlobProofStructOutput = [
+    headers: string[],
+    txs: IL1BlobVerifier.L1TxProofStructOutput[]
+  ] & { headers: string[]; txs: IL1BlobVerifier.L1TxProofStructOutput[] };
+}
+
 export interface ProcessRegistryInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -217,6 +241,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "graceCeil"
       | "graceFloor"
       | "graceMaxTotal"
+      | "l1BlobVerifier"
       | "newProcess"
       | "noticeMin"
       | "pidPrefix"
@@ -235,6 +260,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "setProcessResults"
       | "setProcessStatus"
       | "submitStateTransition"
+      | "submitStateTransitionL1"
       | "ziskVerifier"
   ): FunctionFragment;
 
@@ -248,6 +274,7 @@ export interface ProcessRegistryInterface extends Interface {
       | "ProcessMetadataUpdated"
       | "ProcessResultsSet"
       | "ProcessStateTransitioned"
+      | "ProcessStateTransitionedL1"
       | "ProcessStatusChanged"
       | "ResultsDecryptionRequested"
   ): EventFragment;
@@ -322,6 +349,10 @@ export interface ProcessRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "graceMaxTotal",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "l1BlobVerifier",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -409,6 +440,18 @@ export interface ProcessRegistryInterface extends Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "submitStateTransitionL1",
+    values: [
+      BytesLike,
+      BytesLike,
+      BytesLike,
+      BytesLike[],
+      BytesLike[],
+      BytesLike[],
+      IL1BlobVerifier.L1BlobProofStruct
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "ziskVerifier",
     values?: undefined
   ): string;
@@ -466,6 +509,10 @@ export interface ProcessRegistryInterface extends Interface {
   decodeFunctionResult(functionFragment: "graceFloor", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "graceMaxTotal",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "l1BlobVerifier",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "newProcess", data: BytesLike): Result;
@@ -526,6 +573,10 @@ export interface ProcessRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "submitStateTransition",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "submitStateTransitionL1",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -679,6 +730,28 @@ export namespace ProcessStateTransitionedEvent {
     newVotersCount: bigint;
     newOverwrittenVotesCount: bigint;
     nBlobs: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProcessStateTransitionedL1Event {
+  export type InputTuple = [
+    processId: BytesLike,
+    l1BlockNumbers: BigNumberish[],
+    versionedHashes: BytesLike[]
+  ];
+  export type OutputTuple = [
+    processId: string,
+    l1BlockNumbers: bigint[],
+    versionedHashes: string[]
+  ];
+  export interface OutputObject {
+    processId: string;
+    l1BlockNumbers: bigint[];
+    versionedHashes: string[];
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -846,6 +919,8 @@ export interface ProcessRegistry extends BaseContract {
 
   graceMaxTotal: TypedContractMethod<[], [bigint], "view">;
 
+  l1BlobVerifier: TypedContractMethod<[], [string], "view">;
+
   newProcess: TypedContractMethod<
     [
       status: BigNumberish,
@@ -1000,6 +1075,20 @@ export interface ProcessRegistry extends BaseContract {
     "nonpayable"
   >;
 
+  submitStateTransitionL1: TypedContractMethod<
+    [
+      processId: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      commitments: BytesLike[],
+      ys: BytesLike[],
+      kzgProofs: BytesLike[],
+      l1: IL1BlobVerifier.L1BlobProofStruct
+    ],
+    [void],
+    "nonpayable"
+  >;
+
   ziskVerifier: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -1076,6 +1165,9 @@ export interface ProcessRegistry extends BaseContract {
   getFunction(
     nameOrSignature: "graceMaxTotal"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "l1BlobVerifier"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "newProcess"
   ): TypedContractMethod<
@@ -1249,6 +1341,21 @@ export interface ProcessRegistry extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "submitStateTransitionL1"
+  ): TypedContractMethod<
+    [
+      processId: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      commitments: BytesLike[],
+      ys: BytesLike[],
+      kzgProofs: BytesLike[],
+      l1: IL1BlobVerifier.L1BlobProofStruct
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "ziskVerifier"
   ): TypedContractMethod<[], [string], "view">;
 
@@ -1307,6 +1414,13 @@ export interface ProcessRegistry extends BaseContract {
     ProcessStateTransitionedEvent.InputTuple,
     ProcessStateTransitionedEvent.OutputTuple,
     ProcessStateTransitionedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProcessStateTransitionedL1"
+  ): TypedContractEvent<
+    ProcessStateTransitionedL1Event.InputTuple,
+    ProcessStateTransitionedL1Event.OutputTuple,
+    ProcessStateTransitionedL1Event.OutputObject
   >;
   getEvent(
     key: "ProcessStatusChanged"
@@ -1410,6 +1524,17 @@ export interface ProcessRegistry extends BaseContract {
       ProcessStateTransitionedEvent.InputTuple,
       ProcessStateTransitionedEvent.OutputTuple,
       ProcessStateTransitionedEvent.OutputObject
+    >;
+
+    "ProcessStateTransitionedL1(bytes31,uint256[],bytes32[])": TypedContractEvent<
+      ProcessStateTransitionedL1Event.InputTuple,
+      ProcessStateTransitionedL1Event.OutputTuple,
+      ProcessStateTransitionedL1Event.OutputObject
+    >;
+    ProcessStateTransitionedL1: TypedContractEvent<
+      ProcessStateTransitionedL1Event.InputTuple,
+      ProcessStateTransitionedL1Event.OutputTuple,
+      ProcessStateTransitionedL1Event.OutputObject
     >;
 
     "ProcessStatusChanged(bytes31,uint8,uint8)": TypedContractEvent<
