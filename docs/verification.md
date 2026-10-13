@@ -56,6 +56,22 @@ python3 script/verify_deployment.py --rpc "$RPC" --chain-id 100 \
     --council-manager 0x2f5b110864cbad4017fe8ac59111812278f5f71f
 ```
 
+For the OP Mainnet registry (`deployments/10.json`), with `RPC` an OP Mainnet JSON-RPC endpoint:
+
+```bash
+git checkout 44fdca1
+forge build
+python3 script/verify_deployment.py --rpc "$RPC" --chain-id 10 \
+    --registry 0xC5f88160a1Df51A3Ee56b970b12B8308799c05A7 \
+    --verifier 0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c \
+    --batch-vk 0xa0ad5c4c7e39d4a7007933158181418a752e6c1563a211af84c579640db435fa \
+    --results-vk 0xe693589453ecaee63eba697c48d4c5321a714bb18c2d84a97437b3f368578f68 \
+    --root-c 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
+    --ballot-vk-hash 0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
+    --dkg-manager 0x0 --council-manager 0x0 \
+    --l1-block 0x4200000000000000000000000000000000000015 --grace 300,240,600,1800,60
+```
+
 For the previous Gnosis registry:
 
 ```bash

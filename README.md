@@ -40,23 +40,41 @@ With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committe
 
 ### OP Mainnet, L1-blob mode
 
-OP Mainnet (chain id 10), deployed 2026-10-12 from commit `e7de916` at block 158125136. The
-registry settles transitions on OP while their blobs live in Ethereum blob transactions, checked
-by its `L1BlobVerifier` against OP's `L1Block` predeploy
+OP Mainnet (chain id 10), deployed 2026-10-13 from commit `44fdca1` at block 158155408, on the
+davinci-zkvm v0.2.0 program vks. The registry settles transitions on OP while their blobs live in
+Ethereum blob transactions, checked by its `L1BlobVerifier` against OP's `L1Block` predeploy
 ([settlement.md](docs/settlement.md#l1-blob-mode)). [`deployments/10.json`](deployments/10.json)
 holds the verified record. Not source-verified on an explorer yet.
 
 | Contract | Address |
 |---|---|
-| `ProcessRegistry` | `0x8b63fAE96948D69CF92Eb40e4EE0fCE40962267d` |
-| `L1BlobVerifier` | `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529` (reads `L1Block` `0x4200000000000000000000000000000000000015`) |
-| `ZiskVerifier` | `0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c` (deployed earlier; same code hash as Gnosis') |
+| `ProcessRegistry` | `0xC5f88160a1Df51A3Ee56b970b12B8308799c05A7` |
+| `L1BlobVerifier` | `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529` (reads `L1Block` `0x4200000000000000000000000000000000000015`; reused) |
+| `ZiskVerifier` | `0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c` (reused; same code hash as Gnosis') |
 
-Same pins as the Gnosis registry below; production grace defaults; no DKG or Council adapter.
+| Immutable | Value |
+|---|---|
+| `batchProgramVK` | `0xa0ad5c4c7e39d4a7007933158181418a752e6c1563a211af84c579640db435fa` |
+| `resultsProgramVK` | `0xe693589453ecaee63eba697c48d4c5321a714bb18c2d84a97437b3f368578f68` |
+| `rootCVadcopFinal` | `0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80` |
+| `ballotVKHash` | `0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e` |
+| `defaultGrace` / `graceFloor` / `graceCeil` | 300 / 240 / 600 s |
+| `graceMaxTotal` | 1800 s |
+| `noticeMin` | 60 s |
+
+No DKG or Council adapter.
+
+### OP Mainnet, first registry
+
+`ProcessRegistry` `0x8b63fAE96948D69CF92Eb40e4EE0fCE40962267d` (block 158125136), deployed
+2026-10-12 from commit `e7de916` with the same verifiers, the Gnosis pins below and grace 180 /
+150 / 600 / 1800 / 60 s. Retired: its v0.1 vks and 150 s floor; its record is
+[`deployments/10-0x8b63.json`](deployments/10-0x8b63.json).
 
 ### Gnosis Chain production beta
 
 Gnosis Chain (chain id 100), deployed 2026-10-07 from commit `4e4f6c8` at block 48,633,301.
+Retired on 2026-10-13: sequencers from v0.6.0 on prove under the v0.2.0 vks and follow OP Mainnet.
 Every contract is source-verified on Gnosisscan, Blockscout and Sourcify, and
 [`deployments/100.json`](deployments/100.json) holds the verified record:
 
@@ -86,7 +104,7 @@ chain, but sequencers and SDKs use the production beta registry above.
 | `DavinciDKGAdapter` | `0xE9559c78E7ff8c19937A0657a092A221E90CCBC3` |
 | davinci-dkg `DKGManager` | `0x9999F38Ff8Bf959E98Ddd5D4551f82775219c01B` |
 
-Both registries are pinned to:
+Both Gnosis registries (and the first OP one) are pinned to:
 
 | Immutable | Value |
 |---|---|
