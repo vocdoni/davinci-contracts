@@ -116,7 +116,17 @@ cast keccak $(jq -r .deployedBytecode.object out/ZiskVerifier.sol/ZiskVerifier.j
 `solc 0.8.28`, `evm_version = cancun`, optimizer on with 200 runs, `via_ir = true`, the default
 `bytecode_hash = ipfs` and `cbor_metadata = true`, and the committed `remappings.txt`. Change none of
 them in the same change. The expected value for ZisK 1.3.2-alpha is
-`0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` (forge 1.8.3).
+`0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` (forge 1.8.3). A single-file
+`forge build src/verifiers/ZiskVerifier.sol` gives the same bytecode.
+
+Expected `sha256` for ZisK 1.3.2-alpha, to check the vendoring without rebuilding:
+
+| File | sha256 |
+|---|---|
+| `PlonkVerifier.sol` (source and vendored) | `07001fef0200f422a0287fcef40b8fb040157e92b6cee9891b26f8a80c9c47b9` |
+| `IZiskVerifier.sol` (source and vendored) | `e9f450847fd3d62534b8f0e3ba195e44d96e2876891b6a9229e57398380e8b44` |
+| `ZiskVerifier.sol` upstream | `4d4b8b001bf2acef936a3c352b3c3d24098c5118d4459e5dc044b3ba9c09100b` |
+| `src/verifiers/ZiskVerifier.sol` after the sed | `c9e035dca724db047310da1397d256023c11df34ff5dbec2160aa455439f4393` |
 
 After a new release also re-record `test/vectors/recorded_batch_snark.json` (`program_vk`,
 `root_c_vadcop_final`, `public_values`, `proof_bytes` of a real batch job) and regenerate the decoded
