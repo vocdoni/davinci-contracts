@@ -50,6 +50,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IDkgResultsAdapter__factory>;
     getContractFactory(
+      name: "IL1BlobVerifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IL1BlobVerifier__factory>;
+    getContractFactory(
+      name: "IL1Block",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IL1Block__factory>;
+    getContractFactory(
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IProcessRegistry__factory>;
@@ -57,6 +65,10 @@ declare module "hardhat/types/runtime" {
       name: "IZiskVerifier",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IZiskVerifier__factory>;
+    getContractFactory(
+      name: "L1BlobVerifier",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.L1BlobVerifier__factory>;
     getContractFactory(
       name: "BlobsLib",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -124,6 +136,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IDkgResultsAdapter>;
     getContractAt(
+      name: "IL1BlobVerifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IL1BlobVerifier>;
+    getContractAt(
+      name: "IL1Block",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IL1Block>;
+    getContractAt(
       name: "IProcessRegistry",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -133,6 +155,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IZiskVerifier>;
+    getContractAt(
+      name: "L1BlobVerifier",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.L1BlobVerifier>;
     getContractAt(
       name: "BlobsLib",
       address: string | ethers.Addressable,
@@ -196,6 +223,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IDkgResultsAdapter>;
     deployContract(
+      name: "IL1BlobVerifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IL1BlobVerifier>;
+    deployContract(
+      name: "IL1Block",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IL1Block>;
+    deployContract(
       name: "IProcessRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IProcessRegistry>;
@@ -203,6 +238,10 @@ declare module "hardhat/types/runtime" {
       name: "IZiskVerifier",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IZiskVerifier>;
+    deployContract(
+      name: "L1BlobVerifier",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.L1BlobVerifier>;
     deployContract(
       name: "BlobsLib",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -270,6 +309,16 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IDkgResultsAdapter>;
     deployContract(
+      name: "IL1BlobVerifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IL1BlobVerifier>;
+    deployContract(
+      name: "IL1Block",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IL1Block>;
+    deployContract(
       name: "IProcessRegistry",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -279,6 +328,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IZiskVerifier>;
+    deployContract(
+      name: "L1BlobVerifier",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.L1BlobVerifier>;
     deployContract(
       name: "BlobsLib",
       args: any[],

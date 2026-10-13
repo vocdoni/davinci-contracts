@@ -322,6 +322,11 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "WrongDAMode",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -519,6 +524,31 @@ const _abi = [
       },
     ],
     name: "ProcessStateTransitioned",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        indexed: false,
+        internalType: "uint256[]",
+        name: "l1BlockNumbers",
+        type: "uint256[]",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32[]",
+        name: "versionedHashes",
+        type: "bytes32[]",
+      },
+    ],
+    name: "ProcessStateTransitionedL1",
     type: "event",
   },
   {
@@ -1092,6 +1122,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "l1BlobVerifier",
+    outputs: [
+      {
+        internalType: "contract IL1BlobVerifier",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "enum DAVINCITypes.ProcessStatus",
@@ -1524,6 +1567,78 @@ const _abi = [
       },
     ],
     name: "submitStateTransition",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes31",
+        name: "processId",
+        type: "bytes31",
+      },
+      {
+        internalType: "bytes",
+        name: "publicValues",
+        type: "bytes",
+      },
+      {
+        internalType: "bytes",
+        name: "proofBytes",
+        type: "bytes",
+      },
+      {
+        internalType: "bytes[]",
+        name: "commitments",
+        type: "bytes[]",
+      },
+      {
+        internalType: "bytes32[]",
+        name: "ys",
+        type: "bytes32[]",
+      },
+      {
+        internalType: "bytes[]",
+        name: "kzgProofs",
+        type: "bytes[]",
+      },
+      {
+        components: [
+          {
+            internalType: "bytes[]",
+            name: "headers",
+            type: "bytes[]",
+          },
+          {
+            components: [
+              {
+                internalType: "uint256",
+                name: "headerIndex",
+                type: "uint256",
+              },
+              {
+                internalType: "bytes",
+                name: "key",
+                type: "bytes",
+              },
+              {
+                internalType: "bytes[]",
+                name: "proof",
+                type: "bytes[]",
+              },
+            ],
+            internalType: "struct IL1BlobVerifier.L1TxProof[]",
+            name: "txs",
+            type: "tuple[]",
+          },
+        ],
+        internalType: "struct IL1BlobVerifier.L1BlobProof",
+        name: "l1",
+        type: "tuple",
+      },
+    ],
+    name: "submitStateTransitionL1",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
