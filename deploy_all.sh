@@ -97,6 +97,11 @@ fi
 export L1_BLOB_VERIFIER="${L1_BLOB_VERIFIER:-}" L1_BLOCK="${L1_BLOCK:-}"
 VERIFY_DEPLOYMENT_ARGS+=(--l1-block "${L1_BLOCK:-0x4200000000000000000000000000000000000015}")
 VERIFY_DEPLOYMENT_ARGS+=(--dkg-manager "${DKG_MANAGER:-0x0}" --council-manager "${COUNCIL_MANAGER:-0x0}")
+# EXPECT_GRACE (DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE in seconds): the grace settings the registry
+# must read back. DeployAll keeps its default for a GRACE_* variable that is unset or misspelled.
+if [ -n "${EXPECT_GRACE:-}" ]; then
+    VERIFY_DEPLOYMENT_ARGS+=(--grace "$EXPECT_GRACE")
+fi
 
 # Deploys ZiskVerifier, then L1BlobVerifier (when L1_BLOCK is set), then ProcessRegistry (and the DKG adapter when DKG_MANAGER is set, the
 # Council adapter when COUNCIL_MANAGER is set).

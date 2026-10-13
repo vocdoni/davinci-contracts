@@ -103,8 +103,8 @@ and in another shell:
 
 ```bash
 export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 CHAIN_ID=31337 \
-  BATCH_PROGRAM_VK=0x6cfc89d562d0b22f04478a5c15b390433eb52f1b03147030b183076260da7a10 \
-  RESULTS_PROGRAM_VK=0x7bc8c5e9235548386a44b1885732a2a7ffb1badddc8c7fba599d07ece47be794 \
+  BATCH_PROGRAM_VK=0xa0ad5c4c7e39d4a7007933158181418a752e6c1563a211af84c579640db435fa \
+  RESULTS_PROGRAM_VK=0xe693589453ecaee63eba697c48d4c5321a714bb18c2d84a97437b3f368578f68 \
   ROOT_C_VADCOP_FINAL=0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
   BALLOT_VK_HASH=0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e
 forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
@@ -126,7 +126,10 @@ disabled), and writes what it verified to `deployments/<chain id>.json`: address
 registry, verifier, both adapters and their managers, the `ZiskVerifier` code hash, pins, grace
 settings, commit, deployer, block and transaction hashes. A failed check stops the script before
 it regenerates `golang-types/addresses.go` from the broadcast logs and leaves no record. It needs
-`jq` and `python3` besides Foundry.
+`jq` and `python3` besides Foundry. `DeployAll` keeps its default for a grace variable that is
+unset or misspelled, so set `EXPECT_GRACE` (`DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE`, for example
+`300,240,600,1800,60`) as well: the script then also checks the deployed grace settings against
+it, and writes no record on a difference.
 
 Several chains: put shared values and `DEPLOY_CHAINS=base,sepolia,...` in `.env`, and
 `CHAIN_ID`, `RPC_URL` and anything chain-specific in `.env.<chain>` (or `.env-<chain>`), then:
