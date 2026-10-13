@@ -47,6 +47,7 @@ const (
 	ArbitrumNetwork = "arbitrum"
 	ArbSepoliaNetwork = "arb-sepolia"
 	GnosisNetwork   = "gnosis"
+	OptimismNetwork = "optimism"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
@@ -59,6 +60,7 @@ var AvailableNetworksByName = map[string]uint32{
 	ArbitrumNetwork: 42161,
 	ArbSepoliaNetwork: 421614,
 	GnosisNetwork:   100,
+	OptimismNetwork: 10,
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
@@ -71,6 +73,7 @@ var AvailableNetworksByID = map[uint32]string{
 	42161:	  ArbitrumNetwork,
 	421614:   ArbSepoliaNetwork,
 	100:      GnosisNetwork,
+	10:       OptimismNetwork,
 }
 
 // Contract name constants
@@ -196,6 +199,11 @@ func GetArbSepoliaAddresses() map[string]string {
 // GetGnosisAddresses returns all contract addresses for Gnosis network
 func GetGnosisAddresses() map[string]string {
 	return GetAllContractAddresses(GnosisNetwork)
+}
+
+// GetOptimismAddresses returns all contract addresses for OP Mainnet
+func GetOptimismAddresses() map[string]string {
+	return GetAllContractAddresses(OptimismNetwork)
 }
 EOF
 
