@@ -13,6 +13,7 @@ const (
 	ArbitrumNetwork = "arbitrum"
 	ArbSepoliaNetwork = "arb-sepolia"
 	GnosisNetwork   = "gnosis"
+	OptimismNetwork = "optimism"
 )
 
 // AvailableNetworksByName contains the list of networks where Davinci is deployed.
@@ -25,6 +26,7 @@ var AvailableNetworksByName = map[string]uint32{
 	ArbitrumNetwork: 42161,
 	ArbSepoliaNetwork: 421614,
 	GnosisNetwork:   100,
+	OptimismNetwork: 10,
 }
 
 // AvailableNetworksByID contains the list of networks where Davinci is deployed.
@@ -37,6 +39,7 @@ var AvailableNetworksByID = map[uint32]string{
 	42161:	  ArbitrumNetwork,
 	421614:   ArbSepoliaNetwork,
 	100:      GnosisNetwork,
+	10:       OptimismNetwork,
 }
 
 // Contract name constants
@@ -67,6 +70,7 @@ const (
 	ProcessRegistryBaseAddress = "0xf294d1b02374bc37c2a7980dd62d4bf64d503d52"
 	ProcessRegistryCeloAddress = "0xc2aba38998dfd4cb01edcb327cdc987775e473ef"
 	ProcessRegistryGnosisAddress = "0x20b96e465ca7c3536b9c733571ec1ecf42b2ea21"
+	ProcessRegistryOptimismAddress = "0xc5f88160a1df51a3ee56b970b12b8308799c05a7"
 	ProcessRegistrySepoliaAddress = "0xc3c87053f2a87a16397dd5c3eb730458bcd1420f"
 
 	ResultsVerifierGroth16ArbSepoliaAddress = "0x26559bd3d8b140461057b1187718f10a175f6e01"
@@ -82,6 +86,7 @@ const (
 	StateTransitionVerifierGroth16SepoliaAddress = "0xc3706532f90ef50f3700eead39478b9a38e22ef3"
 
 	ZiskVerifierGnosisAddress = "0x150547716bd6f15d872508b66b2ae7ce17677c9c"
+	ZiskVerifierOptimismAddress = "0x6781fff50d615cb3f331ccd3bdad3416d4ce0d5c"
 
 )
 
@@ -93,6 +98,7 @@ var contractAddressesByNetwork = map[string]map[string]string{
 		BaseNetwork: ProcessRegistryBaseAddress,
 		CeloNetwork: ProcessRegistryCeloAddress,
 		GnosisNetwork: ProcessRegistryGnosisAddress,
+		OptimismNetwork: ProcessRegistryOptimismAddress,
 		SepoliaNetwork: ProcessRegistrySepoliaAddress,
 	},
 	ResultsVerifierGroth16Contract: {
@@ -111,6 +117,7 @@ var contractAddressesByNetwork = map[string]map[string]string{
 	},
 	ZiskVerifierContract: {
 		GnosisNetwork: ZiskVerifierGnosisAddress,
+		OptimismNetwork: ZiskVerifierOptimismAddress,
 	},
 }
 
@@ -173,4 +180,9 @@ func GetArbSepoliaAddresses() map[string]string {
 // GetGnosisAddresses returns all contract addresses for Gnosis network
 func GetGnosisAddresses() map[string]string {
 	return GetAllContractAddresses(GnosisNetwork)
+}
+
+// GetOptimismAddresses returns all contract addresses for OP Mainnet
+func GetOptimismAddresses() map[string]string {
+	return GetAllContractAddresses(OptimismNetwork)
 }
