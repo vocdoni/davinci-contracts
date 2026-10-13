@@ -5,6 +5,10 @@
 //	transition.json  two settlement fixtures with real KZG openings, plus a results fixture
 //	dkg.json         DKG key-mode fixture: pool and organizer keys, accumulator inclusion proofs
 //	publics.json     the decoded registers of recorded_batch_snark.json
+//	l1blob/one_tx.json, l1blob/two_tx.json, l1blob/two_tx_reposted.json,
+//	l1blob/worst_case.json
+//	                 synthetic Ethereum headers and blob transactions carrying the
+//	                 transitions' versioned hashes, for the L1-blob mode tests
 //
 // Run it from this directory with `go run .`. The defaults match the forge tests
 // (registry = CREATE(deployer, 0), chain id 1337); the flags regenerate the
@@ -75,6 +79,7 @@ func main() {
 
 	fx, blobs := transitionFixture(uint32(*chainID), registry, creator, prefix, vkLeaf)
 	writeJSON(*out, "transition.json", fx)
+	l1BlobFixtures(*out, fx)
 	writeJSON(*out, "dkg.json", dkgVectors(prefix, creator, vkLeaf))
 	if *writeBlobs {
 		for t, bs := range blobs {
