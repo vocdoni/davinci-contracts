@@ -58,13 +58,14 @@ python3 script/verify_deployment.py --rpc "$RPC" --chain-id 100 \
     --council-manager 0x2f5b110864cbad4017fe8ac59111812278f5f71f
 ```
 
-For the OP Mainnet ZisK 1.3.2 registry, with `RPC` an OP Mainnet JSON-RPC endpoint (the registry and verifier
-addresses are TBD until the deploy step fills them, and `deploy_all.sh` writes its record to `deployments/10.json`, so first `git mv deployments/10.json deployments/10-0xC5f8.json`):
+For the OP Mainnet ZisK 1.3.2 registry, with `RPC` an OP Mainnet JSON-RPC endpoint (record `deployments/10.json`, commit `fd79251`):
 
 ```bash
+git checkout fd79251
+forge build
 python3 script/verify_deployment.py --rpc "$RPC" --chain-id 10 \
-    --registry <TBD registry> \
-    --verifier <TBD verifier> \
+    --registry 0x7bfa68879f118C98B864FB52d2aD3a112eF1558F \
+    --verifier 0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7 \
     --batch-vk 0xe39e460085ecddecf365649a61183a71c0fe778aa9c06fd2aa1a6c43cddb988b \
     --results-vk 0x394694558f39d0b2da0bbb09322333a0f567ee8d16bea2f354543a086587d167 \
     --root-c 0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265 \
@@ -74,7 +75,7 @@ python3 script/verify_deployment.py --rpc "$RPC" --chain-id 10 \
     --l1-blob-verifier 0x3B95BC14F43ed8Addb83F84D10A949De74eE7529
 ```
 
-For the OP Mainnet registry being retired (`deployments/10.json` until the move above, v0.2.0 vks, ZisK 1.3.0):
+For the retired OP Mainnet registry (`deployments/10-0xC5f8.json`, v0.2.0 vks, ZisK 1.3.0):
 
 ```bash
 git checkout 44fdca1

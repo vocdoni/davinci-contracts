@@ -200,9 +200,9 @@ RPC_URL=... PRIVATE_KEY=... ./deploy_all.sh
 ```
 
 The script logs the verifier's code hash; it must equal `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1`
-(`ZISK_VERIFIER_CODEHASH` in davinci-zkvm). The new registry address is TBD until the deploy step fills it.
+(`ZISK_VERIFIER_CODEHASH` in davinci-zkvm). The deployed registry is `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` (block 158164175, commit `fd79251`) on the new `ZiskVerifier` `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`; its record is `deployments/10.json`.
 
-### OP Mainnet registry being retired (v0.2.0 vks, ZisK 1.3.0)
+### OP Mainnet registry, retired (v0.2.0 vks, ZisK 1.3.0)
 
 Deployed on 2026-10-13 reusing the `ZiskVerifier` and the `L1BlobVerifier` of the first OP registry
 (the verifier is stateless apart from its permissionless origin record), on the davinci-zkvm v0.2.0

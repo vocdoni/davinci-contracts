@@ -41,14 +41,15 @@ With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committe
 ### OP Mainnet, ZisK 1.3.2 registry
 
 OP Mainnet (chain id 10), on the davinci-zkvm ZisK 1.3.2-alpha pins, replacing the registry below.
-Not deployed yet: the deploy step fills `ProcessRegistry` and `ZiskVerifier` (the 1.3.0 verifier
-cannot be reused, it hard-codes the old `rootCVadcopFinal`). `L1BlobVerifier` is reused.
+Deployed 2026-10-13 from commit `fd79251` at block 158164175; [`deployments/10.json`](deployments/10.json) holds
+the verified record. It has its own `ZiskVerifier` (the 1.3.0 verifier hard-codes the old `rootCVadcopFinal`).
+`L1BlobVerifier` is reused.
 
 | Contract | Address |
 |---|---|
-| `ProcessRegistry` | `TBD (filled by the deploy step)` |
+| `ProcessRegistry` | `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` |
 | `L1BlobVerifier` | `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529` (reads `L1Block` `0x4200000000000000000000000000000000000015`; reused) |
-| `ZiskVerifier` | `TBD (filled by the deploy step)`; runtime code hash `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` |
+| `ZiskVerifier` | `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`; runtime code hash `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` |
 
 | Immutable | Value |
 |---|---|
@@ -60,14 +61,14 @@ cannot be reused, it hard-codes the old `rootCVadcopFinal`). `L1BlobVerifier` is
 | `graceMaxTotal` | 1800 s |
 | `noticeMin` | 60 s |
 
-### OP Mainnet, L1-blob mode (v0.2.0 registry, to be retired)
+### OP Mainnet, L1-blob mode (v0.2.0 registry, retired)
 
 OP Mainnet (chain id 10), deployed 2026-10-13 from commit `44fdca1` at block 158155408, on the
 davinci-zkvm v0.2.0 program vks. The registry settles transitions on OP while their blobs live in
 Ethereum blob transactions, checked by its `L1BlobVerifier` against OP's `L1Block` predeploy
-([settlement.md](docs/settlement.md#l1-blob-mode)). [`deployments/10.json`](deployments/10.json)
-holds the verified record. Not source-verified on an explorer yet. It is about to be retired: it
-stays on the v0.2.0 vks and ZisK 1.3.0, and sequencers move to the ZisK 1.3.2 registry above.
+([settlement.md](docs/settlement.md#l1-blob-mode)). [`deployments/10-0xC5f8.json`](deployments/10-0xC5f8.json)
+holds the verified record. Not source-verified on an explorer yet. It is retired: it
+stays on the v0.2.0 vks and ZisK 1.3.0, and sequencers use the ZisK 1.3.2 registry above.
 
 | Contract | Address |
 |---|---|
