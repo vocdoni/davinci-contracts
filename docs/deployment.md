@@ -57,6 +57,7 @@ constructor(
 | `ETHERSCAN_API_KEY` | explorer key for source verification |
 | `ETHERSCAN_API_URL` | optional verifier endpoint for explorers other than Etherscan |
 | `DEBUG_DEPLOY` | `true` traces the script |
+| `EXPECT_GRACE` | optional `DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE` in seconds the registry must read back (e.g. `300,240,600,1800,60`); a misspelled `GRACE_*` silently keeps its default |
 
 [`.env.example`](../.env.example) lists them all.
 
@@ -132,7 +133,9 @@ unset or misspelled, so set `EXPECT_GRACE` (`DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE
 it, and writes no record on a difference.
 
 Several chains: put shared values and `DEPLOY_CHAINS=base,sepolia,...` in `.env`, and
-`CHAIN_ID`, `RPC_URL` and anything chain-specific in `.env.<chain>` (or `.env-<chain>`), then:
+`CHAIN_ID`, `RPC_URL` and anything chain-specific in `.env.<chain>` (or `.env-<chain>`). Like
+`GRACE_*` and `NOTICE_MIN`, `EXPECT_GRACE` is not reset between chains, so a chain that overrides
+`GRACE_*` must override `EXPECT_GRACE` too. Then:
 
 ```bash
 ./deploy_all_contracts_to_all_chains.sh
