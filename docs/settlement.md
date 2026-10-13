@@ -130,7 +130,7 @@ origin (`TxTooOld`); headers above the anchor are ignored. Consequences:
 - `L1Block` exposes only the current origin. If the origin moves past the top header of a proof
   before it lands, the proof still verifies only when its headers include the new origin or an
   origin recorded earlier. Nodes send a few headers above the current origin, or anchor at an origin
-  they recorded when the proof takes longer. The proof cost is about 60-75k gas per header.
+  they recorded when the proof takes longer. The proof cost is about 52k gas per header.
 - The vendored `RLPReader` caps lists at 32 items. Ethereum headers have 21 items today, which
   leaves about 11 more appended fields before a new verifier, and so a new registry, is needed.
 
