@@ -83,6 +83,7 @@ const (
 	ResultsVerifierGroth16Contract         = "resultsVerifierGroth16"
 	SequencerRegistryContract              = "sequencerRegistry"
 	ZiskVerifierContract                   = "ziskVerifier"
+	L1BlobVerifierContract                 = "l1BlobVerifier"
 )
 
 // Dummy consts until we deploy on Mainnet and develop SequencerRegistry

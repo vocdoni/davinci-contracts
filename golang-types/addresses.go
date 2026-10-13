@@ -49,6 +49,7 @@ const (
 	ResultsVerifierGroth16Contract         = "resultsVerifierGroth16"
 	SequencerRegistryContract              = "sequencerRegistry"
 	ZiskVerifierContract                   = "ziskVerifier"
+	L1BlobVerifierContract                 = "l1BlobVerifier"
 )
 
 // Dummy consts until we deploy on Mainnet and develop SequencerRegistry
@@ -65,6 +66,8 @@ const (
 
 // Contract addresses by network
 const (
+	L1BlobVerifierOptimismAddress = "0x3b95bc14f43ed8addb83f84d10a949de74ee7529"
+
 	ProcessRegistryArbSepoliaAddress = "0x70f19aa32bde4ec2b8aa1de90a5b1c1c26d385f3"
 	ProcessRegistryArbitrumAddress = "0xebec47c9499aef2febc7a6da4021670eafe25196"
 	ProcessRegistryBaseAddress = "0xf294d1b02374bc37c2a7980dd62d4bf64d503d52"
@@ -92,6 +95,9 @@ const (
 
 // Contract addresses by network
 var contractAddressesByNetwork = map[string]map[string]string{
+	L1BlobVerifierContract: {
+		OptimismNetwork: L1BlobVerifierOptimismAddress,
+	},
 	ProcessRegistryContract: {
 		ArbSepoliaNetwork: ProcessRegistryArbSepoliaAddress,
 		ArbitrumNetwork: ProcessRegistryArbitrumAddress,
