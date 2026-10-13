@@ -156,12 +156,12 @@ def main():
     a = ap.parse_args()
     expect_grace = None
     if a.grace is not None:
-        try:
-            values = [int(x) for x in a.grace.split(",")]
-        except ValueError:
-            values = []
-        if len(values) != len(GRACE) or min(values) < 0:
+        fields = a.grace.split(",")
+        if len(fields) != len(GRACE) or not all(re.fullmatch(r"[0-9]+", x) for x in fields):
             ap.error("--grace takes five non-negative integers: DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE")
+        values = [int(x) for x in fields]
+        if max(values) > 0xFFFFFFFF:
+            ap.error("--grace values must fit in uint32 (at most 4294967295)")
         expect_grace = dict(zip(GRACE, values))
 
     ok = True
@@ -312,7 +312,8 @@ def main():
         if want_grace is not None:
             check(f"registry.{name} == {a.pins_from}.{name}", grace[name] == want_grace[name], f"{grace[name]} s")
         if expect_grace is not None:
-            check(f"registry.{name} == --grace", grace[name] == expect_grace[name], f"{grace[name]} s")
+            ok_g = grace[name] == expect_grace[name]
+            check(f"registry.{name} == --grace", ok_g, f"{grace[name]} s" + ("" if ok_g else f" (expected {expect_grace[name]})"))
         if want_grace is None and expect_grace is None:
             print(f"{name:13} {'n/a' if grace[name] is None else str(grace[name]) + ' s'}")
     record["grace"] = grace
