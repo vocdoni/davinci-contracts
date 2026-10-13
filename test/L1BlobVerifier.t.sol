@@ -167,7 +167,18 @@ contract L1BlobVerifierTest is Test {
         Fx memory fx = _load("recent");
         l1.set(1, fx.hashes[0]);
         fx.p.txs[0].proof[0][5] = bytes1(uint8(fx.p.txs[0].proof[0][5]) ^ 0x01);
-        vm.expectRevert();
+        vm.expectRevert(bytes("MerkleTrie: invalid root hash"));
+        v.verify(fx.p);
+    }
+
+    /// A valid transaction proof pointed at another header below the anchor: the proof does not
+    /// hash to that header's transactionsRoot.
+    function test_RevertWhen_ProofAgainstAnotherHeader() public {
+        Fx memory fx = _load("recent");
+        l1.set(1, fx.hashes[0]);
+        assertEq(fx.p.txs[0].headerIndex, 3);
+        fx.p.txs[0].headerIndex = 2;
+        vm.expectRevert(bytes("MerkleTrie: invalid root hash"));
         v.verify(fx.p);
     }
 
@@ -311,6 +322,34 @@ contract L1BlobVerifierTest is Test {
         emit log_named_uint("proof calldata bytes", size);
         assertLt(size, 64_000);
         assertLt(used, 8_000_000);
+    }
+
+    /// The worst-case fixture is synthetic: its blocks hold two transactions, so its proofs are 2
+    /// trie nodes, where mainnet's are 3-6 nodes of up to 532-byte branches. This swaps in three
+    /// copies of a real 5-node proof (`index128plus`) and adds the 63 extra synthetic headers the
+    /// real proof needs, to bound the real-depth case. The audit measured about 4.0M gas and 60 KB
+    /// for it; the bounds below leave margin under OP's 128 KB limit and 40M block gas.
+    function test_WorstCaseProof_RealDepth_FitsOP() public {
+        Fx memory fx = _load("index128plus");
+        Fx memory wc = _load("worst_case");
+        IL1BlobVerifier.L1TxProof[] memory three = new IL1BlobVerifier.L1TxProof[](3);
+        three[0] = three[1] = three[2] = fx.p.txs[0];
+        fx.p.txs = three;
+        l1.set(_number(fx.p.headers[0]), fx.hashes[0]);
+        uint256 g = gasleft();
+        v.verify(fx.p);
+        uint256 txGas = g - gasleft();
+        uint256 size = abi.encode(fx.p).length;
+        // the 63 more headers of the 64-header chain, at their synthetic size and measured cost
+        uint256 extraHeaders = 63;
+        for (uint256 i = 1; i < 64; ++i) {
+            size += wc.p.headers[i].length + 64;
+        }
+        uint256 modeled = txGas + extraHeaders * 60_000;
+        emit log_named_uint("real-depth proof calldata bytes (modeled)", size);
+        emit log_named_uint("real-depth verify gas (modeled)", modeled);
+        assertLt(size, 96_000);
+        assertLt(modeled, 8_000_000);
     }
 
     function test_RevertWhen_HeaderIndexOutOfRange() public {
