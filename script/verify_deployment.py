@@ -4,11 +4,12 @@
 Compares the on-chain runtime code of ZiskVerifier, ProcessRegistry and both adapters
 with `forge build` output (immutable slots masked), then reads every immutable back and
 compares it with the expected pins, verifier and managers. The grace and notice settings
-are compared with --pins-from and printed otherwise. Exit status 1 on any mismatch.
---record writes what was verified as JSON, only when every check passes.
+are compared with --pins-from and --grace, and printed otherwise. Exit status 1 on any
+mismatch. --record writes what was verified as JSON, only when every check passes.
 
     python3 script/verify_deployment.py --rpc URL --registry 0x... \
-        --batch-vk 0x... --results-vk 0x... --root-c 0x... --ballot-vk-hash 0x...
+        --batch-vk 0x... --results-vk 0x... --root-c 0x... --ballot-vk-hash 0x... \
+        [--grace 300,240,600,1800,60]
     python3 script/verify_deployment.py --rpc URL --registry 0x... --pins-from 0x... \
         --dkg-manager 0x... --council-manager 0x... [--l1-block 0x...] [--broadcast run-latest.json --record out.json]
 """
@@ -143,10 +144,25 @@ def main():
         default="0x4200000000000000000000000000000000000015",
         help="expected L1BlobVerifier.l1Block() when the registry is in L1-blob mode (OP Stack predeploy by default)",
     )
+    ap.add_argument(
+        "--grace",
+        metavar="DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE",
+        help="expected defaultGrace, graceFloor, graceCeil, graceMaxTotal and noticeMin in seconds "
+        "(DeployAll keeps its default for a GRACE_* variable that is unset or misspelled)",
+    )
     ap.add_argument("--broadcast", help="forge run-latest.json of the deployment, for the record")
     ap.add_argument("--record", help="write the verified deployment as JSON here (only when every check passes)")
     ap.add_argument("--cast", default=str(Path.home() / ".foundry/bin/cast"))
     a = ap.parse_args()
+    expect_grace = None
+    if a.grace is not None:
+        try:
+            values = [int(x) for x in a.grace.split(",")]
+        except ValueError:
+            values = []
+        if len(values) != len(GRACE) or min(values) < 0:
+            ap.error("--grace takes five non-negative integers: DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE")
+        expect_grace = dict(zip(GRACE, values))
 
     ok = True
 
@@ -295,7 +311,9 @@ def main():
             grace[name] = None
         if want_grace is not None:
             check(f"registry.{name} == {a.pins_from}.{name}", grace[name] == want_grace[name], f"{grace[name]} s")
-        else:
+        if expect_grace is not None:
+            check(f"registry.{name} == --grace", grace[name] == expect_grace[name], f"{grace[name]} s")
+        if want_grace is None and expect_grace is None:
             print(f"{name:13} {'n/a' if grace[name] is None else str(grace[name]) + ' s'}")
     record["grace"] = grace
 

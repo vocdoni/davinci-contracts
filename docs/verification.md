@@ -19,9 +19,12 @@ a local build. It checks that:
 - `--dkg-manager 0x0` or `--council-manager 0x0` expect that mode disabled.
 
 It prints the grace and notice settings (`defaultGrace`, `graceFloor`, `graceCeil`,
-`graceMaxTotal`, `noticeMin`) without judging them, except with `--pins-from <registry>`: then
-the pins, the verifier and the grace settings are expected to equal that registry's (a
-deployment made with `PINS_FROM_REGISTRY`), and any pin flag also given must agree with it. Each
+`graceMaxTotal`, `noticeMin`) without judging them, except with `--grace
+DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE` (seconds), which expects those values, or with
+`--pins-from <registry>`: then the pins, the verifier and the grace settings are expected to
+equal that registry's (a deployment made with `PINS_FROM_REGISTRY`), and any pin flag also given
+must agree with it. In L1-blob mode it compares the `L1BlobVerifier`'s code with the local build
+and its `l1Block()` with `--l1-block` (default the OP predeploy). Each
 check prints `OK` or `FAIL`, and the exit status is 1 if any fails. `--record <file>` writes
 what was verified as JSON when every check passes, with `--broadcast <run-latest.json>` adding
 the commit, deployer, block and transaction hashes; `deploy_all.sh` does this after every
