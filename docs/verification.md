@@ -24,7 +24,9 @@ DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE` (seconds), which expects those values, or w
 `--pins-from <registry>`: then the pins, the verifier and the grace settings are expected to
 equal that registry's (a deployment made with `PINS_FROM_REGISTRY`), and any pin flag also given
 must agree with it. In L1-blob mode it compares the `L1BlobVerifier`'s code with the local build
-and its `l1Block()` with `--l1-block` (default the OP predeploy). Each
+and its `l1Block()` with `--l1-block` (default the OP predeploy). `--l1-blob-verifier ADDR|0x0`
+expects the registry's `l1BlobVerifier()` to be that address (`0x0`: blob mode); an unreadable
+getter fails the run. Each
 check prints `OK` or `FAIL`, and the exit status is 1 if any fails. `--record <file>` writes
 what was verified as JSON when every check passes, with `--broadcast <run-latest.json>` adding
 the commit, deployer, block and transaction hashes; `deploy_all.sh` does this after every
@@ -69,7 +71,8 @@ python3 script/verify_deployment.py --rpc "$RPC" --chain-id 10 \
     --root-c 0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \
     --ballot-vk-hash 0xbf1e6590bb1ba883d601c4d7d1c6fa2722a78590716874019db6d68fc776bb0e \
     --dkg-manager 0x0 --council-manager 0x0 \
-    --l1-block 0x4200000000000000000000000000000000000015 --grace 300,240,600,1800,60
+    --l1-block 0x4200000000000000000000000000000000000015 --grace 300,240,600,1800,60 \
+    --l1-blob-verifier 0x3B95BC14F43ed8Addb83F84D10A949De74eE7529
 ```
 
 For the previous Gnosis registry:

@@ -48,6 +48,15 @@ contract DeployAllScript is Script {
 
         Config memory c = _config();
         _checkManagers(c);
+        if (c.l1BlobVerifier != address(0)) {
+            // An immutable registry must not bake in a verifier built on another L1Block.
+            require(c.l1BlobVerifier.code.length > 0, "L1_BLOB_VERIFIER has no code");
+            require(
+                address(L1BlobVerifier(c.l1BlobVerifier).l1Block())
+                    == (c.l1Block == address(0) ? 0x4200000000000000000000000000000000000015 : c.l1Block),
+                "L1_BLOB_VERIFIER is not on the expected L1Block"
+            );
+        }
 
         vm.startBroadcast(deployerPrivateKey);
 

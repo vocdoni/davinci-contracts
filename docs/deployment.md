@@ -173,7 +173,9 @@ serve several registries on the same chain). The verifier is created before the 
 does not change the other contracts' deployment order, but the registry's address then comes from a later nonce than the fixed local one above; the script logs `L1BlobVerifier deployed
 at` and the verifier and `L1Block` addresses. `verify_deployment.py` reads `l1BlobVerifier()`,
 compares its code with the local build and its `l1Block()` with `--l1-block` (default the OP
-predeploy; `deploy_all.sh` passes `L1_BLOCK` when set). The mode is immutable: switching needs a
+predeploy; `deploy_all.sh` passes `L1_BLOCK` when set) and, with `--l1-blob-verifier`, requires
+the registry to hold the expected verifier (`deploy_all.sh` passes `L1_BLOB_VERIFIER`, else the
+one it deployed, else `0x0` for blob mode). The mode is immutable: switching needs a
 new registry. The target chain needs the point-evaluation precompile at `0x0a`, but not
 `BLOBHASH` of its own blobs. A local dry run needs a stand-in `L1Block` (`test/mocks/MockL1Block.sol`).
 See [settlement.md](settlement.md#l1-blob-mode) for the proof and its limits.
