@@ -57,6 +57,7 @@ constructor(
 | `ETHERSCAN_API_KEY` | explorer key for source verification |
 | `ETHERSCAN_API_URL` | optional verifier endpoint for explorers other than Etherscan |
 | `DEBUG_DEPLOY` | `true` traces the script |
+| `EXPECT_DA_MODE` | `l1` or `blob`: the mode the run must produce, checked before `forge script` against `L1_BLOB_VERIFIER` / `L1_BLOCK` (a misspelled name otherwise silently deploys a blob-mode registry). Optional, but required on chains 10 and 11155420 |
 | `EXPECT_GRACE` | optional `DEFAULT,FLOOR,CEIL,MAX_TOTAL,NOTICE` in seconds the registry must read back (e.g. `300,240,600,1800,60`); a misspelled `GRACE_*` silently keeps its default |
 
 [`.env.example`](../.env.example) lists them all.
@@ -190,7 +191,7 @@ pins and a grace window that fits the Ethereum leg, from the owner's account, wi
 ```bash
 CHAIN_ID=10 VERIFY_MODE=false \
 ZISK_VERIFIER=0x6781FFF50D615CB3F331CCD3Bdad3416d4ce0d5c \
-L1_BLOB_VERIFIER=0x3B95BC14F43ed8Addb83F84D10A949De74eE7529 \
+L1_BLOB_VERIFIER=0x3B95BC14F43ed8Addb83F84D10A949De74eE7529 EXPECT_DA_MODE=l1 \
 BATCH_PROGRAM_VK=0xa0ad5c4c7e39d4a7007933158181418a752e6c1563a211af84c579640db435fa \
 RESULTS_PROGRAM_VK=0xe693589453ecaee63eba697c48d4c5321a714bb18c2d84a97437b3f368578f68 \
 ROOT_C_VADCOP_FINAL=0x05006517b6ccde5da4d890587ba62845b5af8a307c00e87d4b9d05099b16dc80 \

@@ -16,6 +16,7 @@ mismatch. --record writes what was verified as JSON, only when every check passe
 import argparse
 import json
 import re
+from urllib.parse import urlsplit
 import subprocess
 import sys
 import urllib.request
@@ -28,7 +29,10 @@ UA = {"Content-Type": "application/json", "User-Agent": "davinci-verify"}
 def rpc(url, method, params):
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
     req = urllib.request.Request(url, data=body.encode(), headers=UA)
-    out = json.load(urllib.request.urlopen(req, timeout=30))
+    try:
+        out = json.load(urllib.request.urlopen(req, timeout=30))
+    except Exception as e:  # noqa: BLE001 - one line; the URL may carry a key and is never echoed
+        raise SystemExit(f"{method}: {type(e).__name__}: {getattr(e, 'reason', getattr(e, 'code', ''))}")
     if "error" in out:
         raise SystemExit(f"{method}: {out['error']}")
     return out["result"]
@@ -159,6 +163,11 @@ def main():
     ap.add_argument("--record", help="write the verified deployment as JSON here (only when every check passes)")
     ap.add_argument("--cast", default=str(Path.home() / ".foundry/bin/cast"))
     a = ap.parse_args()
+    u = urlsplit(a.rpc)
+    if u.scheme not in ("http", "https") or not u.netloc or re.search(r"[\s\x00-\x1f\x7f]", a.rpc):
+        ap.error("--rpc must be an http(s) URL without whitespace (not echoed: it may carry a key)")
+    if a.l1_blob_verifier is not None and not re.fullmatch(r"0x[0-9a-fA-F]{1,40}", a.l1_blob_verifier):
+        ap.error("--l1-blob-verifier takes a hex address or 0x0")
     expect_grace = None
     if a.grace is not None:
         fields = a.grace.split(",")
@@ -297,8 +306,8 @@ def main():
         check("registry.l1BlobVerifier() readable", False, str(e))
         l1v = "unreadable"
     if a.l1_blob_verifier is not None:
-        want = int(a.l1_blob_verifier, 16)
-        if want == 0:
+        want_l1v = int(a.l1_blob_verifier, 16)
+        if want_l1v == 0:
             check("registry is in blob mode as --l1-blob-verifier 0x0 expects", l1v is None or (l1v != "unreadable" and int(l1v, 16) == 0), str(l1v))
         else:
             check("registry.l1BlobVerifier == --l1-blob-verifier", l1v not in (None, "unreadable") and same(l1v, a.l1_blob_verifier), str(l1v))
