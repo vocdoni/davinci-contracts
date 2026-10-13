@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "RLPReader",
+  "sourceName": "src/libraries/op/RLPReader.sol",
+  "abi": [],
+  "bytecode": "0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea2646970667358221220c87d5e80b30912439ef6018182830464a3e0356b237e9eb6c26d0d441a2ea08264736f6c634300081c0033",
+  "deployedBytecode": "0x5f80fdfea2646970667358221220c87d5e80b30912439ef6018182830464a3e0356b237e9eb6c26d0d441a2ea08264736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

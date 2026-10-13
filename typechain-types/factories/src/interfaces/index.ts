@@ -5,5 +5,7 @@ export * as council from "./council";
 export * as dkg from "./dkg";
 export { ICensusValidator__factory } from "./ICensusValidator__factory";
 export { IDkgResultsAdapter__factory } from "./IDkgResultsAdapter__factory";
+export { IL1BlobVerifier__factory } from "./IL1BlobVerifier__factory";
+export { IL1Block__factory } from "./IL1Block__factory";
 export { IProcessRegistry__factory } from "./IProcessRegistry__factory";
 export { IZiskVerifier__factory } from "./IZiskVerifier__factory";
