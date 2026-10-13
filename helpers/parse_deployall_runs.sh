@@ -83,6 +83,17 @@ for run in "${RUN_FILES[@]}"; do
             | select((.arguments // []) | length >= 12)
             | .arguments[1]][0]) as $v
           | if $v == null then . else .ziskVerifier = ($v | ascii_downcase) end
+        end
+      # Likewise the L1BlobVerifier of an L1-blob-mode registry that reused one: the last
+      # constructor argument (14 arguments), when non-zero.
+      | if has("l1BlobVerifier") then .
+        else
+          ([$runfile[0].transactions[]?
+            | select(.transactionType=="CREATE" and .contractName=="ProcessRegistry")
+            | select((.arguments // []) | length >= 14)
+            | .arguments[13]
+            | select(. != "0x0000000000000000000000000000000000000000")][0]) as $l
+          | if $l == null then . else .l1BlobVerifier = ($l | ascii_downcase) end
         end;
 
     . as $existing
