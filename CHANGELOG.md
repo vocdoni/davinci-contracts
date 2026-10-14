@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-10-14
+
+v0.0.51: L1-blob mode and the ZisK 1.3.2-alpha OP Mainnet stack.
+
+- L1-blob mode. `submitStateTransitionL1(processId, publicValues, proofBytes, commitments, ys,
+  L1BlobProof)` settles a transition on OP while its blobs live in Ethereum blob transactions. The
+  registry's immutable `L1BlobVerifier` walks a header chain anchored at `L1Block.hash()` (OP
+  predeploy `0x4200…0015`) or at a header it `record()`ed, proves each blob transaction against its
+  header's `transactionsRoot` (vendored OP `RLPReader`/`MerkleTrie`/`Bytes` from
+  ethereum-optimism/optimism 04108aa, `src/libraries/op/`) and returns the versioned hashes the
+  registry opens with the point-evaluation precompile. `MAX_AGE` is 7200 L1 blocks. New event
+  `ProcessStateTransitionedL1(processId, l1BlockNumbers, versionedHashes)`, `OriginRecorded(number,
+  hash)` and the `l1BlobVerifier()` getter.
+- The mode is immutable. The constructor takes `address _l1BlobVerifier` as its 14th argument; zero
+  is blob mode. `submitStateTransition` on an L1 registry and `submitStateTransitionL1` on a blob
+  registry revert `WrongDAMode`. New `L1BlobVerifier` errors: `L1OriginMismatch`,
+  `BrokenHeaderChain(index)`, `BadHeader(index)`, `TxAboveOrigin(tx)`, `NotBlobTx(tx)`,
+  `BadVersionedHash(tx)`, `TxTooOld(tx)`. `MerkleTrie` reverts with `require` strings
+  (docs/errors.md, docs/settlement.md).
+- ZisK 1.3.2-alpha verifier. `src/verifiers/{PlonkVerifier,ZiskVerifier}.sol` and
+  `src/interfaces/IZiskVerifier.sol` are vendored from the 1.3.2 snark setup (`VERSION()`
+  `v1.3.2-alpha`); the procedure and expected hashes are in docs/development.md. Runtime code hash
+  `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1`. New pins: batch
+  `0xe39e4600…988b`, results `0x39469455…d167`, `rootCVadcopFinal` `0x6b2490fb…b265`. The 1.3.0
+  verifier hard-codes the old root, so a 1.3.2 registry needs its own verifier.
+  `test/vectors/recorded_batch_snark.json` and `publics.json` are re-recorded from a real 1.3.2 job.
+- Deploy tooling. `DeployAll` reads `L1_BLOCK` (deploys an `L1BlobVerifier`) or `L1_BLOB_VERIFIER`
+  (reuses one; refused without code or on another `L1Block`). `deploy_all.sh` requires
+  `EXPECT_DA_MODE=l1|blob` off the local chains and takes `EXPECT_GRACE`. `verify_deployment.py`
+  gains `--l1-block`, `--l1-blob-verifier ADDR|0x0` and `--grace`, fails closed on an unreadable
+  getter and scrubs RPC URLs from its errors.
+- Go bindings: network `optimism` (10) with `L1BlobVerifierContract`,
+  `ProcessRegistryOptimismAddress`, `ZiskVerifierOptimismAddress`, `L1BlobVerifierOptimismAddress`
+  and `GetOptimismAddresses()`. Hardhat artifacts and TypeChain types regenerated, including
+  `L1BlobVerifier`.
+- OP Mainnet (chain id 10) is the production chain. `ProcessRegistry`
+  `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` (block 158164175) on `ZiskVerifier`
+  `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7` (block 158164174) and the reused `L1BlobVerifier`
+  `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529`; grace 300/240/600/1800/60; no DKG or Council
+  adapter; record `deployments/10.json`.
+- Retired, still on chain: `0xC5f88160a1Df51A3Ee56b970b12B8308799c05A7` (v0.2.0 vks on ZisK 1.3.0,
+  `deployments/10-0xC5f8.json`), `0x8b63fAE96948D69CF92Eb40e4EE0fCE40962267d` (v0.1 vks, grace floor
+  150 s, `deployments/10-0x8b63.json`) and the Gnosis registries (`0x20b96e…eA21` retired on
+  2026-10-13).
+- None of the OP contracts is source-verified on an explorer yet.
+
 ## 2026-10-07
 
 - Gnosis production beta registry `0x20b96e465CA7C3536B9C733571ec1eCf42b2eA21` (block
