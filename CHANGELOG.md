@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-10-14
+## 2026-10-15
 
 v0.0.51: L1-blob mode, the ZisK 1.3.2-alpha OP Mainnet stack and the OP registry with the DKG and
 Council adapters.
