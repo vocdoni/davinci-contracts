@@ -2,7 +2,8 @@
 
 ## 2026-10-14
 
-v0.0.51: L1-blob mode and the ZisK 1.3.2-alpha OP Mainnet stack.
+v0.0.51: L1-blob mode, the ZisK 1.3.2-alpha OP Mainnet stack and the OP registry with the DKG and
+Council adapters.
 
 - L1-blob mode. `submitStateTransitionL1(processId, publicValues, proofBytes, commitments, ys,
   L1BlobProof)` settles a transition on OP while its blobs live in Ethereum blob transactions. The
@@ -36,15 +37,23 @@ v0.0.51: L1-blob mode and the ZisK 1.3.2-alpha OP Mainnet stack.
   and `GetOptimismAddresses()`. Hardhat artifacts and TypeChain types regenerated, including
   `L1BlobVerifier`.
 - OP Mainnet (chain id 10) is the production chain. `ProcessRegistry`
-  `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` (block 158164175) on `ZiskVerifier`
-  `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7` (block 158164174) and the reused `L1BlobVerifier`
-  `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529`; grace 300/240/600/1800/60; no DKG or Council
-  adapter; record `deployments/10.json`.
+  `0x64d41aD49009204E8dAcc153Fc98a5Ee14cB6916` (block 158245426, 2026-10-15, commit `338ac77`,
+  deployer `0x5eb38f2D16CEaabFF6a63C17505a14b45624f537`, L1-blob mode) with the DKG adapter
+  `0x0c1E7120FaBf95fDe294839A78780334d27cfCff` (DKGManager `0x9e799a1d…2d41` from davinci-dkg,
+  block 158245366; DKGAppManager `0x1e7f0bec…c39a`) and the Council adapter
+  `0xa5A1e4B204976709EB545Af0189211c41e20193d` (Council manager `0x281b84de…396e`
+  from davinci-dkg-council, circuits-v1 development setup, block 158245395). It reuses the
+  `ZiskVerifier` `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`, the `L1BlobVerifier`
+  `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529`, the 4 pins and grace 300/240/600/1800/60 of the
+  previous registry. Record `deployments/10.json`; `verify_deployment.py` passed 32 checks.
+- The previous OP registry `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` (block 158164175) is
+  retired: no DKG or Council adapter, record `deployments/10-0x7bfa.json`.
 - Retired, still on chain: `0xC5f88160a1Df51A3Ee56b970b12B8308799c05A7` (v0.2.0 vks on ZisK 1.3.0,
   `deployments/10-0xC5f8.json`), `0x8b63fAE96948D69CF92Eb40e4EE0fCE40962267d` (v0.1 vks, grace floor
   150 s, `deployments/10-0x8b63.json`) and the Gnosis registries (`0x20b96e…eA21` retired on
-  2026-10-13).
-- None of the OP contracts is source-verified on an explorer yet.
+  2026-10-13). Gnosis Chain is retired.
+- None of the OP contracts is source-verified on an explorer yet; Optimistic Etherscan
+  verification of the new registry is pending.
 
 ## 2026-10-07
 

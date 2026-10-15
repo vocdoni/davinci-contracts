@@ -7,7 +7,7 @@ final tally on it with zero-knowledge proofs.
 [![test](https://github.com/vocdoni/davinci-contracts/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/vocdoni/davinci-contracts/actions/workflows/test.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-In production beta on Gnosis Chain on development trusted setups. The protocol is
+In production beta on OP Mainnet on development trusted setups. The protocol is
 described in the [whitepaper](https://whitepaper.vocdoni.io).
 
 ## Overview
@@ -38,11 +38,36 @@ With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committe
 
 ## Deployments
 
-### OP Mainnet, ZisK 1.3.2 registry
+### OP Mainnet, registry with the DKG and Council adapters
 
-OP Mainnet (chain id 10), on the davinci-zkvm ZisK 1.3.2-alpha pins, replacing the registry below.
-Deployed 2026-10-13 from commit `fd79251` at block 158164175; [`deployments/10.json`](deployments/10.json) holds
-the verified record. It has its own `ZiskVerifier` (the 1.3.0 verifier hard-codes the old `rootCVadcopFinal`).
+OP Mainnet (chain id 10), deployed 2026-10-15 by the dedicated deployer
+`0x5eb38f2D16CEaabFF6a63C17505a14b45624f537` from commit `338ac77` at block 158245426, in L1-blob
+mode. [`deployments/10.json`](deployments/10.json) holds the verified record; `verify_deployment.py`
+passed 32 checks. Source verification on Optimistic Etherscan is pending. It reuses the
+`ZiskVerifier`, the `L1BlobVerifier`, the 4 pins and the grace settings of the previous OP
+registry below.
+
+| Contract | Address |
+|---|---|
+| `ProcessRegistry` | `0x64d41aD49009204E8dAcc153Fc98a5Ee14cB6916` |
+| `DavinciDKGAdapter` | `0x0c1E7120FaBf95fDe294839A78780334d27cfCff` |
+| davinci-dkg `DKGManager` | `0x9e799a1d22710056e62c849e3ffe19dd01db2d41` (block 158245366) |
+| davinci-dkg `DKGAppManager` | `0x1e7f0bec007828e2e0a1a469d9d3e148888fc39a` |
+| `CouncilAdapter` | `0xa5A1e4B204976709EB545Af0189211c41e20193d` |
+| Council manager | `0x281b84dee6305083cc719187e4a2737d61b4396e` (davinci-dkg-council, development trusted setup, `circuits-v1`, block 158245395) |
+| `L1BlobVerifier` | `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529` (reads `L1Block` `0x4200000000000000000000000000000000000015`; reused) |
+| `ZiskVerifier` | `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7` (reused) |
+
+The pins and grace settings are those of the table in the next section (grace 300 / 240 / 600 /
+1800 / 60 s). The Council manager runs on a development trusted setup: whoever holds that setup's
+toxic waste can forge dealings, so treat COUNCIL processes as a beta.
+
+### OP Mainnet, ZisK 1.3.2 registry (retired)
+
+OP Mainnet (chain id 10), on the davinci-zkvm ZisK 1.3.2-alpha pins. Deployed 2026-10-13 from
+commit `fd79251` at block 158164175. Retired on 2026-10-15: it has no DKG or Council adapter and
+sequencers use the registry above; its record is
+[`deployments/10-0x7bfa.json`](deployments/10-0x7bfa.json). It has its own `ZiskVerifier` (the 1.3.0 verifier hard-codes the old `rootCVadcopFinal`).
 `L1BlobVerifier` is reused.
 
 | Contract | Address |
@@ -61,6 +86,8 @@ the verified record. It has its own `ZiskVerifier` (the 1.3.0 verifier hard-code
 | `graceMaxTotal` | 1800 s |
 | `noticeMin` | 60 s |
 
+No DKG or Council adapter.
+
 ### OP Mainnet, L1-blob mode (v0.2.0 registry, retired)
 
 OP Mainnet (chain id 10), deployed 2026-10-13 from commit `44fdca1` at block 158155408, on the
@@ -68,7 +95,7 @@ davinci-zkvm v0.2.0 program vks. The registry settles transitions on OP while th
 Ethereum blob transactions, checked by its `L1BlobVerifier` against OP's `L1Block` predeploy
 ([settlement.md](docs/settlement.md#l1-blob-mode)). [`deployments/10-0xC5f8.json`](deployments/10-0xC5f8.json)
 holds the verified record. Not source-verified on an explorer yet. It is retired: it
-stays on the v0.2.0 vks and ZisK 1.3.0, and sequencers use the ZisK 1.3.2 registry above.
+stays on the v0.2.0 vks and ZisK 1.3.0, and sequencers use the registry with the adapters above.
 
 | Contract | Address |
 |---|---|
@@ -98,7 +125,7 @@ No DKG or Council adapter.
 ### Gnosis Chain production beta
 
 Gnosis Chain (chain id 100), deployed 2026-10-07 from commit `4e4f6c8` at block 48,633,301.
-Retired on 2026-10-13: sequencers from v0.6.0 on prove under the v0.2.0 vks and follow OP Mainnet.
+Gnosis Chain is retired (2026-10-13): sequencers from v0.6.0 on prove under the v0.2.0 vks and follow OP Mainnet.
 Every contract is source-verified on Gnosisscan, Blockscout and Sourcify, and
 [`deployments/100.json`](deployments/100.json) holds the verified record:
 
