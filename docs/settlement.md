@@ -40,6 +40,7 @@ is in davinci-zkvm's
 | 28..35 | blobs digest |
 | 36 | `n_blobs` |
 | 42 | `occupied_before` |
+| 46..53 | cells digest `D` |
 
 The checks, in order:
 
@@ -60,9 +61,12 @@ The checks, in order:
    accepts the PLONK proof. The verifier hashes the program vk, the public values and the setup
    root together, so a proof of another program or setup fails.
 9. Every blob `i` is present and opens to `y_i` at
-   `z_i = sha256(pid ‖ rootBefore ‖ commitment_i) mod r_BLS`, with the process id and the state
-   root before as 32-byte big-endian integers. This is the point at which the guest evaluated
-   the blob it laid out itself, so the published blobs are the ones the proof covers.
+   `z_i = sha256("davinci/point/v1" ‖ pid ‖ rootBefore ‖ D ‖ u64(n_blobs) ‖ u64(i) ‖ commitment_i) mod r_BLS`,
+   with the process id and the state root before as 32-byte big-endian integers, `D` read from
+   the proven publics and the two counts as 8-byte big-endian integers. This is the point at
+   which the guest evaluated the blob it laid out itself. `D` is the guest's hash of that cell
+   stream, fixed before any point exists, so the content cannot be fitted to a known point and
+   the published blobs are the ones the proof covers.
 
 On success `latestStateRoot` becomes the root after, `votersCount` grows by
 `votes - overwrites`, `overwrittenVotesCount` by `overwrites`, `batchNumber` by one,

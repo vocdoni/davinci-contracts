@@ -93,6 +93,16 @@ contract TransitionL1Test is RegistryTestBase {
         _submitL1(pid, t);
     }
 
+    function test_RevertWhen_L1_CellsDigest() public {
+        // L1 mode derives the points from the same proven D.
+        bytes31 pid = _fixtureProcess();
+        Transition memory t = _transition(0);
+        _arm(t);
+        _setReg32(t.publicValues, 46, bytes32(0));
+        vm.expectRevert(abi.encodeWithSelector(IProcessRegistry.InvalidBlobOpening.selector, 0));
+        _submitL1(pid, t);
+    }
+
     function test_RevertWhen_L1_Digest() public {
         bytes31 pid = _fixtureProcess();
         Transition memory t = _transition(0);

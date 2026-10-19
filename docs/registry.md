@@ -21,17 +21,19 @@ organizer moves a process with `setProcessStatus`:
 
 | From | Organizer may set | Other ways out |
 |---|---|---|
-| `READY` | `PAUSED` (before the end time), `CANCELED`, `ENDED` (from `startTime` on) | `RESULTS` or `ENDED` from the results calls, once the grace window has closed |
-| `PAUSED` | `READY`, `CANCELED`, `ENDED` (from `startTime` on) | same as `READY` |
+| `READY` | `PAUSED` (before the end time), `CANCELED` (before the grace end), `ENDED` (from `startTime` on) | `RESULTS` or `ENDED` from the results calls, once the grace window has closed |
+| `PAUSED` | `READY`, `CANCELED` (before the grace end), `ENDED` (from `startTime` on) | same as `READY` |
 | `ENDED` | none | `RESULTS` from the results calls |
 | `CANCELED` | none | none |
 | `RESULTS` | none | none |
 
 A process ends at `startTime + duration` (`getProcessEndTime`). Setting `ENDED` by hand before
 that sets `duration` to the time elapsed since `startTime` and emits `ProcessDurationChanged`;
-past the end it leaves `duration` alone. `ENDED` is refused before `startTime` and `PAUSED` from
-the end time on, both with `InvalidTimeBounds`: a process that never opened is voided with
-`CANCELED`, and a pause cannot outlast voting.
+past the end it leaves `duration` alone. `ENDED` is refused before `startTime`, `PAUSED` from
+the end time on and `CANCELED` from the grace end on, all with `InvalidTimeBounds`: a process
+that never opened is voided with `CANCELED`, a pause cannot outlast voting, and once results can
+be published a cancel cannot veto them (a pending `setProcessResults` carries the tally in its
+calldata).
 
 Transitions settle while `startTime <= block.timestamp < getProcessGraceEnd(processId)` and the
 process is `READY`, `ENDED`, or `PAUSED` past its end time. A pause during voting stops
@@ -118,7 +120,7 @@ function newProcess(
 |---|---|
 | `status` | `READY` or `PAUSED`. |
 | `startTime` | 0 means now; otherwise not in the past. |
-| `duration` | `startTime + duration` must be in the future. |
+| `duration` | Non-zero, and `startTime + duration` must be in the future. |
 | `maxVoters` | Non-zero, and `ballotMode.maxValue <= 10^12 / maxVoters` so every possible tally stays inside the sequencer's bounded decryption search. |
 | `ballotMode` | See [Ballot mode](#ballot-mode). |
 | `census` | See [Census origins](#census-origins). |

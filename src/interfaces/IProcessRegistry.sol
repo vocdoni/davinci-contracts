@@ -507,8 +507,8 @@ interface IProcessRegistry {
 
     /**
      * @notice Sets the status of a process. ENDED is refused before startTime (CANCELED voids
-     *         a process that never opened) and PAUSED from the end time on, both with
-     *         InvalidTimeBounds.
+     *         a process that never opened), PAUSED from the end time on and CANCELED from the
+     *         grace end on (results can then be published), all with InvalidTimeBounds.
      * @param processId The ID of the process.
      * @param newStatus The new status of the process.
      */

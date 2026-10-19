@@ -30,6 +30,13 @@ contract ZiskVerifierTest is Test {
         emit log_named_uint("ZiskVerifier.verifySnarkProof gas", g - gasleft());
     }
 
+    /// @dev The node, the organizer client and the SDKs pin this code hash. It covers the solc
+    /// metadata, which includes remappings.txt, so the poseidon-solidity remapping stays there
+    /// although the library is gone.
+    function test_CodeHashIsPinned() public view {
+        assertEq(keccak256(address(verifier).code), 0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1);
+    }
+
     function test_RootCMatchesSetup() public view {
         assertEq(verifier.getRootCVadcopFinal(), rootC);
     }

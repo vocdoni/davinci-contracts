@@ -41,8 +41,10 @@ import (
 
 const anvilAccount0 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 
-// fixtureCensusRoot is a Merkle census root (a BN254 field element).
-var fixtureCensusRoot, _ = new(big.Int).SetString("2bc6f255d02b18329662a71d7d66c8ce06fe984607fd4fe26ef33ab93a78f683", 16)
+// fixtureCensusRoot is a Keccak lean-IMT census root: the five-member tree of
+// davinci-zkvm rust-sdk/testdata/leanimt.json. Like most Keccak roots it is
+// above the BN254 modulus, which the registry must carry untouched.
+var fixtureCensusRoot, _ = new(big.Int).SetString("8d8d12d54c906a25a5957df3d35b79a1a8c7624ad86128610110852a729203a2", 16)
 
 func main() {
 	out := flag.String("out", ".", "output directory")
@@ -79,6 +81,7 @@ func main() {
 
 	fx, blobs := transitionFixture(uint32(*chainID), registry, creator, prefix, vkLeaf)
 	writeJSON(*out, "transition.json", fx)
+	writeJSON(*out, "point.json", map[string][]pointCase{"cases": pointVectors()})
 	l1BlobFixtures(*out, fx)
 	writeJSON(*out, "dkg.json", dkgVectors(prefix, creator, vkLeaf))
 	if *writeBlobs {
@@ -567,6 +570,7 @@ type transitionJSON struct {
 	Zs              []string `json:"zs"`
 	VersionedHashes []string `json:"versioned_hashes"`
 	BlobsDigest     string   `json:"blobs_digest"`
+	CellsDigest     string   `json:"cells_digest"`
 }
 
 type resultsJSON struct {
@@ -660,7 +664,8 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 		regs[36] = uint32(len(tb.Blobs))
 		regs[40], regs[41] = 1, 1
 		regs[42] = uint32(b.occ)
-		regs[43], regs[44] = uint32(len(b.voteIDs)), 3
+		regs[43], regs[44] = uint32(len(b.voteIDs)), 71
+		setReg32(&regs, 46, tb.CellsDigest[:])
 
 		tj := transitionJSON{
 			PublicValues:   hex0x(publicValues(regs)),
@@ -672,6 +677,7 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 			OccupiedBefore: b.occ,
 			NBlobs:         uint64(len(tb.Blobs)),
 			BlobsDigest:    hex0x(tb.Digest[:]),
+			CellsDigest:    hex0x(tb.CellsDigest[:]),
 		}
 		var blobs [][]byte
 		for i := range tb.Blobs {
@@ -718,6 +724,44 @@ func transitionFixture(chainID uint32, registry, creator common.Address, prefix 
 		Values:       values[:nf],
 	}
 	return fx, allBlobs
+}
+
+// --- blob evaluation points ---------------------------------------------------
+
+// pointCase is one ProcessRegistry._point input with the go-sdk's z. RootBefore
+// is the raw arbo root as the publics carry it (little-endian integer bytes).
+type pointCase struct {
+	ProcessID   string `json:"process_id"` // bytes31
+	RootBefore  string `json:"root_before"`
+	CellsDigest string `json:"cells_digest"`
+	NBlobs      uint64 `json:"n_blobs"`
+	Index       uint64 `json:"index"`
+	Commitment  string `json:"commitment"`
+	Z           string `json:"z"`
+}
+
+// pointVectors: every input byte distinct (a reversed or shifted field moves
+// z), the first and last index of 32 blobs, and one raw hash above r_bls.
+func pointVectors() []pointCase {
+	var pidBE, rootBE, d [32]byte
+	var com [48]byte
+	for i := range pidBE {
+		pidBE[i] = byte(i)
+		rootBE[i] = byte(0x3f - i)
+		d[i] = byte(0x40 + i)
+	}
+	for i := range com {
+		com[i] = byte(0x60 + i)
+	}
+	var out []pointCase
+	for _, c := range []struct{ n, b int }{{3, 2}, {32, 0}, {32, 31}, {1, 0}} {
+		z := davinci.EvaluationPoint(pidBE, rootBE, d, c.n, c.b, com)
+		out = append(out, pointCase{
+			ProcessID: hex0x(pidBE[1:]), RootBefore: hex0x(reverse(rootBE[:])), CellsDigest: hex0x(d[:]),
+			NBlobs: uint64(c.n), Index: uint64(c.b), Commitment: hex0x(com[:]), Z: hex0x(z[:]),
+		})
+	}
+	return out
 }
 
 // pointGen hands out distinct on-curve TE points for ballot coordinates.

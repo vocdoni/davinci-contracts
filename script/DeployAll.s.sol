@@ -9,8 +9,9 @@ import {IDKGManager} from "../src/interfaces/dkg/IDKGManager.sol";
 
 /// @notice Deploys the ZisK PLONK verifier (ZiskVerifier extends PlonkVerifier) and the
 ///         ProcessRegistry pinned to the davinci-zkvm program vks.
-/// @dev Env: PRIVATE_KEY, CHAIN_ID, BATCH_PROGRAM_VK, RESULTS_PROGRAM_VK, ROOT_C_VADCOP_FINAL,
+/// @dev Env: PRIVATE_KEY, BATCH_PROGRAM_VK, RESULTS_PROGRAM_VK, ROOT_C_VADCOP_FINAL,
 ///      BALLOT_VK_HASH (bytes32 hex). ROOT_C_VADCOP_FINAL must match the vendored verifier setup.
+///      The registry's chain id is the RPC's; CHAIN_ID, if set, must equal it.
 ///      Optional: ZISK_VERIFIER (reuse a deployed verifier instead of deploying one; it must
 ///      report ROOT_C_VADCOP_FINAL, and its code hash is logged for the release pin),
 ///      DKG_MANAGER, COUNCIL_MANAGER, L1_BLOB_VERIFIER (an existing IL1BlobVerifier; non-zero makes
@@ -95,6 +96,7 @@ contract DeployAllScript is Script {
             c.l1BlobVerifier
         );
         console.log("ProcessRegistry deployed at:", address(processRegistry));
+        console.log("Registry chain id:", vm.toString(uint256(processRegistry.chainID())));
         console.log("DavinciDKGAdapter deployed at:", processRegistry.dkgAdapter());
         console.log("  DKG manager:", c.dkgManager);
         console.log("CouncilAdapter deployed at:", processRegistry.councilAdapter());
@@ -124,10 +126,13 @@ contract DeployAllScript is Script {
     }
 
     function _config() internal view returns (Config memory c) {
-        uint256 chainId = vm.envUint("CHAIN_ID");
-        require(chainId <= type(uint32).max, "CHAIN_ID exceeds uint32");
+        // The pid prefix hashes this id and aidFor uses block.chainid: they must agree, or a
+        // registry at the same address on another chain could share the prefix. CHAIN_ID, when
+        // set, is only cross-checked.
+        require(block.chainid <= type(uint32).max, "chain id exceeds uint32");
+        require(vm.envOr("CHAIN_ID", block.chainid) == block.chainid, "CHAIN_ID differs from the chain's id");
         // forge-lint: disable-next-line(unsafe-typecast)
-        c.chainId = uint32(chainId);
+        c.chainId = uint32(block.chainid);
         // Optional davinci-dkg manager; zero (the default) disables the DKG key modes.
         c.dkgManager = _envAddress("DKG_MANAGER");
         // Optional Council manager; zero (the default) disables the COUNCIL key mode.

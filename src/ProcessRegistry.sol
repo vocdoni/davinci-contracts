@@ -51,6 +51,9 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     uint256 private constant REG_BLOBS_DIGEST = 28;
     uint256 private constant REG_N_BLOBS = 36;
     uint256 private constant REG_OCCUPIED_BEFORE = 42;
+    uint256 private constant REG_CELLS_DIGEST = 46;
+    /// @dev Domain tag of the blob evaluation points (davinci-zkvm circuit/src/kzg.rs POINT_TAG).
+    bytes16 private constant POINT_TAG = "davinci/point/v1";
     // Results guest output registers: the state root, then results[i] as (lo, hi) words.
     uint256 private constant REG_RESULTS_STATE_ROOT = 2;
     uint256 private constant REG_RESULTS = 10;
@@ -173,9 +176,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         uint32 _noticeMin,
         address _l1BlobVerifier
     ) {
+        // Equal program keys would let a batch proof pass as a results proof.
         if (
             _ziskVerifier == address(0) || _batchProgramVK == bytes32(0) || _resultsProgramVK == bytes32(0)
-                || _rootCVadcopFinal == bytes32(0) || _ballotVKHash == bytes32(0)
+                || _batchProgramVK == _resultsProgramVK || _rootCVadcopFinal == bytes32(0)
+                || _ballotVKHash == bytes32(0)
         ) revert InvalidVerifierConfig();
         if (
             _graceFloor == 0 || _graceFloor > _defaultGrace || _defaultGrace > _graceCeil || _graceCeil > _graceMaxTotal
@@ -266,7 +271,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
             startTime = currentTimestamp;
         }
         if (startTime < currentTimestamp) revert InvalidStartTime();
-        if (startTime + duration <= currentTimestamp) revert InvalidDuration();
+        // Non-zero as in setProcessDuration: a zero-length election would only settle in its grace.
+        if (duration == 0 || startTime + duration <= currentTimestamp) revert InvalidDuration();
 
         DAVINCITypes.Process storage p = processes[processId];
 
@@ -322,10 +328,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
 
     /// @inheritdoc IProcessRegistry
     /// @dev ENDED before the end time moves the end to now. Past it the end stays put: moving
-    ///      it forward would reopen a grace window that has already closed. Two transitions the
-    ///      matrix allows are refused by time: ENDED before startTime (CANCELED is how a process
-    ///      that never opened is voided) and PAUSED from the end on (a pause cannot hold the
-    ///      grace window shut).
+    ///      it forward would reopen a grace window that has already closed. Three transitions
+    ///      the matrix allows are refused by time: ENDED before startTime (CANCELED is how a
+    ///      process that never opened is voided), PAUSED from the end on (a pause cannot hold
+    ///      the grace window shut) and CANCELED from the grace end on (a results transaction
+    ///      can then be pending with the tally in its calldata, and a cancel would veto it).
     function setProcessStatus(bytes31 processId, DAVINCITypes.ProcessStatus newStatus) external override {
         if (processId == bytes31(0)) revert InvalidProcessId();
         if (!ProcessIdLib.hasPrefix(processId, pidPrefix)) revert UnknownProcessIdPrefix();
@@ -342,6 +349,9 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         uint256 end = startTime + p.duration;
         if (newStatus == DAVINCITypes.ProcessStatus.ENDED && block.timestamp < startTime) revert InvalidTimeBounds();
         if (newStatus == DAVINCITypes.ProcessStatus.PAUSED && block.timestamp >= end) revert InvalidTimeBounds();
+        if (newStatus == DAVINCITypes.ProcessStatus.CANCELED && block.timestamp >= _graceEnd(p)) {
+            revert InvalidTimeBounds();
+        }
 
         p.status = newStatus;
         // if newStatus is ENDED before the end, set duration to the time elapsed since start
@@ -517,7 +527,15 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (BlobsLib.blobHash(nBlobs) != bytes32(0)) revert BlobCountMismatch();
         _checkDigest(publicValues, commitments, ys, kzgProofs);
         ziskVerifier.verifySnarkProof(batchProgramVK, rootCVadcopFinal, publicValues, proofBytes);
-        _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs, _blobHashes(nBlobs));
+        _verifyOpenings(
+            processId,
+            rootBefore,
+            PublicsLib.reg32(publicValues, REG_CELLS_DIGEST),
+            commitments,
+            ys,
+            kzgProofs,
+            _blobHashes(nBlobs)
+        );
     }
 
     /// @inheritdoc IProcessRegistry
@@ -562,7 +580,9 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         (vhs, l1Blocks) = l1BlobVerifier.verify(l1);
         if (vhs.length != nBlobs) revert BlobCountMismatch();
         ziskVerifier.verifySnarkProof(batchProgramVK, rootCVadcopFinal, publicValues, proofBytes);
-        _verifyOpenings(processId, rootBefore, commitments, ys, kzgProofs, vhs);
+        _verifyOpenings(
+            processId, rootBefore, PublicsLib.reg32(publicValues, REG_CELLS_DIGEST), commitments, ys, kzgProofs, vhs
+        );
     }
 
     /// @dev Status, time window, guest ok flag, root continuity, census root, occupancy and
@@ -1054,19 +1074,31 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (sha256(pairs) != PublicsLib.reg32(publicValues, REG_BLOBS_DIGEST)) revert InvalidBlobsDigest();
     }
 
-    /// @dev z = sha256(BE32(pid) ‖ BE32(root) ‖ commitment) mod r_bls. Split out of _verifyOpenings
-    ///      to keep its stack shallow.
-    function _point(bytes31 processId, bytes32 rootBefore, bytes calldata commitment) private pure returns (bytes32) {
+    /// @dev z = sha256(POINT_TAG ‖ BE32(pid) ‖ BE32(root) ‖ D ‖ u64_be(n) ‖ u64_be(index) ‖ commitment)
+    ///      mod r_bls, for blob index of n. D is the guest's hash of the cell stream: it fixes the
+    ///      polynomials before any point exists. Split out of _verifyOpenings for stack depth;
+    ///      internal so tests can check it against the SDK vectors.
+    function _point(
+        bytes31 processId,
+        bytes32 rootBefore,
+        bytes32 cellsDigest,
+        uint256 n,
+        uint256 index,
+        bytes calldata commitment
+    ) internal pure returns (bytes32) {
         bytes32 pidBE = bytes32(uint256(uint248(processId)));
         bytes32 rootBE = PublicsLib.reverse32(rootBefore);
-        return bytes32(uint256(sha256(abi.encodePacked(pidBE, rootBE, commitment))) % BLS_MODULUS);
+        bytes32 h =
+            sha256(abi.encodePacked(POINT_TAG, pidBE, rootBE, cellsDigest, uint64(n), uint64(index), commitment));
+        return bytes32(uint256(h) % BLS_MODULUS);
     }
 
-    /// @dev Opens blob i of this transaction at z_i = sha256(BE32(pid) ‖ BE32(root) ‖ commitment_i)
-    ///      mod r_bls, the point the guest evaluated it at, and checks y_i.
+    /// @dev Opens blob i of this transaction at _point(pid, root, D, n, i, commitment_i), the
+    ///      point the guest evaluated it at, and checks y_i. D comes from the proven publics.
     function _verifyOpenings(
         bytes31 processId,
         bytes32 rootBefore,
+        bytes32 cellsDigest,
         bytes[] calldata commitments,
         bytes32[] calldata ys,
         bytes[] calldata kzgProofs,
@@ -1076,7 +1108,11 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
             if (vhs[i] == bytes32(0)) revert MissingBlob(i);
             (bool ok, bytes memory out) = POINT_EVALUATION.staticcall(
                 abi.encodePacked(
-                    vhs[i], _point(processId, rootBefore, commitments[i]), ys[i], commitments[i], kzgProofs[i]
+                    vhs[i],
+                    _point(processId, rootBefore, cellsDigest, commitments.length, i, commitments[i]),
+                    ys[i],
+                    commitments[i],
+                    kzgProofs[i]
                 )
             );
             // Also rejects a chain where 0x0A is not the precompile (empty return data).

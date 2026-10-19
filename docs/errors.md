@@ -13,8 +13,8 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `ProcessAlreadyExists` | `newProcess` | the id is taken |
 | `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY`/`ENDED`, or `PAUSED` before its end (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
 | `InvalidStartTime` | `newProcess` | start time in the past |
-| `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; new duration zero or unchanged; an earlier end less than `noticeMin` away |
-| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessMaxVoters`, `setProcessCensus`, `setProcessMetadata`, `setProcessGrace`); `ENDED` before `startTime` or `PAUSED` from the end on (`setProcessStatus`); before `startTime` or at or past the grace end (settlement); not ended yet (`setProcessResults`, `requestResultsDecryption`) |
+| `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; duration zero; new duration unchanged; an earlier end less than `noticeMin` away |
+| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessMaxVoters`, `setProcessCensus`, `setProcessMetadata`, `setProcessGrace`); `ENDED` before `startTime`, `PAUSED` from the end on or `CANCELED` from the grace end on (`setProcessStatus`); before `startTime` or at or past the grace end (settlement); not ended yet (`setProcessResults`, `requestResultsDecryption`) |
 | `InvalidGrace` | constructor, `setProcessGrace` | grace outside `[graceFloor, graceCeil]`; constructor bounds not `0 < graceFloor <= defaultGrace <= graceCeil <= graceMaxTotal` with `noticeMin > 0` |
 | `GraceOpen` | results calls | the grace window has not closed |
 | `EmptyTransition` | settlement | the batch carries no vote |
@@ -71,7 +71,7 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `InvalidFieldRange` (Council adapter) | `plaintexts` | `first != 0` or `count` differs from the request's field count |
 | `RequestMismatch` (Council adapter) | `requestResultsDecryption`, `plaintexts` | the manager answered for another request or with the wrong number of values |
 | `UnsupportedKeyMode` (Council adapter) | adapter `reveal` | Council has no organizer key |
-| `InvalidVerifierConfig` | constructor | zero verifier address or pin |
+| `InvalidVerifierConfig` | constructor | zero verifier address or pin, or the same program key for batches and results |
 
 Errors from davinci-dkg pass through unchanged. On `newProcess` these include `InvalidEpoch`
 or `InvalidPhase` for an unknown or not yet Live `DKG_LOCKED` epoch, and `InvalidSchnorrProof`;

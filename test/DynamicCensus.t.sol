@@ -81,6 +81,15 @@ contract DynamicCensusTest is RegistryTestBase {
         assertEq(p.votersCount, 3);
     }
 
+    // --- census roots are 256-bit values ----------------------------------------
+
+    /// @dev Keccak census roots are uniform 256-bit values, most of them above the BN254
+    ///      modulus. The fixture root is one, so the settlement tests here and in
+    ///      Transition.t.sol carry such a root through creation and register 20.
+    function test_FixtureCensusRootIsAboveTheFieldModulus() public view {
+        assertGt(uint256(root), BN254_P);
+    }
+
     // --- origin 2: creation ----------------------------------------------------
 
     function test_Offchain_CreateStoresRootAndGenesis() public {

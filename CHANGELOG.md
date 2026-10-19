@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-10-19
+
+v0.0.52: the protocol v5 registry.
+
+- Blob evaluation points. The registry derives each blob's evaluation point from the cell digest
+  the batch proof outputs (registers 46 to 53) and opens the blob there, in blob and L1-blob mode;
+  it needs a davinci-zkvm v0.4.0 batch program.
+- `setProcessStatus` refuses CANCELED from the grace end on (`InvalidTimeBounds`): a results
+  transaction may then be pending. Before the grace end the organizer still cancels.
+- The constructor refuses equal batch and results program keys, and `newProcess` refuses a zero
+  duration.
+- `DeployAll` deploys with the chain's own id and refuses a different `CHAIN_ID`.
+- Test vectors for protocol v5: the davinci-circom v1.1.0 development ballot key (71 public
+  inputs) and a Keccak census root above the BN254 modulus carried through creation and
+  register 20. A test pins the vendored `ZiskVerifier`'s runtime code hash
+  (`0xadab570d…dcc1`): it covers the solc metadata, so `remappings.txt` keeps the
+  `poseidon-solidity/` entry although the library is gone.
+- Adversarial test suites for settlement, the grace window, results and L1 blobs.
+- Pins for davinci-zkvm v0.4.0: batch `0x1e4a74a1…d2a8`, results `0xde55d751…e4e9`,
+  `rootCVadcopFinal` unchanged.
+
 ## 2026-10-15
 
 v0.0.51: L1-blob mode, the ZisK 1.3.2-alpha OP Mainnet stack and the OP registry with the DKG and
