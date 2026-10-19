@@ -2,6 +2,28 @@
 
 ## 2026-10-19
 
+v0.0.53: the OP Mainnet protocol v5 registry (pre-production).
+
+- `ProcessRegistry` `0x6F500A3e3A161EcB3C19A034bFB6a6Ac3b71abE6` at block 158414417 (transaction
+  `0xdc71c0e5f98c9aa5c0b29059727c4e2e55c481a4e41c4df125c3bde5233132f3`), with
+  `DavinciDKGAdapter` `0x51aB0BB6A455e7f027f3b09b8F1Ea0634806f390` (`DKGManager`
+  `0x9e799a1d22710056e62c849e3ffe19dd01db2d41`) and `CouncilAdapter`
+  `0xC2f51d01E16b61d75eAD2e5b88d139739067af17` (Council manager
+  `0x281b84dee6305083cc719187e4a2737d61b4396e`). It reuses the `ZiskVerifier`
+  `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7` and the `L1BlobVerifier`
+  `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529`. Sources are verified on Optimistic Etherscan and
+  `verify_deployment.py` passes 27 checks.
+- Pins for davinci-zkvm v0.4.1: batch `0x1e4a74a1…d2a8`, results `0xde55d751…e4e9`,
+  `rootCVadcopFinal` `0x6b2490fb…b265`, `ballotVKHash` `0x7caffddc…e219` (pre-production
+  phase-2 ceremony, davinci-circom v1.2.0). Grace 300 / 240 / 600 / 1800 / 60 s, L1-blob mode,
+  process ids start with `3c3e0777`.
+- The Solidity sources are unchanged from v0.0.52. The previous OP registry `0x64d4…6916`
+  (protocol v4) is retired; its record is `deployments/10-0x64d4.json`.
+- `docs/deployment.md` documents the deployment environment and how to finish a broadcast whose
+  receipt was lost.
+
+## 2026-10-19
+
 v0.0.52: the protocol v5 registry.
 
 - Blob evaluation points. The registry derives each blob's evaluation point from the cell digest

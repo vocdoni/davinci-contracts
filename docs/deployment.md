@@ -183,6 +183,40 @@ See [settlement.md](settlement.md#l1-blob-mode) for the proof and its limits.
 
 ## OP Mainnet
 
+### OP Mainnet protocol v5 registry (pre-production)
+
+Deployed on 2026-10-19 with the davinci-zkvm v0.4.1 pins, reusing the `ZiskVerifier` and the
+`L1BlobVerifier`, and the DKG and Council managers already on OP. The pins are explicit (no
+`PINS_FROM_REGISTRY`) and the key is read from a key file into the environment only:
+
+```bash
+CHAIN_ID=10 VERIFY_MODE=false \
+RPC_URL=https://optimism-rpc.publicnode.com \
+ZISK_VERIFIER=0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7 \
+L1_BLOB_VERIFIER=0x3B95BC14F43ed8Addb83F84D10A949De74eE7529 EXPECT_DA_MODE=l1 \
+DKG_MANAGER=0x9e799a1d22710056e62c849e3ffe19dd01db2d41 \
+COUNCIL_MANAGER=0x281b84dee6305083cc719187e4a2737d61b4396e \
+BATCH_PROGRAM_VK=0x1e4a74a1c6fb1cd1874d80895e1e075930837955efb4a135539016f7cdead2a8 \
+RESULTS_PROGRAM_VK=0xde55d751582e510bf378d4eec0d98ee3fa5817a50b77bc0e5ce560035e29e4e9 \
+ROOT_C_VADCOP_FINAL=0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265 \
+BALLOT_VK_HASH=0x7caffddcd7ea38439cbb45789b810d8eafceca65cff93dbeaae409b2bf64e219 \
+GRACE_DEFAULT=300 GRACE_FLOOR=240 GRACE_CEIL=600 GRACE_MAX_TOTAL=1800 NOTICE_MIN=60 \
+EXPECT_GRACE=300,240,600,1800,60 \
+PRIVATE_KEY=... ./deploy_all.sh
+```
+
+The registry is `0x6F500A3e3A161EcB3C19A034bFB6a6Ac3b71abE6` (block 158414417); its record is
+`deployments/10.json`. The previous registry `0x64d4…6916` is retired and keeps its record in
+`deployments/10-0x64d4.json`.
+
+If forge does not get the receipt from the RPC, the broadcast file has the transactions but no
+receipts and the script cannot write the record. Fetch the receipt with `cast receipt <txHash>`,
+add it to `broadcast/DeployAll.s.sol/<chain>/run-latest.json`, then write the record with
+`verify_deployment.py --broadcast broadcast/DeployAll.s.sol/<chain>/run-latest.json --record
+deployments/<chain>.json` (with the same environment). That is how the v5 record was finished.
+
+### OP Mainnet ZisK 1.3.2 registry, retired
+
 The ZisK 1.3.2 registry is deployed like the one below, with these differences: a new `ZiskVerifier`
 (vendored per [development.md](development.md#vendoring-the-zisk-verifier); the old one hard-codes the
 previous `rootCVadcopFinal`, so do not set `ZISK_VERIFIER`), and the davinci-zkvm ZisK 1.3.2-alpha pins:
@@ -200,7 +234,7 @@ RPC_URL=... PRIVATE_KEY=... ./deploy_all.sh
 ```
 
 The script logs the verifier's code hash; it must equal `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1`
-(`ZISK_VERIFIER_CODEHASH` in davinci-zkvm). The deployed registry is `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` (block 158164175, commit `fd79251`) on the new `ZiskVerifier` `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`; its record is `deployments/10.json`.
+(`ZISK_VERIFIER_CODEHASH` in davinci-zkvm). The deployed registry is `0x7bfa68879f118C98B864FB52d2aD3a112eF1558F` (block 158164175, commit `fd79251`) on the new `ZiskVerifier` `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`; its record is `deployments/10-0x7bfa.json`.
 
 ### OP Mainnet registry, retired (v0.2.0 vks, ZisK 1.3.0)
 
