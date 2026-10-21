@@ -38,12 +38,43 @@ With a key from a [davinci-dkg](https://github.com/vocdoni/davinci-dkg) committe
 
 ## Deployments
 
-### OP Mainnet, protocol v5 registry (pre-production)
+### OP Mainnet, protocol v5.1 registry (pre-production)
+
+OP Mainnet (chain id 10), deployed and verified on 2026-10-21 by the dedicated deployer
+`0x5eb38f2D16CEaabFF6a63C17505a14b45624f537` at block 158487281 (transaction
+`0xb1f224f680c4c9b0940dc60eb93b5f487e806b4cf3799c4b6ef8cf3c49b235bb`), in L1-blob mode, on the
+davinci-zkvm v0.5.0 pins. [`deployments/10.json`](deployments/10.json) holds the verified record;
+`verify_deployment.py` passed 27 checks with 0 failures, and the sources are verified on
+Optimistic Etherscan. The ballot key is the pre-production phase-2 ceremony of davinci-circom
+v1.3.0. Process ids start with `e8d4e286`.
+
+| Contract | Address |
+|---|---|
+| `ProcessRegistry` | [`0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97`](https://optimistic.etherscan.io/address/0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97#code) |
+| `DavinciDKGAdapter` | [`0xffAC853E7B93CE6148b1A551A40aFd88DE517863`](https://optimistic.etherscan.io/address/0xffAC853E7B93CE6148b1A551A40aFd88DE517863#code) |
+| davinci-dkg `DKGManager` | [`0x9e799a1d22710056e62c849e3ffe19dd01db2d41`](https://optimistic.etherscan.io/address/0x9e799a1d22710056e62c849e3ffe19dd01db2d41#code) |
+| `CouncilAdapter` | [`0xe07BE522a8fE9d1cf85DCA5Eefbe663055D35127`](https://optimistic.etherscan.io/address/0xe07BE522a8fE9d1cf85DCA5Eefbe663055D35127#code) |
+| Council manager | [`0x281b84dee6305083cc719187e4a2737d61b4396e`](https://optimistic.etherscan.io/address/0x281b84dee6305083cc719187e4a2737d61b4396e#code) |
+| `L1BlobVerifier` | [`0x3B95BC14F43ed8Addb83F84D10A949De74eE7529`](https://optimistic.etherscan.io/address/0x3B95BC14F43ed8Addb83F84D10A949De74eE7529#code) (reads `L1Block` `0x4200000000000000000000000000000000000015`; reused) |
+| `ZiskVerifier` | [`0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`](https://optimistic.etherscan.io/address/0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7#code) (reused); runtime code hash `0xadab570d3e3a4c172d0c75e5aef5d06098b94d70a9c8ff76af239a90fdcadcc1` |
+
+| Immutable | Value |
+|---|---|
+| `batchProgramVK` | `0x4b1a527e284af96fa0c3543e9e9b18746a6494edd99c309e58d96a804e3041dc` |
+| `resultsProgramVK` | `0xce964acdd53329fc49ede57f5ea288f044950e136be119287fd0021390689dc4` |
+| `rootCVadcopFinal` | `0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265` |
+| `ballotVKHash` | `0x67e8e6b47ea32cf144d6e72886f02b95ed068b157f9d4ccc8e97f335858e4963` |
+| `defaultGrace` / `graceFloor` / `graceCeil` | 300 / 240 / 600 s |
+| `graceMaxTotal` | 1800 s |
+| `noticeMin` | 60 s |
+| DA mode | L1 blobs |
+
+### OP Mainnet, protocol v5 registry (retired)
 
 OP Mainnet (chain id 10), deployed and verified on 2026-10-19 by the dedicated deployer
 `0x5eb38f2D16CEaabFF6a63C17505a14b45624f537` at block 158414417 (transaction
 `0xdc71c0e5f98c9aa5c0b29059727c4e2e55c481a4e41c4df125c3bde5233132f3`), in L1-blob mode, on the
-davinci-zkvm v0.4.1 pins. [`deployments/10.json`](deployments/10.json) holds the verified record;
+davinci-zkvm v0.4.1 pins. [`deployments/10-0x6f500a3e3a161ecb3c19a034bfb6a6ac3b71abe6.json`](deployments/10-0x6f500a3e3a161ecb3c19a034bfb6a6ac3b71abe6.json) holds the verified record;
 `verify_deployment.py` passed 27 checks with 0 failures, and the sources are verified on
 Optimistic Etherscan. The ballot key is the pre-production phase-2 ceremony (davinci-circom
 v1.2.0). Process ids start with `3c3e0777`.

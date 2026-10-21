@@ -1,7 +1,20 @@
 # Changelog
 
-## Unreleased
+## 2026-10-21
 
+v0.0.54: the OP Mainnet protocol v5.1 registry (pre-production).
+
+- `ProcessRegistry` `0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97` at block 158487281 (transaction
+  `0xb1f224f680c4c9b0940dc60eb93b5f487e806b4cf3799c4b6ef8cf3c49b235bb`), with
+  `DavinciDKGAdapter` `0xffAC853E7B93CE6148b1A551A40aFd88DE517863` and `CouncilAdapter` `0xe07BE522a8fE9d1cf85DCA5Eefbe663055D35127`
+  (managers as before). It reuses the `ZiskVerifier` `0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7`
+  and the `L1BlobVerifier` `0x3B95BC14F43ed8Addb83F84D10A949De74eE7529`. Sources are verified on
+  Optimistic Etherscan and `verify_deployment.py` passes 27 checks.
+- Pins for davinci-zkvm v0.5.0: batch `0x4b1a527e…41dc`, results `0xce964acd…9dc4`,
+  `rootCVadcopFinal` `0x6b2490fb…b265`, `ballotVKHash` `0x67e8e6b4…4963` (pre-production
+  phase-2 ceremony of davinci-circom v1.3.0). Grace 300 / 240 / 600 / 1800 / 60 s, L1-blob mode,
+  process ids start with `e8d4e286`. The protocol v5 registry `0x6F50…abE6` is retired; its record
+  is `deployments/10-0x6f500a3e3a161ecb3c19a034bfb6a6ac3b71abe6.json`.
 - `Sha256SmtLib.verifyInclusion` accepts up to 65 siblings (the last one zero), so a leaf at
   depth 64 (a key next to a vote id that shares its 63 low bits) verifies;
   `requestResultsDecryption` takes the 65-entry lists nodes send.
