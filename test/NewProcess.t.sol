@@ -204,6 +204,34 @@ contract NewProcessTest is RegistryTestBase {
         _expectKeyRejected(DAVINCITypes.EncryptionKey({x: 0, y: BN254_P - 1}));
     }
 
+    /// @dev The cost rule on newProcess: costExponent >= 1 and numFields * maxValue^costExponent
+    ///      below 2^63, so the circuit's field cost is the integer cost.
+    function test_NewProcess_BallotCostRule() public {
+        DAVINCITypes.BallotMode memory m = _ballotMode();
+        (m.numFields, m.groupSize, m.minValue, m.maxValueSum, m.minValueSum) = (16, 0, 0, 0, 0);
+        (m.maxValue, m.costExponent) = (1 << 15, 4); // 16 * 2^60 = 2^64
+        vm.expectRevert(IProcessRegistry.InvalidBallotCost.selector);
+        _newProcess(block.timestamp, DURATION, 1, m, _census());
+
+        m.costExponent = 0;
+        vm.expectRevert(IProcessRegistry.InvalidBallotCost.selector);
+        _newProcess(block.timestamp, DURATION, 1, m, _census());
+
+        (m.numFields, m.maxValue, m.costExponent) = (2, 1 << 31, 2); // 2 * 2^62 = 2^63
+        vm.expectRevert(IProcessRegistry.InvalidBallotCost.selector);
+        _newProcess(block.timestamp, DURATION, 1, m, _census());
+
+        (m.numFields, m.maxValue, m.costExponent) = (16, (1 << 48) - 1, 255);
+        vm.expectRevert(IProcessRegistry.InvalidBallotCost.selector);
+        _newProcess(block.timestamp, DURATION, 1, m, _census());
+
+        // Accepted: the largest 48-bit linear mode and a quadratic one just below 2^63.
+        (m.numFields, m.maxValue, m.costExponent) = (16, 4096, 1);
+        _newProcess(block.timestamp, DURATION, 1, m, _census());
+        (m.numFields, m.maxValue, m.costExponent) = (1, 3037000499, 2);
+        _newProcess(block.timestamp, DURATION, 1, m, _census());
+    }
+
     function test_NewProcess_RejectsBallotModeOverflow() public {
         DAVINCITypes.BallotMode memory m = _ballotMode();
         m.maxValueSum = uint256(1) << 63;

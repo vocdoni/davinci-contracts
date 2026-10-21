@@ -7,7 +7,7 @@ import {IProcessRegistry} from "../src/interfaces/IProcessRegistry.sol";
 import {DAVINCITypes} from "../src/libraries/DAVINCITypes.sol";
 
 /// @dev The metadata URI and hash: set at creation, replaceable by the organizer until the
-///      end, and every value on record in ProcessMetadataUpdated.
+///      start, and every value on record in ProcessMetadataUpdated.
 contract ProcessMetadataTest is RegistryTestBase {
     string internal constant URI_2 = "https://example.com/metadata-2.json";
     /// @dev sha256("metadata document, second version")
@@ -22,11 +22,19 @@ contract ProcessMetadataTest is RegistryTestBase {
         assertEq(HASH_3, sha256("metadata document, third version"));
     }
 
+    /// @dev Voting opens START_DELAY seconds after creation, so the metadata is still open.
+    uint256 internal constant START_DELAY = 1 hours;
+
     function _create(string memory uri, bytes32 hash) internal returns (bytes31) {
+        return _createAt(vm.getBlockTimestamp() + START_DELAY, uri, hash);
+    }
+
+    /// @dev startTime 0 opens voting at creation.
+    function _createAt(uint256 startTime, string memory uri, bytes32 hash) internal returns (bytes31) {
         vm.prank(ORGANIZER);
         return registry.newProcess(
             DAVINCITypes.ProcessStatus.READY,
-            0,
+            startTime,
             DURATION,
             MAX_VOTERS,
             _ballotMode(),
@@ -109,9 +117,9 @@ contract ProcessMetadataTest is RegistryTestBase {
         _assertMetadata(pid, URI_2, HASH_2);
     }
 
-    function test_SetMetadata_UntilTheLastSecond() public {
+    function test_SetMetadata_UntilTheStart() public {
         bytes31 pid = _create(METADATA_URI, METADATA_HASH);
-        vm.warp(registry.getProcessEndTime(pid) - 1);
+        vm.warp(registry.getProcess(pid).startTime - 1);
         _set(pid, URI_2, HASH_2);
         _assertMetadata(pid, URI_2, HASH_2);
     }
@@ -170,23 +178,33 @@ contract ProcessMetadataTest is RegistryTestBase {
         _assertMetadata(pid, METADATA_URI, METADATA_HASH);
     }
 
-    function test_SetMetadata_RevertWhen_PastTheEnd() public {
+    /// @dev Nodes open admission at the start time: from then on a ballot's meaning is fixed.
+    function test_SetMetadata_RevertWhen_Started() public {
         bytes31 pid = _create(METADATA_URI, METADATA_HASH);
+        vm.warp(registry.getProcess(pid).startTime);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        _set(pid, URI_2, HASH_2);
         vm.warp(registry.getProcessEndTime(pid));
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         _set(pid, URI_2, HASH_2);
+        _assertMetadata(pid, METADATA_URI, METADATA_HASH);
+
+        // A process created with startTime 0 starts at creation: refused in the same block.
+        bytes31 now_ = _createAt(0, METADATA_URI, METADATA_HASH);
+        vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
+        _set(now_, URI_2, HASH_2);
 
         // Paused does not stop the clock.
         bytes31 paused = _create(METADATA_URI, METADATA_HASH);
         vm.prank(ORGANIZER);
         registry.setProcessStatus(paused, DAVINCITypes.ProcessStatus.PAUSED);
-        vm.warp(registry.getProcessEndTime(paused) + 1);
+        vm.warp(registry.getProcess(paused).startTime);
         vm.expectRevert(IProcessRegistry.InvalidTimeBounds.selector);
         _set(paused, URI_2, HASH_2);
     }
 
     function test_SetMetadata_RevertWhen_Ended() public {
-        bytes31 pid = _create(METADATA_URI, METADATA_HASH);
+        bytes31 pid = _createAt(0, METADATA_URI, METADATA_HASH);
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED);
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -194,7 +212,7 @@ contract ProcessMetadataTest is RegistryTestBase {
     }
 
     function test_SetMetadata_RevertWhen_Canceled() public {
-        bytes31 pid = _create(METADATA_URI, METADATA_HASH);
+        bytes31 pid = _createAt(0, METADATA_URI, METADATA_HASH);
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.CANCELED);
         vm.expectRevert(IProcessRegistry.InvalidStatus.selector);
@@ -202,7 +220,7 @@ contract ProcessMetadataTest is RegistryTestBase {
     }
 
     function test_SetMetadata_RevertWhen_Results() public {
-        bytes31 pid = _create(METADATA_URI, METADATA_HASH);
+        bytes31 pid = _createAt(0, METADATA_URI, METADATA_HASH);
         vm.prank(ORGANIZER);
         registry.setProcessStatus(pid, DAVINCITypes.ProcessStatus.ENDED);
         _warpToGraceEnd(pid);

@@ -266,8 +266,9 @@ origins, the DKG key modes and every rule the registry enforces, see
 
 The organizer can pause, resume, end or cancel a process with `setProcessStatus`, and until the
 end time change its duration (`setProcessDuration`, shortening only with `noticeMin` seconds of
-notice), grace window (`setProcessGrace`), voter cap (`setProcessMaxVoters`), census root
-(`setProcessCensus`, dynamic off-chain censuses only) and metadata (`setProcessMetadata`).
+notice), grace window (`setProcessGrace`), voter cap (`setProcessMaxVoters`) and census root
+(`setProcessCensus`, dynamic off-chain censuses only). The metadata (`setProcessMetadata`) can
+change only before the start time.
 Batches keep settling after the end until `getProcessGraceEnd(processId)`, and results are
 accepted from then on.
 

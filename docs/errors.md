@@ -14,7 +14,7 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `InvalidStatus` | several | initial status not `READY`/`PAUSED`; transition not allowed; process not `READY`/`ENDED`, or `PAUSED` before its end (settlement) or not `READY`/`PAUSED` (organizer controls); process `CANCELED` or already `RESULTS` (results calls) |
 | `InvalidStartTime` | `newProcess` | start time in the past |
 | `InvalidDuration` | `newProcess`, `setProcessDuration` | end not in the future; duration zero; new duration unchanged; an earlier end less than `noticeMin` away |
-| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessMaxVoters`, `setProcessCensus`, `setProcessMetadata`, `setProcessGrace`); `ENDED` before `startTime`, `PAUSED` from the end on or `CANCELED` from the grace end on (`setProcessStatus`); before `startTime` or at or past the grace end (settlement); not ended yet (`setProcessResults`, `requestResultsDecryption`) |
+| `InvalidTimeBounds` | several | past the end (`setProcessDuration`, `setProcessMaxVoters`, `setProcessCensus`, `setProcessGrace`); at or past `startTime` (`setProcessMetadata`); `ENDED` before `startTime`, `PAUSED` from the end on or `CANCELED` from the grace end on (`setProcessStatus`); before `startTime` or at or past the grace end (settlement); not ended yet (`setProcessResults`, `requestResultsDecryption`) |
 | `InvalidGrace` | constructor, `setProcessGrace` | grace outside `[graceFloor, graceCeil]`; constructor bounds not `0 < graceFloor <= defaultGrace <= graceCeil <= graceMaxTotal` with `noticeMin > 0` |
 | `GraceOpen` | results calls | the grace window has not closed |
 | `EmptyTransition` | settlement | the batch carries no vote |
@@ -26,6 +26,7 @@ Custom errors of `IProcessRegistry` unless noted. "Settlement" is `submitStateTr
 | `InvalidValueSumBounds` | `newProcess` | `minValueSum > maxValueSum` |
 | `BallotModeMaxValueTooLarge`, `BallotModeMinValueTooLarge` | `newProcess` | value above 2^48 - 1 |
 | `BallotModeMaxValueSumTooLarge`, `BallotModeMinValueSumTooLarge` | `newProcess` | sum above 2^63 - 1 |
+| `InvalidBallotCost` | `newProcess` | `costExponent` is 0, or `numFields * maxValue^costExponent` is 2^63 or more (checked before the 48-bit value bounds: a maxValue of 2^63 or more reverts here) |
 | `InvalidCensusOrigin` | `newProcess`, `setProcessCensus` | `CENSUS_UNKNOWN`; a different origin on update |
 | `InvalidCensusConfig` | `newProcess` | `onchainAllowAnyValidRoot` set |
 | `InvalidCensusAddress` | `newProcess`, `setProcessCensus` | origin 3 contract without code or not answering `getCensusRoot()`; a non-zero address for another origin |

@@ -20,6 +20,10 @@ contract SmtHarness {
     function leaf(uint64 key, uint256 value) external pure returns (bytes32) {
         return Sha256SmtLib.leafHash(key, value);
     }
+
+    function root(uint64[] calldata keys, uint256[] calldata values) external pure returns (bytes32) {
+        return Sha256SmtLib.root(keys, values);
+    }
 }
 
 /// @dev Registry deployed without a DKG manager: the DKG surface must be disabled.
@@ -680,13 +684,13 @@ contract DKGTest is RegistryTestBase {
         }
         assertFalse(h.verify(root, 4, leaf, noPad));
 
-        // Extra zero padding is harmless; 65 entries are not.
-        bytes32[] memory padded = new bytes32[](64);
+        // Extra zero padding is harmless up to 65 entries; 66 are not.
+        bytes32[] memory padded = new bytes32[](65);
         for (uint256 i = 0; i < n; ++i) {
             padded[i] = siblings[i];
         }
         assertTrue(h.verify(root, 4, leaf, padded));
-        bytes32[] memory tooLong = new bytes32[](65);
+        bytes32[] memory tooLong = new bytes32[](66);
         for (uint256 i = 0; i < n; ++i) {
             tooLong[i] = siblings[i];
         }
@@ -697,5 +701,44 @@ contract DKGTest is RegistryTestBase {
         bytes32[] memory zero = new bytes32[](1);
         assertTrue(h.verify(single, 7, 42, zero));
         assertFalse(h.verify(single, 7, 43, zero));
+    }
+
+    /// @dev Key k next to its 63-bit twin 2^63 | k (the encryption key 3 and the results key 4):
+    ///      the pair splits only at level 63, so both leaves sit at depth 64 and a proof needs
+    ///      the 65th, zero slot. A third key, k ^ 1, differs at bit 0 and makes sibling 0 a leaf.
+    function test_VerifyInclusion_Depth64() public {
+        SmtHarness h = new SmtHarness();
+        uint64 ns = uint64(1) << 63;
+        for (uint64 key = 3; key <= 4; ++key) {
+            uint64[] memory keys = new uint64[](3);
+            uint256[] memory values = new uint256[](3);
+            (keys[0], keys[1], keys[2]) = (key ^ 1, key, ns | key);
+            (values[0], values[1], values[2]) = (7, 1000 + key, 0);
+            bytes32 root = h.root(keys, values);
+
+            bytes32[] memory sibs = new bytes32[](65);
+            sibs[0] = h.leaf(key ^ 1, 7);
+            sibs[63] = h.leaf(ns | key, 0);
+            assertTrue(h.verify(root, key, 1000 + key, sibs), "depth-64 leaf, 65 siblings");
+            assertFalse(h.verify(root, key, 1001 + key, sibs), "other value");
+
+            // The twin, proven the same way.
+            bytes32[] memory twin = new bytes32[](65);
+            twin[0] = sibs[0];
+            twin[63] = h.leaf(key, 1000 + key);
+            assertTrue(h.verify(root, ns | key, 0, twin), "twin at depth 64");
+
+            // Without the zero sentinel, or with a 66th slot: refused.
+            bytes32[] memory short = new bytes32[](64);
+            for (uint256 i = 0; i < 64; ++i) {
+                short[i] = sibs[i];
+            }
+            assertFalse(h.verify(root, key, 1000 + key, short), "64 siblings, last non-zero");
+            bytes32[] memory long = new bytes32[](66);
+            for (uint256 i = 0; i < 65; ++i) {
+                long[i] = sibs[i];
+            }
+            assertFalse(h.verify(root, key, 1000 + key, long), "66 siblings");
+        }
     }
 }

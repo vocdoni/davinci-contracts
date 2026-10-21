@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `Sha256SmtLib.verifyInclusion` accepts up to 65 siblings (the last one zero), so a leaf at
+  depth 64 (a key next to a vote id that shares its 63 low bits) verifies;
+  `requestResultsDecryption` takes the 65-entry lists nodes send.
+- `newProcess` refuses a ballot mode whose `costExponent` is 0 or whose largest cost
+  `numFields * maxValue^costExponent` is 2^63 or more (`InvalidBallotCost`).
+- `setProcessMetadata` is refused from the start time on (`InvalidTimeBounds`).
+
 ## 2026-10-19
 
 v0.0.53: the OP Mainnet protocol v5 registry (pre-production).

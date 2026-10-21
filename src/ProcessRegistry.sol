@@ -296,6 +296,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
                 (eid, aid, teX, teY) = CouncilAdapter(councilAdapter).register(processId, sender, dkg);
             } else {
                 if (dkgAdapter == address(0)) revert DKGDisabled();
+                // DKG-mode creation is open to any account for now; a token requirement is planned and,
+                // the adapters being immutable, ships with a new registry.
                 (eid, aid, teX, teY) = DavinciDKGAdapter(dkgAdapter).register(processId, dkg);
             }
             key = DAVINCITypes.EncryptionKey(teX, teY);
@@ -391,8 +393,8 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
     }
 
     /// @inheritdoc IProcessRegistry
-    /// @dev Same window as setProcessCensus: once the end passes, the meaning of every ballot
-    ///      field is fixed.
+    /// @dev Frozen from the start time, when nodes open admission: a voter's ballot always
+    ///      means what the metadata said when it was cast.
     function setProcessMetadata(bytes31 processId, string calldata metadataURI, bytes32 metadataHash)
         external
         override
@@ -405,7 +407,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (status != DAVINCITypes.ProcessStatus.READY && status != DAVINCITypes.ProcessStatus.PAUSED) {
             revert InvalidStatus();
         }
-        if (p.startTime + p.duration <= block.timestamp) revert InvalidTimeBounds();
+        if (block.timestamp >= p.startTime) revert InvalidTimeBounds();
 
         _storeMetadata(processId, p, metadataURI, metadataHash);
     }
@@ -878,6 +880,7 @@ contract ProcessRegistry is IProcessRegistry, ReentrancyGuard {
         if (ballotMode.groupSize > ballotMode.numFields) revert InvalidGroupSize();
         if (ballotMode.minValue > ballotMode.maxValue) revert InvalidMaxMinValueBounds();
         if (ballotMode.minValueSum > ballotMode.maxValueSum) revert InvalidValueSumBounds();
+        if (!GenesisLib.ballotCostFits(ballotMode)) revert InvalidBallotCost();
 
         // validate max voters
         if (maxVoters == 0) revert InvalidMaxVoters();

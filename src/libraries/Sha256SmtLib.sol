@@ -13,6 +13,10 @@ import {PublicsLib} from "./PublicsLib.sol";
  */
 library Sha256SmtLib {
     uint256 internal constant MAX_LEVELS = 64;
+    /// @dev Sibling slots of an inclusion proof. Keys have 64 path bits, so two keys that share
+    ///      their 63 low bits put both leaves at depth 64; the circomlib/arbo proof format needs
+    ///      a zero sentinel below the leaf, the 65th slot.
+    uint256 internal constant MAX_SIBLINGS = MAX_LEVELS + 1;
 
     error SmtMaxLevelsReached();
     error SmtLengthMismatch();
@@ -42,14 +46,15 @@ library Sha256SmtLib {
     ///         the level of the last non-zero sibling plus one (all-zero siblings put the
     ///         leaf at the root). Bit i of the key (LSB first) picks the side at depth i.
     ///         Mirrors circuit-primitives/src/smt.rs::verify_inclusion: the sibling list
-    ///         must be non-empty, at most MAX_LEVELS long, and its last entry zero.
+    ///         must be non-empty, at most MAX_SIBLINGS long, and its last entry zero, so the
+    ///         leaf sits at depth MAX_LEVELS at most.
     function verifyInclusion(bytes32 root_, uint64 key, uint256 value, bytes32[] calldata siblings)
         internal
         pure
         returns (bool)
     {
         uint256 n = siblings.length;
-        if (n == 0 || n > MAX_LEVELS) return false;
+        if (n == 0 || n > MAX_SIBLINGS) return false;
         // Leaf depth: one past the last non-zero sibling. The guest requires the
         // level-insertion flag to fire strictly before the last slot, i.e. siblings[n-1] == 0.
         uint256 d = 0;

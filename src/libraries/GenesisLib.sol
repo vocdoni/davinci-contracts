@@ -70,6 +70,24 @@ library GenesisLib {
         packed |= m.minValueSum << 184;
     }
 
+    /// @notice The registry's cost rule: costExponent >= 1 and the largest cost of a ballot,
+    ///         numFields * maxValue^costExponent, below 2^63. The circuit computes the cost in
+    ///         the field and compares it with the budget; below 2^63 nothing wraps, so it compares
+    ///         integers. Mirrors rust-sdk BallotMode::validate and go-sdk BallotMode.Validate.
+    function ballotCostFits(DAVINCITypes.BallotMode calldata m) internal pure returns (bool) {
+        if (m.costExponent == 0) return false;
+        uint256 maxValue = m.maxValue;
+        if (m.numFields == 0 || maxValue <= 1) return true;
+        if (maxValue > MAX_63) return false;
+        uint256 cost = m.numFields;
+        for (uint256 i = 0; i < m.costExponent; ++i) {
+            // cost and maxValue are below 2^63: the product cannot overflow.
+            cost *= maxValue;
+            if (cost > MAX_63) return false;
+        }
+        return true;
+    }
+
     /// @notice Encryption key leaf: sha256(x_BE32 ‖ y_BE32) over the TE coordinates.
     function encKeyLeaf(DAVINCITypes.EncryptionKey memory k) internal pure returns (uint256) {
         return uint256(sha256(abi.encodePacked(k.x, k.y)));

@@ -117,6 +117,7 @@ contract AttackReentrancyTest is RegistryTestBase {
 
     function _mode() internal view returns (DAVINCITypes.BallotMode memory m) {
         m.numFields = uint8(dkg.readUint(".ballot_mode.num_fields"));
+        m.costExponent = uint8(dkg.readUint(".ballot_mode.cost_exponent"));
         m.maxValue = dkg.readUint(".ballot_mode.max_value");
         m.maxValueSum = dkg.readUint(".ballot_mode.max_value_sum");
     }
