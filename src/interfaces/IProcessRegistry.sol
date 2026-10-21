@@ -216,6 +216,11 @@ interface IProcessRegistry {
     error BallotModeMaxValueSumTooLarge();
     error BallotModeMinValueSumTooLarge();
     /**
+     * @notice InvalidBallotCost error is emitted when a ballot mode's costExponent is 0, or its
+     *         largest ballot cost numFields * maxValue^costExponent is 2^63 or more.
+     */
+    error InvalidBallotCost();
+    /**
      * @notice InvalidStateRoot error is emitted when a state root is invalid.
      */
     error InvalidStateRoot();
@@ -526,8 +531,9 @@ interface IProcessRegistry {
 
     /**
      * @notice Replaces the metadata URI and hash of a process. Only the organizer, while
-     *         READY or PAUSED and before the end time, so what a ballot field means is
-     *         frozen once voting closes.
+     *         READY or PAUSED and before the start time, so what a ballot field means is
+     *         frozen once voting opens. A process created with startTime 0 starts at once,
+     *         so its metadata is final at creation.
      * @param processId The ID of the process.
      * @param metadataURI The URI of the new metadata document, non-empty.
      * @param metadataHash SHA-256 of the exact bytes served at metadataURI (no JSON
@@ -590,7 +596,8 @@ interface IProcessRegistry {
      * @param processId The ID of the process.
      * @param accumulator The 64 BE coordinates of the results accumulator (16 ElGamal
      *        ciphertexts, circomlib form), whose sha256 is the value of state leaf 0x04.
-     * @param siblings The SMT inclusion siblings, root to leaf, zero-padded.
+     * @param siblings The SMT inclusion siblings, root to leaf, zero-padded, at most 65 (the
+     *        last one zero).
      */
     function requestResultsDecryption(bytes31 processId, uint256[64] calldata accumulator, bytes32[] calldata siblings)
         external;

@@ -142,7 +142,8 @@ SHA-256 over the exact bytes served at `metadataURI`, with no JSON canonicalisat
 fetches the document, hashes the raw body and compares the digest with `metadataHash` from
 `getProcess`; reformatting the document changes its hash.
 
-The organizer can replace both with `setProcessMetadata` until voting closes. `newProcess` and
+The organizer can replace both with `setProcessMetadata` until the start time, when nodes open
+admission; a process created with `startTime` 0 starts at once, so its metadata is final. `newProcess` and
 every update emit `ProcessMetadataUpdated`, so the event log alone is the complete metadata
 history of a process.
 
@@ -164,7 +165,9 @@ struct BallotMode {
 `numFields` is 1 to 16, the ballot capacity of the zkVM guest. `groupSize` may not exceed
 `numFields`, `minValue <= maxValue` and `minValueSum <= maxValueSum`. The ballot mode is packed
 into one state leaf, so `maxValue` and `minValue` must fit in 48 bits and the two sums in 63
-bits.
+bits. `costExponent` is at least 1 and the largest cost of a ballot,
+`numFields * maxValue^costExponent`, must be below 2^63 (`InvalidBallotCost`): the ballot circuit
+computes the cost in the BN254 field, and below 2^63 it equals the integer cost.
 
 ### Census origins
 
@@ -289,7 +292,7 @@ parameters of an election are fixed once voting closes.
 | `setProcessGrace(processId, grace)` | `graceFloor <= grace <= graceCeil`. Emits `ProcessGraceChanged`. |
 | `setProcessMaxVoters(processId, maxVoters)` | Non-zero, at least the current `votersCount`, and within the same result cap as `newProcess`. |
 | `setProcessCensus(processId, census)` | Origin 2 only. The new census keeps origin 2, has a non-zero root, a non-empty URI and no contract address. Batches proven against the previous root no longer settle. |
-| `setProcessMetadata(processId, metadataURI, metadataHash)` | Non-empty URI and non-zero hash (see [Metadata](#metadata)). |
+| `setProcessMetadata(processId, metadataURI, metadataHash)` | Before `startTime` only. Non-empty URI and non-zero hash (see [Metadata](#metadata)). |
 
 ## Reading state
 

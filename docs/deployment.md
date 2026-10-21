@@ -196,24 +196,26 @@ ZISK_VERIFIER=0x35Ad4cBc4C77a2Bc69B07e68f2535Da5C6d07AB7 \
 L1_BLOB_VERIFIER=0x3B95BC14F43ed8Addb83F84D10A949De74eE7529 EXPECT_DA_MODE=l1 \
 DKG_MANAGER=0x9e799a1d22710056e62c849e3ffe19dd01db2d41 \
 COUNCIL_MANAGER=0x281b84dee6305083cc719187e4a2737d61b4396e \
-BATCH_PROGRAM_VK=0x1e4a74a1c6fb1cd1874d80895e1e075930837955efb4a135539016f7cdead2a8 \
-RESULTS_PROGRAM_VK=0xde55d751582e510bf378d4eec0d98ee3fa5817a50b77bc0e5ce560035e29e4e9 \
+BATCH_PROGRAM_VK=0x4b1a527e284af96fa0c3543e9e9b18746a6494edd99c309e58d96a804e3041dc \
+RESULTS_PROGRAM_VK=0xce964acdd53329fc49ede57f5ea288f044950e136be119287fd0021390689dc4 \
 ROOT_C_VADCOP_FINAL=0x6b2490fba336fb00f0c8719a961de309a8db6f43a9bfb7575ca5f014d609b265 \
-BALLOT_VK_HASH=0x7caffddcd7ea38439cbb45789b810d8eafceca65cff93dbeaae409b2bf64e219 \
+BALLOT_VK_HASH=0x67e8e6b47ea32cf144d6e72886f02b95ed068b157f9d4ccc8e97f335858e4963 \
 GRACE_DEFAULT=300 GRACE_FLOOR=240 GRACE_CEIL=600 GRACE_MAX_TOTAL=1800 NOTICE_MIN=60 \
 EXPECT_GRACE=300,240,600,1800,60 \
 PRIVATE_KEY=... ./deploy_all.sh
 ```
 
-The registry is `0x6F500A3e3A161EcB3C19A034bFB6a6Ac3b71abE6` (block 158414417); its record is
-`deployments/10.json`. The previous registry `0x64d4…6916` is retired and keeps its record in
-`deployments/10-0x64d4.json`.
+The registry is `0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97` (block 158487281, protocol v5.1, davinci-zkvm v0.5.0 pins); its
+record is `deployments/10.json`. The protocol v5 registry `0x6F500A3e3A161EcB3C19A034bFB6a6Ac3b71abE6`
+(block 158414417) is retired and keeps its record in
+`deployments/10-0x6f500a3e3a161ecb3c19a034bfb6a6ac3b71abe6.json`; the one before it, `0x64d4…6916`,
+in `deployments/10-0x64d4.json`.
 
 If forge does not get the receipt from the RPC, the broadcast file has the transactions but no
 receipts and the script cannot write the record. Fetch the receipt with `cast receipt <txHash>`,
 add it to `broadcast/DeployAll.s.sol/<chain>/run-latest.json`, then write the record with
 `verify_deployment.py --broadcast broadcast/DeployAll.s.sol/<chain>/run-latest.json --record
-deployments/<chain>.json` (with the same environment). That is how the v5 record was finished.
+deployments/<chain>.json` (with the same environment). That is how the v5 and v5.1 records were finished.
 
 ### OP Mainnet ZisK 1.3.2 registry, retired
 

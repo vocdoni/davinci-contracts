@@ -25,6 +25,10 @@ contract GenesisHarness {
     function encKeyLeaf(DAVINCITypes.EncryptionKey calldata k) external pure returns (uint256) {
         return GenesisLib.encKeyLeaf(k);
     }
+
+    function ballotCostFits(DAVINCITypes.BallotMode calldata m) external pure returns (bool) {
+        return GenesisLib.ballotCostFits(m);
+    }
 }
 
 /// @dev genesisRoot against test/vectors/genesis.json: go-sdk chain.NewState roots for
@@ -133,6 +137,30 @@ contract GenesisTest is Test {
                 _le(uint256(registry.ballotVKHash())), vectors.readBytes32(string.concat(leaves, ".0x07")), "vk leaf"
             );
         }
+    }
+
+    /// @dev The cost rule at its exact boundaries, including modes newProcess refuses for
+    ///      their 48-bit maxValue (rust-sdk mode_rule_boundaries, go-sdk
+    ///      TestBallotModeValidateCostRule).
+    function test_BallotCostFits_Boundaries() public view {
+        assertTrue(harness.ballotCostFits(_costMode(16, (1 << 48) - 1, 1)), "16 * (2^48-1)^1");
+        assertFalse(harness.ballotCostFits(_costMode(16, 1 << 15, 4)), "16 * (2^15)^4 = 2^64");
+        assertTrue(harness.ballotCostFits(_costMode(1, (1 << 63) - 1, 1)), "2^63 - 1");
+        assertFalse(harness.ballotCostFits(_costMode(1, 1 << 63, 1)), "2^63");
+        assertFalse(harness.ballotCostFits(_costMode(2, 1 << 31, 2)), "2 * (2^31)^2 = 2^63");
+        assertTrue(harness.ballotCostFits(_costMode(1, 3037000499, 2)), "3037000499^2 < 2^63");
+        assertFalse(harness.ballotCostFits(_costMode(16, (1 << 48) - 1, 255)), "overflow");
+        assertTrue(harness.ballotCostFits(_costMode(16, 1, 255)), "16 * 1^255");
+        assertFalse(harness.ballotCostFits(_costMode(16, 1, 0)), "costExponent 0");
+        assertFalse(harness.ballotCostFits(_costMode(1, type(uint256).max, 1)), "maxValue 2^256 - 1");
+    }
+
+    function _costMode(uint8 numFields, uint256 maxValue, uint8 costExponent)
+        internal
+        pure
+        returns (DAVINCITypes.BallotMode memory m)
+    {
+        (m.numFields, m.groupSize, m.costExponent, m.maxValue) = (numFields, numFields, costExponent, maxValue);
     }
 
     function test_IdentityAccumulatorLeaf() public view {

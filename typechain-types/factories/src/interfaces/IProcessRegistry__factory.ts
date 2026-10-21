@@ -81,6 +81,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidBallotCost",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidBlobCommitmentLength",
     type: "error",
   },

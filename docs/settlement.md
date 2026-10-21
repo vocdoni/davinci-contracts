@@ -178,7 +178,8 @@ function revealProcessKey(bytes31 processId, uint256 sk) external; // DKG_LOCKED
 `requestResultsDecryption` runs once per process, after it has ended and its grace window has
 closed. `accumulator` holds the 16 ElGamal ciphertexts of the results leaf as
 `(C1x, C1y, C2x, C2y)` each, circomlib form, big-endian. `siblings` is the SMT inclusion proof
-of leaf `0x04`, root to leaf, zero-padded, 1 to 64 entries and ending in a zero entry. The
+of leaf `0x04`, root to leaf, zero-padded, 1 to 65 entries and ending in a zero entry (a leaf
+can sit at depth 64 when a vote id shares its 63 low bits with `0x04`; nodes always send 65). The
 registry:
 
 1. requires every coordinate to be below the BN254 scalar field, so `(0, 1)` is the only
