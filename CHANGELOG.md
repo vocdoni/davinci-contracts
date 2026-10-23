@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-23
+
+v0.0.55: the OP Mainnet registry of 2026-10-23 (pre-production).
+
+- `ProcessRegistry` `0xc916F985CbCdbEb25A0EE6950361cf7Dd9Fbe35a` at block 158592889 (transaction `0x95ad9863f1078ddf81995e2f5a4b29584033307c5e252567db5201571ffe0fa9`), with `DavinciDKGAdapter`
+  `0xdb2C3653d59e9693ea3186AE4d4A34b3379A68f7` on the new davinci-dkg `DKGManager` `0x401381a9711b473baf8757404b5514537a5216d7` and `CouncilAdapter` `0x798dD4fE9DE224ffD7bF1081FD8D0C273a6e8860` (Council manager
+  as before). It copies the verifier, the pins and the grace settings of `0x02D6…2B97`
+  (`PINS_FROM_REGISTRY`) and reuses the `ZiskVerifier` and the `L1BlobVerifier`. Sources are verified on
+  Optimistic Etherscan and `verify_deployment.py` passes 32 checks. Process ids start with `e1b56c76`. The
+  2026-10-21 registry `0x02D6…2B97` is retired; its record is `deployments/10-0x02d6c284234b4ce75fab3085cf3f1ba4b7262b97.json`.
+
 ## 2026-10-21
 
 v0.0.54: the OP Mainnet protocol v5.1 registry (pre-production).

@@ -205,9 +205,11 @@ EXPECT_GRACE=300,240,600,1800,60 \
 PRIVATE_KEY=... ./deploy_all.sh
 ```
 
-The registry is `0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97` (block 158487281, protocol v5.1, davinci-zkvm v0.5.0 pins); its
-record is `deployments/10.json`. The protocol v5 registry `0x6F500A3e3A161EcB3C19A034bFB6a6Ac3b71abE6`
-(block 158414417) is retired and keeps its record in
+The registry is `0xc916F985CbCdbEb25A0EE6950361cf7Dd9Fbe35a` (block 158592889, deployed on 2026-10-23 with
+`PINS_FROM_REGISTRY=0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97`: the same verifier, pins and grace settings, and a new davinci-dkg
+manager); its record is `deployments/10.json`. The 2026-10-21 registry `0x02D6c284234B4CE75faB3085cF3f1ba4b7262B97` (block 158487281) is
+retired and keeps its record in `deployments/10-0x02d6c284234b4ce75fab3085cf3f1ba4b7262b97.json`; the protocol v5 registry
+`0x6F500A3e3A161EcB3C19A034bFB6a6Ac3b71abE6` (block 158414417) in
 `deployments/10-0x6f500a3e3a161ecb3c19a034bfb6a6ac3b71abe6.json`; the one before it, `0x64d4…6916`,
 in `deployments/10-0x64d4.json`.
 
